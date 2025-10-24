@@ -1,0 +1,123 @@
+body {
+  margin: 0;
+  background-color: #E6F2FF;
+  font-family: "Poppins", sans-serif;
+  color: #1f355b;
+}
+
+.home-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 40px 0;
+}
+
+.intro {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  gap: 40px;
+  width: 90%;
+  flex-wrap: wrap;
+}
+
+.lado-esquerdo, .lado-direito {
+  flex: 1 1 400px;
+  text-align: center;
+}
+
+.nuvem-flutuante {
+  width: 240px;
+  animation: flutuar 4s ease-in-out infinite;
+}
+@keyframes flutuar {
+  0% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+  100% { transform: translateY(0); }
+}
+
+.mensagem {
+  font-size: 18px;
+  font-weight: 500;
+  margin-top: 10px;
+}
+
+.botoes-acao {
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: center;
+}
+
+.btn-acao {
+  text-decoration: none;
+  padding: 12px 22px;
+  border-radius: 25px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+.btn-acao.principal {
+  background-color: #4A90E2;
+  color: #fff;
+}
+.btn-acao.principal:hover {
+  background-color: #3b7bd6;
+}
+.btn-acao.secundario {
+  border: 2px solid #4A90E2;
+  color: #4A90E2;
+}
+.btn-acao.secundario:hover {
+  background-color: #4A90E2;
+  color: #fff;
+}
+
+.texto-transparente {
+  margin-top: 15px;
+  font-size: 14px;
+  opacity: 0.8;
+}
+
+.lado-direito {
+  text-align: center;
+}
+.titulo-direito {
+  font-size: 22px;
+  margin-bottom: 20px;
+  color: #1f355b;
+}
+
+.carrossel {
+  position: relative;
+  width: 90%;
+  max-width: 500px;
+  overflow: hidden;
+  border-radius: 20px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+}
+.carrossel img {
+  width: 100%;
+  border-radius: 20px;
+}
+
+.faixa-eventos {
+  background: linear-gradient(90deg, #4A90E2, #6fb3ff);
+  color: #fff;
+  text-align: center;
+  padding: 20px;
+  width: 100%;
+  margin-top: 40px;
+}
+.btn-eventos {
+  background: #fff;
+  color: #4A90E2;
+  text-decoration: none;
+  padding: 10px 20px;
+  border-radius: 20px;
+  font-weight: 600;
+  margin-left: 10px;
+}
+.btn-eventos:hover {
+  background: #e4efff;
+}

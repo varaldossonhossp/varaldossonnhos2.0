@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <!-- ============================================================
+       💙 FANTÁSTICA FÁBRICA DE SONHOS — Página Inicial (index.html)
+       ------------------------------------------------------------
+       Estrutura: Header + Corpo + Footer + Cloudinho (componentes)
+  ============================================================ -->
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fantástica Fábrica de Sonhos 💙 | Varal dos Sonhos</title>
+  
+  <link rel="icon" href="/imagens/favicon.png" type="image/png">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+  <!-- 🌈 Cabeçalho dinâmico -->
+  <div id="header"></div>
+
+  <!-- 🌤️ Corpo principal -->
+  <main class="home-container">
+
+    <section class="intro">
+      <div class="lado-esquerdo">
+        <div class="nuvem">
+          <img src="/imagens/nuvem.png" alt="Fantástica Fábrica de Sonhos" class="nuvem-flutuante">
+        </div>
+
+        <p class="mensagem">
+          💙 Adote com responsabilidade. <br>
+          Cada cartinha que você lê é uma janela para o sonho de uma criança.
+        </p>
+
+        <div class="botoes-acao">
+          <a href="/pages/Cartinhas.html" class="btn-acao principal">Quero Adotar um Sonho</a>
+          <a href="/pages/ComoFunciona.html" class="btn-acao secundario">Como Funciona</a>
+        </div>
+
+        <div class="texto-transparente">
+          Processo simples e transparente ✨<br>
+          Acompanhamento por e-mail e WhatsApp 💌
+        </div>
+      </div>
+
+      <div class="lado-direito">
+        <h2 class="titulo-direito">🌟 Momentos que Inspiram</h2>
+
+        <div class="carrossel" id="galeria-home">
+          <!-- As imagens serão carregadas dinamicamente via js/carousel.js -->
+          <div class="slide fade"><img src="/imagens/evento1.jpg" alt="Evento 1"></div>
+          <div class="slide fade"><img src="/imagens/evento2.jpg" alt="Evento 2"></div>
+          <div class="slide fade"><img src="/imagens/evento3.jpg" alt="Evento 3"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 🎉 Faixa final -->
+    <section class="faixa-eventos">
+      <p>🎁 Acompanhe nossos eventos e ajude a espalhar alegria!</p>
+      <a href="/pages/Eventos.html" class="btn-eventos">Ver Todos os Eventos</a>
+    </section>
+
+  </main>
+
+  <!-- 🌈 Rodapé -->
+  <div id="footer"></div>
+
+  <!-- ☁️ Cloudinho -->
+  <div id="cloudinho"></div>
+
+  <!-- 🔧 Scripts globais -->
+  <script src="/js/componentes.js"></script>
+  <script src="/js/carousel.js"></script>
+
+</body>
+</html>
