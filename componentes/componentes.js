@@ -1,38 +1,41 @@
-// Carrega automaticamente header, footer e cloudinho em todas as páginas
-async function carregarComponente(id, arquivo) {
-  const destino = document.getElementById(id);
-  if (!destino) return;
-  const resp = await fetch(`/componentes/${arquivo}`);
-  destino.innerHTML = await resp.text();
-}
-
+// componentes/componentes.js
 document.addEventListener("DOMContentLoaded", async () => {
-  await carregarComponente("header", "header.html");
-  await carregarComponente("footer", "footer.html");
-  await carregarComponente("cloudinho", "cloudinho.html");
+  // HEADER
+  const headerContainer = document.createElement("div");
+  headerContainer.id = "header-container";
+  document.body.prepend(headerContainer);
 
-  // Gerencia menu dinâmico conforme login
-  const usuario = JSON.parse(localStorage.getItem("usuario"));
-  if (usuario) {
-    const nomeSpan = document.getElementById("user-name");
-    const areaUser = document.getElementById("user-area");
-    const btnLogout = document.getElementById("logout-btn");
-    const loginLink = document.getElementById("login-link");
-    const cadastroLink = document.getElementById("cadastro-link");
-    const adminLink = document.getElementById("admin-link");
-    const rankingLink = document.getElementById("ranking-link");
+  try {
+    const headerResp = await fetch("componentes/header.html");
+    const headerHTML = await headerResp.text();
+    headerContainer.innerHTML = headerHTML;
+  } catch (erro) {
+    console.error("Erro ao carregar o cabeçalho:", erro);
+  }
 
-    nomeSpan.textContent = `Olá, ${usuario.nome}!`;
-    areaUser.classList.remove("hidden");
-    loginLink.classList.add("hidden");
-    cadastroLink.classList.add("hidden");
+  // FOOTER
+  const footerContainer = document.createElement("div");
+  footerContainer.id = "footer-container";
+  document.body.appendChild(footerContainer);
 
-    if (usuario.tipo === "administrador") adminLink.classList.remove("hidden");
-    if (usuario.tipo === "doador") rankingLink.classList.remove("hidden");
+  try {
+    const footerResp = await fetch("componentes/footer.html");
+    const footerHTML = await footerResp.text();
+    footerContainer.innerHTML = footerHTML;
+  } catch (erro) {
+    console.error("Erro ao carregar o rodapé:", erro);
+  }
 
-    btnLogout.addEventListener("click", () => {
-      localStorage.removeItem("usuario");
-      window.location.href = "/index.html";
-    });
+  // CLOUDINHO
+  const cloudinhoContainer = document.createElement("div");
+  cloudinhoContainer.id = "cloudinho-container";
+  document.body.appendChild(cloudinhoContainer);
+
+  try {
+    const cloudinhoResp = await fetch("componentes/cloudinho.html");
+    const cloudinhoHTML = await cloudinhoResp.text();
+    cloudinhoContainer.innerHTML = cloudinhoHTML;
+  } catch (erro) {
+    console.error("Erro ao carregar o Cloudinho:", erro);
   }
 });
