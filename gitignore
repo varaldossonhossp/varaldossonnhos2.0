@@ -1,0 +1,7 @@
+# Arquivos e pastas a ignorar
+.env
+.env.local
+node_modules/
+.vercel/
+.DS_Store
+.vscode/
