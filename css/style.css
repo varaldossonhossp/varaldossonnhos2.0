@@ -1,10 +1,20 @@
+/* ============================================================
+💙 VARAL DOS SONHOS — style.css
+---------------------------------------------------------------
+Arquivo principal de estilo do site Fantástica Fábrica de Sonhos
+Contém: estrutura da home, botões, carrossel de eventos,
+nuvem animada, faixas e responsividade.
+============================================================ */
+
+/* ====== ESTILOS GERAIS ====== */
 body {
   margin: 0;
-  background-color: #E6F2FF;
+  background-color: #E6F2FF; /* azul clarinho de fundo */
   font-family: "Poppins", sans-serif;
-  color: #1f355b;
+  color: #1f355b; /* azul escuro padrão dos textos */
 }
 
+/* ====== CONTAINER PRINCIPAL DA HOME ====== */
 .home-container {
   display: flex;
   flex-direction: column;
@@ -12,6 +22,10 @@ body {
   padding: 40px 0;
 }
 
+/* ====== SEÇÃO DE INTRODUÇÃO ======
+   Divide a tela entre lado esquerdo (texto/botões)
+   e lado direito (carrossel de eventos)
+*/
 .intro {
   display: flex;
   justify-content: space-around;
@@ -21,11 +35,14 @@ body {
   flex-wrap: wrap;
 }
 
-.lado-esquerdo, .lado-direito {
+/* ====== COLUNAS ====== */
+.lado-esquerdo, 
+.lado-direito {
   flex: 1 1 400px;
   text-align: center;
 }
 
+/* ====== ANIMAÇÃO DE NUVEM FLUTUANTE ====== */
 .nuvem-flutuante {
   width: 240px;
   animation: flutuar 4s ease-in-out infinite;
@@ -36,12 +53,16 @@ body {
   100% { transform: translateY(0); }
 }
 
+/* ====== FRASE DE APRESENTAÇÃO ====== */
 .mensagem {
   font-size: 18px;
   font-weight: 500;
   margin-top: 10px;
 }
 
+/* ====== BOTÕES DE AÇÃO ======
+   “Quero Adotar um Sonho” e “Como Funciona”
+*/
 .botoes-acao {
   margin-top: 20px;
   display: flex;
@@ -50,6 +71,7 @@ body {
   align-items: center;
 }
 
+/* ====== ESTILO DOS BOTÕES ====== */
 .btn-acao {
   text-decoration: none;
   padding: 12px 22px;
@@ -57,6 +79,8 @@ body {
   font-weight: 600;
   transition: all 0.3s ease;
 }
+
+/* Botão principal (azul cheio) */
 .btn-acao.principal {
   background-color: #4A90E2;
   color: #fff;
@@ -64,6 +88,8 @@ body {
 .btn-acao.principal:hover {
   background-color: #3b7bd6;
 }
+
+/* Botão secundário (azul contornado) */
 .btn-acao.secundario {
   border: 2px solid #4A90E2;
   color: #4A90E2;
@@ -73,21 +99,31 @@ body {
   color: #fff;
 }
 
+/* ====== TEXTO INFORMATIVO ABAIXO DOS BOTÕES ====== */
 .texto-transparente {
   margin-top: 15px;
   font-size: 14px;
   opacity: 0.8;
 }
 
+/* ====== BLOCO DIREITO DA HOME (CARROSSEL) ====== */
 .lado-direito {
   text-align: center;
 }
+
 .titulo-direito {
   font-size: 22px;
   margin-bottom: 20px;
   color: #1f355b;
 }
 
+/* ============================================================
+🎠 CARROSSEL DE EVENTOS AUTOMÁTICO
+Busca imagens da tabela "eventos" (Airtable)
+e alterna entre elas a cada 4 segundos.
+============================================================ */
+
+/* Container principal do carrossel */
 .carrossel {
   position: relative;
   width: 90%;
@@ -95,12 +131,90 @@ body {
   overflow: hidden;
   border-radius: 20px;
   box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+  background: #fff;
 }
-.carrossel img {
+
+/* Cada slide (imagem + legenda) */
+.slide {
+  display: none; /* apenas um visível por vez */
+  text-align: center;
+  transition: opacity 0.8s ease-in-out;
+}
+
+.slide img {
   width: 100%;
   border-radius: 20px;
 }
 
+/* Legenda sobre a imagem */
+.slide .info {
+  background-color: rgba(255, 255, 255, 0.9);
+  padding: 10px;
+  border-radius: 0 0 20px 20px;
+}
+
+.slide .info h3 {
+  margin: 5px 0;
+  font-size: 18px;
+  color: #1f355b;
+}
+
+.slide .info p {
+  font-size: 14px;
+  color: #3b4f7a;
+  margin: 5px 0;
+}
+
+/* ====== CONTROLES (SETAS E BOLINHAS) ====== */
+.seta {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background-color: rgba(255,255,255,0.8);
+  border: none;
+  cursor: pointer;
+  padding: 8px 12px;
+  border-radius: 50%;
+  font-size: 18px;
+  transition: background 0.3s;
+}
+
+.seta:hover {
+  background-color: rgba(255,255,255,1);
+}
+
+.seta.esquerda {
+  left: 10px;
+}
+
+.seta.direita {
+  right: 10px;
+}
+
+/* Bolinhas de navegação */
+.bolinhas {
+  text-align: center;
+  margin-top: 10px;
+}
+
+.bolinha {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  margin: 4px;
+  background-color: #d0e3ff;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.bolinha.ativa {
+  background-color: #4A90E2;
+}
+
+/* ============================================================
+🌈 FAIXA DE EVENTOS (BARRA INFERIOR AZUL)
+============================================================ */
 .faixa-eventos {
   background: linear-gradient(90deg, #4A90E2, #6fb3ff);
   color: #fff;
@@ -108,7 +222,10 @@ body {
   padding: 20px;
   width: 100%;
   margin-top: 40px;
+  box-shadow: 0 -4px 10px rgba(0,0,0,0.1);
 }
+
+/* Botão da faixa inferior */
 .btn-eventos {
   background: #fff;
   color: #4A90E2;
@@ -120,4 +237,21 @@ body {
 }
 .btn-eventos:hover {
   background: #e4efff;
+}
+
+/* ============================================================
+📱 RESPONSIVIDADE
+============================================================ */
+@media (max-width: 768px) {
+  .intro {
+    flex-direction: column;
+  }
+
+  .carrossel {
+    max-width: 90%;
+  }
+
+  .btn-acao {
+    width: 80%;
+  }
 }
