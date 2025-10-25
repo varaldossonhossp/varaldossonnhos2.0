@@ -2,115 +2,118 @@
 <html lang="pt-BR">
 <head>
   <!-- ============================================================
-       💙 FANTÁSTICA FÁBRICA DE SONHOS — Página Inicial (index.html)
+       💙 FANTÁSTICA FÁBRICA DE SONHOS — Página Inicial
        ------------------------------------------------------------
-       Estrutura:
-       • Header dinâmico (componentes/header.html)
-       • Corpo principal (mensagem + carrossel de eventos)
-       • Footer dinâmico (componentes/footer.html)
-       • Cloudinho (assistente virtual)
+       Estrutura modular: Header + Corpo + Footer + Cloudinho
+       Dados dinâmicos: Eventos / Galeria via /api/admin (modo público)
   ============================================================ -->
-
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-  <!-- 🔹 Título e favicon -->
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Fantástica Fábrica de Sonhos 💙 | Varal dos Sonhos</title>
-  <link rel="icon" href="imagens/favicon.png" type="image/png">
 
-  <!-- 🔹 Fonte principal -->
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+  <!-- Ícone e fontes -->
+  <link rel="icon" href="/imagens/favicon.png" type="image/png" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet" />
 
-  <!-- 🔹 Estilos principais -->
-  <link rel="stylesheet" href="css/style.css">
+  <!-- CSS principal -->
+  <link rel="stylesheet" href="/css/style.css" />
+  <link rel="stylesheet" href="/css/header.css" />
+  <link rel="stylesheet" href="/css/footer.css" />
+  <link rel="stylesheet" href="/css/cloudinho.css" />
 </head>
 
 <body>
   <!-- ============================================================
-       🌈 CABEÇALHO DINÂMICO
-       (carregado automaticamente via componentes/componentes.js)
+       🌈 Cabeçalho global (carregado dinamicamente)
   ============================================================ -->
   <div id="header"></div>
 
   <!-- ============================================================
-       🌤️ CORPO PRINCIPAL — Seção Home
+       🌤️ Corpo principal da Home
   ============================================================ -->
   <main class="home-container">
-
-    <!-- ============================================================
-         SEÇÃO DE INTRODUÇÃO (lado esquerdo + carrossel lado direito)
-    ============================================================ -->
     <section class="intro">
-
-      <!-- 💌 LADO ESQUERDO: Nuvem + Mensagem + Botões -->
+      <!-- 💭 Lado esquerdo: Mensagem e botões -->
       <div class="lado-esquerdo">
-        <!-- ☁️ Logotipo/Nuvem animada -->
         <div class="nuvem">
-          <img src="imagens/nuvem.png" alt="Fantástica Fábrica de Sonhos" class="nuvem-flutuante">
+          <img src="/imagens/nuvem.png" alt="Fantástica Fábrica de Sonhos" class="nuvem-flutuante" />
         </div>
 
-        <!-- 💬 Mensagem principal -->
         <p class="mensagem">
-          💙 Adote com responsabilidade. <br>
+          💙 Adote com responsabilidade. <br />
           Cada cartinha que você lê é uma janela para o sonho de uma criança.
         </p>
 
-        <!-- 🔘 Botões de ação -->
         <div class="botoes-acao">
-          <a href="pages/Cartinhas.html" class="btn-acao principal">Quero Adotar um Sonho</a>
-          <a href="pages/ComoFunciona.html" class="btn-acao secundario">Como Funciona</a>
+          <a href="/pages/Cartinhas.html" class="btn-acao principal">Quero Adotar um Sonho</a>
+          <a href="/pages/ComoFunciona.html" class="btn-acao secundario">Como Funciona</a>
         </div>
 
-        <!-- 🕊️ Texto de apoio -->
         <div class="texto-transparente">
-          Processo simples e transparente ✨<br>
+          Processo simples e transparente ✨ <br />
           Acompanhamento por e-mail e WhatsApp 💌
         </div>
       </div>
 
-      <!-- 🎠 LADO DIREITO: Carrossel de Eventos (dinâmico via Airtable) -->
+      <!-- 🎠 Lado direito: Carrossel de eventos -->
       <div class="lado-direito">
-
-        <!-- 🎇 Seção de eventos -->
         <section id="momentos">
-          <h2>🌟 Momentos que inspiram</h2>
-
-          <!-- 💾 Container onde o JS insere o carrossel automático -->
-          <div class="carrossel-eventos"></div>
+          <h2>🌟 Momentos que Inspiram</h2>
+          <div class="carrossel" id="carrossel-eventos">
+            <!-- Imagens dinâmicas serão carregadas via /js/galeria.js -->
+            <div class="slide fade">
+              <img src="/imagens/evento1.jpg" alt="Evento exemplo 1" />
+            </div>
+            <div class="slide fade">
+              <img src="/imagens/evento2.jpg" alt="Evento exemplo 2" />
+            </div>
+            <div class="slide fade">
+              <img src="/imagens/evento3.jpg" alt="Evento exemplo 3" />
+            </div>
+          </div>
         </section>
-
       </div>
     </section>
 
-    <!-- ============================================================
-         🎉 FAIXA FINAL — convite para ver todos os eventos
-    ============================================================ -->
+    <!-- 🎉 Faixa final -->
     <section class="faixa-eventos">
       <p>🎁 Acompanhe nossos eventos e ajude a espalhar alegria!</p>
-      <a href="pages/Eventos.html" class="btn-eventos">Ver Todos os Eventos</a>
+      <a href="/pages/Eventos.html" class="btn-eventos">Ver Todos os Eventos</a>
     </section>
-
   </main>
 
   <!-- ============================================================
-       🌈 RODAPÉ DINÂMICO
-       (carregado automaticamente via componentes/componentes.js)
+       🌈 Rodapé global (carregado dinamicamente)
   ============================================================ -->
   <div id="footer"></div>
 
   <!-- ============================================================
-       ☁️ CLOUDINHO — Assistente Virtual (componentes/cloudinho.html)
+       ☁️ Cloudinho (assistente flutuante)
   ============================================================ -->
   <div id="cloudinho"></div>
 
   <!-- ============================================================
-       📜 SCRIPTS
-       ------------------------------------------------------------
-       • js/galeria.js: busca os eventos no Airtable e monta o carrossel
-       • componentes/componentes.js: carrega header/footer/cloudinho
+       📜 Scripts JS globais
   ============================================================ -->
-  <script src="js/galeria.js"></script>
-  <script src="componentes/componentes.js"></script>
+  <script>
+    // Função para carregar componentes HTML externos dinamicamente
+    async function carregarComponente(id, caminho) {
+      try {
+        const resp = await fetch(caminho);
+        const html = await resp.text();
+        document.getElementById(id).innerHTML = html;
+      } catch (erro) {
+        console.error(`Erro ao carregar componente ${caminho}:`, erro);
+      }
+    }
 
+    // Carrega os três componentes fixos da página
+    carregarComponente("header", "/componentes/header.html");
+    carregarComponente("footer", "/componentes/footer.html");
+    carregarComponente("cloudinho", "/componentes/cloudinho.html");
+  </script>
+
+  <!-- Carrossel e integração com API -->
+  <script src="/js/galeria.js"></script>
 </body>
 </html>

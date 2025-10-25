@@ -1,0 +1,106 @@
+/* ============================================================
+💙 VARAL DOS SONHOS — cartinhas.css
+---------------------------------------------------------------
+Estilo da página Varal Virtual (cartinhas disponíveis)
+============================================================ */
+
+.cartinhas-container {
+  padding: 40px 20px;
+  text-align: center;
+  background-color: #E6F2FF;
+  min-height: 100vh;
+}
+
+.cartinhas-container h1 {
+  color: #1f355b;
+  font-size: 26px;
+  margin-bottom: 10px;
+}
+
+.subtitulo {
+  color: #3b4f7a;
+  font-size: 16px;
+  margin-bottom: 30px;
+}
+
+.filtro input {
+  width: 80%;
+  max-width: 400px;
+  padding: 10px 15px;
+  border-radius: 20px;
+  border: 2px solid #4A90E2;
+  font-family: "Poppins", sans-serif;
+  font-size: 14px;
+  margin-bottom: 30px;
+}
+
+/* ====== GRID DE CARTINHAS ====== */
+.lista-cartinhas {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 25px;
+}
+
+/* ====== CARD INDIVIDUAL ====== */
+.card-cartinha {
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  width: 250px;
+  overflow: hidden;
+  transition: transform 0.3s;
+}
+
+.card-cartinha:hover {
+  transform: scale(1.03);
+}
+
+/* ====== FOTO DA CRIANÇA ====== */
+.card-cartinha img {
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+}
+
+/* ====== INFORMAÇÕES ====== */
+.info-cartinha {
+  padding: 15px;
+  text-align: left;
+}
+
+.info-cartinha h3 {
+  color: #1f355b;
+  margin: 0;
+  font-size: 18px;
+}
+
+.info-cartinha p {
+  margin: 5px 0;
+  color: #3b4f7a;
+  font-size: 14px;
+}
+
+/* ====== BOTÃO DE ADOÇÃO ====== */
+.btn-adotar {
+  display: block;
+  width: 90%;
+  margin: 10px auto 15px;
+  padding: 10px;
+  border: none;
+  border-radius: 25px;
+  background-color: #4A90E2;
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-adotar:hover {
+  background-color: #3b7bd6;
+}
+
+.btn-noCarrinho {
+  background-color: #6fb3ff;
+  cursor: not-allowed;
+}
