@@ -1,3 +1,12 @@
+console.log("🔍 Verificando variáveis de ambiente...");
+console.log("API_KEY:", process.env.AIRTABLE_API_KEY ? "OK" : "MISSING");
+console.log("BASE_ID:", process.env.AIRTABLE_BASE_ID ? "OK" : "MISSING");
+console.log("ADMIN_SECRET:", process.env.ADMIN_SECRET ? "OK" : "MISSING");
+
+
+
+
+
 // ============================================================
 // 💌 VARAL DOS SONHOS — /api/cartinhas.js
 // ------------------------------------------------------------
