@@ -1,4 +1,7 @@
 {
+  "name": "varaldossonhos2.0",
+  "version": "1.0.0",
+  "type": "module",
   "dependencies": {
     "airtable": "^0.12.2"
   }
