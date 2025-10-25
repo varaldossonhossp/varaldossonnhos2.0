@@ -1,37 +1,45 @@
 // ============================================================
 // 💼 VARAL DOS SONHOS — /api/admin.js
 // ------------------------------------------------------------
-// Responsável pelo painel administrativo e visualização pública:
-//   • GET ?tipo=eventos  → retorna eventos ativos (para carrossel.js)
-//   • POST modo=eventos  → criar/editar/excluir eventos (restrito)
-//   • POST modo=galeria  → atualizar imagens (restrito)
-//   • POST modo=adocao   → atualizar status de adoções (restrito)
+// Gerencia as funções administrativas do projeto:
+//   • GET  → lista eventos ativos (usado no carrossel da Home)
+//   • POST modo=eventos  → CRUD de eventos (restrito)
+//   • POST modo=galeria  → atualizar imagens do carrossel (restrito)
+//   • POST modo=adocao   → confirmar/alterar status de adoções
 // ------------------------------------------------------------
-// ⚙️ Segurança: operações POST exigem ADMIN_SECRET (.env.local)
+// ⚙️ Segurança: operações POST exigem token ADMIN_SECRET (.env.local)
 // ============================================================
 
 import Airtable from "airtable";
 
+// Conexão com o banco Airtable
 const base = new Airtable({ apiKey: process.env.AIRTABLE_API_KEY })
   .base(process.env.AIRTABLE_BASE_ID);
 
 export default async function handler(req, res) {
   try {
     // ============================================================
-    // 🔹 1️⃣ REQUISIÇÃO PÚBLICA (GET): listar eventos ativos
+    // 🔹 1️⃣ REQUISIÇÃO PÚBLICA (GET) — Lista de eventos ativos
     // ============================================================
     if (req.method === "GET") {
       const { tipo } = req.query;
 
-      // → GET /api/admin?tipo=eventos
+      // Exemplo: /api/admin?tipo=eventos
       if (tipo === "eventos") {
         const registros = await base("eventos")
-          .select({ sort: [{ field: "data_evento", direction: "desc" }] })
+          .select({
+            filterByFormula: "ativo = 1", // apenas eventos ativos
+            sort: [{ field: "data_evento", direction: "desc" }],
+          })
           .all();
 
         const eventos = registros.map((r) => ({
           id: r.id,
-          fields: r.fields,
+          titulo: r.fields.titulo,
+          descricao: r.fields.descricao,
+          data_evento: r.fields.data_evento,
+          imagem: r.fields.imagem || [],
+          ativo: r.fields.ativo,
         }));
 
         return res.status(200).json({ sucesso: true, eventos });
@@ -48,14 +56,16 @@ export default async function handler(req, res) {
     // ============================================================
     const { modo, acao, token_admin } = req.body;
 
+    // Segurança — valida o token do administrador
     if (token_admin !== process.env.ADMIN_SECRET) {
-      return res
-        .status(401)
-        .json({ sucesso: false, mensagem: "Acesso negado. Token inválido." });
+      return res.status(401).json({
+        sucesso: false,
+        mensagem: "Acesso negado. Token inválido ou ausente.",
+      });
     }
 
     // ============================================================
-    // 🎁 3️⃣ GERENCIAR ADOÇÕES (confirmações e entregas)
+    // 🎁 3️⃣ GERENCIAR ADOÇÕES — confirmação/entrega
     // ============================================================
     if (modo === "adocao") {
       const { id, status } = req.body;
@@ -85,7 +95,7 @@ export default async function handler(req, res) {
     }
 
     // ============================================================
-    // 🎊 4️⃣ GERENCIAR EVENTOS (CRUD)
+    // 🎊 4️⃣ GERENCIAR EVENTOS — CRUD completo
     // ============================================================
     if (modo === "eventos") {
       const { id_evento, titulo, descricao, data_evento, imagens, ativo } =
@@ -94,11 +104,12 @@ export default async function handler(req, res) {
       switch (acao) {
         // ➕ Criar evento
         case "criar":
-          if (!titulo || !descricao)
+          if (!titulo || !descricao) {
             return res.status(400).json({
               sucesso: false,
               mensagem: "Título e descrição são obrigatórios.",
             });
+          }
 
           const novoEvento = await base("eventos").create([
             {
@@ -118,13 +129,14 @@ export default async function handler(req, res) {
             evento: novoEvento,
           });
 
-        // ✏️ Atualizar evento existente
+        // ✏️ Atualizar evento
         case "atualizar":
-          if (!id_evento)
+          if (!id_evento) {
             return res.status(400).json({
               sucesso: false,
-              mensagem: "ID do evento obrigatório.",
+              mensagem: "ID do evento é obrigatório para atualização.",
             });
+          }
 
           const eventoAtualizado = await base("eventos").update([
             {
@@ -148,11 +160,12 @@ export default async function handler(req, res) {
 
         // ❌ Excluir evento
         case "excluir":
-          if (!id_evento)
+          if (!id_evento) {
             return res.status(400).json({
               sucesso: false,
-              mensagem: "ID do evento obrigatório.",
+              mensagem: "ID do evento é obrigatório para exclusão.",
             });
+          }
 
           await base("eventos").destroy([id_evento]);
 
@@ -160,11 +173,17 @@ export default async function handler(req, res) {
             sucesso: true,
             mensagem: "Evento excluído com sucesso.",
           });
+
+        default:
+          return res.status(400).json({
+            sucesso: false,
+            mensagem: "Ação inválida para modo=eventos.",
+          });
       }
     }
 
     // ============================================================
-    // 🖼️ 5️⃣ ATUALIZAR GALERIA / CARROSSEL
+    // 🖼️ 5️⃣ GERENCIAR GALERIA / CARROSSEL
     // ============================================================
     if (modo === "galeria") {
       const { imagens } = req.body;
@@ -188,7 +207,7 @@ export default async function handler(req, res) {
 
       return res.status(201).json({
         sucesso: true,
-        mensagem: "Carrossel atualizado com sucesso.",
+        mensagem: "Galeria atualizada com sucesso.",
         galeria: novaGaleria,
       });
     }
@@ -196,9 +215,10 @@ export default async function handler(req, res) {
     // ============================================================
     // 🚫 6️⃣ MODO INVÁLIDO
     // ============================================================
-    return res
-      .status(400)
-      .json({ sucesso: false, mensagem: "Modo inválido ou não suportado." });
+    return res.status(400).json({
+      sucesso: false,
+      mensagem: "Modo inválido ou não suportado.",
+    });
   } catch (erro) {
     console.error("❌ Erro na API admin:", erro);
     return res.status(500).json({
