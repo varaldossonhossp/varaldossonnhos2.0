@@ -1,0 +1,23 @@
+{
+  "version": 2,
+  "builds": [
+    { "src": "api/**/*.js", "use": "@vercel/node" },
+    { "src": "*.html", "use": "@vercel/static" },
+    { "src": "pages/**/*.html", "use": "@vercel/static" },
+    { "src": "css/**/*.css", "use": "@vercel/static" },
+    { "src": "js/**/*.js", "use": "@vercel/static" },
+    { "src": "componentes/**/*.html", "use": "@vercel/static" },
+    { "src": "imagens/**/*", "use": "@vercel/static" }
+  ],
+  "routes": [
+    { "src": "/", "dest": "/index.html" },
+    { "src": "/cartinhas", "dest": "/pages/cartinhas.html" },
+    { "src": "/carrinho", "dest": "/pages/carrinho.html" },
+    { "src": "/admin", "dest": "/pages/admin.html" },
+    { "src": "/api/(.*)", "dest": "/api/$1.js" }
+  ],
+  "env": {
+    "NODE_ENV": "production",
+    "NODE_VERSION": "20.x"
+  }
+}
