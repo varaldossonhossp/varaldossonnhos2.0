@@ -12,14 +12,14 @@
   <title>Fantástica Fábrica de Sonhos 💙 | Varal dos Sonhos</title>
 
   <!-- Ícone e fontes -->
-  <link rel="icon" href="/imagens/favicon.png" type="image/png" />
+  <link rel="icon" href="imagens/favicon.png" type="image/png" />
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet" />
 
   <!-- CSS principal -->
-  <link rel="stylesheet" href="/css/style.css" />
-  <link rel="stylesheet" href="/css/header.css" />
-  <link rel="stylesheet" href="/css/footer.css" />
-  <link rel="stylesheet" href="/css/cloudinho.css" />
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/header.css" />
+  <link rel="stylesheet" href="css/footer.css" />
+  <link rel="stylesheet" href="css/cloudinho.css" />
 </head>
 
 <body>
@@ -36,7 +36,7 @@
       <!-- 💭 Lado esquerdo: Mensagem e botões -->
       <div class="lado-esquerdo">
         <div class="nuvem">
-          <img src="/imagens/nuvem.png" alt="Fantástica Fábrica de Sonhos" class="nuvem-flutuante" />
+          <img src="imagens/nuvem.png" alt="Fantástica Fábrica de Sonhos" class="nuvem-flutuante" />
         </div>
 
         <p class="mensagem">
@@ -45,8 +45,8 @@
         </p>
 
         <div class="botoes-acao">
-          <a href="/pages/Cartinhas.html" class="btn-acao principal">Quero Adotar um Sonho</a>
-          <a href="/pages/ComoFunciona.html" class="btn-acao secundario">Como Funciona</a>
+          <a href="pages/Cartinhas.html" class="btn-acao principal">Quero Adotar um Sonho</a>
+          <a href="pages/ComoFunciona.html" class="btn-acao secundario">Como Funciona</a>
         </div>
 
         <div class="texto-transparente">
@@ -62,13 +62,13 @@
           <div class="carrossel" id="carrossel-eventos">
             <!-- Imagens dinâmicas serão carregadas via /js/galeria.js -->
             <div class="slide fade">
-              <img src="/imagens/evento1.jpg" alt="Evento exemplo 1" />
+              <img src="imagens/evento1.jpg" alt="Evento exemplo 1" />
             </div>
             <div class="slide fade">
-              <img src="/imagens/evento2.jpg" alt="Evento exemplo 2" />
+              <img src="imagens/evento2.jpg" alt="Evento exemplo 2" />
             </div>
             <div class="slide fade">
-              <img src="/imagens/evento3.jpg" alt="Evento exemplo 3" />
+              <img src="imagens/evento3.jpg" alt="Evento exemplo 3" />
             </div>
           </div>
         </section>
@@ -78,7 +78,7 @@
     <!-- 🎉 Faixa final -->
     <section class="faixa-eventos">
       <p>🎁 Acompanhe nossos eventos e ajude a espalhar alegria!</p>
-      <a href="/pages/Eventos.html" class="btn-eventos">Ver Todos os Eventos</a>
+      <a href="pages/Eventos.html" class="btn-eventos">Ver Todos os Eventos</a>
     </section>
   </main>
 
@@ -108,12 +108,12 @@
     }
 
     // Carrega os três componentes fixos da página
-    carregarComponente("header", "/componentes/header.html");
-    carregarComponente("footer", "/componentes/footer.html");
-    carregarComponente("cloudinho", "/componentes/cloudinho.html");
+    carregarComponente("header", "componentes/header.html");
+    carregarComponente("footer", "componentes/footer.html");
+    carregarComponente("cloudinho", "componentes/cloudinho.html");
   </script>
 
   <!-- Carrossel e integração com API -->
-  <script src="/js/galeria.js"></script>
+  <script src="js/galeria.js"></script>
 </body>
 </html>
