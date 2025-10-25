@@ -1,0 +1,137 @@
+/* ============================================================
+💙 VARAL DOS SONHOS — cloudinho.css
+---------------------------------------------------------------
+Estilos do assistente virtual flutuante
+============================================================ */
+
+#cloudinho-wrapper {
+  position: fixed;
+  bottom: 20px;
+  right: 25px;
+  z-index: 9999;
+  font-family: "Poppins", sans-serif;
+}
+
+/* ===== BOTÃO FLUTUANTE ===== */
+#cloudinho-toggle img {
+  width: 75px;
+  cursor: pointer;
+  animation: balancar 3s ease-in-out infinite;
+  filter: drop-shadow(0 3px 4px rgba(0, 0, 0, 0.2));
+  transition: transform 0.3s;
+}
+
+#cloudinho-toggle img:hover {
+  transform: scale(1.05);
+}
+
+/* Animação fofinha de balanço */
+@keyframes balancar {
+  0% { transform: translateY(0) rotate(0deg); }
+  25% { transform: translateY(-4px) rotate(-2deg); }
+  50% { transform: translateY(0) rotate(2deg); }
+  75% { transform: translateY(4px) rotate(-1deg); }
+  100% { transform: translateY(0) rotate(0deg); }
+}
+
+/* ===== JANELA DO CHAT ===== */
+#cloudinho-chat {
+  width: 310px;
+  height: 420px;
+  background: #ffffff;
+  border-radius: 18px;
+  box-shadow: 0 4px 25px rgba(0, 0, 0, 0.25);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: absolute;
+  bottom: 90px;
+  right: 0;
+  opacity: 1;
+  transform: scale(1);
+  transition: all 0.3s ease;
+}
+
+#cloudinho-chat.hidden {
+  display: none;
+}
+
+/* ===== CABEÇALHO DO CHAT ===== */
+#cloudinho-header {
+  background: linear-gradient(135deg, #a3d9ff, #c4e1ff);
+  color: #1f355b;
+  font-weight: 600;
+  padding: 10px;
+  text-align: center;
+  position: relative;
+  border-bottom: 1px solid #e6f2ff;
+}
+
+#cloudinho-close {
+  position: absolute;
+  right: 10px;
+  top: 6px;
+  cursor: pointer;
+  font-size: 18px;
+  color: #1f355b;
+}
+
+/* ===== MENSAGENS ===== */
+#cloudinho-messages {
+  flex: 1;
+  padding: 10px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.cloudinho-msg {
+  margin: 6px 0;
+  padding: 8px 12px;
+  border-radius: 10px;
+  max-width: 80%;
+  word-wrap: break-word;
+  font-size: 14px;
+}
+
+.user-msg {
+  background: #cde6ff;
+  align-self: flex-end;
+  margin-left: auto;
+}
+
+.bot-msg {
+  background: #f3f6fa;
+  align-self: flex-start;
+  border-left: 3px solid #4A90E2;
+}
+
+/* ===== ÁREA DE DIGITAÇÃO ===== */
+#cloudinho-input-area {
+  display: flex;
+  border-top: 1px solid #ddd;
+  background: #f9f9f9;
+}
+
+#cloudinho-input {
+  flex: 1;
+  border: none;
+  padding: 10px;
+  outline: none;
+  font-size: 14px;
+  border-radius: 0 0 0 16px;
+}
+
+#cloudinho-send {
+  background: #4A90E2;
+  border: none;
+  color: white;
+  padding: 10px 15px;
+  cursor: pointer;
+  font-weight: bold;
+  border-radius: 0 0 16px 0;
+}
+
+#cloudinho-send:hover {
+  background: #3b7bd6;
+}

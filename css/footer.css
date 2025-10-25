@@ -1,0 +1,40 @@
+/* ============================================================
+💙 VARAL DOS SONHOS — footer.css
+---------------------------------------------------------------
+Rodapé fixo com créditos e link do Instagram
+============================================================ */
+
+.footer-site {
+  background: linear-gradient(90deg, #4A90E2, #6fb3ff);
+  color: white;
+  text-align: center;
+  padding: 20px;
+  font-size: 14px;
+  font-weight: 500;
+  position: relative;
+}
+
+.footer-site .redes-sociais {
+  margin-top: 8px;
+}
+
+.footer-site .icone-instagram {
+  width: 22px;
+  vertical-align: middle;
+  margin-right: 6px;
+  transition: transform 0.3s;
+}
+
+.footer-site a {
+  color: white;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.footer-site a:hover .icone-instagram {
+  transform: scale(1.1);
+}
+
+.footer-site a:hover {
+  text-decoration: underline;
+}

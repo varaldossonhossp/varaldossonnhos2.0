@@ -9,9 +9,15 @@ nuvem animada, faixas e responsividade.
 /* ====== ESTILOS GERAIS ====== */
 body {
   margin: 0;
-  background-color: #E6F2FF; /* azul clarinho de fundo */
+  background-color: #E6F2FF; /* Azul clarinho de fundo */
   font-family: "Poppins", sans-serif;
-  color: #1f355b; /* azul escuro padrão dos textos */
+  color: #1f355b; /* Azul escuro padrão dos textos */
+  overflow-x: hidden;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: "Poppins", sans-serif;
+  margin: 0;
 }
 
 /* ====== CONTAINER PRINCIPAL DA HOME ====== */
@@ -22,10 +28,7 @@ body {
   padding: 40px 0;
 }
 
-/* ====== SEÇÃO DE INTRODUÇÃO ======
-   Divide a tela entre lado esquerdo (texto/botões)
-   e lado direito (carrossel de eventos)
-*/
+/* ====== SEÇÃO DE INTRODUÇÃO ====== */
 .intro {
   display: flex;
   justify-content: space-around;
@@ -36,7 +39,7 @@ body {
 }
 
 /* ====== COLUNAS ====== */
-.lado-esquerdo, 
+.lado-esquerdo,
 .lado-direito {
   flex: 1 1 400px;
   text-align: center;
@@ -58,11 +61,10 @@ body {
   font-size: 18px;
   font-weight: 500;
   margin-top: 10px;
+  line-height: 1.5;
 }
 
-/* ====== BOTÕES DE AÇÃO ======
-   “Quero Adotar um Sonho” e “Como Funciona”
-*/
+/* ====== BOTÕES DE AÇÃO ====== */
 .botoes-acao {
   margin-top: 20px;
   display: flex;
@@ -78,6 +80,7 @@ body {
   border-radius: 25px;
   font-weight: 600;
   transition: all 0.3s ease;
+  display: inline-block;
 }
 
 /* Botão principal (azul cheio) */
@@ -119,34 +122,39 @@ body {
 
 /* ============================================================
 🎠 CARROSSEL DE EVENTOS AUTOMÁTICO
-Busca imagens da tabela "eventos" (Airtable)
-e alterna entre elas a cada 4 segundos.
 ============================================================ */
-
-/* Container principal do carrossel */
 .carrossel {
   position: relative;
   width: 90%;
-  max-width: 500px;
+  max-width: 520px;
   overflow: hidden;
   border-radius: 20px;
   box-shadow: 0 4px 15px rgba(0,0,0,0.15);
   background: #fff;
 }
 
-/* Cada slide (imagem + legenda) */
-.slide {
-  display: none; /* apenas um visível por vez */
-  text-align: center;
-  transition: opacity 0.8s ease-in-out;
-}
-
-.slide img {
+.carrossel img {
   width: 100%;
+  height: auto;
   border-radius: 20px;
+  object-fit: cover;
 }
 
-/* Legenda sobre a imagem */
+/* Cada slide */
+.slide {
+  display: none;
+}
+
+.fade {
+  animation-name: fade;
+  animation-duration: 1.5s;
+}
+@keyframes fade {
+  from { opacity: 0.4; }
+  to { opacity: 1; }
+}
+
+/* Legenda sobre a imagem (opcional) */
 .slide .info {
   background-color: rgba(255, 255, 255, 0.9);
   padding: 10px;
@@ -165,53 +173,6 @@ e alterna entre elas a cada 4 segundos.
   margin: 5px 0;
 }
 
-/* ====== CONTROLES (SETAS E BOLINHAS) ====== */
-.seta {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  background-color: rgba(255,255,255,0.8);
-  border: none;
-  cursor: pointer;
-  padding: 8px 12px;
-  border-radius: 50%;
-  font-size: 18px;
-  transition: background 0.3s;
-}
-
-.seta:hover {
-  background-color: rgba(255,255,255,1);
-}
-
-.seta.esquerda {
-  left: 10px;
-}
-
-.seta.direita {
-  right: 10px;
-}
-
-/* Bolinhas de navegação */
-.bolinhas {
-  text-align: center;
-  margin-top: 10px;
-}
-
-.bolinha {
-  display: inline-block;
-  width: 10px;
-  height: 10px;
-  margin: 4px;
-  background-color: #d0e3ff;
-  border-radius: 50%;
-  cursor: pointer;
-  transition: background 0.3s;
-}
-
-.bolinha.ativa {
-  background-color: #4A90E2;
-}
-
 /* ============================================================
 🌈 FAIXA DE EVENTOS (BARRA INFERIOR AZUL)
 ============================================================ */
@@ -219,10 +180,16 @@ e alterna entre elas a cada 4 segundos.
   background: linear-gradient(90deg, #4A90E2, #6fb3ff);
   color: #fff;
   text-align: center;
-  padding: 20px;
+  padding: 25px 20px;
   width: 100%;
-  margin-top: 40px;
-  box-shadow: 0 -4px 10px rgba(0,0,0,0.1);
+  margin-top: 60px;
+  box-shadow: 0 -4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.faixa-eventos p {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 500;
 }
 
 /* Botão da faixa inferior */
@@ -234,6 +201,8 @@ e alterna entre elas a cada 4 segundos.
   border-radius: 20px;
   font-weight: 600;
   margin-left: 10px;
+  display: inline-block;
+  transition: all 0.3s ease;
 }
 .btn-eventos:hover {
   background: #e4efff;
@@ -253,5 +222,9 @@ e alterna entre elas a cada 4 segundos.
 
   .btn-acao {
     width: 80%;
+  }
+
+  .faixa-eventos {
+    padding: 20px 10px;
   }
 }
