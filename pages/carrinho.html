@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <!-- ============================================================
+       💙 VARAL DOS SONHOS — Carrinho.html
+       ------------------------------------------------------------
+       Mostra as cartinhas escolhidas e permite confirmar adoção
+  ============================================================ -->
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Meu Carrinho 💙 | Varal dos Sonhos</title>
+
+  <link rel="icon" href="/imagens/favicon.png" type="image/png" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/carrinho.css" />
+</head>
+<body>
+  <div id="header"></div>
+
+  <main class="carrinho-container">
+    <h1>🧺 Meu Carrinho</h1>
+    <p>Revise suas cartinhas e confirme a adoção.</p>
+
+    <div id="lista-carrinho" class="lista-carrinho"></div>
+
+    <section class="confirmar">
+      <label for="ponto">📍 Escolha o ponto de coleta:</label>
+      <select id="ponto" required>
+        <option value="">Selecione...</option>
+      </select>
+
+      <button id="confirmarAdocao" class="btn-confirmar">Confirmar Adoção 💌</button>
+    </section>
+  </main>
+
+  <div id="footer"></div>
+  <div id="cloudinho"></div>
+
+  <script src="/js/header.js"></script>
+  <script src="/js/footer.js"></script>
+  <script src="/js/cloudinho.js"></script>
+  <script src="/js/carrinho.js"></script>
+</body>
+</html>

@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <!-- ============================================================
+       💼 VARAL DOS SONHOS — Painel Administrativo (admin.html)
+       ------------------------------------------------------------
+       Permite ao administrador gerenciar os eventos exibidos na home.
+       Usa a rota segura /api/admin.js com ADMIN_SECRET.
+  ============================================================ -->
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Painel Administrativo 💼 | Varal dos Sonhos</title>
+  <link rel="stylesheet" href="/css/style.css" />
+  <style>
+    /* ============================== */
+    /* 🎨 ESTILO EXCLUSIVO DO PAINEL */
+    /* ============================== */
+    .admin-container {
+      max-width: 900px;
+      margin: 50px auto;
+      background: #ffffff;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      padding: 30px;
+    }
+
+    h1 {
+      color: #1f355b;
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    form {
+      display: grid;
+      gap: 15px;
+    }
+
+    label {
+      font-weight: 600;
+      color: #1f355b;
+    }
+
+    input, textarea {
+      width: 100%;
+      padding: 10px;
+      border-radius: 6px;
+      border: 1px solid #bcd3f7;
+      font-family: "Poppins", sans-serif;
+    }
+
+    input[type="file"] {
+      background: #f5faff;
+    }
+
+    button {
+      background: #4A90E2;
+      color: #fff;
+      padding: 12px 25px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.3s ease;
+    }
+
+    button:hover {
+      background: #3b7bd6;
+    }
+
+    .lista-eventos {
+      margin-top: 40px;
+    }
+
+    .evento {
+      border: 1px solid #d9e7ff;
+      border-radius: 10px;
+      padding: 15px;
+      margin-bottom: 15px;
+      background: #f7faff;
+    }
+
+    .evento img {
+      max-width: 120px;
+      border-radius: 6px;
+      margin-right: 10px;
+    }
+
+    .acoes {
+      margin-top: 10px;
+    }
+
+    .acoes button {
+      background: #1f355b;
+      margin-right: 5px;
+    }
+
+    .acoes button.excluir {
+      background: #e74c3c;
+    }
+
+    .mensagem {
+      text-align: center;
+      margin-top: 10px;
+      font-weight: 500;
+    }
+  </style>
+</head>
+<body>
+  <div class="admin-container">
+    <h1>🎛️ Painel Administrativo — Varal dos Sonhos</h1>
+
+    <!-- 🔑 Campo de autenticação -->
+    <div id="auth-section">
+      <label for="token">🔒 Informe o token administrativo:</label>
+      <input type="password" id="token" placeholder="Cole aqui seu ADMIN_SECRET..." />
+      <button id="btnLogin">Entrar</button>
+      <p id="authMsg" class="mensagem"></p>
+    </div>
+
+    <!-- 🎨 Formulário de criação de evento -->
+    <form id="formEvento" style="display:none;">
+      <h2>📅 Criar Novo Evento</h2>
+      <label>Título:</label>
+      <input type="text" id="titulo" required />
+
+      <label>Descrição:</label>
+      <textarea id="descricao" rows="3" required></textarea>
+
+      <label>Data do Evento:</label>
+      <input type="date" id="data_evento" />
+
+      <label>Imagens (URLs separadas por vírgula):</label>
+      <input type="text" id="imagens" placeholder="https://exemplo.com/imagem1.jpg, https://exemplo.com/imagem2.jpg" />
+
+      <button type="submit">💾 Salvar Evento</button>
+      <p id="msg" class="mensagem"></p>
+    </form>
+
+    <!-- 📋 Lista de eventos -->
+    <div id="listaEventos" class="lista-eventos" style="display:none;">
+      <h2>🗂️ Eventos Cadastrados</h2>
+      <div id="eventos"></div>
+    </div>
+  </div>
+
+  <script src="/js/admin.js"></script>
+</body>
+</html>
