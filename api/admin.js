@@ -1,230 +1,114 @@
 // ============================================================
-// 💼 VARAL DOS SONHOS — /api/admin.js
-// ------------------------------------------------------------
-// Gerencia as funções administrativas do projeto:
-//   • GET  → lista eventos ativos (usado no carrossel da Home)
-//   • POST modo=eventos  → CRUD de eventos (restrito)
-//   • POST modo=galeria  → atualizar imagens do carrossel (restrito)
-//   • POST modo=adocao   → confirmar/alterar status de adoções
-// ------------------------------------------------------------
-// ⚙️ Segurança: operações POST exigem token ADMIN_SECRET (.env.local)
+// 💼 VARAL DOS SONHOS — /api/admin.js (Airtable + Vercel)
 // ============================================================
-
 import Airtable from "airtable";
 
-// Conexão com o banco Airtable
-const base = new Airtable({ apiKey: process.env.AIRTABLE_API_KEY })
-  .base(process.env.AIRTABLE_BASE_ID);
+export const config = { runtime: "nodejs" };
+
+const ok = (res, data) => res.status(200).json(data);
+const err = (res, code, msg) => res.status(code).json({ sucesso: false, mensagem: msg });
+
+function getToken(req) {
+  return (
+    req.headers["x-admin-token"] ||
+    req.query.token_admin ||
+    (req.body && req.body.token_admin) ||
+    ""
+  );
+}
+
+function requireAuth(req, res) {
+  const secret = process.env.ADMIN_SECRET;
+  if (!secret) return err(res, 500, "ADMIN_SECRET não configurado.");
+  const token = getToken(req);
+  if (!token) return err(res, 401, "Token ausente.");
+  if (token !== secret) return err(res, 401, "Token inválido.");
+  return true;
+}
+
+function getAirtable() {
+  const apiKey = process.env.AIRTABLE_API_KEY;
+  const baseId = process.env.AIRTABLE_BASE_ID;
+  const table = process.env.AIRTABLE_EVENTOS_TABLE || "eventos";
+  if (!apiKey || !baseId) throw new Error("Chaves do Airtable ausentes.");
+  const base = new Airtable({ apiKey }).base(baseId);
+  return { base, table };
+}
 
 export default async function handler(req, res) {
+  // CORS
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type,x-admin-token");
+  if (req.method === "OPTIONS") return res.status(204).end();
+
+  const auth = requireAuth(req, res);
+  if (auth !== true) return;
+
+  const { base, table } = getAirtable();
+
   try {
-    // ============================================================
-    // 🔹 1️⃣ REQUISIÇÃO PÚBLICA (GET) — Lista de eventos ativos
-    // ============================================================
     if (req.method === "GET") {
       const { tipo } = req.query;
+      if (tipo !== "eventos") return err(res, 400, "Tipo inválido.");
 
-      // Exemplo: /api/admin?tipo=eventos
-      if (tipo === "eventos") {
-        const registros = await base("eventos")
-          .select({
-            filterByFormula: "ativo = 1", // apenas eventos ativos
-            sort: [{ field: "data_evento", direction: "desc" }],
-          })
-          .all();
+      const registros = await base(table).select().all();
+      return ok(res, { sucesso: true, eventos: registros });
+    }
 
-        const eventos = registros.map((r) => ({
-          id: r.id,
-          titulo: r.fields.titulo,
-          descricao: r.fields.descricao,
-          data_evento: r.fields.data_evento,
-          imagem: r.fields.imagem || [],
-          ativo: r.fields.ativo,
-        }));
+    if (req.method === "POST") {
+      const { acao, id_evento, fields } = req.body || {};
 
-        return res.status(200).json({ sucesso: true, eventos });
+      // Ação: criar — mapeia diretamente os campos da tabela
+      if (acao === "criar") {
+        const {
+          nome_evento,
+          local_evento,
+          descricao,
+          data_evento,
+          data_limite_recebimento,
+          destacar_na_homepage,
+          imagem, // [{url}]
+        } = req.body || {};
+
+        const newFields = {
+          nome_evento,
+          local_evento,
+          descricao,
+          data_evento: data_evento || null,
+          data_limite_recebimento: data_limite_recebimento || null,
+          destacar_na_homepage: !!destacar_na_homepage,
+          imagem: Array.isArray(imagem) ? imagem : [],
+          status_evento: "em andamento",
+          ativo: true,
+        };
+
+        const created = await base(table).create([{ fields: newFields }]);
+        return ok(res, { sucesso: true, id: created[0].id });
       }
 
-      return res.status(400).json({
-        sucesso: false,
-        mensagem: "Tipo de consulta inválido ou ausente.",
-      });
-    }
+      // Ação: atualizar — permite atualizar qualquer subconjunto de campos
+      if (acao === "atualizar") {
+        if (!id_evento) return err(res, 400, "id_evento ausente.");
+        if (!fields || typeof fields !== "object") return err(res, 400, "fields ausente/ inválido.");
 
-    // ============================================================
-    // 🔒 2️⃣ REQUISIÇÕES ADMINISTRATIVAS (POST)
-    // ============================================================
-    const { modo, acao, token_admin } = req.body;
-
-    // Segurança — valida o token do administrador
-    if (token_admin !== process.env.ADMIN_SECRET) {
-      return res.status(401).json({
-        sucesso: false,
-        mensagem: "Acesso negado. Token inválido ou ausente.",
-      });
-    }
-
-    // ============================================================
-    // 🎁 3️⃣ GERENCIAR ADOÇÕES — confirmação/entrega
-    // ============================================================
-    if (modo === "adocao") {
-      const { id, status } = req.body;
-
-      if (!id || !status) {
-        return res.status(400).json({
-          sucesso: false,
-          mensagem: "Campos obrigatórios ausentes (id, status).",
-        });
+        await base(table).update([{ id: id_evento, fields }]);
+        return ok(res, { sucesso: true });
       }
 
-      const atualizado = await base("adocoes").update([
-        {
-          id,
-          fields: {
-            status,
-            data_ultima_atualizacao: new Date().toISOString(),
-          },
-        },
-      ]);
-
-      return res.status(200).json({
-        sucesso: true,
-        mensagem: "Status da adoção atualizado com sucesso.",
-        registro: atualizado,
-      });
-    }
-
-    // ============================================================
-    // 🎊 4️⃣ GERENCIAR EVENTOS — CRUD completo
-    // ============================================================
-    if (modo === "eventos") {
-      const { id_evento, titulo, descricao, data_evento, imagens, ativo } =
-        req.body;
-
-      switch (acao) {
-        // ➕ Criar evento
-        case "criar":
-          if (!titulo || !descricao) {
-            return res.status(400).json({
-              sucesso: false,
-              mensagem: "Título e descrição são obrigatórios.",
-            });
-          }
-
-          const novoEvento = await base("eventos").create([
-            {
-              fields: {
-                titulo,
-                descricao,
-                data_evento: data_evento || new Date().toISOString(),
-                ativo: ativo ?? true,
-                imagem: imagens || [],
-              },
-            },
-          ]);
-
-          return res.status(201).json({
-            sucesso: true,
-            mensagem: "Evento criado com sucesso.",
-            evento: novoEvento,
-          });
-
-        // ✏️ Atualizar evento
-        case "atualizar":
-          if (!id_evento) {
-            return res.status(400).json({
-              sucesso: false,
-              mensagem: "ID do evento é obrigatório para atualização.",
-            });
-          }
-
-          const eventoAtualizado = await base("eventos").update([
-            {
-              id: id_evento,
-              fields: {
-                titulo,
-                descricao,
-                data_evento,
-                ativo,
-                imagem: imagens,
-                data_ultima_atualizacao: new Date().toISOString(),
-              },
-            },
-          ]);
-
-          return res.status(200).json({
-            sucesso: true,
-            mensagem: "Evento atualizado com sucesso.",
-            evento: eventoAtualizado,
-          });
-
-        // ❌ Excluir evento
-        case "excluir":
-          if (!id_evento) {
-            return res.status(400).json({
-              sucesso: false,
-              mensagem: "ID do evento é obrigatório para exclusão.",
-            });
-          }
-
-          await base("eventos").destroy([id_evento]);
-
-          return res.status(200).json({
-            sucesso: true,
-            mensagem: "Evento excluído com sucesso.",
-          });
-
-        default:
-          return res.status(400).json({
-            sucesso: false,
-            mensagem: "Ação inválida para modo=eventos.",
-          });
-      }
-    }
-
-    // ============================================================
-    // 🖼️ 5️⃣ GERENCIAR GALERIA / CARROSSEL
-    // ============================================================
-    if (modo === "galeria") {
-      const { imagens } = req.body;
-
-      if (!imagens || imagens.length === 0) {
-        return res.status(400).json({
-          sucesso: false,
-          mensagem: "Nenhuma imagem fornecida para atualização.",
-        });
+      // Ação: excluir
+      if (acao === "excluir") {
+        if (!id_evento) return err(res, 400, "id_evento ausente.");
+        await base(table).destroy([id_evento]);
+        return ok(res, { sucesso: true });
       }
 
-      const novaGaleria = await base("galeria").create([
-        {
-          fields: {
-            titulo: "Atualização automática do carrossel",
-            imagens,
-            data_envio: new Date().toISOString(),
-          },
-        },
-      ]);
-
-      return res.status(201).json({
-        sucesso: true,
-        mensagem: "Galeria atualizada com sucesso.",
-        galeria: novaGaleria,
-      });
+      return err(res, 400, "Ação inválida.");
     }
 
-    // ============================================================
-    // 🚫 6️⃣ MODO INVÁLIDO
-    // ============================================================
-    return res.status(400).json({
-      sucesso: false,
-      mensagem: "Modo inválido ou não suportado.",
-    });
-  } catch (erro) {
-    console.error("❌ Erro na API admin:", erro);
-    return res.status(500).json({
-      sucesso: false,
-      mensagem: "Erro interno na API admin.",
-      detalhe: erro.message,
-    });
+    return err(res, 405, "Método não suportado.");
+  } catch (e) {
+    console.error("Erro /api/admin:", e);
+    return err(res, 500, e.message || "Erro interno.");
   }
 }

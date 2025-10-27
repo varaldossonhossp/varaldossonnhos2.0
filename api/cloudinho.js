@@ -1,40 +1,64 @@
-// 💬 Cloudinho - Chat com base de conhecimento (Airtable)
-document.addEventListener("DOMContentLoaded", () => {
-  const painel = document.getElementById("painelCloudinho");
-  const botao = document.getElementById("btnCloudinho");
-  const fechar = document.getElementById("fecharCloudinho");
-  const form = document.getElementById("formCloudinho");
-  const campo = document.getElementById("campoPergunta");
-  const chat = document.getElementById("chatMensagens");
+// ============================================================
+// ☁️ VARAL DOS SONHOS — /api/cloudinho.js
+// ------------------------------------------------------------
+// Chatbot Cloudinho: busca respostas na tabela "cloudinho".
+// Campos: pergunta, palavras_chave, resposta
+// ============================================================
 
-  const append = (txt, quem) => {
-    const div = document.createElement("div");
-    div.className = "msg " + quem;
-    div.textContent = txt;
-    chat.appendChild(div);
-    chat.scrollTop = chat.scrollHeight;
-  };
+import Airtable from "airtable";
+export const config = { runtime: "nodejs" };
 
-  botao.addEventListener("click", () => painel.toggleAttribute("hidden"));
-  fechar.addEventListener("click", () => painel.setAttribute("hidden", true));
+export default async function handler(req, res) {
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+  if (req.method === "OPTIONS") return res.status(204).end();
 
-  form.addEventListener("submit", async e => {
-    e.preventDefault();
-    const pergunta = campo.value.trim();
-    if (!pergunta) return;
-    append(pergunta, "usuario");
-    campo.value = "";
+  try {
+    const base = new Airtable({ apiKey: process.env.AIRTABLE_API_KEY })
+      .base(process.env.AIRTABLE_BASE_ID);
+    const table = process.env.AIRTABLE_CLOUDINHO_TABLE || "cloudinho";
 
-    try {
-      const r = await fetch("/api/cloudinho", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ pergunta })
-      });
-      const j = await r.json();
-      append(j.resposta || "Ainda não aprendi isso 💭", "bot");
-    } catch {
-      append("Ops, estou sem conexão agora 😅", "bot");
+    if (req.method === "POST") {
+      const { pergunta } = req.body || {};
+      if (!pergunta)
+        return res.status(400).json({ sucesso: false, mensagem: "Pergunta ausente." });
+
+      const registros = await base(table).select().all();
+
+      const texto = pergunta.toLowerCase();
+      let melhor = registros.find((r) =>
+        (r.fields.palavras_chave || "").toLowerCase().split(",").some((kw) => texto.includes(kw.trim()))
+      );
+
+      if (!melhor) {
+        melhor = registros.find((r) => texto.includes(r.fields.pergunta?.toLowerCase() || ""));
+      }
+
+      if (melhor) {
+        return res.status(200).json({
+          sucesso: true,
+          resposta: melhor.fields.resposta,
+          pergunta: melhor.fields.pergunta,
+        });
+      } else {
+        return res.status(200).json({
+          sucesso: true,
+          resposta:
+            "Ainda não aprendi sobre isso 😅. Mas você pode perguntar outra coisa ou falar com nossos voluntários!",
+        });
+      }
     }
-  });
-});
+
+    if (req.method === "GET") {
+      const todos = await base(table).select().all();
+      const lista = todos.map((r) => ({ id: r.id, ...r.fields }));
+      return res.status(200).json({ sucesso: true, base: lista });
+    }
+
+    return res.status(405).json({ sucesso: false, mensagem: "Método não suportado." });
+  } catch (e) {
+    console.error("Erro /api/cloudinho:", e);
+    res.status(500).json({ sucesso: false, mensagem: e.message });
+  }
+}
