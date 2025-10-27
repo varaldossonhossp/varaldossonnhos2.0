@@ -1,9 +1,11 @@
 // ============================================================
-// ☁️ CLOUDINHO INTELIGENTE — v5.3.2 (fix ready + balão/chat)
+// ☁️ CLOUDINHO INTELIGENTE — v5.4 (conexão direta + balão + chat)
+// ------------------------------------------------------------
+// Busca respostas da tabela "cloudinho" no Airtable via API
 // ============================================================
 
 async function inicializarCloudinho() {
-  // Aguarda o HTML do componente ser injetado
+  // Aguarda o HTML do componente ser carregado
   let tentativas = 0;
   while (!document.querySelector(".cloudinho-botao") && tentativas < 20) {
     await new Promise(r => setTimeout(r, 300));
@@ -22,7 +24,9 @@ async function inicializarCloudinho() {
     return;
   }
 
-  // === 💬 Balão automático de dicas ===
+  // ============================================================
+  // 💬 Balão flutuante automático
+  // ============================================================
   const mensagensAuto = [
     "Oi 💙 Quer ajuda para adotar um sonho?",
     "Sabia que você pode escolher o ponto de coleta?",
@@ -31,7 +35,7 @@ async function inicializarCloudinho() {
   ];
   let indexMsg = 0;
 
-  // Cria o balão
+  // Cria o balão (se não existir)
   let balao = document.querySelector(".balao-cloudinho");
   if (!balao) {
     balao = document.createElement("div");
@@ -53,23 +57,34 @@ async function inicializarCloudinho() {
   mostrarBalao();
   setInterval(mostrarBalao, 12000);
 
-  // === ☁️ Verifica conexão ===
+  // ============================================================
+  // 🔗 Verifica se a API do Cloudinho está acessível
+  // ============================================================
   async function verificarConexao() {
     try {
-      const resp = await fetch("/api/health", { cache: "no-store" });
-      return resp.ok;
-    } catch {
+      const resp = await fetch("/api/cloudinho", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ pergunta: "teste" }),
+      });
+      const data = await resp.json();
+      return data?.sucesso !== false;
+    } catch (e) {
+      console.warn("Cloudinho offline:", e.message);
       return false;
     }
   }
 
-  // === 💬 Abrir o chat ===
+  // ============================================================
+  // 💬 Abre e fecha o chat
+  // ============================================================
   mascote.addEventListener("click", async () => {
     const aberto = chat.style.display === "flex";
     chat.style.display = aberto ? "none" : "flex";
 
     if (!aberto) {
       mensagens.innerHTML = "";
+
       const msgInicial = document.createElement("div");
       msgInicial.className = "msg bot";
       msgInicial.textContent = "Oi 💙 Como posso te ajudar hoje?";
@@ -86,12 +101,13 @@ async function inicializarCloudinho() {
     }
   });
 
-  // === ❌ Fechar ===
   if (fechar) {
     fechar.addEventListener("click", () => (chat.style.display = "none"));
   }
 
-  // === 📩 Enviar pergunta ===
+  // ============================================================
+  // 📩 Envia mensagem e exibe resposta
+  // ============================================================
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
     const texto = campo.value.trim();
@@ -122,7 +138,9 @@ async function inicializarCloudinho() {
     mensagens.scrollTop = mensagens.scrollHeight;
   });
 
-  // === 🔍 Consulta API ===
+  // ============================================================
+  // 🔍 Chama a API /api/cloudinho para obter resposta do Airtable
+  // ============================================================
   async function buscarResposta(pergunta) {
     try {
       const resp = await fetch("/api/cloudinho", {
@@ -130,9 +148,13 @@ async function inicializarCloudinho() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ pergunta }),
       });
+
       const data = await resp.json();
-      if (data.sucesso && data.resposta) return data.resposta;
-      return "💭 Ainda não tenho resposta para isso, mas estou aprendendo!";
+      if (data.sucesso && data.resposta) {
+        return data.resposta;
+      } else {
+        return "💭 Ainda não tenho resposta para isso, mas estou aprendendo!";
+      }
     } catch (e) {
       console.error("Erro ao buscar resposta:", e);
       return "☁️ Tive um probleminha para falar com a Fábrica dos Sonhos...";
@@ -140,5 +162,4 @@ async function inicializarCloudinho() {
   }
 }
 
-// Aguarda carregamento do documento e dos componentes
 window.addEventListener("load", inicializarCloudinho);
