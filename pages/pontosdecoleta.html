@@ -11,33 +11,43 @@
 </head>
 
 <body class="bg-gradiente">
-  <!-- Header e Footer -->
+  <!-- Header dinâmico -->
   <div id="header"></div>
 
   <main class="home-container">
-    <section class="intro">
-      <div class="topo-coleta">
-        <img src="../imagens/logo.png" class="logo-coleta" alt="Logo Fábrica de Sonhos">
-        <h2>🌍 Pontos de Coleta Solidária</h2>
-        <p>Locais parceiros onde você pode deixar presentes e doações para nossas crianças sonhadoras 💙</p>
-      </div>
+    <!-- topo / explicação -->
+    <section class="topo-coleta">
+      <img src="../imagens/logo.png" class="logo-coleta" alt="Fantástica Fábrica de Sonhos" />
+      <h2>📍Pontos de Coleta Solidária</h2>
+      <p>
+        Aqui você encontra os locais parceiros onde pode deixar presentes e doações
+        para nossas crianças sonhadoras. Obrigado por espalhar alegria! 💙
+      </p>
     </section>
 
-    <!-- Varal -->
-    <section class="varal-coleta" id="listaColeta"></section>
+    <!-- varal com os cartões -->
+    <section class="varal-coleta">
+      <div class="fio-varal" aria-hidden="true"></div>
+      <div id="listaColeta" class="lista-coleta" aria-live="polite"></div>
+    </section>
   </main>
 
+  <!-- Footer e Cloudinho -->
   <div id="footer"></div>
   <div id="cloudinho"></div>
 
-  <!-- Scripts -->
-  <script src="../js/componentes.js"></script>
+  <!-- Carregador de componentes (mesma lógica usada na home) -->
   <script>
+    async function carregarComponente(id, arquivo) {
+      const resp = await fetch(arquivo, { cache: "no-store" });
+      if (resp.ok) document.getElementById(id).innerHTML = await resp.text();
+    }
     carregarComponente("header", "../componentes/header.html");
     carregarComponente("footer", "../componentes/footer.html");
     carregarComponente("cloudinho", "../componentes/cloudinho.html");
   </script>
 
+  <!-- Scripts da página -->
   <script src="../js/pontosdecoleta.js"></script>
   <script src="../js/cloudinho.js"></script>
 </body>
