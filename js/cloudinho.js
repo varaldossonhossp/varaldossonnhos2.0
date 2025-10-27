@@ -1,7 +1,8 @@
 // ============================================================
-// ☁️ CLOUDINHO INTELIGENTE — v5.1
+// ☁️ CLOUDINHO INTELIGENTE — v5.3 (Airtable + Chat Rotativo)
 // ------------------------------------------------------------
-// Usa componente modular + API segura (/api/cloudinho)
+// Integra com /api/cloudinho sem expor tokens
+// Mostra balão animado + chat funcional
 // ============================================================
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -14,7 +15,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   if (!mascote || !chat) return;
 
-  // 🌤️ Balão automático
+  // 💬 Mensagens rotativas do balão
   const mensagensAuto = [
     "Oi 💙 Quer ajuda para adotar um sonho?",
     "Sabia que você pode escolher o ponto de coleta?",
@@ -23,14 +24,15 @@ document.addEventListener("DOMContentLoaded", () => {
   ];
   let indexMsg = 0;
 
-  function mostrarBalao() {
-    let balao = document.querySelector(".balao-cloudinho");
-    if (!balao) {
-      balao = document.createElement("div");
-      balao.className = "balao-cloudinho"; // <- importante para o CSS
-      document.body.appendChild(balao);
-    }
+  // Cria balão se não existir
+  let balao = document.querySelector(".balao-cloudinho");
+  if (!balao) {
+    balao = document.createElement("div");
+    balao.className = "balao-cloudinho";
+    document.body.appendChild(balao);
+  }
 
+  function mostrarBalao() {
     balao.textContent = mensagensAuto[indexMsg];
     balao.style.opacity = "1";
     balao.style.transform = "translateY(0)";
@@ -44,26 +46,46 @@ document.addEventListener("DOMContentLoaded", () => {
   mostrarBalao();
   setInterval(mostrarBalao, 12000);
 
-  // 💬 Abrir chat
-  mascote.addEventListener("click", () => {
+  // 🔗 Verifica se o servidor está online
+  async function verificarConexao() {
+    try {
+      const resp = await fetch("/api/health", { cache: "no-store" });
+      return resp.ok;
+    } catch {
+      return false;
+    }
+  }
+
+  // 🎈 Clique no mascote → abre chat
+  mascote.addEventListener("click", async () => {
     const aberto = chat.style.display === "flex";
     chat.style.display = aberto ? "none" : "flex";
+
     if (!aberto) {
       mensagens.innerHTML = "";
       const msgInicial = document.createElement("div");
       msgInicial.className = "msg bot";
       msgInicial.textContent = "Oi 💙 Como posso te ajudar hoje?";
       mensagens.appendChild(msgInicial);
+
+      const conectado = await verificarConexao();
+      if (!conectado) {
+        const aviso = document.createElement("div");
+        aviso.className = "msg bot";
+        aviso.textContent =
+          "☁️ Estou sem conexão com a Fábrica dos Sonhos, mas posso anotar sua pergunta!";
+        mensagens.appendChild(aviso);
+      }
     }
   });
 
-  // ❌ Fechar chat
-  fechar?.addEventListener("click", () => {
-    chat.style.display = "none";
-  });
+  // ❌ Fecha o chat
+  if (fechar) {
+    fechar.addEventListener("click", () => (chat.style.display = "none"));
+  }
 
-  // 📩 Enviar pergunta
-  form?.addEventListener("submit", async (e) => {
+  // 📩 Envio da pergunta
+  form.addEventListener("submit", async (e) => {
     e.preventDefault();
     const texto = campo.value.trim();
     if (!texto) return;
@@ -74,28 +96,39 @@ document.addEventListener("DOMContentLoaded", () => {
     mensagens.appendChild(msgUser);
     campo.value = "";
 
+    const conectado = await verificarConexao();
+    if (!conectado) {
+      const msgBot = document.createElement("div");
+      msgBot.className = "msg bot";
+      msgBot.textContent =
+        "☁️ Estou offline agora, mas vou guardar sua pergunta! 💌";
+      mensagens.appendChild(msgBot);
+      mensagens.scrollTop = mensagens.scrollHeight;
+      return;
+    }
+
+    const resposta = await buscarResposta(texto);
+    const msgBot = document.createElement("div");
+    msgBot.className = "msg bot";
+    msgBot.textContent = resposta;
+    mensagens.appendChild(msgBot);
+    mensagens.scrollTop = mensagens.scrollHeight;
+  });
+
+  // 🔍 Chama a API segura
+  async function buscarResposta(pergunta) {
     try {
       const resp = await fetch("/api/cloudinho", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ pergunta: texto }),
+        body: JSON.stringify({ pergunta }),
       });
-
       const data = await resp.json();
-      const msgBot = document.createElement("div");
-      msgBot.className = "msg bot";
-      msgBot.textContent =
-        data.resposta ||
-        "☁️ Ainda não encontrei uma resposta para isso, mas estou aprendendo!";
-      mensagens.appendChild(msgBot);
-      mensagens.scrollTop = mensagens.scrollHeight;
+      if (data.sucesso && data.resposta) return data.resposta;
+      return "💭 Ainda não tenho resposta para isso, mas estou aprendendo!";
     } catch (e) {
-      console.error("Erro Cloudinho:", e);
-      const msgBot = document.createElement("div");
-      msgBot.className = "msg bot erro";
-      msgBot.textContent =
-        "☁️ Tive um probleminha para falar com a Fábrica dos Sonhos...";
-      mensagens.appendChild(msgBot);
+      console.error("Erro ao buscar resposta:", e);
+      return "☁️ Tive um probleminha para falar com a Fábrica dos Sonhos...";
     }
-  });
+  }
 });
