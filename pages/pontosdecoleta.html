@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pontos de Coleta | Fantástica Fábrica de Sonhos</title>
+
+  <!-- Estilos -->
+  <link rel="stylesheet" href="../css/pontosdecoleta.css" />
+  <link rel="stylesheet" href="../css/cloudinho.css" />
+</head>
+
+<body class="bg-gradiente">
+  <!-- Header e Footer -->
+  <div id="header"></div>
+
+  <main class="home-container">
+    <section class="intro">
+      <div class="topo-coleta">
+        <img src="../imagens/logo.png" class="logo-coleta" alt="Logo Fábrica de Sonhos">
+        <h2>🌍 Pontos de Coleta Solidária</h2>
+        <p>Locais parceiros onde você pode deixar presentes e doações para nossas crianças sonhadoras 💙</p>
+      </div>
+    </section>
+
+    <!-- Varal -->
+    <section class="varal-coleta" id="listaColeta"></section>
+  </main>
+
+  <div id="footer"></div>
+  <div id="cloudinho"></div>
+
+  <!-- Scripts -->
+  <script src="../js/componentes.js"></script>
+  <script>
+    carregarComponente("header", "../componentes/header.html");
+    carregarComponente("footer", "../componentes/footer.html");
+    carregarComponente("cloudinho", "../componentes/cloudinho.html");
+  </script>
+
+  <script src="../js/pontosdecoleta.js"></script>
+  <script src="../js/cloudinho.js"></script>
+</body>
+</html>

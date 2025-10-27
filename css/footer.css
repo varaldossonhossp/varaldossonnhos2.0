@@ -38,3 +38,59 @@ Rodapé fixo com créditos e link do Instagram
 .footer-site a:hover {
   text-decoration: underline;
 }
+
+.footer-site {
+  background: #f9fbff;
+  color: #1F355B;
+  font-size: 14px;
+  border-top: 1px solid #dce8ff;
+}
+.footer-site a {
+  color: #4A90E2;
+  text-decoration: none;
+}
+.footer-site a:hover {
+  text-decoration: underline;
+}
+
+.footer-site {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background: #f9fbff;
+  border-top: 1px solid #dce8ff;
+  padding: 8px 24px;
+  height: 42px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: #1F355B;
+  font-size: 13px;
+  box-shadow: 0 -2px 6px rgba(0, 0, 0, 0.08);
+  z-index: 90;
+}
+
+.footer-site img.icone-instagram {
+  width: 16px;
+  height: 16px;
+  margin-right: 6px;
+  vertical-align: middle;
+}
+
+.footer-site a {
+  color: #4A90E2;
+  text-decoration: none;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.footer-site a:hover {
+  text-decoration: underline;
+}
+
+body {
+  padding-bottom: 60px; /* garante que o conteúdo não fique escondido */
+}

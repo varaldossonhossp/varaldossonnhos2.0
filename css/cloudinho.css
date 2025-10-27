@@ -1,137 +1,138 @@
 /* ============================================================
-💙 VARAL DOS SONHOS — cloudinho.css
----------------------------------------------------------------
-Estilos do assistente virtual flutuante
+💙 CLOUDINHO INTELIGENTE — v4.7
 ============================================================ */
 
-#cloudinho-wrapper {
+.cloudinho-widget {
   position: fixed;
-  bottom: 20px;
-  right: 25px;
-  z-index: 9999;
-  font-family: "Poppins", sans-serif;
+  right: 22px;
+  bottom: 50px; /* posição perfeita que você mencionou */
+  z-index: 950;
 }
 
-/* ===== BOTÃO FLUTUANTE ===== */
-#cloudinho-toggle img {
-  width: 75px;
+/* ☁️ Mascote flutuante */
+.cloudinho-botao {
+  border: none;
+  background: transparent;
   cursor: pointer;
-  animation: balancar 3s ease-in-out infinite;
-  filter: drop-shadow(0 3px 4px rgba(0, 0, 0, 0.2));
-  transition: transform 0.3s;
+  animation: flutua 6s ease-in-out infinite;
+  transition: transform 0.3s ease;
+}
+.cloudinho-botao img {
+  width: 70px;
+  height: 70px;
+  filter: drop-shadow(0 6px 12px rgba(31, 53, 91, 0.25));
+}
+.cloudinho-botao:hover {
+  transform: scale(1.08);
 }
 
-#cloudinho-toggle img:hover {
-  transform: scale(1.05);
-}
-
-/* Animação fofinha de balanço */
-@keyframes balancar {
-  0% { transform: translateY(0) rotate(0deg); }
-  25% { transform: translateY(-4px) rotate(-2deg); }
-  50% { transform: translateY(0) rotate(2deg); }
-  75% { transform: translateY(4px) rotate(-1deg); }
-  100% { transform: translateY(0) rotate(0deg); }
-}
-
-/* ===== JANELA DO CHAT ===== */
-#cloudinho-chat {
-  width: 310px;
-  height: 420px;
-  background: #ffffff;
-  border-radius: 18px;
-  box-shadow: 0 4px 25px rgba(0, 0, 0, 0.25);
-  display: flex;
-  flex-direction: column;
+/* 💬 Janela do chat */
+.cloudinho-chat {
+  position: fixed;
+  right: 22px;
+  bottom: 160px;
+  width: 320px;
+  max-height: 440px;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 16px 40px rgba(31, 53, 91, 0.18);
   overflow: hidden;
-  position: absolute;
-  bottom: 90px;
-  right: 0;
-  opacity: 1;
-  transform: scale(1);
-  transition: all 0.3s ease;
-}
-
-#cloudinho-chat.hidden {
-  display: none;
-}
-
-/* ===== CABEÇALHO DO CHAT ===== */
-#cloudinho-header {
-  background: linear-gradient(135deg, #a3d9ff, #c4e1ff);
-  color: #1f355b;
-  font-weight: 600;
-  padding: 10px;
-  text-align: center;
-  position: relative;
-  border-bottom: 1px solid #e6f2ff;
-}
-
-#cloudinho-close {
-  position: absolute;
-  right: 10px;
-  top: 6px;
-  cursor: pointer;
-  font-size: 18px;
-  color: #1f355b;
-}
-
-/* ===== MENSAGENS ===== */
-#cloudinho-messages {
-  flex: 1;
-  padding: 10px;
-  overflow-y: auto;
-  display: flex;
   flex-direction: column;
+  border: 1px solid #e5efff;
+  display: none;
+  z-index: 940;
 }
 
-.cloudinho-msg {
-  margin: 6px 0;
-  padding: 8px 12px;
-  border-radius: 10px;
-  max-width: 80%;
-  word-wrap: break-word;
-  font-size: 14px;
-}
-
-.user-msg {
-  background: #cde6ff;
-  align-self: flex-end;
-  margin-left: auto;
-}
-
-.bot-msg {
-  background: #f3f6fa;
-  align-self: flex-start;
-  border-left: 3px solid #4A90E2;
-}
-
-/* ===== ÁREA DE DIGITAÇÃO ===== */
-#cloudinho-input-area {
+.cloudinho-chat header {
+  background: linear-gradient(90deg, #4A90E2, #6FB3FF);
+  color: #fff;
+  padding: 10px 12px;
   display: flex;
-  border-top: 1px solid #ddd;
-  background: #f9f9f9;
-}
-
-#cloudinho-input {
-  flex: 1;
-  border: none;
-  padding: 10px;
-  outline: none;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: 600;
+  font-family: "Poppins", sans-serif;
   font-size: 14px;
-  border-radius: 0 0 0 16px;
 }
-
-#cloudinho-send {
-  background: #4A90E2;
+.cloudinho-chat header button {
+  background: transparent;
   border: none;
-  color: white;
-  padding: 10px 15px;
+  color: #fff;
+  font-size: 16px;
   cursor: pointer;
-  font-weight: bold;
-  border-radius: 0 0 16px 0;
 }
 
-#cloudinho-send:hover {
-  background: #3b7bd6;
+/* Área de mensagens */
+.chat-mensagens {
+  flex: 1;
+  padding: 10px;
+  background: #f7fbff;
+  overflow-y: auto;
+}
+.msg {
+  margin: 6px 0;
+  padding: 10px 14px;
+  border-radius: 12px;
+  max-width: 85%;
+  font-family: "Poppins", sans-serif;
+  font-size: 14px;
+}
+.msg.bot {
+  background: #E6F2FF;
+  color: #1F355B;
+}
+.msg.usuario {
+  background: linear-gradient(90deg, #4A90E2, #6FB3FF);
+  color: #fff;
+  align-self: flex-end;
+}
+
+/* Campo de envio */
+#formCloudinho {
+  display: flex;
+  border-top: 1px solid #e8eefc;
+}
+#formCloudinho input {
+  flex: 1;
+  border: 0;
+  padding: 10px;
+  font-family: inherit;
+  outline: none;
+}
+#formCloudinho button {
+  background: #4A90E2;
+  color: #fff;
+  border: 0;
+  padding: 10px 14px;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+#formCloudinho button:hover {
+  background: #5ca3f5;
+}
+
+/* 🌤️ Balão automático */
+.balao-cloudinho {
+  position: fixed;
+  right: 90px;
+  bottom: 130px; /* mais para baixo */
+  background: #ffffff;
+  color: #1F355B;
+  font-family: "Poppins", sans-serif;
+  font-size: 14px;
+  border-radius: 15px;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
+  padding: 10px 14px;
+  max-width: 220px;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: all 0.6s ease;
+  z-index: 98;
+  border: 1px solid #d9e8ff;
+}
+
+/* ☁️ Animação de flutuação */
+@keyframes flutua {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
 }

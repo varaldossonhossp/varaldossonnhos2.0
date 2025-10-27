@@ -1,230 +1,317 @@
 /* ============================================================
-💙 VARAL DOS SONHOS — style.css
----------------------------------------------------------------
-Arquivo principal de estilo do site Fantástica Fábrica de Sonhos
-Contém: estrutura da home, botões, carrossel de eventos,
-nuvem animada, faixas e responsividade.
+💙 VARAL DOS SONHOS — STYLE.CSS (v9 FINAL)
+------------------------------------------------------------
+Layout oficial da Fantástica Fábrica de Sonhos:
+Cabeçalho fixo, nuvem animada, carrossel, rodapé fixo
+e paleta azul institucional.
 ============================================================ */
 
-/* ====== ESTILOS GERAIS ====== */
-body {
-  margin: 0;
-  background-color: #E6F2FF; /* Azul clarinho de fundo */
-  font-family: "Poppins", sans-serif;
-  color: #1f355b; /* Azul escuro padrão dos textos */
-  overflow-x: hidden;
+/* ---------- Reset mínimo ---------- */
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+img { max-width: 100%; display: block; }
+
+/* ---------- Paleta oficial ---------- */
+:root {
+  --azul-royal: #4A90E2;
+  --azul-escuro: #1F355B;
+  --azul-claro: #E6F2FF;
+  --azul-cta: #5A8ECF;
+  --branco: #fff;
+  --sombra: 0 8px 24px rgba(31, 53, 91, .12);
+  --borda: #d9e6ff;
 }
 
-h1, h2, h3, h4, h5, h6 {
+/* ---------- Fundo e tipografia ---------- */
+body, .bg-gradiente {
+  background: linear-gradient(180deg, #E6F2FF 0%, #C7E2FF 100%);
+  color: var(--azul-escuro);
   font-family: "Poppins", sans-serif;
-  margin: 0;
 }
 
-/* ====== CONTAINER PRINCIPAL DA HOME ====== */
+/* ============================================================
+🧭 HEADER FIXO — Navegação principal
+============================================================ */
+.header-site {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 1000;
+  background: var(--branco);
+  box-shadow: 0 6px 18px rgba(31, 53, 91, .06);
+}
+
+.menu {
+  max-width: 1100px;
+  margin: 0 auto;
+  height: 72px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 14px;
+}
+
+.marca {
+  font-family: "Pacifico", cursive;
+  font-size: 26px;
+  color: var(--azul-escuro);
+  text-decoration: none;
+}
+
+.menu-links {
+  display: flex;
+  gap: 16px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.menu-links a {
+  color: var(--azul-escuro);
+  text-decoration: none;
+  padding: 8px 10px;
+  border-radius: 10px;
+  transition: background 0.3s ease;
+}
+
+.menu-links a:hover {
+  background: #e9f2ff;
+}
+
+/* ============================================================
+🏠 HOME CONTAINER — estrutura central
+============================================================ */
 .home-container {
+  margin-top: 90px; /* empurra abaixo do header fixo */
+  min-height: calc(100vh - 180px);
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 40px 0;
+  justify-content: center;
+  padding-bottom: 80px; /* evita sobreposição do footer */
 }
 
-/* ====== SEÇÃO DE INTRODUÇÃO ====== */
+/* ============================================================
+🌤️ INTRO — Seção principal com nuvem e botões
+============================================================ */
 .intro {
-  display: flex;
-  justify-content: space-around;
+  display: grid;
+  grid-template-columns: 1.1fr 1fr;
+  gap: 36px;
+  width: min(1150px, 94vw);
   align-items: center;
-  gap: 40px;
-  width: 90%;
+  padding: 40px 2vw;
+}
+
+@media (max-width: 1000px) {
+  .intro { grid-template-columns: 1fr; }
+}
+
+.lado-esquerdo {
+  text-align: center;
+  position: relative;
+}
+
+.titulo-marca {
+  font-family: "Pacifico", cursive;
+  font-size: 44px;
+  line-height: 1.1;
+  margin: 4px 0 8px;
+}
+
+.legenda-marca {
+  opacity: .9;
+}
+
+/* ============================================================
+☁️ NUVEM FLUTUANTE — animação e efeito de hover
+============================================================ */
+.nuvem-flutuante {
+  width: 300px;
+  animation: flutuar 6s ease-in-out infinite;
+  transition: transform 0.3s ease, filter 0.3s ease;
+  filter: drop-shadow(0 6px 10px rgba(74, 144, 226, 0.25));
+  margin: 0 auto 10px;
+}
+
+.nuvem-flutuante:hover {
+  transform: scale(1.05);
+  filter: drop-shadow(0 0 14px rgba(74, 144, 226, 0.35));
+}
+
+/* Keyframes da flutuação */
+@keyframes flutuar {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+/* ============================================================
+🎯 BOTÕES DE AÇÃO
+============================================================ */
+.botoes-acao {
+  margin-top: 16px;
+  display: flex;
+  gap: 12px;
+  justify-content: center;
   flex-wrap: wrap;
 }
 
-/* ====== COLUNAS ====== */
-.lado-esquerdo,
-.lado-direito {
-  flex: 1 1 400px;
-  text-align: center;
-}
-
-/* ====== ANIMAÇÃO DE NUVEM FLUTUANTE ====== */
-.nuvem-flutuante {
-  width: 240px;
-  animation: flutuar 4s ease-in-out infinite;
-}
-@keyframes flutuar {
-  0% { transform: translateY(0); }
-  50% { transform: translateY(-10px); }
-  100% { transform: translateY(0); }
-}
-
-/* ====== FRASE DE APRESENTAÇÃO ====== */
-.mensagem {
-  font-size: 18px;
-  font-weight: 500;
-  margin-top: 10px;
-  line-height: 1.5;
-}
-
-/* ====== BOTÕES DE AÇÃO ====== */
-.botoes-acao {
-  margin-top: 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  align-items: center;
-}
-
-/* ====== ESTILO DOS BOTÕES ====== */
 .btn-acao {
-  text-decoration: none;
-  padding: 12px 22px;
-  border-radius: 25px;
+  border-radius: 28px;
+  padding: 12px 20px;
   font-weight: 600;
-  transition: all 0.3s ease;
-  display: inline-block;
+  text-decoration: none;
+  transition: all .25s;
 }
 
-/* Botão principal (azul cheio) */
 .btn-acao.principal {
-  background-color: #4A90E2;
+  background: var(--azul-royal);
   color: #fff;
+  box-shadow: var(--sombra);
 }
+
 .btn-acao.principal:hover {
-  background-color: #3b7bd6;
+  transform: translateY(-2px);
+  filter: brightness(1.07);
 }
 
-/* Botão secundário (azul contornado) */
 .btn-acao.secundario {
-  border: 2px solid #4A90E2;
-  color: #4A90E2;
+  border: 2px solid var(--azul-royal);
+  color: var(--azul-royal);
+  background: transparent;
+  box-shadow: 0 2px 6px rgba(74,144,226,0.1);
 }
+
 .btn-acao.secundario:hover {
-  background-color: #4A90E2;
+  background: var(--azul-royal);
   color: #fff;
 }
 
-/* ====== TEXTO INFORMATIVO ABAIXO DOS BOTÕES ====== */
 .texto-transparente {
-  margin-top: 15px;
+  margin-top: 12px;
   font-size: 14px;
-  opacity: 0.8;
-}
-
-/* ====== BLOCO DIREITO DA HOME (CARROSSEL) ====== */
-.lado-direito {
-  text-align: center;
-}
-
-.titulo-direito {
-  font-size: 22px;
-  margin-bottom: 20px;
-  color: #1f355b;
+  opacity: .9;
 }
 
 /* ============================================================
-🎠 CARROSSEL DE EVENTOS AUTOMÁTICO
+🎠 CARROSSEL DE EVENTOS
 ============================================================ */
+.h2-azul { margin: 0 0 10px; }
+
 .carrossel {
   position: relative;
-  width: 90%;
-  max-width: 520px;
-  overflow: hidden;
+  width: 100%;
+  max-width: 560px;
   border-radius: 20px;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+  overflow: hidden;
+  box-shadow: var(--sombra);
   background: #fff;
+  margin: 0 auto;
 }
+
+.carrossel .slide { display: none; }
 
 .carrossel img {
   width: 100%;
-  height: auto;
-  border-radius: 20px;
+  height: 380px;
   object-fit: cover;
 }
 
-/* Cada slide */
-.slide {
-  display: none;
-}
-
-.fade {
-  animation-name: fade;
-  animation-duration: 1.5s;
-}
-@keyframes fade {
-  from { opacity: 0.4; }
-  to { opacity: 1; }
-}
-
-/* Legenda sobre a imagem (opcional) */
-.slide .info {
-  background-color: rgba(255, 255, 255, 0.9);
-  padding: 10px;
-  border-radius: 0 0 20px 20px;
-}
-
-.slide .info h3 {
-  margin: 5px 0;
-  font-size: 18px;
-  color: #1f355b;
-}
-
-.slide .info p {
-  font-size: 14px;
-  color: #3b4f7a;
-  margin: 5px 0;
-}
-
 /* ============================================================
-🌈 FAIXA DE EVENTOS (BARRA INFERIOR AZUL)
+🎁 FAIXA DE EVENTOS (rodapé azul da seção)
 ============================================================ */
 .faixa-eventos {
+  margin-top: 40px;
+  width: 100%;
+  text-align: center;
+  padding: 22px 12px;
   background: linear-gradient(90deg, #4A90E2, #6fb3ff);
   color: #fff;
-  text-align: center;
-  padding: 25px 20px;
-  width: 100%;
-  margin-top: 60px;
-  box-shadow: 0 -4px 10px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--sombra);
 }
 
-.faixa-eventos p {
-  margin: 0;
-  font-size: 18px;
-  font-weight: 500;
-}
-
-/* Botão da faixa inferior */
 .btn-eventos {
+  display: inline-block;
+  margin-left: 8px;
   background: #fff;
   color: #4A90E2;
   text-decoration: none;
-  padding: 10px 20px;
-  border-radius: 20px;
+  padding: 8px 16px;
+  border-radius: 18px;
   font-weight: 600;
-  margin-left: 10px;
-  display: inline-block;
-  transition: all 0.3s ease;
+  transition: background 0.3s ease;
 }
+
 .btn-eventos:hover {
-  background: #e4efff;
+  background: #eef5ff;
+}
+
+/* ============================================================
+⚓ FOOTER FIXO — Créditos e redes sociais
+============================================================ */
+.footer-site {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  width: 100%;
+  background: #f9fbff;
+  border-top: 1px solid #dce8ff;
+  padding: 8px 24px;
+  height: 42px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: #1F355B;
+  font-size: 13px;
+  box-shadow: 0 -2px 6px rgba(0, 0, 0, 0.08);
+  z-index: 90;
+}
+
+.footer-site .creditos {
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.footer-site .redes-sociais {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.footer-site a {
+  color: #4A90E2;
+  text-decoration: none;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.footer-site a:hover {
+  text-decoration: underline;
+}
+
+.footer-site img.icone-instagram {
+  width: 16px;
+  height: 16px;
+  margin-right: 4px;
+  vertical-align: middle;
 }
 
 /* ============================================================
 📱 RESPONSIVIDADE
 ============================================================ */
 @media (max-width: 768px) {
-  .intro {
+  .intro { padding: 20px; }
+  .carrossel img { height: 260px; }
+  .footer-site {
     flex-direction: column;
+    height: auto;
+    padding: 10px;
+    gap: 6px;
   }
+}
 
-  .carrossel {
-    max-width: 90%;
-  }
-
-  .btn-acao {
-    width: 80%;
-  }
-
-  .faixa-eventos {
-    padding: 20px 10px;
-  }
+body {
+  padding-bottom: 60px; /* garante que o conteúdo não fique escondido atrás do footer */
 }
