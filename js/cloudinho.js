@@ -1,11 +1,15 @@
 // ============================================================
-// ☁️ CLOUDINHO INTELIGENTE — v5.3 (Airtable + Chat Rotativo)
-// ------------------------------------------------------------
-// Integra com /api/cloudinho sem expor tokens
-// Mostra balão animado + chat funcional
+// ☁️ CLOUDINHO INTELIGENTE — v5.3.2 (fix ready + balão/chat)
 // ============================================================
 
-document.addEventListener("DOMContentLoaded", () => {
+async function inicializarCloudinho() {
+  // Aguarda o HTML do componente ser injetado
+  let tentativas = 0;
+  while (!document.querySelector(".cloudinho-botao") && tentativas < 20) {
+    await new Promise(r => setTimeout(r, 300));
+    tentativas++;
+  }
+
   const mascote = document.querySelector(".cloudinho-botao");
   const chat = document.querySelector(".cloudinho-chat");
   const fechar = document.getElementById("fecharCloudinho");
@@ -13,9 +17,12 @@ document.addEventListener("DOMContentLoaded", () => {
   const campo = document.getElementById("campoPergunta");
   const mensagens = document.getElementById("chatMensagens");
 
-  if (!mascote || !chat) return;
+  if (!mascote || !chat) {
+    console.warn("Cloudinho não encontrado no DOM.");
+    return;
+  }
 
-  // 💬 Mensagens rotativas do balão
+  // === 💬 Balão automático de dicas ===
   const mensagensAuto = [
     "Oi 💙 Quer ajuda para adotar um sonho?",
     "Sabia que você pode escolher o ponto de coleta?",
@@ -24,7 +31,7 @@ document.addEventListener("DOMContentLoaded", () => {
   ];
   let indexMsg = 0;
 
-  // Cria balão se não existir
+  // Cria o balão
   let balao = document.querySelector(".balao-cloudinho");
   if (!balao) {
     balao = document.createElement("div");
@@ -46,7 +53,7 @@ document.addEventListener("DOMContentLoaded", () => {
   mostrarBalao();
   setInterval(mostrarBalao, 12000);
 
-  // 🔗 Verifica se o servidor está online
+  // === ☁️ Verifica conexão ===
   async function verificarConexao() {
     try {
       const resp = await fetch("/api/health", { cache: "no-store" });
@@ -56,7 +63,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // 🎈 Clique no mascote → abre chat
+  // === 💬 Abrir o chat ===
   mascote.addEventListener("click", async () => {
     const aberto = chat.style.display === "flex";
     chat.style.display = aberto ? "none" : "flex";
@@ -79,12 +86,12 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // ❌ Fecha o chat
+  // === ❌ Fechar ===
   if (fechar) {
     fechar.addEventListener("click", () => (chat.style.display = "none"));
   }
 
-  // 📩 Envio da pergunta
+  // === 📩 Enviar pergunta ===
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
     const texto = campo.value.trim();
@@ -115,7 +122,7 @@ document.addEventListener("DOMContentLoaded", () => {
     mensagens.scrollTop = mensagens.scrollHeight;
   });
 
-  // 🔍 Chama a API segura
+  // === 🔍 Consulta API ===
   async function buscarResposta(pergunta) {
     try {
       const resp = await fetch("/api/cloudinho", {
@@ -131,4 +138,7 @@ document.addEventListener("DOMContentLoaded", () => {
       return "☁️ Tive um probleminha para falar com a Fábrica dos Sonhos...";
     }
   }
-});
+}
+
+// Aguarda carregamento do documento e dos componentes
+window.addEventListener("load", inicializarCloudinho);
