@@ -1,7 +1,7 @@
 // ============================================================
-// 💬 CLOUDINHO INTELIGENTE — v5.0 (versão segura e conectada)
+// ☁️ CLOUDINHO INTELIGENTE — v5.1
 // ------------------------------------------------------------
-// Integração com API /api/cloudinho (Vercel + Airtable)
+// Usa componente modular + API segura (/api/cloudinho)
 // ============================================================
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -43,8 +43,8 @@ document.addEventListener("DOMContentLoaded", () => {
   mostrarBalao();
   setInterval(mostrarBalao, 12000);
 
-  // 💬 Abrir/fechar chat
-  mascote.addEventListener("click", async () => {
+  // 💬 Abrir chat
+  mascote.addEventListener("click", () => {
     const aberto = chat.style.display === "flex";
     chat.style.display = aberto ? "none" : "flex";
     if (!aberto) {
@@ -56,14 +56,13 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  if (fechar) {
-    fechar.addEventListener("click", () => {
-      chat.style.display = "none";
-    });
-  }
+  // ❌ Fechar chat
+  fechar?.addEventListener("click", () => {
+    chat.style.display = "none";
+  });
 
   // 📩 Enviar pergunta
-  form.addEventListener("submit", async (e) => {
+  form?.addEventListener("submit", async (e) => {
     e.preventDefault();
     const texto = campo.value.trim();
     if (!texto) return;
@@ -86,7 +85,7 @@ document.addEventListener("DOMContentLoaded", () => {
       msgBot.className = "msg bot";
       msgBot.textContent =
         data.resposta ||
-        "☁️ Ainda não encontrei uma resposta, mas estou aprendendo!";
+        "☁️ Ainda não encontrei uma resposta para isso, mas estou aprendendo!";
       mensagens.appendChild(msgBot);
       mensagens.scrollTop = mensagens.scrollHeight;
     } catch (e) {
