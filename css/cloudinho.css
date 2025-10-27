@@ -1,164 +1,124 @@
+/* ============================================================
+💬 CLOUDINHO - Visual completo
+Mascote flutuante + balão + chat fixo
+============================================================ */
+
+/* Mascote */
 .cloudinho-botao {
   position: fixed;
-  bottom: 30px;
-  right: 30px;
-  cursor: pointer;
+  bottom: 25px;
+  right: 25px;
+  width: 80px;
+  height: 80px;
   z-index: 9999;
-  transition: transform 0.3s ease;
+  cursor: pointer;
+  animation: flutuar 3s ease-in-out infinite;
 }
 
-.cloudinho-botao:hover {
-  transform: scale(1.1);
+@keyframes flutuar {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
 }
 
+/* Balão automático */
+.balao-cloudinho {
+  position: fixed;
+  bottom: 130px;
+  right: 110px;
+  max-width: 260px;
+  padding: 12px 14px;
+  background: #ffffff;
+  border-radius: 14px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.15);
+  color: #274c77;
+  font: 500 14px/1.4 "Poppins", sans-serif;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 0.35s ease, transform 0.35s ease;
+  z-index: 9998;
+}
+
+/* Chat fixo */
 .cloudinho-chat {
   position: fixed;
-  bottom: 120px;
-  right: 30px;
-  width: 310px;
-  background: #ffffff;
-  border: 2px solid #cfe7ff;
-  border-radius: 15px;
-  display: flex;
+  bottom: 110px;
+  right: 25px;
+  width: 320px;
+  max-height: 70vh;
+  display: none;
   flex-direction: column;
-  justify-content: space-between;
-  z-index: 9998;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
-  font-family: "Poppins", sans-serif;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 10px 25px rgba(24, 64, 136, 0.25);
+  overflow: hidden;
+  z-index: 10000;
 }
 
+/* Cabeçalho */
 .chat-header {
-  background: #0099ff;
-  color: white;
-  padding: 10px;
-  border-radius: 15px 15px 0 0;
-  font-weight: bold;
+  background: #2196f3;
+  color: #fff;
+  padding: 10px 14px;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  font: 600 14px "Poppins", sans-serif;
 }
 
 .btn-fechar {
-  background: transparent;
+  background: none;
   border: none;
-  color: white;
+  color: #fff;
   font-size: 18px;
   cursor: pointer;
 }
 
-.chat-mensagens {
-  padding: 10px;
-  height: 230px;
+/* Corpo */
+.chat-body {
+  flex: 1;
+  padding: 12px;
   overflow-y: auto;
-  font-size: 14px;
+  background: #f7faff;
 }
 
 .msg {
-  margin: 8px 0;
+  margin: 6px 0;
   padding: 8px 12px;
-  border-radius: 12px;
-  max-width: 85%;
-  line-height: 1.3em;
+  border-radius: 10px;
+  max-width: 90%;
+  line-height: 1.4;
 }
 
 .msg.usuario {
+  background: #e3f2fd;
   align-self: flex-end;
-  background: #d9f0ff;
-  text-align: right;
 }
 
 .msg.bot {
+  background: #f1f8e9;
   align-self: flex-start;
-  background: #f2f2f2;
 }
 
+/* Formulário */
 .chat-form {
   display: flex;
-  padding: 8px;
-  border-top: 1px solid #ddd;
+  border-top: 1px solid #e0e0e0;
 }
 
 .chat-form input {
   flex: 1;
-  border: 1px solid #ccc;
-  border-radius: 10px;
-  padding: 6px;
-  margin-right: 5px;
+  border: none;
+  padding: 10px;
+  font-size: 14px;
+  outline: none;
 }
 
 .chat-form button {
-  background: #0099ff;
-  color: white;
   border: none;
-  padding: 6px 10px;
-  border-radius: 10px;
+  background: #2196f3;
+  color: #fff;
+  padding: 0 16px;
+  font-weight: 600;
   cursor: pointer;
-  transition: background 0.3s;
-}
-
-.chat-form button:hover {
-  background: #007bff;
-}
-
-.balao-cloudinho {
-  position: fixed;
-  bottom: 120px;
-  right: 140px;
-  background: #ffffff;
-  border-radius: 20px;
-  padding: 8px 14px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-  font-size: 14px;
-  opacity: 0;
-  transform: translateY(10px);
-  transition: all 0.5s ease;
-  max-width: 200px;
-}
-
-/* Mascote fixo no canto e flutuando */
-.cloudinho-botao {
-  position: fixed;
-  right: 24px;
-  bottom: 24px;
-  width: 72px;
-  height: 72px;
-  cursor: pointer;
-  z-index: 9999;
-  animation: flutua 3.2s ease-in-out infinite;
-}
-
-@keyframes flutua {
-  0%, 100% { transform: translateY(0); }
-  50%      { transform: translateY(-6px); }
-}
-
-/* Balão automático próximo do mascote */
-.balao-cloudinho {
-  position: fixed;
-  right: 110px;           /* distância do canto direito */
-  bottom: 120px;          /* distância do canto inferior */
-  max-width: 260px;
-  background: #fff;
-  border: 1px solid #e6eefb;
-  box-shadow: 0 10px 24px rgba(24, 64, 136, 0.12);
-  border-radius: 14px;
-  padding: 12px 14px;
-  font: 500 14px/1.4 "Poppins", system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
-  color: #274c77;
-  opacity: 0;
-  transform: translateY(10px);
-  transition: opacity .35s ease, transform .35s ease;
-  z-index: 9998;
-}
-
-/* Chat (garantir que abre acima de tudo) */
-.cloudinho-chat {
-  position: fixed;
-  right: 24px;
-  bottom: 100px;
-  width: 320px;
-  max-height: 60vh;
-  display: none;
-  flex-direction: column;
-  z-index: 10000;
+  border-radius: 0;
 }
