@@ -1,45 +1,43 @@
 // ============================================================
-// 🏪 VARAL DOS SONHOS — /api/pontosdecoleta.js
+// 💙 VARAL DOS SONHOS — /api/pontosdecoleta.js
 // ------------------------------------------------------------
-// Retorna os pontos de coleta ativos da tabela "pontos_coleta".
+// Retorna lista de pontos de coleta do Airtable
 // ============================================================
 
 import Airtable from "airtable";
+
 export const config = { runtime: "nodejs" };
 
 export default async function handler(req, res) {
-  res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Methods", "GET,OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
-  if (req.method === "OPTIONS") return res.status(204).end();
+  if (req.method !== "GET") {
+    return res.status(405).json({ sucesso: false, erro: "Método não permitido" });
+  }
 
   try {
-    const base = new Airtable({ apiKey: process.env.AIRTABLE_API_KEY })
-      .base(process.env.AIRTABLE_BASE_ID);
-    const table = process.env.AIRTABLE_PONTOCOLETA_TABLE || "pontos_coleta";
+    const base = new Airtable({ apiKey: process.env.AIRTABLE_API_KEY }).base(
+      process.env.AIRTABLE_BASE_ID
+    );
 
-    const records = await base(table)
-      .select({
-        filterByFormula: "({status} = 'ativo')",
-        sort: [{ field: "nome_ponto", direction: "asc" }],
-      })
-      .all();
+    const tabela = process.env.AIRTABLE_PONTOCOLETA_TABLE || "pontos_coleta";
+    const registros = await base(tabela).select().all();
 
-    const pontos = records.map((r) => ({
-      id: r.id,
-      id_ponto: r.fields.id_ponto,
-      nome_ponto: r.fields.nome_ponto,
-      endereco: r.fields.endereco,
-      telefone: r.fields.telefone,
-      email_ponto: r.fields.email_ponto,
-      horario: r.fields.horario,
-      responsavel: r.fields.responsavel,
-      status: r.fields.status,
+    const pontos = registros.map((r) => ({
+      id_ponto: r.fields["id ponto"] || "",
+      nome_ponto: r.fields["nome ponto"] || "",
+      endereco: r.fields["endereco"] || "",
+      telefone: r.fields["telefone"] || "",
+      email_ponto: r.fields["email_ponto"] || "",
+      horario: r.fields["horario"] || "",
+      responsavel: r.fields["responsavel"] || "",
+      status: r.fields["status"] || "",
+      data_cadastro: r.fields["data_cadastro"] || "",
+      adocoes: r.fields["adocoes"] || "",
+      adocoes2: r.fields["adocoes2"] || ""
     }));
 
     res.status(200).json({ sucesso: true, pontos });
-  } catch (e) {
-    console.error("❌ Erro /api/pontosdecoleta:", e);
-    res.status(500).json({ sucesso: false, mensagem: "Erro ao listar pontos de coleta." });
+  } catch (erro) {
+    console.error("Erro ao buscar pontos:", erro);
+    res.status(500).json({ sucesso: false, erro: erro.message });
   }
 }
