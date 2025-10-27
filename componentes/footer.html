@@ -4,13 +4,14 @@
 Rodapé fixo com créditos e link do Instagram
 ============================================================ -->
 <footer class="footer-site">
-  <p>
-    © <span id="anoAtual"></span> Fantástica Fábrica de Sonhos | Desenvolvido com amor 💙
-  </p>
+  <p>© <span id="anoAtual"></span> Fantástica Fábrica de Sonhos — Desenvolvido com amor 💙</p>
   <div class="redes-sociais">
-    <a id="linkInstagram" href="https://www.instagram.com/fantasticafabricadosonhos" target="_blank">
+    <a href="https://www.instagram.com/fantasticafabricadosonhos" target="_blank" rel="noopener">
       <img src="/imagens/instagram.png" alt="Instagram" class="icone-instagram" />
-      <span>#SIGA NOSSO INSTAGRAM</span>
+      <span>#Siga nosso Instagram</span>
     </a>
   </div>
 </footer>
+<script>document.getElementById("anoAtual").textContent = new Date().getFullYear();</script>
+
+

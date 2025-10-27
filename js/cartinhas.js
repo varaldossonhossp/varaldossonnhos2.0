@@ -39,21 +39,21 @@ document.addEventListener("DOMContentLoaded", async () => {
     listaContainer.innerHTML = "";
 
     cartinhas.forEach((c) => {
-      const { nome, idade, sonho, sexo, tem_irmaos, imagem, status } = c.fields;
-      const imgUrl = imagem && imagem[0] ? imagem[0].url : "/imagens/sem-foto.png";
-      const estaAdotada = status && status.toLowerCase() !== "disponível";
+      const f = c.fields;
+      const imgUrl = f.foto?.[0]?.url || "/imagens/sem-foto.png";
+      const estaAdotada = f.status && f.status.toLowerCase() !== "disponível";
 
       const card = document.createElement("div");
       card.classList.add("card-cartinha");
 
       card.innerHTML = `
-        <img src="${imgUrl}" alt="Cartinha de ${nome}">
+        <img src="${imgUrl}" alt="Cartinha de ${f.nome_crianca}">
         <div class="info-cartinha">
-          <h3>${nome}</h3>
-          <p>🎂 Idade: ${idade || "?"} anos</p>
-          <p>💭 Sonho: ${sonho || "—"}</p>
-          <p>👦 Sexo: ${sexo || "—"}</p>
-          <p>👨‍👧 Irmãos: ${tem_irmaos ? "Sim" : "Não"}</p>
+          <h3>${f.nome_crianca}</h3>
+          <p>🎂 Idade: ${f.idade || "?"} anos</p>
+          <p>💭 Sonho: ${f.sonho || "—"}</p>
+          <p>👦 Sexo: ${f.sexo || "—"}</p>
+          <p>👨‍👧 Irmãos: ${f.irmaos ? "Sim" : "Não"}</p>
         </div>
         <button class="btn-adotar ${estaAdotada ? "btn-noCarrinho" : ""}">
           ${estaAdotada ? "Adotada 💙" : "Adotar Sonho 💌"}
@@ -73,14 +73,26 @@ document.addEventListener("DOMContentLoaded", async () => {
   // 3️⃣ Adiciona a cartinha ao carrinho (localStorage)
   // ============================================================
   function adicionarAoCarrinho(cartinha) {
+    const f = cartinha.fields;
+    const id_cartinha = f.id_cartinha || cartinha.id;
+
     let carrinho = JSON.parse(localStorage.getItem("carrinho")) || [];
-    const jaExiste = carrinho.find((item) => item.id === cartinha.id);
+    const jaExiste = carrinho.find((item) => item.id_cartinha === id_cartinha);
 
     if (!jaExiste) {
-      carrinho.push(cartinha);
+      carrinho.push({
+        id_cartinha,
+        nome_crianca: f.nome_crianca,
+        idade: f.idade,
+        sonho: f.sonho,
+        sexo: f.sexo,
+        irmaos: f.irmaos,
+        foto: f.foto,
+      });
+
       localStorage.setItem("carrinho", JSON.stringify(carrinho));
-      alert(`💌 Cartinha de ${cartinha.fields.nome} adicionada ao carrinho!`);
-      carregarCartinhas(); // atualiza a lista
+      alert(`💌 Cartinha de ${f.nome_crianca} adicionada ao carrinho!`);
+      carregarCartinhas();
     } else {
       alert("Essa cartinha já está no seu carrinho 💙");
     }
@@ -89,10 +101,10 @@ document.addEventListener("DOMContentLoaded", async () => {
   // ============================================================
   // 4️⃣ Filtro de busca
   // ============================================================
-  inputBusca.addEventListener("input", (e) => {
+  inputBusca?.addEventListener("input", (e) => {
     const termo = e.target.value.toLowerCase();
     const filtradas = todasCartinhas.filter((c) => {
-      const nome = (c.fields.nome || "").toLowerCase();
+      const nome = (c.fields.nome_crianca || "").toLowerCase();
       const sonho = (c.fields.sonho || "").toLowerCase();
       return nome.includes(termo) || sonho.includes(termo);
     });

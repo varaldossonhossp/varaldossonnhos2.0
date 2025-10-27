@@ -60,3 +60,15 @@ Estilo do cabeçalho fixo e responsivo
     gap: 10px;
   }
 }
+
+.header-site {
+  background: linear-gradient(180deg, #ffffff 90%, #eaf3ff 100%);
+  box-shadow: 0 3px 15px rgba(74, 144, 226, 0.12);
+}
+.menu-links a {
+  font-weight: 500;
+}
+.menu-links a:hover {
+  color: #4A90E2;
+  background: rgba(74,144,226,0.08);
+}

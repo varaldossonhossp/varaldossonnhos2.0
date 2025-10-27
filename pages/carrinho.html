@@ -2,18 +2,17 @@
 <html lang="pt-BR">
 <head>
   <!-- ============================================================
-       💙 VARAL DOS SONHOS — Carrinho.html
-       ------------------------------------------------------------
-       Mostra as cartinhas escolhidas e permite confirmar adoção
+       💙 VARAL DOS SONHOS — Carrinho
   ============================================================ -->
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Meu Carrinho 💙 | Varal dos Sonhos</title>
 
-  <link rel="icon" href="../imagens/favicon.png" type="image/png" />
+  <link rel="icon" href="/imagens/favicon.png" type="image/png" />
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="../css/carrinho.css" />
 </head>
+
 <body>
   <div id="header"></div>
 
@@ -28,7 +27,6 @@
       <select id="ponto" required>
         <option value="">Selecione...</option>
       </select>
-
       <button id="confirmarAdocao" class="btn-confirmar">Confirmar Adoção 💌</button>
     </section>
   </main>
@@ -36,9 +34,20 @@
   <div id="footer"></div>
   <div id="cloudinho"></div>
 
-  <script src="../js/header.js"></script>
-  <script src="../js/footer.js"></script>
-  <script src="../js/cloudinho.js"></script>
+  <script>
+    async function carregarComponente(id, caminho) {
+      try {
+        const resp = await fetch(caminho);
+        document.getElementById(id).innerHTML = await resp.text();
+      } catch (e) {
+        console.error("Erro ao carregar:", caminho, e);
+      }
+    }
+    carregarComponente("header", "../componentes/header.html");
+    carregarComponente("footer", "../componentes/footer.html");
+    carregarComponente("cloudinho", "../componentes/cloudinho.html");
+  </script>
+
   <script src="../js/carrinho.js"></script>
 </body>
 </html>

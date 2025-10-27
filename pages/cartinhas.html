@@ -2,18 +2,15 @@
 <html lang="pt-BR">
 <head>
   <!-- ============================================================
-       💙 VARAL DOS SONHOS — Cartinhas (Varal com carrossel)
-       Campos do Airtable usados: nome_crianca, idade, sexo, irmaos,
-       sonho, foto (anexo), status, adotada, ativo
+       💙 VARAL DOS SONHOS — Cartinhas
   ============================================================ -->
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Varal Virtual 💌 | Adote um Sonho</title>
 
-  <link rel="icon" href="../imagens/favicon.png" type="image/png" />
+  <link rel="icon" href="/imagens/favicon.png" type="image/png" />
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet" />
 
-  <!-- Estilos globais e do varal -->
   <link rel="stylesheet" href="../css/header.css" />
   <link rel="stylesheet" href="../css/footer.css" />
   <link rel="stylesheet" href="../css/cloudinho.css" />
@@ -21,7 +18,6 @@
 </head>
 
 <body>
-  <!-- Cabeçalho -->
   <div id="header"></div>
 
   <main class="varal-wrapper">
@@ -32,22 +28,29 @@
 
     <section class="varal-area">
       <div class="corda"></div>
-      <button class="nav seta-esq" aria-label="Anterior">‹</button>
-      <button class="nav seta-dir" aria-label="Próximo">›</button>
-
-      <div id="trilho-varal" class="trilho snap">
-        <!-- JS irá inserir os cards aqui -->
-      </div>
+      <button class="nav seta-esq">‹</button>
+      <button class="nav seta-dir">›</button>
+      <div id="trilho-varal" class="trilho snap"></div>
     </section>
   </main>
 
   <div id="footer"></div>
   <div id="cloudinho"></div>
 
-  <!-- Scripts -->
-  <script src="../js/header.js"></script>
-  <script src="../js/footer.js"></script>
-  <script src="../js/cloudinho.js"></script>
+  <script>
+    async function carregarComponente(id, caminho) {
+      try {
+        const resp = await fetch(caminho);
+        document.getElementById(id).innerHTML = await resp.text();
+      } catch (e) {
+        console.error("Erro ao carregar:", caminho, e);
+      }
+    }
+    carregarComponente("header", "../componentes/header.html");
+    carregarComponente("footer", "../componentes/footer.html");
+    carregarComponente("cloudinho", "../componentes/cloudinho.html");
+  </script>
+
   <script src="../js/varal.js"></script>
 </body>
 </html>

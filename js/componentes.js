@@ -1,5 +1,5 @@
 // ============================================================
-// 🌐 Carregamento dinâmico dos componentes HTML
+// 📦 Importa componentes HTML (header, footer, cloudinho)
 // ============================================================
 async function carregarComponente(id, arquivo) {
   try {
@@ -8,6 +8,6 @@ async function carregarComponente(id, arquivo) {
     const html = await resp.text();
     document.getElementById(id).innerHTML = html;
   } catch (erro) {
-    console.error("Falha ao importar componente:", erro);
+    console.error("Erro ao carregar componente:", erro);
   }
 }

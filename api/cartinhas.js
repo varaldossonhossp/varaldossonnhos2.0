@@ -1,55 +1,72 @@
-console.log("🔍 Verificando variáveis de ambiente...");
-console.log("API_KEY:", process.env.AIRTABLE_API_KEY ? "OK" : "MISSING");
-console.log("BASE_ID:", process.env.AIRTABLE_BASE_ID ? "OK" : "MISSING");
-console.log("ADMIN_SECRET:", process.env.ADMIN_SECRET ? "OK" : "MISSING");
-
-
-
-
-
 // ============================================================
-// 💌 VARAL DOS SONHOS — /api/cartinhas.js
+// 💌 VARAL DOS SONHOS — API Cartinhas
 // ------------------------------------------------------------
-// Retorna todas as cartinhas ativas da tabela "cartinhas"
-// (campos: nome_crianca, idade, sexo, sonho, irmaos, foto[], status, ativo)
+// Fornece lista de cartinhas e detalhes individuais
+// Tabela: cartinhas (Airtable)
 // ============================================================
 
 import Airtable from "airtable";
 
-// 🔐 Conexão com o Airtable (usa variáveis do .env.local)
-const base = new Airtable({ apiKey: process.env.AIRTABLE_API_KEY })
-  .base(process.env.AIRTABLE_BASE_ID);
+const base = new Airtable({
+  apiKey: process.env.AIRTABLE_API_KEY
+}).base(process.env.AIRTABLE_BASE_ID);
 
 export default async function handler(req, res) {
   try {
-    // Seleciona apenas cartinhas ativas
-    const records = await base("cartinhas")
-      .select({
-        filterByFormula: "ativo = 1",
-        sort: [{ field: "nome_crianca", direction: "asc" }],
-      })
-      .all();
+    // Se for GET com um ID (ex: /api/cartinhas?id=rec123)
+    if (req.method === "GET" && req.query.id) {
+      const record = await base("cartinhas").find(req.query.id);
+      if (!record) return res.status(404).json({ erro: "Cartinha não encontrada" });
 
-    // Mapeia campos existentes
-    const cartinhas = records.map((r) => ({
-      id: r.id,
-      nome_crianca: r.fields.nome_crianca || "Sem nome",
-      idade: r.fields.idade || "",
-      sexo: r.fields.sexo || "",
-      irmaos: r.fields.irmaos || "",
-      sonho: r.fields.sonho || "",
-      foto: Array.isArray(r.fields.foto) ? r.fields.foto[0]?.url : "/imagens/sem-foto.png",
-      status: r.fields.status || "Disponível",
-      adotada: r.fields.adotada || false,
-    }));
+      const f = record.fields;
+      return res.status(200).json({
+        id: record.id,
+        nome_crianca: f.nome_crianca,
+        primeiro_nome: f.primeiro_nome,
+        sexo: f.sexo,
+        idade: f.idade,
+        sonho: f.sonho,
+        escola: f.escola,
+        cidade: f.cidade,
+        psicologa_responsavel: f.psicologa_responsavel,
+        telefone_contato: f.telefone_contato,
+        imagem_cartinha: f.imagem_cartinha,
+        irmaos: f.irmaos,
+        idade_irmaos: f.idade_irmaos,
+        status: f.status,
+        data_cadastro: f.data_cadastro
+      });
+    }
 
-    res.status(200).json({ sucesso: true, total: cartinhas.length, cartinhas });
-  } catch (erro) {
-    console.error("❌ Erro ao buscar cartinhas:", erro);
-    res.status(500).json({
-      sucesso: false,
-      mensagem: "Erro ao conectar à tabela de cartinhas.",
-      detalhe: erro.message,
-    });
+    // Se for GET geral (lista de cartinhas disponíveis)
+    if (req.method === "GET") {
+      const records = await base("cartinhas")
+        .select({ filterByFormula: "status = 'disponível'" })
+        .all();
+
+      const lista = records.map(r => {
+        const f = r.fields;
+        return {
+          id: r.id,
+          nome_crianca: f.nome_crianca,
+          primeiro_nome: f.primeiro_nome,
+          idade: f.idade,
+          sonho: f.sonho,
+          cidade: f.cidade,
+          imagem_cartinha: f.imagem_cartinha,
+          status: f.status
+        };
+      });
+
+      return res.status(200).json(lista);
+    }
+
+    // Bloqueia métodos não suportados
+    res.setHeader("Allow", ["GET"]);
+    res.status(405).json({ erro: "Método não permitido" });
+
+  } catch (err) {
+    console.error("Erro API cartinhas:", err);
+    res.status(500).json({ erro: "Erro ao carregar cartinhas" });
   }
 }

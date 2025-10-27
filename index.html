@@ -1,119 +1,83 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <!-- ============================================================
-       💙 FANTÁSTICA FÁBRICA DE SONHOS — Página Inicial
-       ------------------------------------------------------------
-       Estrutura modular: Header + Corpo + Footer + Cloudinho
-       Dados dinâmicos: Eventos / Galeria via /api/admin (modo público)
-  ============================================================ -->
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Fantástica Fábrica de Sonhos 💙 | Varal dos Sonhos</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Fantástica Fábrica de Sonhos 💙</title>
 
-  <!-- Ícone e fontes -->
-  <link rel="icon" href="imagens/favicon.png" type="image/png" />
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet" />
+  <!-- Tipografia oficial -->
+  <link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet" />
 
-  <!-- CSS principal -->
+  <link rel="icon" href="/imagens/favicon.png" type="image/png" />
+
+  <!-- CSS -->
   <link rel="stylesheet" href="css/style.css" />
-  <link rel="stylesheet" href="css/header.css" />
-  <link rel="stylesheet" href="css/footer.css" />
   <link rel="stylesheet" href="css/cloudinho.css" />
 </head>
 
-<body>
-  <!-- ============================================================
-       🌈 Cabeçalho global (carregado dinamicamente)
-  ============================================================ -->
+<body class="bg-gradiente">
+  <!-- Header dinâmico -->
   <div id="header"></div>
 
-  <!-- ============================================================
-       🌤️ Corpo principal da Home
-  ============================================================ -->
   <main class="home-container">
     <section class="intro">
-      <!-- 💭 Lado esquerdo: Mensagem e botões -->
       <div class="lado-esquerdo">
-        <div class="nuvem">
-          <img src="imagens/nuvem.png" alt="Fantástica Fábrica de Sonhos" class="nuvem-flutuante" />
-        </div>
+        <img src="imagens/nuvem.png" alt="Fantástica Fábrica de Sonhos" class="nuvem-flutuante" />
 
-        <p class="mensagem">
-          💙 Adote com responsabilidade. <br />
+       
+
+        <p class="legenda-marca">
+          <strong>ADOTEM COM RESPONSABILIDADE</strong><br/>
           Cada cartinha que você lê é uma janela para o sonho de uma criança.
         </p>
 
         <div class="botoes-acao">
-          <a href="pages/Cartinhas.html" class="btn-acao principal">Quero Adotar um Sonho</a>
-          <a href="pages/ComoFunciona.html" class="btn-acao secundario">Como Funciona</a>
+          <a href="pages/cartinhas.html" class="btn-acao principal">Quero Adotar um Sonho</a>
+          <a href="pages/como-funciona.html" class="btn-acao secundario">Como Funciona</a>
         </div>
 
         <div class="texto-transparente">
-          Processo simples e transparente ✨ <br />
-          Acompanhamento por e-mail e WhatsApp 💌
+          Processo simples e transparente ✨ • Acompanhamento por e-mail e WhatsApp 💌
         </div>
       </div>
 
-      <!-- 🎠 Lado direito: Carrossel de eventos -->
       <div class="lado-direito">
         <section id="momentos">
-          <h2>🌟 Momentos que Inspiram</h2>
+          <h2 class="h2-azul">🌟 Momentos que Inspiram</h2>
           <div class="carrossel" id="carrossel-eventos">
-            <!-- Imagens dinâmicas serão carregadas via /js/galeria.js -->
-            <div class="slide fade">
-              <img src="imagens/evento1.jpg" alt="Evento exemplo 1" />
-            </div>
-            <div class="slide fade">
-              <img src="imagens/evento2.jpg" alt="Evento exemplo 2" />
-            </div>
-            <div class="slide fade">
-              <img src="imagens/evento3.jpg" alt="Evento exemplo 3" />
-            </div>
+            <!-- Fallback local (enquanto não vem da API) -->
+            <div class="slide fade"><img src="imagens/1.png" alt="Evento 1" /></div>
+            <div class="slide fade"><img src="imagens/2.png" alt="Evento 2" /></div>
+            <div class="slide fade"><img src="imagens/3.png" alt="Evento 3" /></div>
           </div>
         </section>
       </div>
     </section>
 
-    <!-- 🎉 Faixa final -->
     <section class="faixa-eventos">
       <p>🎁 Acompanhe nossos eventos e ajude a espalhar alegria!</p>
-      <a href="pages/Eventos.html" class="btn-eventos">Ver Todos os Eventos</a>
+      <a href="pages/eventos.html" class="btn-eventos">Ver Todos os Eventos</a>
     </section>
   </main>
 
-  <!-- ============================================================
-       🌈 Rodapé global (carregado dinamicamente)
-  ============================================================ -->
+  <!-- Footer e Cloudinho -->
   <div id="footer"></div>
-
-  <!-- ============================================================
-       ☁️ Cloudinho (assistente flutuante)
-  ============================================================ -->
   <div id="cloudinho"></div>
 
-  <!-- ============================================================
-       📜 Scripts JS globais
-  ============================================================ -->
+  <!-- Carregador de componentes (funciona na raiz e em /pages) -->
   <script>
-    // Função para carregar componentes HTML externos dinamicamente
-    async function carregarComponente(id, caminho) {
-      try {
-        const resp = await fetch(caminho);
-        const html = await resp.text();
-        document.getElementById(id).innerHTML = html;
-      } catch (erro) {
-        console.error(`Erro ao carregar componente ${caminho}:`, erro);
-      }
+    async function carregarComponente(id, arquivo) {
+      const base = location.pathname.includes("/pages/") ? "../componentes/" : "componentes/";
+      const resp = await fetch(base + arquivo);
+      if (resp.ok) document.getElementById(id).innerHTML = await resp.text();
     }
-
-    // Carrega os três componentes fixos da página
-    carregarComponente("header", "componentes/header.html");
-    carregarComponente("footer", "componentes/footer.html");
-    carregarComponente("cloudinho", "componentes/cloudinho.html");
+    carregarComponente("header", "header.html");
+    carregarComponente("footer", "footer.html");
+    carregarComponente("cloudinho", "cloudinho.html");
   </script>
 
-  <!-- Carrossel e integração com API -->
-  <script src="js/galeria.js"></script>
+  <!-- JS -->
+  <script src="js/carrocel.js"></script>
+  <script src="js/cloudinho.js"></script>
 </body>
 </html>

@@ -1,32 +1,22 @@
 <!-- ============================================================
-💭 VARAL DOS SONHOS — Cloudinho (Assistente Virtual)
----------------------------------------------------------------
-Componente global — aparece em todas as páginas no canto direito
-Busca perguntas e respostas na tabela “cloudinho” do Airtable.
+💬 CLOUDINHO — Assistente Inteligente Fantástica Fábrica de Sonhos
 ============================================================ -->
-<div id="cloudinho-wrapper">
-  <!-- Botão flutuante -->
-  <div id="cloudinho-toggle">
-    <img src="/imagens/cloudinho.png" alt="Cloudinho Assistente" title="Fale com o Cloudinho 💬" />
-  </div>
+<div class="cloudinho-widget">
+  <button class="cloudinho-botao" title="Fale com o Cloudinho">
+    <img src="imagens/cloudinho.png" alt="Cloudinho" />
+  </button>
 
-  <!-- Janela do chat -->
-  <div id="cloudinho-chat" class="hidden">
-    <div id="cloudinho-header">
-      ☁️ <strong>Cloudinho</strong>
-      <span id="cloudinho-close">✕</span>
-    </div>
+  <div class="cloudinho-chat" style="display: none;">
+    <header>
+      <div class="titulo">☁️ Cloudinho</div>
+      <button id="fecharCloudinho" aria-label="Fechar chat">✕</button>
+    </header>
 
-    <div id="cloudinho-messages">
-      <div class="bot-msg">
-        Oi! Eu sou o <strong>Cloudinho</strong> 💙<br>
-        Posso te ajudar a entender como funciona o Varal dos Sonhos!
-      </div>
-    </div>
+    <div class="chat-mensagens" id="chatMensagens"></div>
 
-    <div id="cloudinho-input-area">
-      <input type="text" id="cloudinho-input" placeholder="Digite sua pergunta..." maxlength="150" />
-      <button id="cloudinho-send" title="Enviar mensagem">➤</button>
-    </div>
+    <form id="formCloudinho" autocomplete="off">
+      <input type="text" id="campoPergunta" placeholder="Digite sua pergunta..." />
+      <button type="submit">Enviar</button>
+    </form>
   </div>
 </div>

@@ -4,6 +4,7 @@
     { "src": "api/**/*.js", "use": "@vercel/node" },
     { "src": "index.html", "use": "@vercel/static" },
     { "src": "pages/**/*.html", "use": "@vercel/static" },
+    { "src": "componentes/**/*.html", "use": "@vercel/static" },
     { "src": "css/**/*", "use": "@vercel/static" },
     { "src": "js/**/*", "use": "@vercel/static" },
     { "src": "imagens/**/*", "use": "@vercel/static" }
@@ -13,7 +14,9 @@
     { "src": "/css/(.*)", "dest": "/css/$1" },
     { "src": "/js/(.*)", "dest": "/js/$1" },
     { "src": "/imagens/(.*)", "dest": "/imagens/$1" },
+    { "src": "/componentes/(.*)", "dest": "/componentes/$1" },
     { "src": "/pages/(.*)", "dest": "/pages/$1" },
     { "src": "/(.*)", "dest": "/index.html" }
   ]
 }
+

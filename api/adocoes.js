@@ -1,100 +1,126 @@
 // ============================================================
-// 🎁 VARAL DOS SONHOS — /api/adocoes.js
+// 🎁 VARAL DOS SONHOS — API Adoções
 // ------------------------------------------------------------
-// Endpoint responsável por:
-//   ✅ Criar registro de adoção na tabela "adocoes"
-//   ✅ Atualizar o status da cartinha para "Aguardando Confirmação"
-//   ✅ Enviar e-mail ao doador usando EmailJS
+// Controla adoções de cartinhas (Airtable)
+// Tabelas: adocoes, cartinhas, usuarios
 // ============================================================
 
 import Airtable from "airtable";
-import enviarEmail from "../lib/enviarEmail.js"; // função auxiliar modularizada
 
-// ============================================================
-// 🔐 Conexão com Airtable
-// ============================================================
-const base = new Airtable({ apiKey: process.env.AIRTABLE_API_KEY })
-  .base(process.env.AIRTABLE_BASE_ID);
+const base = new Airtable({
+  apiKey: process.env.AIRTABLE_API_KEY
+}).base(process.env.AIRTABLE_BASE_ID);
 
-// ============================================================
-// ⚙️ Função principal /api/adocoes (método POST)
-// ============================================================
 export default async function handler(req, res) {
-  if (req.method !== "POST") {
-    return res.status(405).json({ sucesso: false, mensagem: "Método não permitido." });
-  }
-
   try {
-    // Lê os dados enviados do front-end (JSON)
-    const { id_cartinha, nome_doador, email_doador } = req.body;
+    // ========================================================
+    // 1️⃣ LISTAR TODAS AS ADOÇÕES
+    // GET /api/adocoes
+    // ========================================================
+    if (req.method === "GET") {
+      const records = await base("adocoes").select().all();
 
-    if (!id_cartinha || !nome_doador || !email_doador) {
-      return res.status(400).json({
-        sucesso: false,
-        mensagem: "Campos obrigatórios ausentes.",
+      const lista = records.map(r => {
+        const f = r.fields;
+        return {
+          id: r.id,
+          id_doacao: f.id_doacao,
+          data_adocao: f.data_adocao,
+          id_cartinha: f.id_cartinha,
+          id_usuario: f.id_usuario,
+          nome_doador: f.nome_doador,
+          email_doador: f.email_doador,
+          telefone_doador: f.telefone_doador,
+          tipo: f.tipo,
+          ponto_coleta: f.ponto_coleta,
+          status_adocao: f.status_adocao
+        };
+      });
+
+      return res.status(200).json(lista);
+    }
+
+    // ========================================================
+    // 2️⃣ CRIAR UMA NOVA ADOÇÃO
+    // POST /api/adocoes
+    // ========================================================
+    if (req.method === "POST") {
+      const {
+        id_cartinha,
+        id_usuario,
+        nome_doador,
+        email_doador,
+        telefone_doador,
+        tipo,
+        ponto_coleta
+      } = req.body;
+
+      if (!id_cartinha || !id_usuario) {
+        return res.status(400).json({ erro: "Campos obrigatórios ausentes." });
+      }
+
+      // Cria o registro na tabela adocoes
+      const created = await base("adocoes").create([
+        {
+          fields: {
+            id_doacao: "DOA-" + Date.now(),
+            data_adocao: new Date().toISOString(),
+            id_cartinha,
+            id_usuario,
+            nome_doador,
+            email_doador,
+            telefone_doador,
+            tipo,
+            ponto_coleta,
+            status_adocao: "aguardando confirmacao"
+          }
+        }
+      ]);
+
+      // Atualiza a cartinha para "adotada"
+      await base("cartinhas").update([
+        {
+          id: id_cartinha,
+          fields: { status: "adotada" }
+        }
+      ]);
+
+      return res.status(200).json({
+        sucesso: true,
+        mensagem: "Adoção registrada com sucesso!",
+        id: created[0].id
       });
     }
 
-    // ============================================================
-    // 🧾 1️⃣ Cria o registro de adoção
-    // ------------------------------------------------------------
-    // Cria novo registro na tabela "adocoes"
-    // ============================================================
-    const novaAdocao = await base("adocoes").create([
-      {
-        fields: {
-          id_cartinha,
-          nome_doador,
-          email_doador,
-          status: "Aguardando Confirmação",
-          data_adocao: new Date().toISOString(),
-        },
-      },
-    ]);
+    // ========================================================
+    // 3️⃣ ATUALIZAR STATUS DE ADOÇÃO
+    // PUT /api/adocoes?id=recXXXX
+    // body: { status_adocao: "confirmada" }
+    // ========================================================
+    if (req.method === "PUT") {
+      const { id } = req.query;
+      const { status_adocao } = req.body;
+      if (!id || !status_adocao)
+        return res.status(400).json({ erro: "Dados incompletos." });
 
-    // ============================================================
-    // 🧩 2️⃣ Atualiza o status da cartinha
-    // ------------------------------------------------------------
-    // Muda de "Disponível" para "Aguardando Confirmação"
-    // ============================================================
-    await base("cartinhas").update([
-      {
-        id: id_cartinha,
-        fields: { status: "Aguardando Confirmação" },
-      },
-    ]);
+      await base("adocoes").update([
+        {
+          id,
+          fields: { status_adocao }
+        }
+      ]);
 
-    // ============================================================
-    // 💌 3️⃣ Envia e-mail de notificação (via EmailJS)
-    // ============================================================
-    await enviarEmail({
-      to_email: email_doador,
-      to_name: nome_doador,
-      subject: "💙 Adoção recebida!",
-      message: `
-        Olá ${nome_doador},<br><br>
-        Obrigado por adotar uma cartinha no <strong>Varal dos Sonhos</strong>! 🎁<br>
-        Sua adoção foi registrada e aguarda confirmação da equipe.<br>
-        Assim que confirmada, você receberá as instruções de entrega do presente.<br><br>
-        Com carinho,<br>
-        💙 Fantástica Fábrica de Sonhos
-      `,
-    });
+      return res.status(200).json({ sucesso: true, status: status_adocao });
+    }
 
-    // ============================================================
-    // ✅ 4️⃣ Retorno de sucesso
-    // ============================================================
-    res.status(201).json({
-      sucesso: true,
-      mensagem: "Adoção registrada com sucesso!",
-      adocao: novaAdocao,
-    });
-  } catch (erro) {
-    console.error("Erro ao registrar adoção:", erro);
-    res.status(500).json({
-      sucesso: false,
-      mensagem: "Erro ao registrar adoção.",
-      detalhe: erro.message,
-    });
+    // ========================================================
+    // 4️⃣ BLOQUEIA OUTROS MÉTODOS
+    // ========================================================
+    res.setHeader("Allow", ["GET", "POST", "PUT"]);
+    res.status(405).json({ erro: "Método não permitido." });
+
+  } catch (err) {
+    console.error("Erro API adocoes:", err);
+    res.status(500).json({ erro: "Erro ao processar adoções." });
   }
 }

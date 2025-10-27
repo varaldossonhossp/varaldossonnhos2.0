@@ -1,36 +1,40 @@
-// ============================================================
-// ☁️ VARAL DOS SONHOS — /api/cloudinho.js
-// ------------------------------------------------------------
-// Busca respostas automáticas da tabela "cloudinho" (Airtable).
-// Campos esperados: pergunta, resposta, ativo
-// ============================================================
+// 💬 Cloudinho - Chat com base de conhecimento (Airtable)
+document.addEventListener("DOMContentLoaded", () => {
+  const painel = document.getElementById("painelCloudinho");
+  const botao = document.getElementById("btnCloudinho");
+  const fechar = document.getElementById("fecharCloudinho");
+  const form = document.getElementById("formCloudinho");
+  const campo = document.getElementById("campoPergunta");
+  const chat = document.getElementById("chatMensagens");
 
-import Airtable from "airtable";
+  const append = (txt, quem) => {
+    const div = document.createElement("div");
+    div.className = "msg " + quem;
+    div.textContent = txt;
+    chat.appendChild(div);
+    chat.scrollTop = chat.scrollHeight;
+  };
 
-const base = new Airtable({ apiKey: process.env.AIRTABLE_API_KEY })
-  .base(process.env.AIRTABLE_BASE_ID);
+  botao.addEventListener("click", () => painel.toggleAttribute("hidden"));
+  fechar.addEventListener("click", () => painel.setAttribute("hidden", true));
 
-export default async function handler(req, res) {
-  const pergunta = (req.query.pergunta || "").toLowerCase();
+  form.addEventListener("submit", async e => {
+    e.preventDefault();
+    const pergunta = campo.value.trim();
+    if (!pergunta) return;
+    append(pergunta, "usuario");
+    campo.value = "";
 
-  try {
-    const records = await base("cloudinho")
-      .select({
-        filterByFormula: `AND(ativo, FIND(LOWER("${pergunta}"), LOWER({pergunta})))`,
-        maxRecords: 1,
-      })
-      .firstPage();
-
-    if (records.length > 0) {
-      res.status(200).json({ resposta: records[0].fields.resposta });
-    } else {
-      res.status(200).json({
-        resposta:
-          "Desculpe, ainda não sei responder isso. Você pode entrar em contato conosco pela página Fale Conosco 💙",
+    try {
+      const r = await fetch("/api/cloudinho", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ pergunta })
       });
+      const j = await r.json();
+      append(j.resposta || "Ainda não aprendi isso 💭", "bot");
+    } catch {
+      append("Ops, estou sem conexão agora 😅", "bot");
     }
-  } catch (err) {
-    console.error("Erro no Cloudinho API:", err);
-    res.status(500).json({ resposta: "Erro ao acessar base de dados 😢" });
-  }
-}
+  });
+});
