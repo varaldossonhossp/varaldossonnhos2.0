@@ -1,129 +1,168 @@
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
 
-body {
-  margin: 0;
-  font-family: "Poppins", sans-serif;
-  background: linear-gradient(180deg, #E6F2FF 0%, #C7E2FF 100%);
-  color: #1F355B;
+:root{
+  --azul-escuro:#1F355B;
+  --azul:#4A90E2;
+  --azul-claro:#6FB3FF;
+  --texto:#2f4976;
+  --card:#ffffff;
+  --grad1:#E6F2FF;
+  --grad2:#C7E2FF;
 }
 
-/* Cabeçalho da página */
-.topo-coleta {
-  text-align: center;
-  margin-top: 120px;
-}
-.logo-coleta {
-  width: 120px;
-  margin-bottom: 12px;
-}
-.topo-coleta h2 {
-  color: #1F355B;
-  font-size: 26px;
-  margin-bottom: 8px;
-}
-.topo-coleta p {
-  max-width: 500px;
-  margin: 0 auto 40px;
-  color: #324b7c;
+*{ box-sizing:border-box; }
+
+html, body{
+  margin:0;
+  font-family:"Poppins",sans-serif;
+  color:var(--azul-escuro);
+  background:linear-gradient(180deg, var(--grad1) 0%, var(--grad2) 100%);
 }
 
-/* Linha do varal */
-.varal-coleta {
-  display: flex;
-  justify-content: center;
-  flex-wrap: wrap;
-  gap: 40px;
-  position: relative;
-  padding: 40px 0 120px;
+/* topo / intro */
+.topo-coleta{
+  text-align:center;
+  padding:120px 16px 24px;
 }
-.varal-coleta::before {
-  content: "";
-  position: absolute;
-  top: 20px;
-  left: 5%;
-  right: 5%;
-  height: 4px;
-  background: linear-gradient(90deg, #4A90E2, #6FB3FF);
-  border-radius: 2px;
-  z-index: 1;
+.logo-coleta{
+  width:120px;
+  margin-bottom:12px;
+  user-select:none;
 }
-
-/* Cards */
-.card-ponto {
-  position: relative;
-  background: #fff;
-  border-radius: 16px;
-  box-shadow: 0 8px 24px rgba(31, 53, 91, 0.1);
-  padding: 18px;
-  width: 280px;
-  text-align: center;
-  transition: transform 0.3s ease;
+.topo-coleta h2{
+  font-size:28px;
+  margin:0 0 8px;
 }
-.card-ponto:hover {
-  transform: translateY(-8px) rotate(-1deg);
-}
-.card-ponto::before {
-  content: "";
-  position: absolute;
-  top: -35px;
-  left: calc(50% - 15px);
-  width: 30px;
-  height: 40px;
-  background: url("../imagens/prendedor.png") no-repeat center/contain;
-  z-index: 2;
-}
-.card-ponto h3 {
-  color: #4A90E2;
-  margin-bottom: 6px;
-}
-.card-ponto p {
-  margin: 4px 0;
-  font-size: 14px;
-  color: #2f4976;
-}
-.card-ponto button {
-  margin-top: 12px;
-  background: #4A90E2;
-  color: #fff;
-  border: none;
-  border-radius: 8px;
-  padding: 8px 14px;
-  cursor: pointer;
-  transition: background 0.3s ease;
-}
-.card-ponto button:hover {
-  background: #6FB3FF;
+.topo-coleta p{
+  max-width:680px;
+  margin:0 auto 36px;
+  color:#324b7c;
 }
 
-/* Modal do mapa */
-.modal-mapa {
-  position: fixed;
-  top: 0; left: 0;
-  width: 100%; height: 100%;
-  background: rgba(0,0,0,0.6);
-  display: flex; justify-content: center; align-items: center;
-  z-index: 999;
+/* seção varal */
+.varal-coleta{
+  position:relative;
+  padding:24px 16px 120px;
 }
-.conteudo-mapa {
-  background: #fff;
-  border-radius: 12px;
-  box-shadow: 0 8px 30px rgba(0,0,0,0.25);
-  padding: 10px;
-  position: relative;
-  width: 90%; max-width: 600px;
+.fio-varal{
+  position:absolute;
+  top:18px;
+  left:5%;
+  right:5%;
+  height:4px;
+  border-radius:2px;
+  background:linear-gradient(90deg, var(--azul) 0%, var(--azul-claro) 100%);
+  filter:drop-shadow(0 1px 0 rgba(0,0,0,.08));
 }
-.conteudo-mapa iframe {
-  width: 100%; height: 400px;
-  border: 0; border-radius: 10px;
-}
-.conteudo-mapa .fechar {
-  position: absolute;
-  top: 8px; right: 8px;
-  border: none; background: #4A90E2;
-  color: #fff; border-radius: 50%;
-  width: 28px; height: 28px; cursor: pointer;
+.lista-coleta{
+  display:flex;
+  justify-content:center;
+  gap:40px;
+  flex-wrap:wrap;
+  position:relative;
+  z-index:1;
 }
 
-@media (max-width: 768px) {
-  .card-ponto { width: 90%; }
+/* cards como se estivessem pendurados */
+.card-ponto{
+  position:relative;
+  width:290px;
+  background:var(--card);
+  border-radius:16px;
+  box-shadow:0 8px 24px rgba(31,53,91,.10);
+  padding:18px 18px 16px;
+  text-align:center;
+  transition: transform .35s ease, box-shadow .2s ease;
+  transform-origin: top center;
+}
+.card-ponto:focus{ outline: 3px solid rgba(74,144,226,.35); }
+
+.card-ponto:hover{
+  transform: translateY(-6px) rotate(-1.2deg);
+  box-shadow:0 12px 30px rgba(31,53,91,.16);
+}
+.card-ponto .prendedor{
+  position:absolute;
+  top:-34px;
+  left:calc(50% - 16px);
+  width:32px; height:42px;
+  background:url("../imagens/prendedor.png") no-repeat center/contain;
+}
+
+/* textos */
+.card-ponto h3{
+  margin:6px 0 6px;
+  color:var(--azul);
+}
+.card-ponto p{
+  margin:4px 0;
+  font-size:14px;
+  color:var(--texto);
+}
+.card-ponto .endereco{
+  font-weight:600;
+  color:#1f355b;
+}
+
+/* botão */
+.btn-mapa{
+  margin-top:12px;
+  background:var(--azul);
+  color:#fff;
+  border:none;
+  border-radius:10px;
+  padding:10px 16px;
+  cursor:pointer;
+  transition:background .25s ease, transform .1s ease;
+}
+.btn-mapa:hover{ background:var(--azul-claro); }
+.btn-mapa:active{ transform:scale(.98); }
+
+/* mensagens */
+.msg-erro,.msg-vazio{
+  color:#2f4976;
+  background:#ffffff;
+  border-radius:12px;
+  padding:14px 18px;
+  box-shadow:0 6px 18px rgba(31,53,91,.08);
+}
+
+/* modal do mapa */
+.modal-mapa{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.55);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  z-index:999;
+  padding:16px;
+}
+.conteudo-mapa{
+  position:relative;
+  width:min(760px, 100%);
+  background:#fff;
+  border-radius:14px;
+  padding:10px;
+  box-shadow:0 12px 36px rgba(0,0,0,.25);
+}
+.conteudo-mapa iframe{
+  width:100%;
+  height:440px;
+  border:0;
+  border-radius:10px;
+}
+.conteudo-mapa .fechar{
+  position:absolute;
+  top:10px; right:10px;
+  width:32px; height:32px;
+  border:0; border-radius:50%;
+  background:var(--azul);
+  color:#fff;
+  cursor:pointer;
+}
+
+/* responsivo */
+@media (max-width: 768px){
+  .card-ponto{ width:92%; }
 }
