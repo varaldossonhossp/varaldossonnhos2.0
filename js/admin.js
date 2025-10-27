@@ -1,16 +1,11 @@
 // ============================================================
-// 💼 VARAL DOS SONHOS — js/admin.js
-// ------------------------------------------------------------
-// Controla o painel administrativo (admin.html):
-//   • Autenticação com ADMIN_SECRET
-//   • Criação de eventos
-//   • Listagem, exclusão e atualização
+// 💼 VARAL DOS SONHOS — js/admin.js (compatível com tabela "eventos")
 // ============================================================
-
 document.addEventListener("DOMContentLoaded", () => {
   const tokenInput = document.getElementById("token");
   const btnLogin = document.getElementById("btnLogin");
   const authMsg = document.getElementById("authMsg");
+
   const formEvento = document.getElementById("formEvento");
   const msg = document.getElementById("msg");
   const listaEventos = document.getElementById("listaEventos");
@@ -18,21 +13,24 @@ document.addEventListener("DOMContentLoaded", () => {
 
   let tokenAdmin = "";
 
-  // ============================================================
-  // 🔑 LOGIN DO ADMINISTRADOR
-  // ============================================================
+  const H = () => ({
+    "Content-Type": "application/json",
+    "x-admin-token": tokenAdmin || "",
+    "Cache-Control": "no-store",
+  });
+
+  // 🔑 LOGIN (apenas valida o token consultando a listagem)
   btnLogin.addEventListener("click", async () => {
     tokenAdmin = tokenInput.value.trim();
-
     if (!tokenAdmin) {
       authMsg.textContent = "⚠️ Informe o token administrativo.";
       authMsg.style.color = "red";
       return;
     }
 
-    // testa o token chamando /api/admin?tipo=eventos
     try {
-      const resp = await fetch("/api/admin?tipo=eventos");
+      const url = `/api/admin?tipo=eventos&token_admin=${encodeURIComponent(tokenAdmin)}`;
+      const resp = await fetch(url, { headers: H() });
       if (resp.ok) {
         authMsg.textContent = "✅ Acesso liberado.";
         authMsg.style.color = "green";
@@ -42,7 +40,8 @@ document.addEventListener("DOMContentLoaded", () => {
         listaEventos.style.display = "block";
         carregarEventos();
       } else {
-        throw new Error("Falha no acesso");
+        authMsg.textContent = "❌ Token inválido.";
+        authMsg.style.color = "red";
       }
     } catch {
       authMsg.textContent = "❌ Erro ao verificar token.";
@@ -50,16 +49,19 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // ============================================================
   // 📅 CRIAR NOVO EVENTO
-  // ============================================================
   formEvento.addEventListener("submit", async (e) => {
     e.preventDefault();
 
     const titulo = document.getElementById("titulo").value.trim();
+    const local = document.getElementById("local").value.trim();
     const descricao = document.getElementById("descricao").value.trim();
-    const data_evento = document.getElementById("data_evento").value;
+    const data_evento = document.getElementById("data_evento").value || null;
+    const data_limite_recebimento = document.getElementById("data_limite_recebimento").value || null;
+    const destacar = document.getElementById("destacar")?.checked ?? false;
+
     const imagensRaw = document.getElementById("imagens").value.trim();
+    const imagens = imagensRaw ? imagensRaw.split(",").map(u => ({ url: u.trim() })) : [];
 
     if (!titulo || !descricao) {
       msg.textContent = "⚠️ Preencha título e descrição.";
@@ -67,53 +69,51 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    // transforma URLs em formato aceito pelo Airtable
-    const imagens = imagensRaw
-      ? imagensRaw.split(",").map((url) => ({ url: url.trim() }))
-      : [];
-
     msg.textContent = "⏳ Enviando...";
     msg.style.color = "black";
 
     try {
       const resp = await fetch("/api/admin", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: H(),
         body: JSON.stringify({
           modo: "eventos",
           acao: "criar",
           token_admin: tokenAdmin,
-          titulo,
+          // mapeamento para os campos da tabela
+          nome_evento: titulo,
+          local_evento: local,
           descricao,
           data_evento,
-          imagens,
+          data_limite_recebimento,
+          destacar_na_homepage: destacar,
+          imagem: imagens,
         }),
       });
-
       const json = await resp.json();
+
       if (json.sucesso) {
-        msg.textContent = "✅ Evento criado com sucesso!";
+        msg.textContent = "✅ Evento criado!";
         msg.style.color = "green";
         formEvento.reset();
         carregarEventos();
       } else {
-        msg.textContent = "❌ Erro: " + json.mensagem;
+        msg.textContent = "❌ Erro: " + (json.mensagem || "Falha ao criar.");
         msg.style.color = "red";
       }
     } catch (erro) {
+      console.error(erro);
       msg.textContent = "❌ Falha ao criar evento.";
       msg.style.color = "red";
-      console.error(erro);
     }
   });
 
-  // ============================================================
-  // 🗂️ LISTAR EVENTOS EXISTENTES
-  // ============================================================
+  // 🗂️ LISTAR
   async function carregarEventos() {
     divEventos.innerHTML = "<p>⏳ Carregando eventos...</p>";
     try {
-      const resp = await fetch("/api/admin?tipo=eventos");
+      const url = `/api/admin?tipo=eventos&token_admin=${encodeURIComponent(tokenAdmin)}`;
+      const resp = await fetch(url, { headers: H() });
       const json = await resp.json();
 
       if (!json.sucesso) {
@@ -121,86 +121,89 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
-      if (json.eventos.length === 0) {
-        divEventos.innerHTML = "<p>Nenhum evento cadastrado ainda 💙</p>";
+      if (!json.eventos?.length) {
+        divEventos.innerHTML = "<p>Nenhum evento cadastrado 💙</p>";
         return;
       }
 
       divEventos.innerHTML = "";
       json.eventos.forEach((ev) => {
-        const f = ev.fields;
-        const imagens = f.imagem || [];
+        const f = ev.fields || {};
+        const imgs = f.imagem || [];
 
         const bloco = document.createElement("div");
         bloco.className = "evento";
-
         bloco.innerHTML = `
-          <h3>${f.titulo || "Sem título"}</h3>
+          <h3>${f.nome_evento || "Sem título"}</h3>
           <p>${f.descricao || ""}</p>
+          <p>📍 ${f.local_evento || "—"}</p>
           <p>📅 ${f.data_evento ? new Date(f.data_evento).toLocaleDateString("pt-BR") : "Sem data"}</p>
+          <p>⏳ Limite: ${f.data_limite_recebimento ? new Date(f.data_limite_recebimento).toLocaleDateString("pt-BR") : "—"}</p>
+          <p>Status: ${f.status_evento || "—"} ${f.destacar_na_homepage ? "⭐" : ""}</p>
           <div class="fotos">
-            ${imagens
-              .map(
-                (img) => `<img src="${img.url}" alt="${f.titulo}" title="${f.titulo}">`
-              )
-              .join("")}
+            ${imgs.map(img => `<img src="${img.url}" alt="${f.nome_evento || ""}" />`).join("")}
           </div>
           <div class="acoes">
             <button class="ativar">${f.ativo ? "Desativar" : "Ativar"}</button>
+            <button class="encerrar">Encerrar</button>
+            <button class="destacar">${f.destacar_na_homepage ? "Remover destaque" : "Destacar"}</button>
             <button class="excluir">Excluir</button>
           </div>
         `;
 
-        // botão ativar/desativar
         bloco.querySelector(".ativar").addEventListener("click", async () => {
-          await atualizarStatus(ev.id, !f.ativo);
+          await atualizaCampo(ev.id, { ativo: !f.ativo });
+          carregarEventos();
         });
 
-        // botão excluir
+        bloco.querySelector(".encerrar").addEventListener("click", async () => {
+          await atualizaCampo(ev.id, { status_evento: "encerrado" });
+          carregarEventos();
+        });
+
+        bloco.querySelector(".destacar").addEventListener("click", async () => {
+          await atualizaCampo(ev.id, { destacar_na_homepage: !f.destacar_na_homepage });
+          carregarEventos();
+        });
+
         bloco.querySelector(".excluir").addEventListener("click", async () => {
-          if (confirm(`Excluir o evento "${f.titulo}"?`)) {
+          if (confirm(`Excluir "${f.nome_evento || "o evento"}"?`)) {
             await excluirEvento(ev.id);
+            carregarEventos();
           }
         });
 
         divEventos.appendChild(bloco);
       });
-    } catch (erro) {
-      console.error("Erro ao listar eventos:", erro);
+    } catch (e) {
+      console.error(e);
       divEventos.innerHTML = "<p>❌ Erro ao carregar eventos.</p>";
     }
   }
 
-  // ============================================================
-  // 🔄 ATUALIZAR STATUS (ativo/inativo)
-  // ============================================================
-  async function atualizarStatus(id_evento, ativo) {
+  async function atualizaCampo(id_evento, fields) {
     try {
       await fetch("/api/admin", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: H(),
         body: JSON.stringify({
           modo: "eventos",
           acao: "atualizar",
           token_admin: tokenAdmin,
           id_evento,
-          ativo,
+          fields, // campos arbitrários
         }),
       });
-      carregarEventos();
-    } catch (erro) {
-      console.error("Erro ao atualizar status:", erro);
+    } catch (e) {
+      console.error("Erro ao atualizar:", e);
     }
   }
 
-  // ============================================================
-  // ❌ EXCLUIR EVENTO
-  // ============================================================
   async function excluirEvento(id_evento) {
     try {
       await fetch("/api/admin", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: H(),
         body: JSON.stringify({
           modo: "eventos",
           acao: "excluir",
@@ -208,9 +211,8 @@ document.addEventListener("DOMContentLoaded", () => {
           id_evento,
         }),
       });
-      carregarEventos();
-    } catch (erro) {
-      console.error("Erro ao excluir evento:", erro);
+    } catch (e) {
+      console.error("Erro ao excluir:", e);
     }
   }
 });

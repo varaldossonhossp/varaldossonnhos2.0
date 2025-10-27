@@ -1,8 +1,7 @@
 // ============================================================
-// 🏪 VARAL DOS SONHOS — /api/pontosdecoleta.js
+// 📜 VARAL DOS SONHOS — /api/regras_gamificacao.js
 // ------------------------------------------------------------
-// Retorna os pontos de coleta ativos (status = ativo).
-// Tabela Airtable: ponto_coleta
+// Lista as regras de gamificação configuradas no Airtable.
 // ============================================================
 
 import Airtable from "airtable";
@@ -17,23 +16,22 @@ export default async function handler(req, res) {
   try {
     const base = new Airtable({ apiKey: process.env.AIRTABLE_API_KEY })
       .base(process.env.AIRTABLE_BASE_ID);
-    const table = process.env.AIRTABLE_PONTOCOLETA_TABLE || "ponto_coleta";
+    const tabela = process.env.AIRTABLE_REGRAS_GAMIFICACAO_TABLE || "regras_gamificacao";
 
-    const records = await base(table)
-      .select({
-        filterByFormula: "({status}='ativo')",
-        sort: [{ field: "nome_ponto", direction: "asc" }],
-      })
+    const registros = await base(tabela)
+      .select({ sort: [{ field: "nivel_gamificacao", direction: "asc" }] })
       .all();
 
-    const pontos = records.map((r) => ({
+    const regras = registros.map((r) => ({
       id: r.id,
       ...r.fields,
     }));
 
-    res.status(200).json({ sucesso: true, pontos });
+    res.status(200).json({ sucesso: true, regras });
   } catch (e) {
-    console.error("Erro /api/pontosdecoleta:", e);
-    res.status(500).json({ sucesso: false, mensagem: "Erro ao listar pontos de coleta." });
+    console.error("Erro /api/regras_gamificacao:", e);
+    res
+      .status(500)
+      .json({ sucesso: false, mensagem: "Erro ao listar regras.", detalhe: e.message });
   }
 }

@@ -1,49 +1,54 @@
 // ============================================================
-// 🎁 VARAL DOS SONHOS — API Adoções
+// 💌 VARAL DOS SONHOS — /api/adocoes.js
 // ------------------------------------------------------------
-// Controla adoções de cartinhas (Airtable)
-// Tabelas: adocoes, cartinhas, usuarios
+// Cria registro de adoção, envia e-mail e marca cartinha como "adotada".
+// Tabelas Airtable: adocoes, cartinhas, usuarios, eventos, ponto_coleta
 // ============================================================
 
 import Airtable from "airtable";
 
-const base = new Airtable({
-  apiKey: process.env.AIRTABLE_API_KEY
-}).base(process.env.AIRTABLE_BASE_ID);
+export const config = { runtime: "nodejs" };
+
+// utilitário
+const ok = (res, data) => res.status(200).json(data);
+const err = (res, code, msg) => res.status(code).json({ sucesso: false, mensagem: msg });
+
+async function enviarEmailJS({ nome_doador, email_doador, nome_crianca, sonho, ponto_coleta }) {
+  try {
+    const params = {
+      service_id: process.env.EMAILJS_SERVICE_ID,
+      template_id: process.env.EMAILJS_TEMPLATE_ID,
+      user_id: process.env.EMAILJS_PUBLIC_KEY,
+      template_params: {
+        to_name: nome_doador,
+        to_email: email_doador,
+        subject: "Confirmação de Adoção 💙 Varal dos Sonhos",
+        message: `Olá ${nome_doador}, sua adoção da cartinha de ${nome_crianca} (“${sonho}”) foi registrada!\n\nPonto de entrega: ${ponto_coleta}.\n\nObrigado por espalhar sonhos! 🌟`,
+      },
+    };
+
+    await fetch("https://api.emailjs.com/api/v1.0/email/send", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(params),
+    });
+  } catch (e) {
+    console.warn("Falha ao enviar e-mail:", e.message);
+  }
+}
 
 export default async function handler(req, res) {
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+  if (req.method === "OPTIONS") return res.status(204).end();
+
+  const base = new Airtable({ apiKey: process.env.AIRTABLE_API_KEY })
+    .base(process.env.AIRTABLE_BASE_ID);
+  const T_ADOCOES = "adocoes";
+  const T_CARTINHAS = "cartinhas";
+
   try {
-    // ========================================================
-    // 1️⃣ LISTAR TODAS AS ADOÇÕES
-    // GET /api/adocoes
-    // ========================================================
-    if (req.method === "GET") {
-      const records = await base("adocoes").select().all();
-
-      const lista = records.map(r => {
-        const f = r.fields;
-        return {
-          id: r.id,
-          id_doacao: f.id_doacao,
-          data_adocao: f.data_adocao,
-          id_cartinha: f.id_cartinha,
-          id_usuario: f.id_usuario,
-          nome_doador: f.nome_doador,
-          email_doador: f.email_doador,
-          telefone_doador: f.telefone_doador,
-          tipo: f.tipo,
-          ponto_coleta: f.ponto_coleta,
-          status_adocao: f.status_adocao
-        };
-      });
-
-      return res.status(200).json(lista);
-    }
-
-    // ========================================================
-    // 2️⃣ CRIAR UMA NOVA ADOÇÃO
-    // POST /api/adocoes
-    // ========================================================
     if (req.method === "POST") {
       const {
         id_cartinha,
@@ -51,76 +56,48 @@ export default async function handler(req, res) {
         nome_doador,
         email_doador,
         telefone_doador,
-        tipo,
-        ponto_coleta
-      } = req.body;
+        ponto_coleta,
+        nome_crianca,
+        sonho,
+      } = req.body || {};
 
-      if (!id_cartinha || !id_usuario) {
-        return res.status(400).json({ erro: "Campos obrigatórios ausentes." });
-      }
+      if (!id_cartinha || !id_usuario)
+        return err(res, 400, "Faltam dados obrigatórios (id_cartinha ou id_usuario).");
 
-      // Cria o registro na tabela adocoes
-      const created = await base("adocoes").create([
-        {
-          fields: {
-            id_doacao: "DOA-" + Date.now(),
-            data_adocao: new Date().toISOString(),
-            id_cartinha,
-            id_usuario,
-            nome_doador,
-            email_doador,
-            telefone_doador,
-            tipo,
-            ponto_coleta,
-            status_adocao: "aguardando confirmacao"
-          }
-        }
+      const nova = {
+        data_adocao: new Date().toISOString(),
+        id_cartinha,
+        id_usuario,
+        nome_doador,
+        email_doador,
+        telefone_doador,
+        ponto_coleta,
+        nome_crianca,
+        sonho,
+        status_adocao: "aguardando confirmacao",
+      };
+
+      const rec = await base(T_ADOCOES).create([{ fields: nova }]);
+
+      // atualiza cartinha
+      await base(T_CARTINHAS).update([
+        { id: id_cartinha, fields: { status: "adotada" } },
       ]);
 
-      // Atualiza a cartinha para "adotada"
-      await base("cartinhas").update([
-        {
-          id: id_cartinha,
-          fields: { status: "adotada" }
-        }
-      ]);
+      // envia email (não bloqueia o fluxo)
+      enviarEmailJS({ nome_doador, email_doador, nome_crianca, sonho, ponto_coleta });
 
-      return res.status(200).json({
-        sucesso: true,
-        mensagem: "Adoção registrada com sucesso!",
-        id: created[0].id
-      });
+      return ok(res, { sucesso: true, id: rec[0].id });
     }
 
-    // ========================================================
-    // 3️⃣ ATUALIZAR STATUS DE ADOÇÃO
-    // PUT /api/adocoes?id=recXXXX
-    // body: { status_adocao: "confirmada" }
-    // ========================================================
-    if (req.method === "PUT") {
-      const { id } = req.query;
-      const { status_adocao } = req.body;
-      if (!id || !status_adocao)
-        return res.status(400).json({ erro: "Dados incompletos." });
-
-      await base("adocoes").update([
-        {
-          id,
-          fields: { status_adocao }
-        }
-      ]);
-
-      return res.status(200).json({ sucesso: true, status: status_adocao });
+    if (req.method === "GET") {
+      const registros = await base(T_ADOCOES).select().all();
+      return ok(res, { sucesso: true, adocoes: registros.map((r) => ({ id: r.id, ...r.fields })) });
     }
 
-    // ========================================================
-    // 4️⃣ BLOQUEIA OUTROS MÉTODOS
-    // ========================================================
-    res.setHeader("Allow", ["GET", "POST", "PUT"]);
-    res.status(405).json({ erro: "Método não permitido." });
-
-  } catch (err) {
-    console.error("Erro API adocoes:", err);
-    res.status(500).json({ erro: "Erro ao processar adoções." });
+    return err(res, 405, "Método não suportado.");
+  } catch (e) {
+    console.error("Erro /api/adocoes:", e);
+    return err(res, 500, e.message || "Erro interno.");
   }
 }
