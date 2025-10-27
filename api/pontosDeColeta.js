@@ -39,7 +39,7 @@ export default async function handler(req, res) {
 
     res.status(200).json({ sucesso: true, pontos });
   } catch (e) {
-    console.error("Erro /api/pontosdecoleta:", e);
+    console.error("❌ Erro /api/pontosdecoleta:", e);
     res.status(500).json({ sucesso: false, mensagem: "Erro ao listar pontos de coleta." });
   }
 }
