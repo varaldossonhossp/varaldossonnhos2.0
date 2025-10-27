@@ -1,22 +1,25 @@
 <!-- ============================================================
-💬 CLOUDINHO — Assistente Inteligente Fantástica Fábrica de Sonhos
+     ☁️ CLOUDINHO — Assistente Virtual Fantástica Fábrica de Sonhos
 ============================================================ -->
-<div class="cloudinho-widget">
-  <button class="cloudinho-botao" title="Fale com o Cloudinho">
-    <img src="imagens/cloudinho.png" alt="Cloudinho" />
-  </button>
+<div class="cloudinho-botao" title="Falar com o Cloudinho">
+  <img src="imagens/cloudinho.png" alt="Cloudinho" width="90" height="90" />
+</div>
 
-  <div class="cloudinho-chat" style="display: none;">
-    <header>
-      <div class="titulo">☁️ Cloudinho</div>
-      <button id="fecharCloudinho" aria-label="Fechar chat">✕</button>
-    </header>
-
-    <div class="chat-mensagens" id="chatMensagens"></div>
-
-    <form id="formCloudinho" autocomplete="off">
-      <input type="text" id="campoPergunta" placeholder="Digite sua pergunta..." />
-      <button type="submit">Enviar</button>
-    </form>
+<div class="cloudinho-chat" style="display: none;">
+  <div class="chat-header">
+    <span>💬 Cloudinho — Fábrica de Sonhos</span>
+    <button id="fecharCloudinho" class="btn-fechar">✖</button>
   </div>
+
+  <div id="chatMensagens" class="chat-mensagens"></div>
+
+  <form id="formCloudinho" class="chat-form">
+    <input
+      type="text"
+      id="campoPergunta"
+      placeholder="Digite sua pergunta..."
+      autocomplete="off"
+    />
+    <button type="submit">Enviar</button>
+  </form>
 </div>

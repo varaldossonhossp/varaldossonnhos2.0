@@ -1,138 +1,116 @@
-/* ============================================================
-💙 CLOUDINHO INTELIGENTE — v4.7
-============================================================ */
-
-.cloudinho-widget {
-  position: fixed;
-  right: 22px;
-  bottom: 50px; /* posição perfeita que você mencionou */
-  z-index: 950;
-}
-
-/* ☁️ Mascote flutuante */
 .cloudinho-botao {
-  border: none;
-  background: transparent;
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
   cursor: pointer;
-  animation: flutua 6s ease-in-out infinite;
+  z-index: 9999;
   transition: transform 0.3s ease;
 }
-.cloudinho-botao img {
-  width: 70px;
-  height: 70px;
-  filter: drop-shadow(0 6px 12px rgba(31, 53, 91, 0.25));
-}
+
 .cloudinho-botao:hover {
-  transform: scale(1.08);
+  transform: scale(1.1);
 }
 
-/* 💬 Janela do chat */
 .cloudinho-chat {
   position: fixed;
-  right: 22px;
-  bottom: 160px;
-  width: 320px;
-  max-height: 440px;
-  background: #fff;
-  border-radius: 16px;
-  box-shadow: 0 16px 40px rgba(31, 53, 91, 0.18);
-  overflow: hidden;
+  bottom: 120px;
+  right: 30px;
+  width: 310px;
+  background: #ffffff;
+  border: 2px solid #cfe7ff;
+  border-radius: 15px;
+  display: flex;
   flex-direction: column;
-  border: 1px solid #e5efff;
-  display: none;
-  z-index: 940;
+  justify-content: space-between;
+  z-index: 9998;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+  font-family: "Poppins", sans-serif;
 }
 
-.cloudinho-chat header {
-  background: linear-gradient(90deg, #4A90E2, #6FB3FF);
-  color: #fff;
-  padding: 10px 12px;
+.chat-header {
+  background: #0099ff;
+  color: white;
+  padding: 10px;
+  border-radius: 15px 15px 0 0;
+  font-weight: bold;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-weight: 600;
-  font-family: "Poppins", sans-serif;
-  font-size: 14px;
 }
-.cloudinho-chat header button {
+
+.btn-fechar {
   background: transparent;
   border: none;
-  color: #fff;
-  font-size: 16px;
+  color: white;
+  font-size: 18px;
   cursor: pointer;
 }
 
-/* Área de mensagens */
 .chat-mensagens {
-  flex: 1;
   padding: 10px;
-  background: #f7fbff;
+  height: 230px;
   overflow-y: auto;
+  font-size: 14px;
 }
+
 .msg {
-  margin: 6px 0;
-  padding: 10px 14px;
+  margin: 8px 0;
+  padding: 8px 12px;
   border-radius: 12px;
   max-width: 85%;
-  font-family: "Poppins", sans-serif;
-  font-size: 14px;
+  line-height: 1.3em;
 }
-.msg.bot {
-  background: #E6F2FF;
-  color: #1F355B;
-}
+
 .msg.usuario {
-  background: linear-gradient(90deg, #4A90E2, #6FB3FF);
-  color: #fff;
   align-self: flex-end;
+  background: #d9f0ff;
+  text-align: right;
 }
 
-/* Campo de envio */
-#formCloudinho {
+.msg.bot {
+  align-self: flex-start;
+  background: #f2f2f2;
+}
+
+.chat-form {
   display: flex;
-  border-top: 1px solid #e8eefc;
-}
-#formCloudinho input {
-  flex: 1;
-  border: 0;
-  padding: 10px;
-  font-family: inherit;
-  outline: none;
-}
-#formCloudinho button {
-  background: #4A90E2;
-  color: #fff;
-  border: 0;
-  padding: 10px 14px;
-  cursor: pointer;
-  transition: background 0.3s ease;
-}
-#formCloudinho button:hover {
-  background: #5ca3f5;
+  padding: 8px;
+  border-top: 1px solid #ddd;
 }
 
-/* 🌤️ Balão automático */
+.chat-form input {
+  flex: 1;
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  padding: 6px;
+  margin-right: 5px;
+}
+
+.chat-form button {
+  background: #0099ff;
+  color: white;
+  border: none;
+  padding: 6px 10px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.chat-form button:hover {
+  background: #007bff;
+}
+
 .balao-cloudinho {
   position: fixed;
-  right: 90px;
-  bottom: 130px; /* mais para baixo */
+  bottom: 120px;
+  right: 140px;
   background: #ffffff;
-  color: #1F355B;
-  font-family: "Poppins", sans-serif;
+  border-radius: 20px;
+  padding: 8px 14px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
   font-size: 14px;
-  border-radius: 15px;
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
-  padding: 10px 14px;
-  max-width: 220px;
   opacity: 0;
   transform: translateY(10px);
-  transition: all 0.6s ease;
-  z-index: 98;
-  border: 1px solid #d9e8ff;
-}
-
-/* ☁️ Animação de flutuação */
-@keyframes flutua {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-8px); }
+  transition: all 0.5s ease;
+  max-width: 200px;
 }
