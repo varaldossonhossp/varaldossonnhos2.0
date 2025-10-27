@@ -27,9 +27,10 @@ document.addEventListener("DOMContentLoaded", () => {
     let balao = document.querySelector(".balao-cloudinho");
     if (!balao) {
       balao = document.createElement("div");
-      balao.className = "balao-cloudinho";
+      balao.className = "balao-cloudinho"; // <- importante para o CSS
       document.body.appendChild(balao);
     }
+
     balao.textContent = mensagensAuto[indexMsg];
     balao.style.opacity = "1";
     balao.style.transform = "translateY(0)";
