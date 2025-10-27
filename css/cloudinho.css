@@ -114,3 +114,51 @@
   transition: all 0.5s ease;
   max-width: 200px;
 }
+
+/* Mascote fixo no canto e flutuando */
+.cloudinho-botao {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  width: 72px;
+  height: 72px;
+  cursor: pointer;
+  z-index: 9999;
+  animation: flutua 3.2s ease-in-out infinite;
+}
+
+@keyframes flutua {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-6px); }
+}
+
+/* Balão automático próximo do mascote */
+.balao-cloudinho {
+  position: fixed;
+  right: 110px;           /* distância do canto direito */
+  bottom: 120px;          /* distância do canto inferior */
+  max-width: 260px;
+  background: #fff;
+  border: 1px solid #e6eefb;
+  box-shadow: 0 10px 24px rgba(24, 64, 136, 0.12);
+  border-radius: 14px;
+  padding: 12px 14px;
+  font: 500 14px/1.4 "Poppins", system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  color: #274c77;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity .35s ease, transform .35s ease;
+  z-index: 9998;
+}
+
+/* Chat (garantir que abre acima de tudo) */
+.cloudinho-chat {
+  position: fixed;
+  right: 24px;
+  bottom: 100px;
+  width: 320px;
+  max-height: 60vh;
+  display: none;
+  flex-direction: column;
+  z-index: 10000;
+}
