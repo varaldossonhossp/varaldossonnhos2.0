@@ -2,14 +2,23 @@
   "version": 2,
   "builds": [
     { "src": "api/**/*.js", "use": "@vercel/node" },
+    { "src": "index.html", "use": "@vercel/static" },
     { "src": "pages/**/*.html", "use": "@vercel/static" },
     { "src": "componentes/**/*.html", "use": "@vercel/static" },
-    { "src": "css/**/*", "use": "@vercel/static" },
-    { "src": "js/**/*", "use": "@vercel/static" },
+    { "src": "css/**/*.css", "use": "@vercel/static" },
+    { "src": "js/**/*.js", "use": "@vercel/static" },
     { "src": "imagens/**/*", "use": "@vercel/static" }
   ],
   "routes": [
-    { "src": "/api/(.*)", "dest": "/api/$1.js" },
-    { "src": "/(.*)", "dest": "/pages/$1" }
-  ]
+    { "src": "^/api/(.*)$", "dest": "/api/$1.js" },
+    { "src": "^/$", "dest": "/index.html" },
+    { "src": "^/cartinhas$", "dest": "/pages/cartinhas.html" },
+    { "src": "^/carrinho$", "dest": "/pages/carrinho.html" },
+    { "src": "^/admin$", "dest": "/pages/admin.html" },
+    { "src": "^/pontosdecoleta$", "dest": "/pages/pontosdecoleta.html" },
+    { "src": "^(.*)$", "dest": "/index.html" }
+  ],
+  "env": {
+    "NODE_ENV": "production"
+  }
 }
