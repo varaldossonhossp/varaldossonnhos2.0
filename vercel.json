@@ -11,14 +11,18 @@
   ],
   "routes": [
     { "src": "^/api/(.*)$", "dest": "/api/$1.js" },
+
     { "src": "^/$", "dest": "/index.html" },
     { "src": "^/cartinhas$", "dest": "/pages/cartinhas.html" },
     { "src": "^/carrinho$", "dest": "/pages/carrinho.html" },
     { "src": "^/admin$", "dest": "/pages/admin.html" },
     { "src": "^/pontosdecoleta$", "dest": "/pages/pontosdecoleta.html" },
+
+    { "src": "^/componentes/(.*)$", "dest": "/componentes/$1" },
+    { "src": "^/css/(.*)$", "dest": "/css/$1" },
+    { "src": "^/js/(.*)$", "dest": "/js/$1" },
+    { "src": "^/imagens/(.*)$", "dest": "/imagens/$1" },
+
     { "src": "^(.*)$", "dest": "/index.html" }
-  ],
-  "env": {
-    "NODE_ENV": "production"
-  }
+  ]
 }
