@@ -26,3 +26,33 @@
 .card-ponto p {
   margin: 0.25rem 0;
 }
+
+.grid-pontos {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+  margin-top: 2rem;
+}
+
+.card-ponto {
+  background: #fff;
+  border-radius: 16px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  transition: all 0.2s ease-in-out;
+}
+
+.card-ponto:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 18px rgba(0,0,0,0.15);
+}
+
+.card-ponto h3 {
+  color: var(--azul-escuro);
+  margin-bottom: 0.5rem;
+}
+
+.card-ponto p {
+  margin: 0.25rem 0;
+  color: #333;
+}
