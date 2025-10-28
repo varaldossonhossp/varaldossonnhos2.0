@@ -11,8 +11,9 @@
   <title>Pontos de Coleta | Varal dos Sonhos</title>
 
   <!-- CSS principal e da página -->
-  <link rel="stylesheet" href="../css/style.css">
-  <link rel="stylesheet" href="../css/pontosdecoleta.css">
+  <link rel="stylesheet" href="../css/style.css" />
+  <link rel="stylesheet" href="../css/pontosdecoleta.css" />
+  
 
   <link rel="icon" href="../imagens/favicon.png" type="image/png" />
 </head>
@@ -38,9 +39,91 @@
   <!-- Cloudinho (assistente virtual) -->
   <div id="cloudinho"></div>
 
-  <!-- Scripts principais -->
-  <script src="../js/componentes.js"></script>
-  <script src="../js/pontosdecoleta.js"></script>
-  <script src="../js/cloudinho.js"></script>
+    <!-- Carregador de componentes (funciona na raiz e em /pages) -->
+<script>
+    // ------------------------------------
+    // --- Configurações de Caminho Base ---
+    // ------------------------------------
+    // Caminhos absolutos garantem que o script funcione 
+    // na raiz (/) ou em subpastas (/pages/).
+    const BASE_URL_COMPONENTES = "/componentes/";
+    const BASE_URL_CSS = "/css/";
+    const BASE_URL_JS = "/js/"; // Novo caminho para a pasta JS
+
+    // 1. FUNÇÃO PARA CARREGAR E INSERIR COMPONENTES HTML
+    async function carregarComponente(id, arquivo) {
+        const url = BASE_URL_COMPONENTES + arquivo;
+        
+        try {
+            const resp = await fetch(url);
+            
+            if (resp.ok) {
+                document.getElementById(id).innerHTML = await resp.text();
+            } else {
+                console.error(`Erro ao carregar componente ${arquivo}. Status: ${resp.status}`);
+            }
+        } catch (error) {
+            console.error(`Falha na requisição de ${arquivo}:`, error);
+        }
+    }
+    
+    // 2. FUNÇÃO PARA CARREGAR E INSERIR ARQUIVOS CSS
+    function carregarCSS(arquivo) {
+        const url = BASE_URL_CSS + arquivo;
+        
+        // Evita carregar o mesmo arquivo CSS múltiplas vezes
+        if (document.querySelector(`link[href="${url}"]`)) {
+            return; 
+        }
+
+        const link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.type = 'text/css';
+        link.href = url;
+        
+        document.head.appendChild(link);
+    }
+
+    // 3. FUNÇÃO PARA CARREGAR E INSERIR ARQUIVOS JAVASCRIPT
+    function carregarJS(arquivo) {
+        const url = BASE_URL_JS + arquivo;
+        
+        // Evita carregar o mesmo arquivo JS múltiplas vezes
+        if (document.querySelector(`script[src="${url}"]`)) {
+            return;
+        }
+
+        // Cria o elemento <script>
+        const script = document.createElement('script');
+        
+        // Define os atributos
+        script.src = url;
+        script.defer = true; // Adiciona 'defer' para garantir que o script não bloqueie o parsing do HTML
+        
+        // Adiciona o elemento <script> ao <body> do documento (melhor para performance)
+        document.body.appendChild(script);
+    }
+
+    // ---------------------
+    // --- EXECUÇÃO GERAL ---
+    // ---------------------
+
+    // 1. Carregar os estilos (CSS)
+    carregarCSS("header.css");
+    carregarCSS("footer.css");
+    carregarCSS("cloudinho.css");
+    
+    // 2. Carregar os componentes HTML
+    carregarComponente("header", "header.html");
+    carregarComponente("footer", "footer.html");
+    carregarComponente("cloudinho", "cloudinho.html");
+
+    // 3. Carregar os scripts JavaScript
+    carregarJS("header.js");
+    carregarJS("footer.js");
+    carregarJS("cloudinho.js");
+
+</script>
+
 </body>
 </html>
