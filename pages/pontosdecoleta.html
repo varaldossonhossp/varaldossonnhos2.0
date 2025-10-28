@@ -1,25 +1,44 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- ============================================================
+       💙 VARAL DOS SONHOS — Página Pontos de Coleta
+       Autor: Equipe Beta | Deploy: Vercel + Airtable + EmailJS
+  ============================================================ -->
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Veja onde entregar os presentes das cartinhas adotadas no Varal dos Sonhos." />
   <title>Pontos de Coleta | Varal dos Sonhos</title>
+
+  <!-- CSS principal e da página -->
   <link rel="stylesheet" href="../css/style.css">
   <link rel="stylesheet" href="../css/pontosdecoleta.css">
+
+  <link rel="icon" href="../imagens/favicon.png" type="image/png" />
 </head>
+
 <body>
+  <!-- Header dinâmico -->
   <div id="header"></div>
 
   <main class="container">
     <h1 class="titulo-pagina">📦 Pontos de Coleta</h1>
-    <p>Confira onde você pode entregar os presentes das cartinhas adotadas 💌</p>
+    <p class="descricao">
+      Confira onde você pode entregar os presentes das cartinhas adotadas 💌
+    </p>
 
-    <div id="lista-pontos" class="grid-pontos"></div>
+    <section id="lista-pontos" class="grid-pontos">
+      <p>Carregando pontos de coleta...</p>
+    </section>
   </main>
 
+  <!-- Footer dinâmico -->
   <div id="footer"></div>
+
+  <!-- Cloudinho (assistente virtual) -->
   <div id="cloudinho"></div>
 
+  <!-- Scripts principais -->
   <script src="../js/componentes.js"></script>
   <script src="../js/pontosdecoleta.js"></script>
   <script src="../js/cloudinho.js"></script>

@@ -1,6 +1,6 @@
 // ============================================================
 // 💙 VARAL DOS SONHOS — js/pontosdecoleta.js
-// Busca pontos ativos do Airtable via /api/pontosdecoleta
+// Mostra pontos de coleta vindos do Airtable via API
 // ============================================================
 
 document.addEventListener("DOMContentLoaded", async () => {
@@ -9,21 +9,22 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   try {
     const resp = await fetch("/api/pontosdecoleta");
-    const json = await resp.json();
+    const dados = await resp.json();
 
-    if (!json.sucesso) throw new Error("Erro ao buscar pontos.");
+    if (!dados.sucesso) throw new Error("Erro ao buscar dados.");
 
-    lista.innerHTML = json.pontos.map(p => `
+    lista.innerHTML = dados.pontos.map(p => `
       <div class="card-ponto">
         <h3>${p.nome_ponto}</h3>
         <p><strong>Endereço:</strong> ${p.endereco}</p>
         <p><strong>Responsável:</strong> ${p.responsavel}</p>
         <p><strong>Telefone:</strong> ${p.telefone}</p>
         <p><strong>Email:</strong> ${p.email_ponto}</p>
-        <p><strong>Funcionamento:</strong> ${p.horario}</p>
+        <p><strong>Horário:</strong> ${p.horario_funcionamento || p.horario}</p>
       </div>
     `).join("");
-  } catch (e) {
-    lista.innerHTML = `<p style="color:red;">${e.message}</p>`;
+  } catch (erro) {
+    console.error(erro);
+    lista.innerHTML = `<p style="color:red;">${erro.message}</p>`;
   }
 });
