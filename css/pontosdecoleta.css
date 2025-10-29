@@ -1,200 +1,293 @@
 /* ============================================================
-💙 VARAL DOS SONHOS — PONTOSDECOLETA.CSS
+💙 VARAL DOS SONHOS — PONTOSDECOLETA (ESTILO APRIMORADO)
 ------------------------------------------------------------
-Estilos para a página de Pontos de Coleta, cards e efeitos
-de varal/vento.
+Melhorias visuais: sombras, gradientes, fitas, hover suave,
+botões mais elegantes, responsividade.
 ============================================================ */
+
+/* Variáveis (ajuste no :root se quiser) */
+:root{
+  --azul-escuro: #153F5A;
+  --azul-cta: #2F80ED;
+  --azul-royal: #3469C6;
+  --card-bg: #ffffff;
+  --card-radius: 14px;
+  --muted: #556;
+  --soft-shadow: 0 8px 24px rgba(31,48,70,0.08);
+  --glass: rgba(255,255,255,0.6);
+}
 
 /* --- Layout da Página --- */
 .container-pontos {
-    max-width: 1100px;
-    margin: 90px auto 80px; /* Ajusta margem para Header e Footer fixos */
+    max-width: 1200px;
+    margin: 80px auto 80px;
     padding: 20px;
     text-align: center;
 }
 
 .titulo-pagina {
     color: var(--azul-escuro);
-    margin-bottom: 0.5rem;
-    font-size: 2.2rem;
+    margin-bottom: 0.4rem;
+    font-size: 2.4rem;
+    font-weight: 700;
+    letter-spacing: -0.5px;
 }
 
 .descricao {
-    margin-bottom: 2rem;
-    opacity: 0.8;
+    margin-bottom: 1.8rem;
+    opacity: 0.85;
+    color: var(--muted);
 }
 
 /* --- Efeito Varal --- */
 .varal-topo {
     width: 100%;
-    height: 2px;
-    background-color: var(--azul-cta); /* Cor do Varal */
-    background-image: linear-gradient(to right, transparent 0%, var(--azul-cta) 5%, var(--azul-cta) 95%, transparent 100%);
-    margin: 2rem 0;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+    height: 3px;
+    margin: 1.6rem 0;
+    background-image: linear-gradient(90deg, transparent 0%, var(--azul-cta) 12%, var(--azul-cta) 88%, transparent 100%);
+    box-shadow: 0 2px 6px rgba(47,128,237,0.08), inset 0 -1px 0 rgba(255,255,255,0.4);
+    border-radius: 3px;
 }
 
-/* --- Grid dos Cards --- */
-/* --- Grid dos Cards ( É UM CARROSSEL SCROLLÁVEL) --- */
-.grid-pontos {
-    /* Mude de grid para flex (ou use grid, mas com o fluxo certo) */
+/* --- Grid dos Cards (carrossel horizontal) --- */
+.grid-pontos{
     display: flex;
-    
-    /* Permite a rolagem horizontal */
-    overflow-x: auto; 
+    gap: 2rem;
+    overflow-x: auto;
     overflow-y: hidden;
-    
-    /* Impede que os cards quebrem para a próxima linha */
-    flex-wrap: nowrap; 
-    
-    /* Mantém o gap entre os cards */
-    gap: 3rem 1.5rem; 
-    
-    margin-top: 2rem;
-    padding-bottom: 20px; /* Adiciona espaço para a barra de rolagem não cortar a sombra */
-    
-    /* Configuração de rolagem otimizada (apenas para navegadores que suportam) */
+    padding-bottom: 18px;
     scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* espaçamento lateral para o carrossel "respirar" */
+.grid-pontos::before,
+.grid-pontos::after {
+  content: "";
+  flex: 0 0 12px;
 }
 
 /* --- Card de Ponto de Coleta --- */
 .card-ponto {
     flex: 0 0 320px;
     scroll-snap-align: start;
-    position: relative; /* Necessário para posicionar o prendedor */
-    background: #fff;
-    border-radius: 12px;
-    padding: 1.5rem;
-    padding-top: 2.5rem; /* Espaço para o prendedor */
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-    transition: transform 0.4s ease-in-out, box-shadow 0.2s ease;
-    transform: rotate(0deg); /* Estado inicial */
+    position: relative;
+    background: linear-gradient(180deg, rgba(255,255,255,0.98) 0%, var(--card-bg) 100%);
+    border-radius: var(--card-radius);
+    padding: 1.8rem 1.4rem 1.6rem;
+    padding-top: 3.2rem; /* espaço p/ prendedor */
+    box-shadow: var(--soft-shadow);
+    transition: transform 0.45s cubic-bezier(.2,.9,.2,1), box-shadow 0.25s ease, filter 0.25s ease;
+    transform-origin: center top;
+    border: 1px solid rgba(20,60,90,0.05);
+    overflow: hidden;
+    min-height: 220px;
 }
 
-/* Efeito Balanço no Vento (Hover) */
+/* variações sutis por card para sensação "artesanal" */
+.card-ponto:nth-child(3n+1){ transform: rotate(-0.8deg); }
+.card-ponto:nth-child(3n+2){ transform: rotate(0.3deg); }
+.card-ponto:nth-child(3n+3){ transform: rotate(0.5deg); }
+
+/* Hover — elevação + pequena rotação inversa */
 .card-ponto:hover {
-    box-shadow: 0 8px 18px rgba(0,0,0,0.15);
-    /* Simula um leve balanço */
-    transform: rotate(1deg) translateY(-2px); 
+    box-shadow: 0 18px 40px rgba(31,48,70,0.12);
+    transform: translateY(-8px) rotate(0deg) scale(1.01);
+    filter: saturate(1.03);
 }
 
-/* --- Prendedor no Card --- */
+/* Quando foco (acessibilidade teclado) */
+.card-ponto:focus-within {
+    outline: 3px solid rgba(47,128,237,0.12);
+    transform: translateY(-6px) rotate(0deg);
+}
+
+/* --- Prendedor no Card (ajustável) --- */
 .prendedor-card {
     position: absolute;
-    top: -2.5rem; /* Puxa para cima do varal */
+    top: -28px;
     left: 50%;
     transform: translateX(-50%);
-    width: 30px; /* Tamanho do seu prendedor.png */
-    height: auto;
-    /* Ajuste para o seu arquivo real (deve estar em ../imagens/prendedor.png) */
-    content: url('../imagens/prendedor.png'); 
-    z-index: 5;
+    width: 44px;
+    height: 44px;
+    z-index: 6;
+    display: block;
+    background-repeat: no-repeat;
+    background-size: contain;
+    background-position: center;
+    /* Use uma imagem PNG/SVG com fundo transparente ou substitua pela sua url */
+    background-image: url('../imagens/prendedor.png');
+    filter: drop-shadow(0 4px 6px rgba(20,40,60,0.12));
 }
 
+/* Pequena "fita" decorativa abaixo do prendedor (opcional) */
+.card-ponto::before {
+    content: "";
+    position: absolute;
+    top: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 84%;
+    height: 18px;
+    border-radius: 10px;
+    background: linear-gradient(90deg, rgba(47,128,237,0.06), rgba(20,40,60,0.02));
+    z-index: 2;
+    pointer-events: none;
+}
+
+/* --- Conteúdo do Card --- */
 .card-ponto h3 {
     color: var(--azul-escuro);
-    margin-bottom: 0.5rem;
+    margin: 0 0 0.35rem 0;
+    font-size: 1.15rem;
+    font-weight: 700;
+    letter-spacing: -0.2px;
+}
+
+.meta {
+    color: var(--muted);
+    font-size: 0.92rem;
+    margin: 0.1rem 0 0.65rem 0;
 }
 
 .card-ponto p {
-    margin: 0.25rem 0;
-    color: #333;
+    margin: 0.18rem 0;
+    color: #2c3e50;
     font-size: 0.95rem;
+    line-height: 1.35;
+}
+
+/* destaque de label (Endereço, Horário, etc) */
+.card-ponto .label {
+    font-weight: 700;
+    color: #213B52;
+    display: inline-block;
+    margin-right: 6px;
+    font-size: 0.92rem;
+}
+
+/* Responsividade do texto */
+@media (max-width: 420px) {
+    .card-ponto { flex: 0 0 86%; padding: 1.2rem; padding-top: 3rem; }
+    .prendedor-card { width: 36px; top: -24px; }
 }
 
 /* --- Botão Localização --- */
 .btn-localizacao {
-    display: inline-block;
-    margin-top: 1rem;
-    background: var(--azul-cta);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 1.05rem;
+    background: linear-gradient(180deg,var(--azul-cta),var(--azul-royal));
     color: #fff;
     padding: 10px 18px;
-    border-radius: 20px;
+    border-radius: 999px;
     text-decoration: none;
-    font-weight: 600;
-    transition: background 0.2s ease, transform 0.2s ease;
+    font-weight: 700;
+    font-size: 0.95rem;
+    box-shadow: 0 8px 18px rgba(47,128,237,0.18), inset 0 -2px 0 rgba(255,255,255,0.06);
+    transition: transform 0.18s ease, box-shadow 0.18s ease, opacity 0.12s;
+    border: none;
+    cursor: pointer;
 }
 
-.btn-localizacao:hover {
-    background: #4A90E2;
-    transform: scale(1.05);
+/* ícone do pino pode vir via pseudo-elemento ou texto */
+.btn-localizacao::before{
+    content: "📍";
+    display:inline-block;
 }
 
-/* --- Modal (Pop-up do Mapa) --- */
+/* hover / active / focus */
+.btn-localizacao:hover { transform: translateY(-3px) scale(1.02); box-shadow: 0 14px 30px rgba(47,128,237,0.18); }
+.btn-localizacao:active { transform: translateY(-1px) scale(0.995); }
+.btn-localizacao:focus-visible { outline: 3px solid rgba(47,128,237,0.18); }
+
+/* botão secundário (quando estiver desabilitado) */
+.btn-localizacao[disabled], .btn-localizacao.is-disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+/* --- Modal (mapa) — leve polimento --- */
 .modal {
     position: fixed;
-    z-index: 1100; /* Acima do header fixo (1000) e cloudinho (90) */
-    left: 0;
-    top: 0;
+    z-index: 1200;
+    left: 0; top: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.6);
+    background: linear-gradient(180deg, rgba(6,18,34,0.45), rgba(6,18,34,0.6));
     display: flex;
     justify-content: center;
     align-items: center;
     opacity: 0;
     visibility: hidden;
-    transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
+    transition: opacity .28s ease, visibility .28s ease;
+    padding: 28px;
 }
-
-.modal.is-open {
-    opacity: 1;
-    visibility: visible;
-}
+.modal.is-open { opacity: 1; visibility: visible; }
 
 .modal-content {
-    background-color: #fefefe;
-    padding: 20px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.98), #fff);
+    padding: 18px;
     border-radius: 12px;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-    width: 90%;
-    max-width: 800px;
+    box-shadow: 0 22px 50px rgba(6,18,34,0.5);
+    width: min(1100px, 95%);
+    max-width: 900px;
     position: relative;
-    transform: translateY(-50px);
-    transition: transform 0.3s ease-in-out;
+    transform: translateY(-18px);
+    transition: transform .28s cubic-bezier(.2,.9,.2,1);
 }
+.modal.is-open .modal-content { transform: translateY(0); }
 
-.modal.is-open .modal-content {
-    transform: translateY(0);
-}
-
-.modal-content h2 {
-    color: var(--azul-escuro);
-    margin-top: 0;
-    margin-bottom: 15px;
-}
-
-.modal-content iframe {
-    width: 100%;
-    display: block;
-    border-radius: 8px;
-}
-
+/* Close */
 .close {
-    color: #aaa;
+    color: #6c7b8a;
     position: absolute;
-    top: 10px;
-    right: 20px;
-    font-size: 28px;
-    font-weight: bold;
-    cursor: pointer;
+    top: 12px;
+    right: 16px;
+    font-size: 26px;
+    font-weight: 700;
     background: none;
     border: none;
-    padding: 0;
+    cursor: pointer;
+}
+.close:hover { color: var(--azul-royal); transform: scale(1.02); }
+
+/* --- Esconder barra de rolagem (carrossel limpo) --- */
+.grid-pontos::-webkit-scrollbar { display: none; }
+.grid-pontos { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* --- Ajustes de layout em telas maiores --- */
+@media (min-width: 1000px) {
+    .grid-pontos { gap: 2.5rem; }
+    .card-ponto { flex: 0 0 340px; }
 }
 
-.close:hover,
-.close:focus {
-    color: var(--azul-royal);
-    text-decoration: none;
+/* --- Pequena etiqueta de "responsável" no rodapé do card --- */
+.card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 12px;
+    gap: 8px;
+    font-size: 0.88rem;
+    color: #415468;
 }
 
-/* --- Esconder Barra de Rolagem (Carrossel Limpo) --- */
-.grid-pontos::-webkit-scrollbar {
-    display: none; /* Chrome, Safari e Edge */
-}
-
-.grid-pontos {
-    -ms-overflow-style: none;  /* IE e Edge */
-    scrollbar-width: none;  /* Firefox */
+/* --- Alternativa: fita superior (ribbon) --- */
+.ribbon {
+    position: absolute;
+    top: 10px;
+    left: 14px;
+    background: linear-gradient(90deg, #FFD79B, #FFB66B);
+    color: #5a3b00;
+    font-weight: 700;
+    padding: 6px 10px;
+    border-radius: 6px;
+    box-shadow: 0 6px 14px rgba(0,0,0,0.08);
+    font-size: 0.8rem;
+    transform: rotate(-2deg);
+    z-index: 8;
 }
