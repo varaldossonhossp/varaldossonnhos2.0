@@ -1,58 +1,104 @@
+/* ============================================================
+💙 VARAL DOS SONHOS — PONTOSDECOLETA.CSS
+------------------------------------------------------------
+Estilos para a página de Pontos de Coleta, cards e efeitos
+de varal/vento.
+============================================================ */
+
+/* --- Layout da Página --- */
+.container-pontos {
+    max-width: 1100px;
+    margin: 90px auto 80px; /* Ajusta margem para Header e Footer fixos */
+    padding: 20px;
+    text-align: center;
+}
+
+.titulo-pagina {
+    color: var(--azul-escuro);
+    margin-bottom: 0.5rem;
+    font-size: 2.2rem;
+}
+
+.descricao {
+    margin-bottom: 2rem;
+    opacity: 0.8;
+}
+
+/* --- Efeito Varal --- */
+.varal-topo {
+    width: 100%;
+    height: 2px;
+    background-color: var(--azul-cta); /* Cor do Varal */
+    background-image: linear-gradient(to right, transparent 0%, var(--azul-cta) 5%, var(--azul-cta) 95%, transparent 100%);
+    margin: 2rem 0;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+}
+
+/* --- Grid dos Cards --- */
 .grid-pontos {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 1.5rem;
-  margin-top: 2rem;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 3rem 1.5rem; /* Aumenta o gap vertical para o efeito do prendedor */
+    margin-top: 2rem;
 }
 
+/* --- Card de Ponto de Coleta --- */
 .card-ponto {
-  background: #fff;
-  border-radius: 16px;
-  padding: 1.5rem;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+    position: relative; /* Necessário para posicionar o prendedor */
+    background: #fff;
+    border-radius: 12px;
+    padding: 1.5rem;
+    padding-top: 2.5rem; /* Espaço para o prendedor */
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    transition: transform 0.4s ease-in-out, box-shadow 0.2s ease;
+    transform: rotate(0deg); /* Estado inicial */
 }
 
+/* Efeito Balanço no Vento (Hover) */
 .card-ponto:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 16px rgba(0,0,0,0.15);
+    box-shadow: 0 8px 18px rgba(0,0,0,0.15);
+    /* Simula um leve balanço */
+    transform: rotate(1deg) translateY(-2px); 
+}
+
+/* --- Prendedor no Card --- */
+.prendedor-card {
+    position: absolute;
+    top: -2.5rem; /* Puxa para cima do varal */
+    left: 50%;
+    transform: translateX(-50%);
+    width: 30px; /* Tamanho do seu prendedor.png */
+    height: auto;
+    /* Ajuste para o seu arquivo real (deve estar em ../imagens/prendedor.png) */
+    content: url('../imagens/prendedor.png'); 
+    z-index: 5;
 }
 
 .card-ponto h3 {
-  color: var(--azul-escuro);
-  margin-bottom: 0.5rem;
+    color: var(--azul-escuro);
+    margin-bottom: 0.5rem;
 }
 
 .card-ponto p {
-  margin: 0.25rem 0;
+    margin: 0.25rem 0;
+    color: #333;
+    font-size: 0.95rem;
 }
 
-.grid-pontos {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 1.5rem;
-  margin-top: 2rem;
+/* --- Botão Localização --- */
+.btn-localizacao {
+    display: inline-block;
+    margin-top: 1rem;
+    background: var(--azul-cta);
+    color: #fff;
+    padding: 10px 18px;
+    border-radius: 20px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: background 0.2s ease, transform 0.2s ease;
 }
 
-.card-ponto {
-  background: #fff;
-  border-radius: 16px;
-  padding: 1.5rem;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-  transition: all 0.2s ease-in-out;
-}
-
-.card-ponto:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 18px rgba(0,0,0,0.15);
-}
-
-.card-ponto h3 {
-  color: var(--azul-escuro);
-  margin-bottom: 0.5rem;
-}
-
-.card-ponto p {
-  margin: 0.25rem 0;
-  color: #333;
+.btn-localizacao:hover {
+    background: #4A90E2;
+    transform: scale(1.05);
 }
