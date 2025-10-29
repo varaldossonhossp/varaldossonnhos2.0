@@ -102,3 +102,72 @@ de varal/vento.
     background: #4A90E2;
     transform: scale(1.05);
 }
+
+/* --- Modal (Pop-up do Mapa) --- */
+.modal {
+    position: fixed;
+    z-index: 1100; /* Acima do header fixo (1000) e cloudinho (90) */
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
+}
+
+.modal.is-open {
+    opacity: 1;
+    visibility: visible;
+}
+
+.modal-content {
+    background-color: #fefefe;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    width: 90%;
+    max-width: 800px;
+    position: relative;
+    transform: translateY(-50px);
+    transition: transform 0.3s ease-in-out;
+}
+
+.modal.is-open .modal-content {
+    transform: translateY(0);
+}
+
+.modal-content h2 {
+    color: var(--azul-escuro);
+    margin-top: 0;
+    margin-bottom: 15px;
+}
+
+.modal-content iframe {
+    width: 100%;
+    display: block;
+    border-radius: 8px;
+}
+
+.close {
+    color: #aaa;
+    position: absolute;
+    top: 10px;
+    right: 20px;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+    background: none;
+    border: none;
+    padding: 0;
+}
+
+.close:hover,
+.close:focus {
+    color: var(--azul-royal);
+    text-decoration: none;
+}
