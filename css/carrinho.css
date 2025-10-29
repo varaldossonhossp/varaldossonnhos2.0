@@ -1,8 +1,10 @@
 /* ============================================================
-💙 VARAL DOS SONHOS — css/carrinho.css
+💙 VARAL DOS SONHOS — css/carrinho.css (COMPLETO)
 ============================================================ */
+
+/* --- Base & Container --- */
 body {
-  background: #E6F2FF;
+  background: #E6F2FF; /* Fundo azul claro suave */
   font-family: "Poppins", sans-serif;
   color: #1f355b;
 }
@@ -12,13 +14,27 @@ body {
   margin: 40px auto;
   background: #fff;
   border-radius: 16px;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+  box-shadow: 0 8px 25px rgba(0,0,0,0.15); /* Sombra mais destacada */
   padding: 30px;
 }
 
-h1 { margin-top: 0; text-align:center; }
+h1 { 
+    margin-top: 0; 
+    text-align: center; 
+    font-size: 2.2rem;
+    color: #153f5a; /* Azul escuro */
+}
 
-.lista-carrinho {
+.carrinho-container .sub {
+    text-align: center;
+    color: #555;
+    margin-bottom: 30px;
+    font-size: 0.95rem;
+}
+
+
+/* --- Lista de Cartinhas no Carrinho --- */
+.carrinho-lista {
   display: flex;
   flex-wrap: wrap;
   gap: 25px;
@@ -26,6 +42,7 @@ h1 { margin-top: 0; text-align:center; }
   margin-top: 20px;
 }
 
+/* Card Individual */
 .card-carrinho {
   background: #f9f9ff;
   border-radius: 14px;
@@ -33,39 +50,258 @@ h1 { margin-top: 0; text-align:center; }
   overflow: hidden;
   box-shadow: 0 3px 10px rgba(0,0,0,0.1);
   text-align: center;
+  padding-bottom: 10px;
 }
 
 .card-carrinho img {
   width: 100%;
   height: 150px;
   object-fit: cover;
+  border-bottom: 1px solid #e0e0e0;
 }
 
-.card-carrinho h3 { margin: 10px 0 5px; }
-.card-carrinho p { font-size: 14px; margin: 2px 0; color:#3b4f7a; }
-
-.confirmar {
-  text-align: center;
-  margin-top: 30px;
+.card-carrinho h3 { 
+    margin: 10px 0 5px; 
+    font-size: 1.3rem;
+    color: #1f355b;
+}
+.card-carrinho p { 
+    font-size: 14px; 
+    margin: 2px 0; 
+    color:#3b4f7a; 
 }
 
-#ponto {
-  padding: 10px 15px;
-  border: 2px solid #4A90E2;
-  border-radius: 25px;
-  font-family: "Poppins", sans-serif;
-  font-size: 14px;
-  margin-right: 10px;
-}
-
-.btn-confirmar {
-  background: #4A90E2;
+/* Botão Remover */
+.btn-remover {
+  background: #ff4d4d;
   color: white;
   border: none;
-  padding: 12px 25px;
-  border-radius: 25px;
-  font-weight: 600;
+  padding: 5px 10px;
+  border-radius: 10px;
+  font-size: 12px;
+  margin-top: 10px;
   cursor: pointer;
   transition: background .3s;
 }
-.btn-confirmar:hover { background:#3b7bd6; }
+.btn-remover:hover {
+  background: #cc0000;
+}
+
+/* Carrinho Vazio */
+.carrinho-vazio {
+    text-align: center;
+    padding: 40px;
+    border: 1px dashed #ccc;
+    border-radius: 10px;
+    margin: 20px auto;
+    width: 80%;
+}
+.carrinho-vazio p {
+    font-size: 1.1rem;
+    color: #1f355b;
+    margin-bottom: 15px;
+}
+.carrinho-vazio .btn {
+    display: inline-block;
+    padding: 10px 20px;
+}
+
+/* --- Seleção de Ponto de Coleta --- */
+
+.pontos-box {
+    margin-top: 40px;
+    padding: 25px;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    background: #f7f9ff; /* Fundo suave para a caixa */
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+.pontos-box h2 {
+    font-size: 1.5rem;
+    margin-top: 0;
+    color: #153f5a;
+}
+.pontos-controls {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+.placeholder {
+    color: #999;
+    font-style: italic;
+    padding: 10px 0;
+}
+
+#selectPontos {
+    flex-grow: 1;
+    min-width: 250px;
+    background: white;
+    padding: 10px 15px;
+    border: 2px solid #4A90E2;
+    border-radius: 25px;
+    font-family: "Poppins", sans-serif;
+    font-size: 14px;
+    height: 45px;
+}
+
+.pontos-controls .obs {
+    width: 100%;
+    font-size: 0.85rem;
+    color: #999;
+    text-align: left;
+    margin-top: 5px;
+}
+
+/* --- Botões Genéricos --- */
+.btn-outline { /* Botão "Ver no Mapa" e "Limpar Carrinho" */
+    background: none;
+    color: #4A90E2;
+    border: 2px solid #4A90E2;
+    padding: 10px 18px;
+    border-radius: 25px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all .3s;
+    text-decoration: none; /* Para usar em tags <a> ou <button> */
+    white-space: nowrap;
+}
+.btn-outline:hover:not(:disabled) {
+    background: #4A90E2;
+    color: white;
+}
+
+.btn-primary { /* Botão "Confirmar Adoção" */
+    background: #4A90E2;
+    color: white;
+    border: none;
+    padding: 12px 25px;
+    border-radius: 25px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background .3s;
+    text-decoration: none;
+}
+.btn-primary:hover:not(:disabled) { background: #3b7bd6; }
+
+/* Botões Desabilitados */
+.btn-outline:disabled,
+.btn-primary:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* --- Área de Ações (Limpar e Confirmar) --- */
+.acoes {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 30px;
+    border-top: 1px solid #eee;
+    padding-top: 20px;
+    align-items: center;
+}
+
+
+/* --- Feedback e Mensagens --- */
+.feedback {
+    padding: 15px;
+    border-radius: 8px;
+    margin-top: 20px;
+    font-weight: 600;
+    text-align: center;
+}
+.feedback.sucesso {
+    background-color: #e6ffe6;
+    color: #28a745;
+}
+.feedback.erro {
+    background-color: #ffe6e6;
+    color: #dc3545;
+}
+.hidden {
+    display: none !important;
+}
+
+/* --- Modal do Mapa --- */
+.map-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 9999;
+    display: none;
+    justify-content: center;
+    align-items: center;
+}
+.map-modal.visivel {
+    display: flex;
+}
+.map-backdrop {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+}
+.map-frame {
+    position: relative;
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+    width: 90%;
+    max-width: 800px;
+    height: 80%;
+    z-index: 10000;
+}
+.map-frame iframe {
+    width: 100%;
+    height: calc(100% - 40px);
+    border-radius: 10px 10px 0 0;
+}
+.map-close {
+    position: absolute;
+    top: -10px;
+    right: -10px;
+    background: white;
+    border: 2px solid #ccc;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    cursor: pointer;
+    font-size: 1.2rem;
+    line-height: 1;
+    z-index: 10001;
+}
+.map-caption {
+    padding: 10px;
+    text-align: center;
+    font-weight: 600;
+    color: #1f355b;
+}
+
+/* --- Responsividade --- */
+@media (max-width: 768px) {
+    .carrinho-container {
+        margin: 20px;
+        padding: 20px;
+    }
+    .acoes {
+        flex-direction: column-reverse;
+        gap: 15px;
+    }
+    .btn-primary, .btn-outline {
+        width: 100%;
+        text-align: center;
+        margin: 0;
+    }
+    .pontos-controls {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    #selectPontos, .btn-outline {
+        min-width: unset;
+        width: 100%;
+    }
+}
