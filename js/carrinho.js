@@ -1,291 +1,254 @@
 // ============================================================
-// 💙 VARAL DOS SONHOS — /js/carrinho.js (Completo)
-// ------------------------------------------------------------
-// Lógica para listar cartinhas no carrinho, seleção de ponto de coleta e submissão da adoção.
+// 💙 VARAL DOS SONHOS — js/carrinho.js
+// Lógica de visualização, remoção e confirmação de adoção.
 // ============================================================
 
-// --- 1. Variáveis e Configuração do DOM ---
-const carrinhoLista = document.getElementById('carrinho-lista');
-const selectPontos = document.getElementById('selectPontos');
-const btnConfirmar = document.getElementById('btnConfirmarAdocao');
-const btnLimpar = document.getElementById('btnLimparCarrinho');
-const feedbackMsg = document.getElementById('feedback-msg');
-const acoesContainer = document.querySelector('.acoes');
+document.addEventListener("DOMContentLoaded", async () => {
+  // Elementos principais
+  const listaCarrinho = document.getElementById("carrinhoLista");
+  const selectPontos = document.getElementById("selectPontos");
+  const btnConfirmar = document.getElementById("btnConfirmar");
+  const btnLimpar = document.getElementById("btnLimpar");
+  const btnVerMapa = document.getElementById("verNoMapa");
+  const feedbackDiv = document.getElementById("feedback");
+  const pontosControls = document.getElementById("pontosControls");
+  const pontosPlaceholder = document.getElementById("pontosPlaceholder");
 
-// Variáveis Globais do Modal
-const mapModal = document.getElementById('mapModal');
-const mapFrame = document.getElementById('mapFrame');
-const closeModalBtn = document.getElementById('closeModal');
-const mapCaption = document.getElementById('mapCaption'); // Adicionado para exibir o nome
+  let carrinho = JSON.parse(localStorage.getItem("carrinho")) || [];
+  let pontosDeColetaData = []; // Para armazenar os dados completos dos pontos
 
-// --- 2. Funções de Utilidade (Modal) ---
+  // --- Funções de Estado e UI ---
 
-function setupModalListeners() {
-    closeModalBtn.addEventListener('click', fecharModal);
-    mapModal.addEventListener('click', (e) => {
-        if (e.target === mapModal) {
-            fecharModal();
-        }
-    });
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && mapModal.classList.contains('is-open')) {
-            fecharModal();
-        }
-    });
-}
+  // Exibe mensagens de feedback
+  const showFeedback = (msg, isError = false) => {
+    feedbackDiv.textContent = msg;
+    feedbackDiv.className = `feedback ${isError ? 'erro' : 'sucesso'}`;
+    feedbackDiv.classList.remove('hidden');
+    setTimeout(() => feedbackDiv.classList.add('hidden'), 5000);
+  };
 
-/**
- * Abre o modal e carrega o mapa com base no endereço.
- * @param {string} endereco O endereço completo do ponto de coleta.
- * @param {string} nomePonto O nome do ponto de coleta.
- */
-function abrirModalMapa(endereco, nomePonto) {
-    const GOOGLE_MAPS_KEY = "SUA_CHAVE_API_GOOGLE_AQUI"; // 🚨 OBRIGATÓRIO: Use sua chave real!
-    const enderecoFormatado = encodeURIComponent(endereco);
-    
-    // Usando a URL de pesquisa, mas se a chave for válida, use a URL Embed do Maps
-    // A API Embed exige o parâmetro 'key' e o 'q' para pesquisa de endereço.
-    // É altamente recomendado que você use a URL de Embed API:
-    const mapsEmbedUrl = `https://www.google.com/maps/embed/v1/place?key=${GOOGLE_MAPS_KEY}&q=${enderecoFormatado}`;
+  // Atualiza o localStorage e re-renderiza o carrinho
+  const updateCarrinho = () => {
+    localStorage.setItem("carrinho", JSON.stringify(carrinho));
+    exibirCarrinho();
+    // Habilita/Desabilita o botão de confirmação
+    btnConfirmar.disabled = carrinho.length === 0 || !selectPontos.value;
+  };
 
-    mapFrame.src = mapsEmbedUrl; // Use a URL com a sua chave
-    mapCaption.textContent = `📍 ${nomePonto} - ${endereco}`; // Exibe o nome
-    mapModal.classList.add('is-open');
-    mapModal.setAttribute('aria-hidden', 'false');
-    document.body.style.overflow = 'hidden';
-}
+  // 1️⃣ Exibir e Renderizar Carrinho
+  function exibirCarrinho() {
+    listaCarrinho.innerHTML = "";
+    if (carrinho.length === 0) {
+      listaCarrinho.innerHTML = `
+        <div class="carrinho-vazio">
+          <p>Seu carrinho está vazio 😢</p>
+          <a href="cartinhas.html" class="btn btn-primary">Escolher Cartinhas</a>
+        </div>
+      `;
+      btnConfirmar.disabled = true;
+      btnLimpar.disabled = true;
+      return;
+    }
+    btnLimpar.disabled = false;
+    btnConfirmar.disabled = !selectPontos.value;
 
-function fecharModal() {
-    mapModal.classList.remove('is-open');
-    mapModal.setAttribute('aria-hidden', 'true');
-    mapFrame.src = "";
-    document.body.style.overflow = '';
-}
+    carrinho.forEach((item) => {
+      const f = item.fields || {};
+      const foto =
+        Array.isArray(f.imagem_cartinha) && f.imagem_cartinha[0]
+          ? f.imagem_cartinha[0].url
+          : "../imagens/sem-foto.png"; // Ajuste o caminho
 
-// --- 3. Gerenciamento do Carrinho (LocalStorage) ---
+      const card = document.createElement("div");
+      card.className = "card-carrinho";
+      card.setAttribute('data-id', item.id); // Usamos o ID do Airtable
 
-const getCarrinho = () => JSON.parse(localStorage.getItem('carrinho_adocoes') || '[]');
-const setCarrinho = (carrinho) => localStorage.setItem('carrinho_adocoes', JSON.stringify(carrinho));
+      card.innerHTML = `
+        <img src="${foto}" alt="Cartinha de ${f.nome_crianca}">
+        <h3>${f.nome_crianca || 'Criança'}</h3>
+        <p>🎂 ${f.idade || "—"} anos</p>
+        ${f.sonho ? `<p>💭 ${f.sonho}</p>` : ""}
+        <button class="btn-remover" data-id="${item.id}">❌ Remover</button>
+      `;
+      listaCarrinho.appendChild(card);
+    });
+    
+    // Adicionar listener de remoção
+    listaCarrinho.querySelectorAll('.btn-remover').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const idToRemove = e.target.getAttribute('data-id');
+        carrinho = carrinho.filter(item => item.id !== idToRemove);
+        updateCarrinho();
+      });
+    });
+  }
 
-function renderizarCarrinho() {
-    const carrinho = getCarrinho();
-    carrinhoLista.innerHTML = ''; // Limpa a lista atual
+  // 2️⃣ Carregar pontos de coleta
+  async function carregarPontos() {
+    try {
+      const resp = await fetch("/api/pontosdecoleta");
+      const json = await resp.json();
+      
+      if (json.sucesso && json.pontos && json.pontos.length > 0) {
+        pontosDeColetaData = json.pontos; // Guarda os dados completos
+        
+        json.pontos.forEach((p) => {
+          // Usamos o nome do ponto como valor e o endereço como data attribute
+          const nome = p.nome_ponto || "Ponto Sem Nome";
+          const endereco = p.endereco || ""; 
+          
+          const opt = document.createElement("option");
+          opt.value = nome;
+          opt.textContent = `${nome} (${p.horario_funcionamento || 'Horário não informado'})`;
+          opt.setAttribute('data-endereco', endereco);
+          selectPontos.appendChild(opt);
+        });
+        
+        // Exibir os controles de seleção e esconder o placeholder
+        pontosControls.classList.remove('hidden');
+        pontosPlaceholder.classList.add('hidden');
 
-    if (carrinho.length === 0) {
-        carrinhoLista.innerHTML = `
-            <div class="carrinho-vazio">
-                <p>O seu Varal de Sonhos está vazio. 😔</p>
-                <p>Que tal escolher uma cartinha para adotar?</p>
-                <a href="./cartinhas.html" class="btn btn-outline">Ir para o Varal Virtual</a>
-            </div>
-        `;
-        // Esconde os controles de ponto de coleta e ações
-        document.querySelector('.pontos-box').classList.add('hidden');
-        acoesContainer.classList.add('hidden');
-        return;
-    }
+      } else {
+        showFeedback("⚠️ Não foi possível carregar os pontos de coleta.", true);
+        pontosPlaceholder.textContent = "Erro ao carregar pontos.";
+      }
+    } catch (e) {
+      console.error("Erro ao carregar pontos:", e);
+      showFeedback("❌ Falha na comunicação com a API de Pontos de Coleta.", true);
+      pontosPlaceholder.textContent = "Erro ao carregar pontos.";
+    }
+  }
 
-    // Mostra os controles
-    document.querySelector('.pontos-box').classList.remove('hidden');
-    acoesContainer.classList.remove('hidden');
+  // 3️⃣ Modal de Mapa (Google Maps)
+  const mapModal = document.getElementById('mapModal');
+  const mapFrame = document.getElementById('mapFrame');
+  const mapCaption = document.getElementById('mapCaption');
 
-    const htmlCards = carrinho.map(item => `
-        <div class="card-carrinho" data-id="${item.id}">
-            <img src="${item.fotoUrl || '../imagens/cartinha-placeholder.jpg'}" alt="Foto da Cartinha">
-            <h3>${item.nome} (${item.idade} anos)</h3>
-            <p>Sonho: **${item.sonho}**</p>
-            <p>Irmãos: ${item.irmaos ? 'Sim' : 'Não'} (${item.idadeIrmaos || 0})</p>
-            <button class="btn-remover" data-id="${item.id}">Remover</button>
-        </div>
-    `).join('');
+  const abrirModalMapa = (endereco, nome) => {
+    // URL básica para busca no Google Maps (usamos o q para pesquisa)
+    const mapaURL = `https://www.google.com/maps/embed/v1/search?key=SEU_GOOGLE_MAPS_API_KEY&q=${encodeURIComponent(endereco)}`;
+    
+    mapFrame.src = mapaURL;
+    mapCaption.textContent = `📍 ${nome} - ${endereco}`;
+    mapModal.classList.add('visivel');
+    mapModal.setAttribute('aria-hidden', 'false');
+  };
+  
+  const fecharModalMapa = () => {
+    mapModal.classList.remove('visivel');
+    mapModal.setAttribute('aria-hidden', 'true');
+    mapFrame.src = 'about:blank'; // Limpa o iframe
+  };
 
-    carrinhoLista.innerHTML = htmlCards;
-    
-    // Adiciona listener para os botões de remover
-    document.querySelectorAll('.btn-remover').forEach(button => {
-        button.addEventListener('click', removerDoCarrinho);
-    });
+  // --- Event Listeners ---
+  
+  // Listener para a seleção do ponto
+  selectPontos.addEventListener('change', () => {
+    const selectedOption = selectPontos.options[selectPontos.selectedIndex];
+    const endereco = selectedOption.getAttribute('data-endereco');
+    
+    // Habilita o botão do mapa e confirmação
+    const isPontoSelecionado = !!selectPontos.value;
+    btnVerMapa.disabled = !isPontoSelecionado;
+    btnConfirmar.disabled = carrinho.length === 0 || !isPontoSelecionado;
+  });
 
-    // Atualiza o estado do botão de confirmar
-    atualizarEstadoBotao();
-}
+  // Listener para ver o mapa
+  btnVerMapa.addEventListener('click', () => {
+    const selectedOption = selectPontos.options[selectPontos.selectedIndex];
+    const endereco = selectedOption.getAttribute('data-endereco');
+    const nome = selectedOption.value;
+    if (endereco) {
+      abrirModalMapa(endereco, nome);
+    }
+  });
+  
+  // Listeners do Modal
+  document.getElementById('closeMap').addEventListener('click', fecharModalMapa);
+  document.getElementById('mapBackdrop').addEventListener('click', fecharModalMapa);
 
-function removerDoCarrinho(e) {
-    const idRemover = e.target.getAttribute('data-id');
-    let carrinho = getCarrinho();
-    
-    // Remove apenas a cartinha com o ID clicado
-    const novoCarrinho = carrinho.filter(item => item.id !== idRemover);
-    setCarrinho(novoCarrinho);
-    
-    renderizarCarrinho(); // Renderiza novamente
-    exibirFeedback('Item removido com sucesso.', 'sucesso');
-}
 
-function limparCarrinho() {
-    if (confirm("Tem certeza que deseja limpar o carrinho?")) {
-        setCarrinho([]);
-        renderizarCarrinho();
-        exibirFeedback('Carrinho limpo.', 'sucesso');
-    }
-}
+  // 4️⃣ Confirmar adoção (Ação Final)
+  btnConfirmar.addEventListener("click", async () => {
+    const ponto = selectPontos.value;
+    const cartinhasIDs = carrinho.map(item => item.id);
+    
+    if (!ponto || carrinho.length === 0) {
+      showFeedback("Selecione um ponto e tenha cartinhas no carrinho.", true);
+      return;
+    }
 
-// --- 4. Carregamento e Seleção de Pontos de Coleta ---
+    // ⚠️ ATENÇÃO: NOME E EMAIL DO DOADOR
+    // Aqui você deve implementar a lógica de login/sessão para pegar os dados do doador real.
+    // Por enquanto, usamos placeholders:
+    const nomeDoador = "Usuário Logado"; 
+    const emailDoador = "usuario.logado@seudominio.com";
+    
+    // Exibir a tela de carregamento/bloqueio antes do FOR
+    btnConfirmar.disabled = true;
+    btnConfirmar.textContent = "⌛ Registrando Adoções...";
 
-async function carregarPontosDeColeta() {
-    try {
-        const resposta = await fetch("/api/pontosdecoleta");
-        
-        if (!resposta.ok) throw new Error(`Status: ${resposta.status}`);
-        
-        const dados = await resposta.json();
+    try {
+      let sucessoCount = 0;
+      for (const item of carrinho) {
+        // Payload final com as variáveis do doador logado
+        const payload = {
+          id_cartinha: item.id,
+          nome_doador: nomeDoador, 
+          email_doador: emailDoador,
+          ponto_coleta: ponto,
+        };
 
-        if (!dados.sucesso || !dados.pontos || dados.pontos.length === 0) {
-            selectPontos.innerHTML = '<option value="">Nenhum ponto ativo.</option>';
-            return;
-        }
+        const resp = await fetch("/api/adocoes", { // API a ser criada no Vercel
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
 
-        const pontosAtivos = dados.pontos.filter(p => p.status && p.status.toLowerCase() === 'ativo');
-        
-        selectPontos.innerHTML = '<option value="" disabled selected>Selecione um ponto de coleta...</option>';
-        
-        pontosAtivos.forEach(ponto => {
-            // Valor: o endereço completo para envio na API e uso no mapa
-            const enderecoCompleto = `${ponto.nome_ponto} - ${ponto.endereco}, ${ponto.cidade} - ${ponto.estado}`;
-            const option = document.createElement('option');
-            option.value = enderecoCompleto; 
-            option.textContent = `${ponto.nome_ponto} (${ponto.cidade})`;
-            // Armazena todos os dados do ponto para facilitar o modal
-            option.dataset.nome = ponto.nome_ponto;
-            option.dataset.endereco = ponto.endereco;
-            selectPontos.appendChild(option);
-        });
+        const json = await resp.json();
+        if (json.sucesso) {
+          sucessoCount++;
+        } else {
+          console.error("Falha ao adotar cartinha:", item.id, json.mensagem);
+        }
+      }
+      
+      // Sucesso: Limpar carrinho e feedback final
+      if (sucessoCount === carrinho.length) {
+        showFeedback(`💙 ${sucessoCount} cartinha(s) adotada(s) com sucesso! Você receberá um email de confirmação.`, false);
+        carrinho = []; // Limpa o array local
+        updateCarrinho(); // Salva e renderiza
+      } else {
+        throw new Error("Adoção parcial ou falha no servidor.");
+      }
+    } catch (erro) {
+      console.error("Erro geral no registro de adoção:", erro);
+      showFeedback("❌ Erro ao finalizar adoção. Tente novamente.", true);
+      btnConfirmar.textContent = "✅ Confirmar Adoção"; // Restaura o botão
+      btnConfirmar.disabled = false;
+    }
+  });
+  
+  // Listener para Limpar Carrinho
+  btnLimpar.addEventListener('click', () => {
+    if (confirm("Tem certeza que deseja remover todas as cartinhas do carrinho?")) {
+      carrinho = [];
+      updateCarrinho();
+      showFeedback("Carrinho esvaziado.", false);
+    }
+  });
 
-    } catch (erro) {
-        console.error("Falha ao carregar pontos de coleta:", erro);
-        selectPontos.innerHTML = '<option value="">Erro ao carregar (Tente novamente)</option>';
-    }
-}
 
-// --- 5. Ações e Feedback ---
-
-function exibirFeedback(mensagem, tipo = 'sucesso') {
-    feedbackMsg.textContent = mensagem;
-    feedbackMsg.className = `feedback ${tipo}`; // Define a classe (sucesso ou erro)
-    feedbackMsg.classList.remove('hidden');
-
-    // Esconde a mensagem após 5 segundos
-    setTimeout(() => {
-        feedbackMsg.classList.add('hidden');
-    }, 5000);
-}
-
-function atualizarEstadoBotao() {
-    const carrinho = getCarrinho();
-    const pontoSelecionado = selectPontos.value;
-
-    if (carrinho.length > 0 && pontoSelecionado) {
-        btnConfirmar.disabled = false;
-        btnConfirmar.textContent = `Confirmar Adoção de ${carrinho.length} Cartinha(s)`;
-    } else {
-        btnConfirmar.disabled = true;
-        btnConfirmar.textContent = 'Selecione o Ponto de Coleta';
-    }
-}
-
-// --- 6. Submissão da Adoção ---
-
-async function confirmarAdocao() {
-    btnConfirmar.disabled = true;
-    btnConfirmar.textContent = 'Processando... ⏳';
-
-    const id_usuario = localStorage.getItem('id_usuario_varal'); // 🚨 Mudar conforme sua lógica de login
-    const nome_doador = localStorage.getItem('nome_usuario_varal'); // 🚨 Mudar conforme sua lógica de login
-    const email_doador = localStorage.getItem('email_usuario_varal'); // 🚨 Mudar conforme sua lógica de login
-    // Telefone será opcional.
-
-    if (!id_usuario || !email_doador) {
-        exibirFeedback("Você precisa estar logado para confirmar a adoção.", 'erro');
-        btnConfirmar.textContent = 'Faça Login';
-        btnConfirmar.addEventListener('click', () => window.location.href = './login.html', { once: true });
-        return;
-    }
-
-    const carrinho = getCarrinho();
-    const ponto_coleta = selectPontos.value;
-
-    if (carrinho.length === 0 || !ponto_coleta) {
-        exibirFeedback("Carrinho vazio ou ponto de coleta não selecionado.", 'erro');
-        atualizarEstadoBotao();
-        return;
-    }
-
-    // Itera sobre todas as cartinhas no carrinho
-    for (const cartinha of carrinho) {
-        const payload = {
-            id_cartinha: cartinha.id,
-            id_usuario: id_usuario,
-            nome_doador: nome_doador,
-            email_doador: email_doador,
-            telefone_doador: "N/A", // Se não coletamos, use N/A
-            ponto_coleta: ponto_coleta,
-            // (nome_crianca e sonho não são mais necessários, a API ajustada busca)
-        };
-
-        try {
-            const resposta = await fetch('/api/adocoes', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
-
-            const dados = await resposta.json();
-
-            if (!dados.sucesso) {
-                // Se uma falhar, exibe o erro e para o loop
-                throw new Error(dados.mensagem || 'Erro desconhecido ao registrar adoção.');
-            }
-        } catch (erro) {
-            exibirFeedback(`Falha ao adotar a cartinha: ${erro.message}`, 'erro');
-            // Mantém o botão desabilitado em caso de erro grave no servidor
-            return;
-        }
-    }
-
-    // Se todas as adoções foram bem-sucedidas:
-    setCarrinho([]); // Esvazia o carrinho
-    renderizarCarrinho(); // Atualiza a visualização
-    exibirFeedback('🎉 Parabéns! Suas adoções foram registradas com sucesso! Verifique seu e-mail para os próximos passos.', 'sucesso');
-    btnConfirmar.textContent = 'Sucesso!';
-}
-
-// --- 7. Inicialização ---
-
-document.addEventListener("DOMContentLoaded", () => {
-    // 1. Configura os listeners do Modal (copiado do pontosdecoleta.js)
-    setupModalListeners();
-
-    // 2. Carrega e renderiza o carrinho e os pontos de coleta
-    renderizarCarrinho();
-    carregarPontosDeColeta();
-
-    // 3. Configura os listeners principais
-    selectPontos.addEventListener('change', atualizarEstadoBotao);
-    btnConfirmar.addEventListener('click', confirmarAdocao);
-    btnLimpar.addEventListener('click', limparCarrinho);
-
-    // Listener do botão de mapa no seletor de pontos
-    document.getElementById('btnVerMapa').addEventListener('click', (e) => {
-        const selectedOption = selectPontos.options[selectPontos.selectedIndex];
-        
-        if (selectedOption && selectedOption.value) {
-            const nomePonto = selectedOption.dataset.nome || 'Ponto de Coleta Selecionado';
-            abrirModalMapa(selectedOption.value, nomePonto);
-        } else {
-            exibirFeedback('Selecione um ponto de coleta primeiro.', 'erro');
-        }
-    });
-
-    // 4. Garante que o estado inicial do botão esteja correto
-    atualizarEstadoBotao();
+  // --- Inicialização ---
+  // Verificar Autenticação (Requisito 1)
+  // ⚠️ IMPORTANTE: Você precisa implementar a lógica real de login.
+  const userIsLoggedIn = true; // Simulação de login para prosseguir com o código.
+  if (!userIsLoggedIn) {
+    // Redirecionar para a página de login se não estiver autenticado
+    // window.location.href = 'login.html'; 
+    // return;
+  }
+  
+  exibirCarrinho();
+  carregarPontos();
 });
