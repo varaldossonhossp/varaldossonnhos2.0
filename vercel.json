@@ -11,6 +11,7 @@
   ],
   "routes": [
     { "src": "/api/pontosdecoleta", "dest": "/api/pontosdecoleta.js" },
+    { "src": "/api/cartinhas", "dest": "/api/cartinhas.js" },
     
     { "src": "/api/(.*)", "dest": "/api/$1.js" },
 
