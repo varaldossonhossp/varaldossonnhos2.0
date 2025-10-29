@@ -63,40 +63,28 @@
 
     <div id="footer"></div>
     <div id="cloudinho"></div>
-
-    <script>
-    async function buscarEnderecoPorCEP() {
-        const cepInput = document.getElementById('cep');
-        const cep = cepInput.value.replace(/\D/g, '');
-        if (cep.length !== 8) return; 
-
-        try {
-            const loading = document.createElement('span');
-            loading.textContent = 'Buscando...';
-            cepInput.parentNode.insertBefore(loading, cepInput.nextSibling);
-
-            const r = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
-            const d = await r.json();
-
-            loading.remove();
-
-            if (d.erro) {
-                alert('CEP não encontrado ou inválido.');
-                return;
+    
+        <script>
+        // Função universal para carregar componentes HTML.
+        async function carregarComponente(id, arquivo) {
+            // Caminho relativo para a pasta "componentes/"
+            const base = "../componentes/"; 
+            const resp = await fetch(base + arquivo);
+            if (resp.ok) {
+                document.getElementById(id).innerHTML = await resp.text();
+            } else {
+                console.error(`Erro ao carregar componente ${arquivo}. Status: ${resp.status}`);
             }
-            
-            // Preenche os campos
-            document.getElementById('endereco').value = `${d.logradouro || ''}, ${d.bairro || ''}`;
-            document.getElementById('cidade').value = d.localidade || '';
-
-        } catch {
-            alert('Erro de conexão ao buscar endereço.');
         }
-    }
+        
+        // Carrega HTML do Header, Footer e Cloudinho
+        carregarComponente("header", "header.html");
+        carregarComponente("footer", "footer.html");
+        carregarComponente("cloudinho", "cloudinho.html");
     </script>
-
+    
     <script type="module" src="../js/componentes.js"></script>
-    <script src="../js/cadastro.js"></script>
     <script src="../js/cloudinho.js"></script>
+    <script src="../js/cadastro.js"></script>
 </body>
 </html>

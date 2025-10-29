@@ -1,13 +1,16 @@
 <!doctype html>
 <html lang="pt-BR">
+
 <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Login | Varal dos Sonhos 💙</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Login | Varal dos Sonhos 💙</title>  
 
     <link rel="stylesheet" href="../css/style.css" />
-    <link rel="stylesheet" href="../css/cadastro.css" /> 
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/cadastro.css" />
+    <link rel="stylesheet" href="../css/cloudinho.css" /> 
+    <link rel="icon" href="../imagens/favicon.png" type="image/png" />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
 </head>
 
 <body>
@@ -40,8 +43,28 @@
     </main>
 
     <div id="footer"></div>
-
-    <script type="module" src="../js/componentes.js"></script>
+    <div id="cloudinho"></div>
+    
+        <script>
+        // Função universal para carregar componentes HTML.
+        async function carregarComponente(id, arquivo) {
+            // Caminho relativo para a pasta "componentes/"
+            const base = "../componentes/"; 
+            const resp = await fetch(base + arquivo);
+            if (resp.ok) {
+                document.getElementById(id).innerHTML = await resp.text();
+            } else {
+                console.error(`Erro ao carregar componente ${arquivo}. Status: ${resp.status}`);
+            }
+        }
+        
+        // Carrega HTML do Header, Footer e Cloudinho
+        carregarComponente("header", "header.html");
+        carregarComponente("footer", "footer.html");
+        carregarComponente("cloudinho", "cloudinho.html");
+    </script>
+    
+    <script src="../js/cloudinho.js"></script>
     <script src="../js/login.js"></script>
 </body>
 </html>
