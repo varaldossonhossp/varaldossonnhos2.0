@@ -1,6 +1,8 @@
 // ============================================================
-// 💙 VARAL DOS SONHOS — /api/cartinhas.js (Versão Corrigida FINAL)
+// 💙 VARAL DOS SONHOS — /api/cartinhas.js (Correção de Acento/Capitalização)
 // ------------------------------------------------------------
+// Usando 'disponivel' (minúsculo, sem acento)
+// ============================================================
 
 import Airtable from "airtable";
 export const config = { runtime: "nodejs" };
@@ -19,8 +21,8 @@ export default async function handler(req, res) {
 
     const records = await base(table)
       .select({
-        // CORREÇÃO: Removido o filtro 'AND({ativo}=1)' que estava dando erro
-        filterByFormula: "{status}='disponível'",
+        // CORREÇÃO FINAL: Usando 'disponivel' (minúsculo e SEM ACENTO), conforme a configuração do Single Select
+        filterByFormula: "{status}='disponivel'",
         sort: [{ field: "data_cadastro", direction: "desc" }],
       })
       .all();
@@ -33,9 +35,8 @@ export default async function handler(req, res) {
     res.status(200).json({ sucesso: true, cartinhas });
   } catch (e) {
     console.error("Erro /api/cartinhas:", e);
-    // Mensagem de erro mais genérica, já que agora o erro é de campo
     res
       .status(500)
-      .json({ sucesso: false, mensagem: "Erro ao listar cartinhas. Verifique os nomes dos campos na API.", detalhe: e.message });
+      .json({ sucesso: false, mensagem: "Erro ao listar cartinhas. Verifique se o nome da tabela/campos está correto.", detalhe: e.message });
   }
 }
