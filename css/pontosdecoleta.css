@@ -35,15 +35,32 @@ de varal/vento.
 }
 
 /* --- Grid dos Cards --- */
+/* --- Grid dos Cards ( É UM CARROSSEL SCROLLÁVEL) --- */
 .grid-pontos {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 3rem 1.5rem; /* Aumenta o gap vertical para o efeito do prendedor */
+    /* Mude de grid para flex (ou use grid, mas com o fluxo certo) */
+    display: flex;
+    
+    /* Permite a rolagem horizontal */
+    overflow-x: auto; 
+    overflow-y: hidden;
+    
+    /* Impede que os cards quebrem para a próxima linha */
+    flex-wrap: nowrap; 
+    
+    /* Mantém o gap entre os cards */
+    gap: 3rem 1.5rem; 
+    
     margin-top: 2rem;
+    padding-bottom: 20px; /* Adiciona espaço para a barra de rolagem não cortar a sombra */
+    
+    /* Configuração de rolagem otimizada (apenas para navegadores que suportam) */
+    scroll-snap-type: x mandatory;
 }
 
 /* --- Card de Ponto de Coleta --- */
 .card-ponto {
+    flex: 0 0 320px;
+    scroll-snap-align: start;
     position: relative; /* Necessário para posicionar o prendedor */
     background: #fff;
     border-radius: 12px;
@@ -170,4 +187,14 @@ de varal/vento.
 .close:focus {
     color: var(--azul-royal);
     text-decoration: none;
+}
+
+/* --- Esconder Barra de Rolagem (Carrossel Limpo) --- */
+.grid-pontos::-webkit-scrollbar {
+    display: none; /* Chrome, Safari e Edge */
+}
+
+.grid-pontos {
+    -ms-overflow-style: none;  /* IE e Edge */
+    scrollbar-width: none;  /* Firefox */
 }
