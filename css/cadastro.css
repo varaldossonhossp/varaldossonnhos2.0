@@ -1,0 +1,145 @@
+/* ============================================================
+// 🎨 VARAL DOS SONHOS — /css/cadastro.css
+// ------------------------------------------------------------
+// Estilos para as páginas de Cadastro e Login (Formulários).
+// ============================================================ */
+
+/* Variáveis de cor (se estiver usando Poppins no style.css, use-o aqui também) */
+:root {
+    --cor-primaria: #4A90E2;
+    --cor-secundaria: #1f355b;
+    --fundo-claro: #f0f8ff;
+    --borda-clara: #bcd3f7;
+    --sombra-card: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.form-container {
+    padding: 40px 20px;
+    background-color: var(--fundo-claro);
+    min-height: 80vh; /* Garante altura mínima para centralização */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.login-card, .cadastro-card {
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow: var(--sombra-card);
+    padding: 40px;
+    width: 100%;
+    max-width: 400px;
+}
+
+h2 {
+    color: var(--cor-secundaria);
+    font-weight: 700;
+    text-align: center;
+    margin-bottom: 1.5rem;
+}
+
+form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+label {
+    font-weight: 500;
+    color: var(--cor-secundaria);
+}
+
+input[type="email"],
+input[type="password"],
+input[type="text"],
+input[type="tel"],
+input[type="number"],
+input[type="date"] {
+    width: 100%;
+    padding: 12px;
+    border-radius: 6px;
+    border: 1px solid var(--borda-clara);
+    font-family: "Poppins", sans-serif;
+    transition: border-color 0.3s;
+}
+
+input:focus {
+    border-color: var(--cor-primaria);
+    outline: none;
+}
+
+.btn-primary {
+    background: var(--cor-primaria);
+    color: #fff;
+    padding: 12px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: background-color 0.3s;
+}
+
+.btn-primary:hover:not(:disabled) {
+    background: #3b7bd6;
+}
+
+.btn-primary:disabled {
+    background: #aab8c2;
+    cursor: not-allowed;
+}
+
+.text-center {
+    text-align: center;
+    font-size: 0.9rem;
+}
+
+.text-center a {
+    color: var(--cor-primaria);
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.feedback {
+    padding: 10px;
+    border-radius: 6px;
+    text-align: center;
+    font-weight: 600;
+    margin-top: 10px;
+    font-size: 0.9rem;
+}
+
+.feedback.sucesso {
+    background-color: #e6ffed;
+    color: #008000;
+    border: 1px solid #008000;
+}
+
+.feedback.erro {
+    background-color: #ffe6e6;
+    color: #ff0000;
+    border: 1px solid #ff0000;
+}
+
+.hidden {
+    display: none !important;
+}
+
+.alert-message {
+    padding: 10px;
+    border-radius: 6px;
+    background-color: #fff3cd;
+    color: #856404;
+    border: 1px solid #ffeeba;
+    text-align: center;
+    margin-top: 20px;
+}
+
+/* Estilos específicos para o Cadastro */
+.opcoes-contato {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+}
+.opcoes-contato label {
+    font-weight: 400;
+}
