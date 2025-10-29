@@ -1,56 +1,70 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <!-- ============================================================
-       💙 VARAL DOS SONHOS — Cartinhas
-  ============================================================ -->
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Varal Virtual 💌 | Adote um Sonho</title>
 
-  <link rel="icon" href="/imagens/favicon.png" type="image/png" />
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../css/style.css" />
+  <link rel="stylesheet" href="../css/cartinhas.css" />
+  <link rel="stylesheet" href="../css/cloudinho.css" /> 
+  <link rel="icon" href="../imagens/favicon.png" type="image/png" />
 
-  <link rel="stylesheet" href="../css/header.css" />
-  <link rel="stylesheet" href="../css/footer.css" />
-  <link rel="stylesheet" href="../css/cloudinho.css" />
-  <link rel="stylesheet" href="../css/varal.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
 </head>
 
 <body>
   <div id="header"></div>
 
   <main class="varal-wrapper">
+    
     <div class="varal-title">
-      <h2>ADOTEM COM RESPONSABILIDADE</h2>
-      <p>Cada cartinha que você lê é uma janela para o sonho de uma criança.</p>
+      <h1 class="titulo-pagina">Varal Virtual</h1>
+      <p class="descricao">Arraste para o lado e escolha a cartinha que você deseja adotar.</p>
+    </div>
+
+    <section class="varal-area">
+      <div class="corda"></div>
+            <button class="nav seta-esq">‹</button>
+      <button class="nav seta-dir">›</button>
+            <div id="trilho-varal" class="trilho snap">
+                <p style="text-align:center; padding: 20px;">Carregando cartinhas...</p>
+      </div>
+    </section>
+  </main>
+  
+  <div id="modal-cartinha-zoom" class="modal-zoom">
+    <div class="modal-content-zoom">
+      <span class="close-zoom">&times;</span>
+      <img id="cartinha-zoom-img" src="" alt="Cartinha em zoom" />
+      <p id="nome-cartinha-zoom" class="nome-zoom"></p>
     </div>
+  </div>
 
-    <section class="varal-area">
-      <div class="corda"></div>
-      <button class="nav seta-esq">‹</button>
-      <button class="nav seta-dir">›</button>
-      <div id="trilho-varal" class="trilho snap"></div>
-    </section>
-  </main>
+  <div id="footer"></div>
+  <div id="cloudinho"></div>
 
-  <div id="footer"></div>
-  <div id="cloudinho"></div>
-
-  <script>
-    async function carregarComponente(id, caminho) {
-      try {
-        const resp = await fetch(caminho);
-        document.getElementById(id).innerHTML = await resp.text();
-      } catch (e) {
-        console.error("Erro ao carregar:", caminho, e);
-      }
-    }
-    carregarComponente("header", "../componentes/header.html");
-    carregarComponente("footer", "../componentes/footer.html");
-    carregarComponente("cloudinho", "../componentes/cloudinho.html");
-  </script>
-
-  <script src="../js/varal.js"></script>
+   <script>
+        // Função universal para carregar componentes HTML.
+        async function carregarComponente(id, arquivo) {
+            // Caminho relativo para a pasta "componentes/"
+            const base = "../componentes/"; 
+            const resp = await fetch(base + arquivo);
+            if (resp.ok) {
+                document.getElementById(id).innerHTML = await resp.text();
+            } else {
+                console.error(`Erro ao carregar componente ${arquivo}. Status: ${resp.status}`);
+            }
+        }
+        
+        // Carrega HTML do Header, Footer e Cloudinho
+        carregarComponente("header", "header.html");
+        carregarComponente("footer", "footer.html");
+        carregarComponente("cloudinho", "cloudinho.html");
+    </script>
+    
+    <script src="../js/cloudinho.js"></script>
+  <script src="../js/cartinhas.js"></script>
 </body>
 </html>

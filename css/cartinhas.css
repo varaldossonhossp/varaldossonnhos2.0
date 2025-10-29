@@ -3,104 +3,280 @@
 ---------------------------------------------------------------
 Estilo da página Varal Virtual (cartinhas disponíveis)
 ============================================================ */
+:root {
+  --azul-escuro: #153f5a;
+  --azul-cta: #2f80ed;
+  --fundo-claro: #f0f8ff; /* Cor de fundo suave */
+  --corda-cor: #8b4513; /* Marrom para a corda */
+}
 
-.cartinhas-container {
-  padding: 40px 20px;
+/* --- Layout Principal --- */
+.varal-wrapper {
+  max-width: 1400px;
+  margin: 80px auto 80px;
+  padding: 20px;
   text-align: center;
-  background-color: #E6F2FF;
-  min-height: 100vh;
+  /* Fundo sutil */
+  background: radial-gradient(circle at top, rgba(230,242,255,0.8) 0%, rgba(255,255,255,0) 100%);
 }
 
-.cartinhas-container h1 {
-  color: #1f355b;
-  font-size: 26px;
-  margin-bottom: 10px;
+.varal-title .titulo-pagina {
+  color: var(--azul-escuro);
+  font-size: 2.8rem;
+  margin-bottom: 0.5rem;
 }
 
-.subtitulo {
-  color: #3b4f7a;
-  font-size: 16px;
+.varal-title .descricao {
+  color: var(--azul-escuro);
+  opacity: 0.8;
+  font-size: 1.1rem;
   margin-bottom: 30px;
 }
 
-.filtro input {
-  width: 80%;
-  max-width: 400px;
-  padding: 10px 15px;
-  border-radius: 20px;
-  border: 2px solid #4A90E2;
-  font-family: "Poppins", sans-serif;
-  font-size: 14px;
-  margin-bottom: 30px;
+/* ====== ÁREA DO VARAL (Carrossel) ====== */
+.varal-area {
+  position: relative;
+  /* Ajusta a área para acomodar a corda e o trilho */
+  padding: 30px 0 50px; 
 }
 
-/* ====== GRID DE CARTINHAS ====== */
-.lista-cartinhas {
+/* CORDA DO VARAL */
+.corda {
+  position: absolute;
+  top: 15px; /* Posição no topo dos cards */
+  left: 0;
+  right: 0;
+  height: 2px;
+  background-color: var(--corda-cor);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+  z-index: 10;
+}
+
+/* TRILHO (Onde os cards rolam) */
+.trilho {
   display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 25px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  gap: 20px; /* Espaçamento entre os cards */
+  padding: 40px 20px 20px; /* Padding para rolagem e visual */
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  justify-content: flex-start;
+  align-items: flex-start; /* Alinha o topo dos cards */
+}
+
+/* Esconder barra de rolagem (limpeza visual) */
+.trilho::-webkit-scrollbar { display: none; }
+.trilho { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* Adiciona espaço nas extremidades do carrossel */
+.trilho::before,
+.trilho::after {
+  content: "";
+  flex: 0 0 30px; 
+}
+
+/* GANCHO / PRENDEDOR */
+.gancho {
+  position: relative;
+  flex-shrink: 0;
+  width: 280px; /* Largura do item no trilho */
+  scroll-snap-align: center;
+  /* Imagem do prendedor no topo */
+}
+.gancho::before {
+  content: "";
+  position: absolute;
+  top: -20px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 30px;
+  height: 30px;
+  background-image: url('../imagens/prendedor.png'); /* Usar a imagem do prendedor */
+  background-size: contain;
+  background-repeat: no-repeat;
+  z-index: 15;
 }
 
 /* ====== CARD INDIVIDUAL ====== */
 .card-cartinha {
   background: #fff;
   border-radius: 16px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  width: 250px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.1);
+  width: 100%; /* Ocupa a largura total do .gancho */
   overflow: hidden;
-  transition: transform 0.3s;
+  transition: transform 0.3s, box-shadow 0.3s;
+  min-height: 400px; /* Altura mínima para padronizar */
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 }
 
 .card-cartinha:hover {
-  transform: scale(1.03);
+  transform: translateY(-5px); /* Efeito de elevação */
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
 }
 
-/* ====== FOTO DA CRIANÇA ====== */
-.card-cartinha img {
+/* ====== IMAGEM DA CARTINHA (Para zoom) ====== */
+.cartinha-img-wrapper {
+  position: relative;
+  overflow: hidden;
+  height: 240px;
+  cursor: pointer;
+  border-bottom: 1px solid #eee;
+}
+.cartinha-img-wrapper img {
   width: 100%;
-  height: 180px;
+  height: 100%;
   object-fit: cover;
+  transition: transform 0.5s ease;
+}
+.cartinha-img-wrapper img:hover {
+  transform: scale(1.05);
 }
 
-/* ====== INFORMAÇÕES ====== */
+/* ====== INFORMAÇÕES DA CRIANÇA ====== */
 .info-cartinha {
   padding: 15px;
-  text-align: left;
+  text-align: center;
+  flex-grow: 1;
 }
 
 .info-cartinha h3 {
-  color: #1f355b;
-  margin: 0;
-  font-size: 18px;
+  color: var(--azul-escuro);
+  margin: 0 0 0.2rem 0;
+  font-size: 1.5rem; /* Nome maior */
+  font-weight: 700;
+}
+
+.info-cartinha .detalhes {
+  margin: 5px 0 10px;
+  color: var(--azul-cta);
+  font-weight: 600;
+  font-size: 1rem;
 }
 
 .info-cartinha p {
-  margin: 5px 0;
-  color: #3b4f7a;
-  font-size: 14px;
+  margin: 2px 0;
+  color: #4a5c76;
+  font-size: 0.95rem;
 }
 
-/* ====== BOTÃO DE ADOÇÃO ====== */
+/* ====== BOTÃO DE ADOÇÃO / STATUS ====== */
 .btn-adotar {
   display: block;
-  width: 90%;
-  margin: 10px auto 15px;
-  padding: 10px;
+  width: 80%;
+  margin: 0 auto 20px; /* Centralizado e espaçado do rodapé */
+  padding: 10px 15px;
   border: none;
-  border-radius: 25px;
-  background-color: #4A90E2;
+  border-radius: 999px;
+  background-color: var(--azul-cta);
   color: #fff;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
   transition: all 0.3s ease;
+  box-shadow: 0 4px 10px rgba(47, 128, 237, 0.2);
 }
 
-.btn-adotar:hover {
-  background-color: #3b7bd6;
+.btn-adotar:hover:not(:disabled) {
+  background-color: var(--azul-escuro);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 15px rgba(47, 128, 237, 0.3);
 }
 
-.btn-noCarrinho {
-  background-color: #6fb3ff;
+.btn-adotar:disabled {
+  background-color: #ccc;
   cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* Botão quando já está no carrinho */
+.btn-ocupada {
+  background-color: #f7a300;
+}
+
+/* Botões de navegação (setas) */
+.nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 20;
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid #ddd;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  font-size: 24px;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.2s;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+.nav:hover { background: #fff; }
+.seta-esq { left: 5px; }
+.seta-dir { right: 5px; }
+
+/* ============================================================
+* ESTILOS DO MODAL DE ZOOM (NOVO)
+* ============================================================ */
+
+.modal-zoom {
+  display: none; /* Escondido por padrão */
+  position: fixed;
+  z-index: 2000; /* Alto para sobrepor tudo */
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  background-color: rgba(0, 0, 0, 0.85); /* Fundo escuro */
+  justify-content: center;
+  align-items: center;
+}
+
+.modal-content-zoom {
+  margin: auto;
+  display: block;
+  width: 90%;
+  max-width: 700px;
+  position: relative;
+}
+
+#cartinha-zoom-img {
+  width: 100%;
+  height: auto;
+  border-radius: 8px;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+}
+
+.close-zoom {
+  position: absolute;
+  top: 15px;
+  right: 35px;
+  color: #f1f1f1;
+  font-size: 40px;
+  font-weight: bold;
+  transition: 0.3s;
+  cursor: pointer;
+  z-index: 2001;
+}
+
+.close-zoom:hover,
+.close-zoom:focus {
+  color: #bbb;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.nome-zoom {
+  text-align: center;
+  color: #fff;
+  padding: 10px 0;
+  font-size: 1.2rem;
+}
+
+/* Responsividade do Zoom */
+@media (max-width: 700px) {
+  .modal-content-zoom {
+    width: 95%;
+  }
 }

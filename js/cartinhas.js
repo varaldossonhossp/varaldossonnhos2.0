@@ -1,116 +1,152 @@
 // ============================================================
 // 💙 VARAL DOS SONHOS — /js/cartinhas.js
 // ------------------------------------------------------------
-// Lista as cartinhas da tabela "cartinhas" do Airtable.
-// Permite buscar, filtrar e adicionar cartinhas ao carrinho.
+// Lista as cartinhas, monta o carrossel, adiciona ao carrinho e cuida do zoom.
 // ============================================================
 
 document.addEventListener("DOMContentLoaded", async () => {
-  const listaContainer = document.getElementById("lista-cartinhas");
-  const inputBusca = document.getElementById("buscaCartinha");
+  const trilho = document.getElementById("trilho-varal");
+  const btnEsq = document.querySelector(".seta-esq");
+  const btnDir = document.querySelector(".seta-dir");
 
-  let todasCartinhas = [];
+  // Elementos do Modal de Zoom
+  const modalZoom = document.getElementById("modal-cartinha-zoom");
+  const imgZoom = document.getElementById("cartinha-zoom-img");
+  const nomeZoom = document.getElementById("nome-cartinha-zoom");
+  const closeZoom = document.querySelector(".close-zoom");
 
-  // ============================================================
-  // 1️⃣ Carrega as cartinhas da API
-  // ============================================================
-  async function carregarCartinhas() {
-    try {
-      const resposta = await fetch("/api/cartinhas");
-      const data = await resposta.json();
+  let cartinhas = [];
 
-      if (!data.sucesso || !data.cartinhas) {
-        listaContainer.innerHTML = "<p>❌ Não foi possível carregar as cartinhas.</p>";
-        return;
-      }
-
-      todasCartinhas = data.cartinhas;
-      exibirCartinhas(todasCartinhas);
-    } catch (erro) {
-      console.error("Erro ao buscar cartinhas:", erro);
-      listaContainer.innerHTML = "<p>⚠️ Erro ao carregar dados.</p>";
+  // 1️⃣ Buscar dados da API
+  try {
+    const resp = await fetch("/api/cartinhas");
+    // Adicionar tratamento de erro 404/500
+    if (!resp.ok) {
+        throw new Error(`Falha no servidor. Status: ${resp.status}`);
     }
-  }
+    
+    const json = await resp.json();
 
-  // ============================================================
-  // 2️⃣ Renderiza os cards das cartinhas
-  // ============================================================
-  function exibirCartinhas(cartinhas) {
-    listaContainer.innerHTML = "";
+    if (!json?.sucesso || !Array.isArray(json.cartinhas)) {
+      trilho.innerHTML = "<p style='padding:20px; color:#c0392b;'>⚠️ Varal vazio ou não foi possível carregar as cartinhas 💙</p>";
+      return;
+    }
 
-    cartinhas.forEach((c) => {
-      const f = c.fields;
-      const imgUrl = f.foto?.[0]?.url || "/imagens/sem-foto.png";
-      const estaAdotada = f.status && f.status.toLowerCase() !== "disponível";
+    // Airtable já filtra a maioria, mas reforçamos.
+    cartinhas = json.cartinhas; 
 
-      const card = document.createElement("div");
-      card.classList.add("card-cartinha");
+    montarVaral(cartinhas);
+  } catch (e) {
+    console.error("Erro ao carregar cartinhas:", e);
+    trilho.innerHTML = "<p style='padding:20px; color:#c0392b;'>❌ Erro ao conectar com o servidor da API. Tente mais tarde.</p>";
+  }
 
-      card.innerHTML = `
-        <img src="${imgUrl}" alt="Cartinha de ${f.nome_crianca}">
-        <div class="info-cartinha">
-          <h3>${f.nome_crianca}</h3>
-          <p>🎂 Idade: ${f.idade || "?"} anos</p>
-          <p>💭 Sonho: ${f.sonho || "—"}</p>
-          <p>👦 Sexo: ${f.sexo || "—"}</p>
-          <p>👨‍👧 Irmãos: ${f.irmaos ? "Sim" : "Não"}</p>
-        </div>
-        <button class="btn-adotar ${estaAdotada ? "btn-noCarrinho" : ""}">
-          ${estaAdotada ? "Adotada 💙" : "Adotar Sonho 💌"}
-        </button>
-      `;
+  // 2️⃣ Montar os cards
+  function montarVaral(registros) {
+    trilho.innerHTML = "";
 
-      const botao = card.querySelector("button");
-      if (!estaAdotada) {
-        botao.addEventListener("click", () => adicionarAoCarrinho(c));
-      }
+    registros.forEach((r) => {
+      const nome = (r.primeiro_nome || "").trim() || "Criança";
+      const idade = r.idade ?? "—";
+      const sonho = r.sonho || "Sonho não especificado.";
+      const irmaos = r.irmaos || "Não"; // Novo Campo
+      const idadeIrmaos = r.idade_irmaos ?? "—"; // Novo Campo
+      
+      const foto =
+        Array.isArray(r.imagem_cartinha) && r.imagem_cartinha[0]
+          ? r.imagem_cartinha[0].url
+          : "/imagens/sem-foto.png"; // Use uma imagem placeholder se não houver
 
-      listaContainer.appendChild(card);
-    });
-  }
+      // item do trilho (Gancho)
+      const gancho = document.createElement("div");
+      gancho.className = "gancho";
 
-  // ============================================================
-  // 3️⃣ Adiciona a cartinha ao carrinho (localStorage)
-  // ============================================================
-  function adicionarAoCarrinho(cartinha) {
-    const f = cartinha.fields;
-    const id_cartinha = f.id_cartinha || cartinha.id;
+      // card
+      const card = document.createElement("div");
+      card.className = "card-cartinha";
+      card.innerHTML = `
+        <div class="cartinha-img-wrapper" data-img="${foto}" data-nome="${nome}">
+          <img src="${foto}" alt="Cartinha de ${nome}" />
+        </div>
+        <div class="info-cartinha">
+          <h3>${nome}</h3>
+          <p class="detalhes">🎂 ${idade} anos | 💭 ${sonho}</p>
+          <p>Irmãos: <strong>${irmaos}</strong></p>
+          ${irmaos.toLowerCase() === 'sim' ? `<p>Idade dos Irmãos: ${idadeIrmaos}</p>` : ''}
+        </div>
+        <button class="btn-adotar" data-id="${r.id}">Adotar Sonho 💌</button>
+      `;
 
-    let carrinho = JSON.parse(localStorage.getItem("carrinho")) || [];
-    const jaExiste = carrinho.find((item) => item.id_cartinha === id_cartinha);
+      // --- Lógica de Adoção ---
+      const btn = card.querySelector(".btn-adotar");
+      const cartItem = { id: r.id, id_cartinha: r.id_cartinha, fields: r };
 
-    if (!jaExiste) {
-      carrinho.push({
-        id_cartinha,
-        nome_crianca: f.nome_crianca,
-        idade: f.idade,
-        sonho: f.sonho,
-        sexo: f.sexo,
-        irmaos: f.irmaos,
-        foto: f.foto,
+      if (estaNoCarrinho(r.id)) {
+        btn.textContent = "No Carrinho 🧺";
+        btn.classList.add("btn-ocupada");
+        btn.disabled = true;
+      }
+
+      btn.addEventListener("click", () => {
+        adicionarAoCarrinho(cartItem, btn, nome);
+      });
+      
+      // --- Lógica de Zoom (Clicar na Imagem) ---
+      card.querySelector(".cartinha-img-wrapper").addEventListener('click', (e) => {
+        const imgUrl = e.currentTarget.dataset.img;
+        const criancaNome = e.currentTarget.dataset.nome;
+        abrirModalZoom(imgUrl, criancaNome);
       });
 
-      localStorage.setItem("carrinho", JSON.stringify(carrinho));
-      alert(`💌 Cartinha de ${f.nome_crianca} adicionada ao carrinho!`);
-      carregarCartinhas();
-    } else {
-      alert("Essa cartinha já está no seu carrinho 💙");
+      gancho.appendChild(card);
+      trilho.appendChild(gancho);
+    });
+  }
+  
+  // --- Funções Auxiliares de Carrinho ---
+
+  function estaNoCarrinho(id) {
+    const carrinho = JSON.parse(localStorage.getItem("carrinho")) || [];
+    return !!carrinho.find((i) => i.id === id);
+  }
+
+  function adicionarAoCarrinho(item, botao, nome) {
+    const carrinho = JSON.parse(localStorage.getItem("carrinho")) || [];
+    if (!carrinho.find((i) => i.id === item.id)) {
+      carrinho.push(item);
+      localStorage.setItem("carrinho", JSON.stringify(carrinho));
+      botao.textContent = "No Carrinho 🧺";
+      botao.classList.add("btn-ocupada");
+      botao.disabled = true;
+      alert(`💙 A cartinha de ${nome} foi adicionada ao carrinho!`);
+    }
+  }
+  
+  // --- Funções Auxiliares de Zoom ---
+  function abrirModalZoom(imgUrl, nome) {
+    imgZoom.src = imgUrl;
+    nomeZoom.textContent = `Cartinha de ${nome}`;
+    modalZoom.style.display = "flex"; // Usa flex para centralizar
+  }
+  
+  closeZoom.onclick = function() {
+    modalZoom.style.display = "none";
+  }
+  
+  window.onclick = function(event) {
+    if (event.target == modalZoom) {
+      modalZoom.style.display = "none";
     }
   }
 
-  // ============================================================
-  // 4️⃣ Filtro de busca
-  // ============================================================
-  inputBusca?.addEventListener("input", (e) => {
-    const termo = e.target.value.toLowerCase();
-    const filtradas = todasCartinhas.filter((c) => {
-      const nome = (c.fields.nome_crianca || "").toLowerCase();
-      const sonho = (c.fields.sonho || "").toLowerCase();
-      return nome.includes(termo) || sonho.includes(termo);
-    });
-    exibirCartinhas(filtradas);
-  });
+  // 3️⃣ Controles do carrossel
+  const passo = 300;
 
-  // Inicializa
-  carregarCartinhas();
+  btnEsq.addEventListener("click", () => {
+    trilho.scrollBy({ left: -passo, behavior: "smooth" });
+  });
+
+  btnDir.addEventListener("click", () => {
+    trilho.scrollBy({ left: passo, behavior: "smooth" });
+  });
 });
