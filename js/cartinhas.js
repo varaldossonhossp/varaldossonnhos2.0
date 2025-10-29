@@ -37,6 +37,7 @@ try {
 
     montarVaral(cartinhas);
   } catch (e) {
+    // Este erro será exibido se a API falhar (ex: Status 500 do Airtable)
     console.error("Erro ao carregar cartinhas:", e);
     trilho.innerHTML = "<p style='padding:20px; color:#c0392b;'>❌ Erro ao conectar com o servidor da API. Tente mais tarde.</p>";
   }
@@ -50,14 +51,14 @@ try {
       const idade = r.idade ?? "—";
       const sonho = r.sonho || "Sonho não especificado.";
       
-      // Campos de texto (Single Line Text)
-      const irmaos = r.irmaos?.toUpperCase() || "NÃO"; // Trata como texto e coloca em maiúsculo
-      const idadeIrmaos = r.idade_irmaos ?? "—"; 
+      // Lógica para campos de texto: Converte para maiúsculo para comparação segura.
+      const irmaos = r.irmaos?.toUpperCase() || "NÃO"; 
+      const idadeIrmaos = r.idade_irmaos ?? "—";
       
       const foto =
         Array.isArray(r.imagem_cartinha) && r.imagem_cartinha[0]
           ? r.imagem_cartinha[0].url
-          : "/imagens/sem-foto.png"; // Use uma imagem placeholder se não houver
+          : "/imagens/sem-foto.png"; 
 
       // item do trilho (Gancho)
       const gancho = document.createElement("div");
@@ -74,11 +75,12 @@ try {
           <h3>${nome}</h3>
           <p class="detalhes">🎂 ${idade} anos | 💭 ${sonho}</p>
           <p>Irmãos: <strong>${irmaos}</strong></p>
-          ${irmaos === 'SIM' ? `<p>Idade dos Irmãos: ${idadeIrmaos}</p>` : ''}         </div>
+          ${irmaos === 'SIM' ? `<p>Idade dos Irmãos: ${idadeIrmaos}</p>` : ''}
+        </div>
         <button class="btn-adotar" data-id="${r.id}">Adotar Sonho 💌</button>
       `;
 
-      // --- Lógica de Adoção ---
+      // --- Lógica de Adoção e Zoom (mantida) ---
       const btn = card.querySelector(".btn-adotar");
       const cartItem = { id: r.id, id_cartinha: r.id_cartinha, fields: r };
 
@@ -92,7 +94,6 @@ try {
         adicionarAoCarrinho(cartItem, btn, nome);
       });
       
-      // --- Lógica de Zoom (Clicar na Imagem) ---
       card.querySelector(".cartinha-img-wrapper").addEventListener('click', (e) => {
         const imgUrl = e.currentTarget.dataset.img;
         const criancaNome = e.currentTarget.dataset.nome;
@@ -104,8 +105,7 @@ try {
     });
   }
   
-  // --- Funções Auxiliares de Carrinho ---
-
+  // --- Funções Auxiliares (mantidas) ---
   function estaNoCarrinho(id) {
     const carrinho = JSON.parse(localStorage.getItem("carrinho")) || [];
     return !!carrinho.find((i) => i.id === id);
@@ -123,11 +123,10 @@ try {
     }
   }
   
-  // --- Funções Auxiliares de Zoom ---
   function abrirModalZoom(imgUrl, nome) {
     imgZoom.src = imgUrl;
     nomeZoom.textContent = `Cartinha de ${nome}`;
-    modalZoom.style.display = "flex"; // Usa flex para centralizar
+    modalZoom.style.display = "flex"; 
   }
   
   closeZoom.onclick = function() {
@@ -140,7 +139,7 @@ try {
     }
   }
 
-  // 3️⃣ Controles do carrossel
+  // 3️⃣ Controles do carrossel (mantidos)
   const passo = 300;
 
   btnEsq.addEventListener("click", () => {
