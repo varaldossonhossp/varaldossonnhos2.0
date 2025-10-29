@@ -8,7 +8,7 @@
 
     <link rel="stylesheet" href="../css/style.css" />
     <link rel="stylesheet" href="../css/pontosdecoleta.css" />
-    <link rel="stylesheet" href="../css/cloudinho.css" />
+    <link rel="stylesheet" href="../css/cloudinho.css" /> 
     <link rel="icon" href="../imagens/favicon.png" type="image/png" />
 </head>
 
@@ -27,18 +27,33 @@
             <p>Carregando pontos de coleta...</p>
             </section>
         
-        <p id="mensagem-status" style="display:none; text-align:center;">Não foi possível carregar os pontos de coleta ou nenhum ponto ativo foi encontrado.</p>
+        <p id="mensagem-status" style="display:none; text-align:center;"></p>
     </main>
-
+    
+    <div id="mapModal" class="modal" aria-hidden="true">
+        <div class="modal-content" role="dialog" aria-label="Mapa">
+          <button id="closeModal" class="close" aria-label="Fechar mapa">×</button>
+          <h2>Localização do Ponto de Coleta</h2>
+          <iframe id="mapFrame" 
+                  title="Google Maps"
+                  width="100%" 
+                  height="450" 
+                  style="border:0;" 
+                  loading="lazy"
+                  referrerpolicy="no-referrer-when-downgrade" 
+                  allowfullscreen>
+          </iframe>
+        </div>
+    </div>
     <div id="footer"></div>
 
     <div id="cloudinho"></div>
 
     <script>
-        // Função universal para carregar componentes, ajustando o caminho.
+        // Função universal para carregar componentes HTML.
         async function carregarComponente(id, arquivo) {
-            // A página está dentro de /pages/, então o caminho base para a raiz é "../"
-            const base = "../componentes/";
+            // Caminho relativo para a pasta "componentes/"
+            const base = "../componentes/"; 
             const resp = await fetch(base + arquivo);
             if (resp.ok) {
                 document.getElementById(id).innerHTML = await resp.text();
