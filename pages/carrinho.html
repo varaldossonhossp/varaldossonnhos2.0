@@ -1,16 +1,15 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <!-- ============================================================
-       💙 VARAL DOS SONHOS — Carrinho
-  ============================================================ -->
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Meu Carrinho 💙 | Varal dos Sonhos</title>
-
-  <link rel="icon" href="/imagens/favicon.png" type="image/png" />
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="../css/carrinho.css" />
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Veja onde entregar os presentes das cartinhas adotadas no Varal dos Sonhos." />
+    <title>Meu Carrinho 💙 | Varal dos Sonhos</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../css/style.css" />
+    <link rel="stylesheet" href="../css/carrinho.css" />
+    <link rel="stylesheet" href="../css/cloudinho.css" /> 
+    <link rel="icon" href="../imagens/favicon.png" type="image/png" />
 </head>
 
 <body>
@@ -34,20 +33,26 @@
   <div id="footer"></div>
   <div id="cloudinho"></div>
 
-  <script>
-    async function carregarComponente(id, caminho) {
-      try {
-        const resp = await fetch(caminho);
-        document.getElementById(id).innerHTML = await resp.text();
-      } catch (e) {
-        console.error("Erro ao carregar:", caminho, e);
-      }
-    }
-    carregarComponente("header", "../componentes/header.html");
-    carregarComponente("footer", "../componentes/footer.html");
-    carregarComponente("cloudinho", "../componentes/cloudinho.html");
-  </script>
-
-  <script src="../js/carrinho.js"></script>
+    <script>
+        // Função universal para carregar componentes HTML.
+        async function carregarComponente(id, arquivo) {
+            // Caminho relativo para a pasta "componentes/"
+            const base = "../componentes/"; 
+            const resp = await fetch(base + arquivo);
+            if (resp.ok) {
+                document.getElementById(id).innerHTML = await resp.text();
+            } else {
+                console.error(`Erro ao carregar componente ${arquivo}. Status: ${resp.status}`);
+            }
+        }
+        
+        // Carrega HTML do Header, Footer e Cloudinho
+        carregarComponente("header", "header.html");
+        carregarComponente("footer", "footer.html");
+        carregarComponente("cloudinho", "cloudinho.html");
+    </script>
+    
+    <script src="../js/cloudinho.js"></script>
+    <script src="../js/carrinho.js"></script>
 </body>
 </html>
