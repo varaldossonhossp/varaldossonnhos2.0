@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Login | Varal dos Sonhos 💙</title>
+
+    <link rel="stylesheet" href="../css/style.css" />
+    <link rel="stylesheet" href="../css/cadastro.css" /> 
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div id="header"></div>
+
+    <main class="container form-container">
+        <section class="login-card card">
+            <h2 style="margin-bottom: 0.5rem;">Bem-vindo de volta!</h2>
+            <p style="margin-bottom: 2rem; color: #666;">Entre na sua conta para continuar a jornada.</p>
+
+            <form id="formLogin">
+                <label for="email">E-mail</label>
+                <input type="email" id="email" name="email" placeholder="Seu e-mail de cadastro" required>
+
+                <label for="senha">Senha</label>
+                <input type="password" id="senha" name="senha" placeholder="Sua senha secreta" required>
+
+                <button type="submit" class="btn btn-primary" style="margin-top: 1.5rem;">Entrar</button>
+            </form>
+
+            <p id="feedback-msg" class="feedback hidden" style="margin-top: 1rem;"></p>
+            
+            <p class="text-center" style="margin-top: 1.5rem;">
+                Não tem uma conta? <a href="cadastro.html">Cadastre-se aqui</a>
+            </p>
+            <p class="text-center">
+                <a href="#">Esqueci minha senha</a>
+            </p>
+        </section>
+    </main>
+
+    <div id="footer"></div>
+
+    <script type="module" src="../js/componentes.js"></script>
+    <script src="../js/login.js"></script>
+</body>
+</html>
