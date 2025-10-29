@@ -1,9 +1,6 @@
 // ============================================================
-// 💙 VARAL DOS SONHOS — /api/cartinhas.js
+// 💙 VARAL DOS SONHOS — /api/cartinhas.js (Versão Corrigida FINAL)
 // ------------------------------------------------------------
-// Lista cartinhas disponíveis e ativas para adoção.
-// Tabela: cartinha (CORRIGIDO)
-// ============================================================
 
 import Airtable from "airtable";
 export const config = { runtime: "nodejs" };
@@ -18,13 +15,12 @@ export default async function handler(req, res) {
     const base = new Airtable({ apiKey: process.env.AIRTABLE_API_KEY })
       .base(process.env.AIRTABLE_BASE_ID);
     
-    // CORREÇÃO: O fallback agora é "cartinha" no singular.
-    // O nome da variável de ambiente é mantido por compatibilidade.
     const table = process.env.AIRTABLE_CARTINHAS_TABLE || "cartinha"; 
 
     const records = await base(table)
       .select({
-        filterByFormula: "AND({status}='disponível', {ativo}=1)",
+        // CORREÇÃO: Removido o filtro 'AND({ativo}=1)' que estava dando erro
+        filterByFormula: "{status}='disponível'",
         sort: [{ field: "data_cadastro", direction: "desc" }],
       })
       .all();
@@ -37,8 +33,9 @@ export default async function handler(req, res) {
     res.status(200).json({ sucesso: true, cartinhas });
   } catch (e) {
     console.error("Erro /api/cartinhas:", e);
+    // Mensagem de erro mais genérica, já que agora o erro é de campo
     res
       .status(500)
-      .json({ sucesso: false, mensagem: "Erro ao listar cartinhas. Nome da Tabela ou Permissões Incorretas.", detalhe: e.message });
+      .json({ sucesso: false, mensagem: "Erro ao listar cartinhas. Verifique os nomes dos campos na API.", detalhe: e.message });
   }
 }
