@@ -52,7 +52,7 @@ botões mais elegantes, responsividade.
 /* --- Grid dos Cards (carrossel horizontal) --- */
 .grid-pontos{
     display: flex;
-    gap: 2rem;
+    gap: 1.2rem;
     overflow-x: auto;
     overflow-y: hidden;
     padding-bottom: 18px;
@@ -69,13 +69,13 @@ botões mais elegantes, responsividade.
 
 /* --- Card de Ponto de Coleta --- */
 .card-ponto {
-    flex: 0 0 320px;
+    flex: 0 0 260px;
     scroll-snap-align: start;
     position: relative;
     background: linear-gradient(180deg, rgba(255,255,255,0.98) 0%, var(--card-bg) 100%);
     border-radius: var(--card-radius);
-    padding: 1.8rem 1.4rem 1.6rem;
-    padding-top: 3.2rem; /* espaço p/ prendedor */
+    padding: 1.5rem 1rem 1.4rem;
+    padding-top: 3rem; /* espaço p/ prendedor */
     box-shadow: var(--soft-shadow);
     transition: transform 0.45s cubic-bezier(.2,.9,.2,1), box-shadow 0.25s ease, filter 0.25s ease;
     transform-origin: center top;
@@ -115,7 +115,6 @@ botões mais elegantes, responsividade.
     background-repeat: no-repeat;
     background-size: contain;
     background-position: center;
-    /* Use uma imagem PNG/SVG com fundo transparente ou substitua pela sua url */
     background-image: url('../imagens/prendedor.png');
     filter: drop-shadow(0 4px 6px rgba(20,40,60,0.12));
 }
@@ -139,7 +138,7 @@ botões mais elegantes, responsividade.
 .card-ponto h3 {
     color: var(--azul-escuro);
     margin: 0 0 0.35rem 0;
-    font-size: 1.15rem;
+    font-size: 1.1rem;
     font-weight: 700;
     letter-spacing: -0.2px;
 }
@@ -153,7 +152,7 @@ botões mais elegantes, responsividade.
 .card-ponto p {
     margin: 0.18rem 0;
     color: #2c3e50;
-    font-size: 0.95rem;
+    font-size: 0.9rem;
     line-height: 1.35;
 }
 
