@@ -2,7 +2,7 @@
 // 💙 VARAL DOS SONHOS — /api/cartinhas.js
 // ------------------------------------------------------------
 // Lista cartinhas disponíveis e ativas para adoção.
-// Tabela: cartinhas
+// Tabela: cartinha (CORRIGIDO)
 // ============================================================
 
 import Airtable from "airtable";
@@ -17,9 +17,11 @@ export default async function handler(req, res) {
   try {
     const base = new Airtable({ apiKey: process.env.AIRTABLE_API_KEY })
       .base(process.env.AIRTABLE_BASE_ID);
-    const table = process.env.AIRTABLE_CARTINHAS_TABLE || "cartinhas";
+    
+    // CORREÇÃO: O fallback agora é "cartinha" no singular.
+    // O nome da variável de ambiente é mantido por compatibilidade.
+    const table = process.env.AIRTABLE_CARTINHAS_TABLE || "cartinha"; 
 
-    // Filtra por 'disponível' e {ativo}=1
     const records = await base(table)
       .select({
         filterByFormula: "AND({status}='disponível', {ativo}=1)",
@@ -37,6 +39,6 @@ export default async function handler(req, res) {
     console.error("Erro /api/cartinhas:", e);
     res
       .status(500)
-      .json({ sucesso: false, mensagem: "Erro ao listar cartinhas.", detalhe: e.message });
+      .json({ sucesso: false, mensagem: "Erro ao listar cartinhas. Nome da Tabela ou Permissões Incorretas.", detalhe: e.message });
   }
 }
