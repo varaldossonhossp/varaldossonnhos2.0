@@ -15,18 +15,26 @@ document.addEventListener("DOMContentLoaded", () => {
 async function carregarPontosDeColeta() {
     const listaPontos = document.getElementById("lista-pontos");
     const statusMsg = document.getElementById("mensagem-status");
-    listaPontos.innerHTML = "<p>Buscando pontos de coleta no servidor...</p>";
+    listaPontos.innerHTML = "<p style='text-align:center;'>Buscando pontos de coleta no servidor...</p>";
+    statusMsg.style.display = 'none';
 
-    try {
-        // Chamada para a API (que, no Vercel, fica na raiz do projeto)
+   try {
+        // O caminho deve ser ABSOLUTO (ou relativo à raiz, começando com /) para APIs no Vercel.
         const resposta = await fetch("/api/pontosdecoleta");
+        
+        if (!resposta.ok) {
+            // Se o status HTTP não for 200, lançamos um erro. 
+            // Isso deve capturar o 404 ou 500 que você está vendo.
+            const errorText = await resposta.text();
+            throw new Error(`Falha no servidor. Status: ${resposta.status}. Resposta: ${errorText.substring(0, 50)}...`);
+        }
+        
         const dados = await resposta.json();
 
         if (!dados.sucesso || !dados.pontos || dados.pontos.length === 0) {
             throw new Error("API retornou sem sucesso ou lista vazia.");
         }
 
-        // Filtra apenas pontos com status 'ativo' (ou outro critério de visibilidade se existir)
         const pontosAtivos = dados.pontos.filter(p => p.status && p.status.toLowerCase() === 'ativo');
 
         if (pontosAtivos.length === 0) {
@@ -36,10 +44,9 @@ async function carregarPontosDeColeta() {
             return;
         }
 
-        // Gera o HTML dos cards
         const htmlCards = pontosAtivos.map(ponto => {
-            // Cria um link do Google Maps com o endereço
-            const enderecoFormatado = encodeURIComponent(ponto.endereco + ", " + ponto.nome_ponto);
+            const enderecoFormatado = encodeURIComponent(ponto.endereco);
+            // Link que abre no Google Maps.
             const linkMaps = `https://www.google.com/maps/search/?api=1&query=${enderecoFormatado}`;
 
             return `
@@ -59,12 +66,11 @@ async function carregarPontosDeColeta() {
         }).join("");
 
         listaPontos.innerHTML = htmlCards;
-        statusMsg.style.display = 'none'; // Esconde a mensagem de status se deu tudo certo
 
     } catch (erro) {
-        console.error("Falha ao carregar pontos de coleta:", erro);
+        console.error("Falha detalhada ao carregar pontos de coleta:", erro);
         listaPontos.innerHTML = "";
-        statusMsg.textContent = "⚠️ Houve um erro ao tentar carregar os pontos de coleta. Tente novamente mais tarde.";
+        statusMsg.textContent = `⚠️ Houve um erro ao tentar carregar os pontos de coleta. Detalhe: ${erro.message}`;
         statusMsg.style.display = 'block';
     }
 }
