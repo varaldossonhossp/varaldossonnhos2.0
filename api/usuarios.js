@@ -1,31 +1,31 @@
 // ============================================================
-// 👥 VARAL DOS SONHOS — /api/usuarios.js (VERSÃO ROBUSTA FINAL)
+// 👥 VARAL DOS SONHOS — /api/usuarios.js (VERSÃO FINAL COM NOME DE CAMPO CORRIGIDO)
 // ------------------------------------------------------------
-// ✅ Inicialização do Airtable movida para DENTRO do handler (ROBUSTO).
-// ✅ Teste de chave de API no início do handler (DEBUG).
-// ✅ Modo de Senha Simples (Login e Cadastro) para estabilidade.
+// ✅ Inicialização robusta.
+// ✅ TABLE_NAME CORRIGIDO para 'usuarios' (como na Vercel).
+// ✅ Nome do campo de senha CORRIGIDO para {'A senha'} (tanto POST quanto GET).
 // ============================================================
 
 import Airtable from "airtable";
 
-// As variáveis de ambiente serão lidas dentro do handler para garantir que estejam prontas.
+// Variáveis de ambiente
 const AIRTABLE_API_KEY = process.env.AIRTABLE_API_KEY;
 const AIRTABLE_BASE_ID = process.env.AIRTABLE_BASE_ID;
 
 // Configuração do Vercel
 export const config = { runtime: "nodejs" };
 
+// 🚨 Tabela: Usando o nome exato da variável da Vercel: 'usuarios'
 const TABLE_NAME =
-  process.env.AIRTABLE_USUARIOS_TABLE || "usuario"; // Usando 'usuario' conforme suas imagens
+  process.env.AIRTABLE_USUARIOS_TABLE || "usuarios"; 
 
 const err = (res, code, msg, extra = {}) => {
   console.error("❌", code, msg, extra);
   return res.status(code).json({ sucesso: false, mensagem: msg, ...extra });
 };
 
-// Função auxiliar para evitar erro de sintaxe na fórmula (Essencial para Airtable)
+// Função auxiliar para evitar erro de sintaxe na fórmula
 const escapeFormulaString = (str) => {
-    // Substitui aspas simples (') por duas aspas simples ('')
     return str ? str.replace(/'/g, "''") : ''; 
 };
 
@@ -37,22 +37,17 @@ export default async function handler(req, res) {
   if (req.method === "OPTIONS") return res.status(204).end();
 
   try {
-    // ============================================================
     // 🔑 INICIALIZAÇÃO E TESTE DE CHAVE ROBUSTO
-    // ============================================================
     if (!AIRTABLE_API_KEY || !AIRTABLE_BASE_ID) {
         return err(res, 500, "ERRO CRÍTICO: Chaves de ambiente do Airtable ausentes.", { detalhe: "AIRTABLE_API_KEY ou BASE_ID não configurados na Vercel." });
     }
     
-    // 💡 TESTE DE LEITURA (Se o token não começar com 'pat', é um aviso)
     if (!AIRTABLE_API_KEY.startsWith("pat")) {
         console.warn("⚠️ A chave Airtable não parece ser um Personal Access Token (PAT). Confirme se a chave API legada está correta.");
     }
 
-    // Inicialização da Base DEPOIS de confirmar que as chaves foram lidas.
     const base = new Airtable({ apiKey: AIRTABLE_API_KEY })
         .base(AIRTABLE_BASE_ID);
-    // FIM DA INICIALIZAÇÃO ROBUSTA
 
 
     // ============================================================
@@ -66,7 +61,6 @@ export default async function handler(req, res) {
         cidade, cep, endereco, numero,
       } = req.body || {};
       
-      // Validação de TODOS os campos obrigatórios
       const camposObrigatorios = { nome_usuario, email_usuario, telefone, senha, tipo_usuario, cidade, cep, endereco, numero };
       const camposFaltando = Object.keys(camposObrigatorios).filter(key => !camposObrigatorios[key]);
 
@@ -74,7 +68,7 @@ export default async function handler(req, res) {
         return err(res, 400, "Todos os campos de cadastro são obrigatórios.", { campos_faltando: camposFaltando });
 
 
-      // VERIFICAÇÃO DE DUPLICIDADE (E-MAIL OU TELEFONE)
+      // VERIFICAÇÃO DE DUPLICIDADE
       const emailLower = escapeFormulaString(email_usuario).toLowerCase();
       const telefoneNumerico = telefone.replace(/\D/g, "");
 
@@ -89,15 +83,15 @@ export default async function handler(req, res) {
       if (existentes.length > 0)
         return err(res, 409, "Já existe cadastro com este e-mail ou telefone.");
 
-
-      // ⚠️ MODO SENHA SIMPLES ATIVADO: A senha é salva como texto puro.
       let senhaFinal = senha; 
 
       // Cria o registro no Airtable
       const novo = await base(TABLE_NAME).create([
         {
           fields: {
-            nome_usuario, email_usuario, telefone, senha: senhaFinal, 
+            nome_usuario, email_usuario, telefone, 
+             // 🚨 CORREÇÃO DE CAMPO: Usando o nome do campo como 'A senha' na criação
+             'A senha': senhaFinal, 
             tipo_usuario, cidade, cep, endereco, numero,
             status: "ativo",
             data_cadastro: new Date().toLocaleDateString("pt-BR"),
@@ -127,8 +121,8 @@ export default async function handler(req, res) {
       const emailEscapado = escapeFormulaString(email);
       const senhaEscapada = escapeFormulaString(senha);
 
-      // Filtro que busca email + senha simples
-      const formula = `AND({email_usuario}='${emailEscapado}', {senha}='${senhaEscapada}', {status}='ativo')`;
+      // 🚨 CORREÇÃO DE CAMPO: Usando o nome do campo como 'A senha' na busca (GET)
+      const formula = `AND({email_usuario}='${emailEscapado}', {'A senha'}='${senhaEscapada}', {status}='ativo')`;
       console.log("🔍 Airtable Formula (Senha Simples):", formula);
 
       const registros = await base(TABLE_NAME)
@@ -143,7 +137,8 @@ export default async function handler(req, res) {
 
       const user = registros[0].fields;
 
-      const { senha: _, ...dados } = user;
+      // A linha abaixo foi ajustada para remover a senha do retorno, usando o nome do campo correto
+      const { 'A senha': _, ...dados } = user;
       return res.status(200).json({
         sucesso: true,
         mensagem: "Login efetuado com sucesso (MODO SIMPLES).",
@@ -155,7 +150,6 @@ export default async function handler(req, res) {
     return err(res, 405, "Método não suportado.");
   } catch (e) {
     console.error("🔥 Erro interno /api/usuarios:", e);
-    // Se houver um erro de autorização do Airtable, ele será capturado aqui
     return err(res, 500, "Erro interno no servidor.", { detalhe: e.message });
   }
 }
