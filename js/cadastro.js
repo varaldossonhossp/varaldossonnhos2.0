@@ -20,6 +20,33 @@ document.addEventListener("DOMContentLoaded", () => {
         }, 5000);
     };
 
+    // ============================================================
+    // 🧭 Auto-preenchimento de endereço pelo CEP (ViaCEP)
+    // ============================================================
+    const cepInput = document.getElementById("cep");
+    if (cepInput) {
+        cepInput.addEventListener("blur", async () => {
+            const cep = cepInput.value.replace(/\D/g, "");
+            if (cep.length !== 8) return; // ignora CEP inválido
+
+            try {
+                const resp = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+                if (!resp.ok) return;
+                const dados = await resp.json();
+                if (dados.erro) return;
+
+                const enderecoInput = document.getElementById("endereco");
+                const cidadeInput = document.getElementById("cidade");
+                if (enderecoInput)
+                    enderecoInput.value = [dados.logradouro, dados.bairro].filter(Boolean).join(" - ");
+                if (cidadeInput)
+                    cidadeInput.value = [dados.localidade, dados.uf].filter(Boolean).join("/");
+            } catch (e) {
+                console.warn("Erro ao buscar CEP:", e);
+            }
+        });
+    }
+
     form.addEventListener("submit", async (e) => {
         e.preventDefault();
 
@@ -68,11 +95,23 @@ document.addEventListener("DOMContentLoaded", () => {
                 body: JSON.stringify(payload),
             });
 
-            const data = await resp.json();
+            // Tenta interpretar como JSON; se falhar, lê como texto
+            let data;
+            try {
+                data = await resp.json();
+            } catch {
+                const texto = await resp.text();
+                console.error("Resposta não JSON:", texto);
+                throw new Error("Resposta inesperada do servidor");
+            }
 
             if (!resp.ok) {
-                // Erro 409 (Conflito - Email duplicado) ou outro erro de validação
-                exibirFeedback(data.mensagem || "Erro ao cadastrar usuário. Tente novamente.", 'erro');
+                // Mensagens mais específicas conforme backend
+                if (resp.status === 409) {
+                    exibirFeedback(data.mensagem || "E-mail ou telefone já cadastrados.", 'erro');
+                } else {
+                    exibirFeedback(data.mensagem || "Erro ao cadastrar usuário. Tente novamente.", 'erro');
+                }
                 return;
             }
 
