@@ -1,20 +1,18 @@
 // ============================================================
-// 👥 VARAL DOS SONHOS — /api/usuarios.js (VERSÃO FINAL E ROBUSTA)
+// 👥 VARAL DOS SONHOS — /api/usuarios.js (VERSÃO CORRIGIDA E TEMPORARIAMENTE SIMPLES)
 // ------------------------------------------------------------
-// ✅ Inicialização do Airtable movida para o escopo global (como na API unificada)
-// ✅ Importação do bcryptjs movida para o handler (solução robusta para Vercel)
+// ✅ Aplicação da correção de 'escaping' na fórmula do Airtable.
+// ✅ Desabilita o hash de senha no cadastro (POST) para salvar a senha em texto simples.
 // ============================================================
 
 import Airtable from "airtable";
 
 // ============================================================
-// 🔑 Inicialização do Airtable (LOGICA ANTIGA / GLOBAL)
+// 🔑 Inicialização do Airtable
 // ============================================================
 const AIRTABLE_API_KEY = process.env.AIRTABLE_API_KEY;
 const AIRTABLE_BASE_ID = process.env.AIRTABLE_BASE_ID;
 
-// Inicializa a base globalmente. Se a chave estiver ausente, ela retornará um erro,
-// mas a lógica de programaçao é a mesma que funcionava antes.
 const base = new Airtable({ apiKey: AIRTABLE_API_KEY })
   .base(AIRTABLE_BASE_ID);
 
@@ -25,28 +23,37 @@ let bcryptjsModule = null;
 export const config = { runtime: "nodejs" };
 
 const TABLE_NAME =
-  process.env.AIRTABLE_USUARIOS_TABLE || "usuarios";
+  process.env.AIRTABLE_USUARIOS_TABLE || "usuario"; // Corrigido para "usuario" conforme suas tabelas
 
 const err = (res, code, msg, extra = {}) => {
   console.error("❌", code, msg, extra);
   return res.status(code).json({ sucesso: false, mensagem: msg, ...extra });
 };
 
-// Função para carregar o bcryptjs com cache e tratar erros
+// ============================================================
+// 🔧 Função auxiliar para evitar erro de sintaxe na fórmula (Correção Crítica!)
+// ============================================================
+const escapeFormulaString = (str) => {
+    // Substitui aspas simples (') por duas aspas simples ('') - Essencial para Airtable
+    // E garante que o valor seja tratado como string no Airtable
+    return str ? str.replace(/'/g, "''") : ''; 
+};
+
+
 async function loadBcryptjs() {
-    if (bcryptjsModule) {
-        return bcryptjsModule;
-    }
-    
-    try {
-        const bcryptjs = await import("bcryptjs");
-        bcryptjsModule = bcryptjs;
-        console.log("✅ bcryptjs carregado com sucesso");
-        return bcryptjs;
-    } catch (e) {
-        console.warn("⚠️ bcryptjs não disponível — usando modo texto simples. Erro:", e.message);
-        return null;
-    }
+    if (bcryptjsModule) {
+        return bcryptjsModule;
+    }
+    
+    try {
+        const bcryptjs = await import("bcryptjs");
+        bcryptjsModule = bcryptjs;
+        console.log("✅ bcryptjs carregado com sucesso");
+        return bcryptjs;
+    } catch (e) {
+        console.warn("⚠️ bcryptjs não disponível — usando modo texto simples. Erro:", e.message);
+        return null;
+    }
 }
 
 
@@ -57,32 +64,30 @@ export default async function handler(req, res) {
   if (req.method === "OPTIONS") return res.status(204).end();
 
   try {
-    // 💡 REMOVIDO: Inicialização do Airtable movida para o escopo global
-
     // ============================================================
-    // POST → Cadastro
+    // POST → Cadastro (Modo de Senha Simples TEMPORÁRIO)
     // ============================================================
     if (req.method === "POST") {
-      console.log("📩 Requisição POST recebida em /api/usuarios");
+      console.log("📩 Requisição POST recebida em /api/usuarios (Cadastro)");
 
       const {
         nome_usuario, email_usuario, telefone, senha, tipo_usuario,
         cidade, cep, endereco, numero,
       } = req.body || {};
 
-      // Carrega o bcryptjs apenas quando for fazer o hash da senha
-      const bcryptjs = await loadBcryptjs();
-      
-      // Validação de TODOS os campos obrigatórios
-      const camposObrigatorios = { nome_usuario, email_usuario, telefone, senha, tipo_usuario, cidade, cep, endereco, numero };
-      const camposFaltando = Object.keys(camposObrigatorios).filter(key => !camposObrigatorios[key]);
+      // Carrega o bcryptjs, mas não o usa para o hash (temporariamente)
+      // const bcryptjs = await loadBcryptjs(); // Carregar, mas não usar.
+      
+      // Validação de TODOS os campos obrigatórios
+      const camposObrigatorios = { nome_usuario, email_usuario, telefone, senha, tipo_usuario, cidade, cep, endereco, numero };
+      const camposFaltando = Object.keys(camposObrigatorios).filter(key => !camposObrigatorios[key]);
 
       if (camposFaltando.length > 0)
         return err(res, 400, "Todos os campos de cadastro são obrigatórios.", { campos_faltando: camposFaltando });
 
 
       // VERIFICAÇÃO DE DUPLICIDADE (E-MAIL OU TELEFONE)
-      const emailLower = email_usuario.toLowerCase();
+      const emailLower = escapeFormulaString(email_usuario).toLowerCase(); // Aplicando escape aqui também
       const telefoneNumerico = telefone.replace(/\D/g, "");
 
       const formula = `
@@ -97,8 +102,10 @@ export default async function handler(req, res) {
         return err(res, 409, "Já existe cadastro com este e-mail ou telefone.");
 
 
-      // Criptografa a senha, se possível
-      let senhaFinal = senha;
+      // ⚠️ MODO SENHA SIMPLES TEMPORÁRIO
+      let senhaFinal = senha; // A senha é salva como texto puro.
+      /*
+      // Criptografa a senha, se possível (VERSÃO SEGURA QUE VAI VOLTAR)
       if (bcryptjs) {
         try {
           senhaFinal = await bcryptjs.hash(senha, 8);
@@ -106,6 +113,7 @@ export default async function handler(req, res) {
           console.warn("⚠️ Falha no hash, usando senha em texto:", e.message);
         }
       }
+      */
 
       // Cria o registro no Airtable
       const novo = await base(TABLE_NAME).create([
@@ -129,7 +137,7 @@ export default async function handler(req, res) {
     }
 
     // ============================================================
-    // GET → Login
+    // GET → Login (Modo Criptografia + Senha Simples Fallback)
     // ============================================================
     if (req.method === "GET") {
       console.log("🔑 Requisição GET (login) recebida");
@@ -139,9 +147,15 @@ export default async function handler(req, res) {
       if (!email || !senha)
         return err(res, 400, "E-mail e senha são obrigatórios para login.");
 
+      // ✅ CORREÇÃO AQUI: Aplicação da função de escape no email
+      const emailEscapado = escapeFormulaString(email).toLowerCase();
+
+      const formula = `AND(LOWER({email_usuario})='${emailEscapado}', {status}='ativo')`;
+      console.log("🔍 Airtable Formula:", formula); // LOG para debug
+
       const registros = await base(TABLE_NAME)
         .select({
-          filterByFormula: `AND(LOWER({email_usuario})='${email.toLowerCase()}', {status}='ativo')`,
+          filterByFormula: formula,
         })
         .all();
 
@@ -152,9 +166,21 @@ export default async function handler(req, res) {
 
       let match = false;
       try {
+        // 1. Tenta comparar com senha criptografada (hashed)
         if (bcryptjs && user.senha) match = await bcryptjs.compare(senha, user.senha);
-      } catch {}
-      if (!match && senha === user.senha) match = true;
+      } catch (e) {
+        console.warn("⚠️ Erro na comparação de hash, tentando modo simples.", e.message);
+      }
+      
+      // 2. Fallback: Compara com senha simples (para senhas "123456")
+      if (!match && senha === user.senha) {
+        match = true;
+        console.log("✅ Login com sucesso: Senha simples detectada.");
+
+        /* * 💡 FUTURA MELHORIA: AQUI VOCÊ PODE RE-CRIPTOGRAFAR A SENHA E SALVÁ-LA 
+         * DE VOLTA NO AIRTABLE (MIGRAÇÃO DE SENHA ASSÍNCRONA).
+         */
+      }
 
       if (!match)
         return err(res, 401, "Senha incorreta.");
