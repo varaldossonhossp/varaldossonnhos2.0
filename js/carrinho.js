@@ -1,6 +1,5 @@
-// js/carrinho.js
 // ============================================================
-// 💙 VARAL DOS SONHOS — /js/carrinho.js
+// 💙 VARAL DOS SONHOS — /js/carrinho.js (CORRIGIDO)
 // ------------------------------------------------------------
 // Lógica para listar cartinhas no carrinho, seleção de ponto de coleta e submissão da adoção.
 // ============================================================
@@ -23,14 +22,35 @@ document.addEventListener("DOMContentLoaded", () => {
   const mapBackdrop = document.getElementById("mapBackdrop");
   const mapCaption = document.getElementById("mapCaption");
 
-  // Usuário (exige login)
-  const usuario = JSON.parse(localStorage.getItem("usuario")) || JSON.parse(localStorage.getItem("nomeUsuario") ? JSON.stringify({ nome: localStorage.getItem("nomeUsuario"), email: localStorage.getItem("usuarioEmail") || "" }) : null);
-  
-  if (!usuario || !usuario.email) {
-    alert("Você precisa estar logado para acessar o carrinho.");
-    window.location.href = "login.html";
+  // ============================================================
+  // 🛑 CORREÇÃO DE PERSISTÊNCIA DE LOGIN
+  // Lê as chaves salvas individualmente pelo login.js
+  // ============================================================
+  const idUsuario = localStorage.getItem("id_usuario_varal");
+  const nomeUsuario = localStorage.getItem("nome_usuario_varal");
+  const emailUsuario = localStorage.getItem("email_usuario_varal");
+
+  // Monta o objeto 'usuario' com os dados lidos
+  const usuario = (idUsuario && nomeUsuario && emailUsuario) ? {
+    id: idUsuario,
+    nome: nomeUsuario,
+    email: emailUsuario,
+    tipo: localStorage.getItem("tipo_usuario_varal"),
+    // Adicionar telefone se estiver salvo:
+    telefone: localStorage.getItem("telefone_usuario_varal") || "N/A", 
+  } : null;
+
+  // 🛑 Proteção de Página: Verifica o objeto montado
+  if (!usuario || !usuario.id) {
+    alert("Você precisa estar logado para acessar o carrinho."); //
+    // Usa a URL relativa que funciona de /pages/carrinho.html
+    window.location.href = "login.html"; 
     return;
   }
+  // ============================================================
+  // FIM DA CORREÇÃO
+  // ============================================================
+
 
   // Carrega carrinho
   let carrinho = JSON.parse(localStorage.getItem("carrinho")) || [];
@@ -100,7 +120,8 @@ document.addEventListener("DOMContentLoaded", () => {
       const resp = await fetch("/api/pontosdecoleta");
       if (!resp.ok) throw new Error("Erro ao buscar pontos");
       const pontos = await resp.json();
-      popularSelectPontos(pontos.pontos); // Ajustado para a estrutura da API
+      // Assumindo que a API retorna { sucesso: true, pontos: [...] }
+      popularSelectPontos(pontos.pontos); 
     } catch (err) {
       console.error("Erro pontos:", err);
       pontosPlaceholder.textContent = "Não foi possível carregar os pontos. Tente novamente mais tarde.";
@@ -121,7 +142,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const opt = document.createElement("option");
       // guardamos o endereço e id no value (json string)
       const payload = {
-        id: p.id || p.nome_local || i,
+        id: p.id || p.recordId || i,
         nome: p.nome_ponto || p.nome || "Ponto",
         endereco: `${p.endereco || ""}, ${p.cidade || ""}`, // Cria o endereço completo
       };
@@ -145,7 +166,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // abrir mapa (modal)
   function abrirMapa(endereco, nome = "") {
     // 🔑 Usando a URL de pesquisa do Google Maps que NÃO requer a chave de API
-    const url = `https://www.google.com/maps?q=${encodeURIComponent(endereco)}&output=embed`;
+    const url = `https://maps.google.com/maps?q=${encodeURIComponent(endereco)}&output=embed`;
     
     mapFrame.src = url;
     mapCaption.textContent = nome || endereco;
@@ -195,53 +216,53 @@ document.addEventListener("DOMContentLoaded", () => {
     const ponto = JSON.parse(selectPontos.value);
 
     // montar payload — conforme sua API /api/adocoes espera
-    // Ajuste para mapear os campos que a sua API /api/adocoes.js usa
+    // Usa o objeto 'usuario' que foi montado corretamente no início
     const payload = {
-      id_usuario: usuario.id || "doador_sem_id", // Se o ID do usuário não estiver salvo, use um placeholder
+      id_usuario: usuario.id, 
       nome_doador: usuario.nome,
       email_doador: usuario.email,
-      telefone_doador: localStorage.getItem("usuarioTelefone") || "N/A",
+      telefone_doador: usuario.telefone, // Usa o telefone do objeto 'usuario'
       ponto_coleta: ponto.nome || ponto.endereco || "",
     };
-    
+    
     // UX: feedback e desabilitar botões
     btnConfirmar.disabled = true;
     btnConfirmar.textContent = "Enviando...";
     feedback.classList.add("hidden");
 
-    let sucessoTotal = true;
-    let cartinhasSucesso = 0;
-    
-    // Itera por cada cartinha no carrinho e envia uma requisição de adoção separada
-    for (const item of carrinho) {
-        // Campos que a API /api/adocoes.js precisa (id_cartinha, nome_crianca, sonho)
-        const cartinhaPayload = {
-            ...payload,
-            id_cartinha: item.id || item.id_cartinha || item.recordId, // Tenta usar o ID da cartinha
-            nome_crianca: item.nome || item.primeiro_nome || "Criança",
-            sonho: item.sonho || item.descricao || "Um presente",
-        };
+    let sucessoTotal = true;
+    let cartinhasSucesso = 0;
+    
+    // Itera por cada cartinha no carrinho e envia uma requisição de adoção separada
+    for (const item of carrinho) {
+        // Campos que a API /api/adocoes.js precisa (id_cartinha, nome_crianca, sonho)
+        const cartinhaPayload = {
+            ...payload,
+            id_cartinha: item.id || item.id_cartinha || item.recordId, // Tenta usar o ID da cartinha
+            nome_crianca: item.nome || item.primeiro_nome || "Criança",
+            sonho: item.sonho || item.descricao || "Um presente",
+        };
 
-        try {
-            const resp = await fetch("/api/adocoes", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify(cartinhaPayload)
-            });
+        try {
+            const resp = await fetch("/api/adocoes", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(cartinhaPayload)
+            });
 
-            const data = await resp.json();
+            const data = await resp.json();
 
-            if (resp.ok && data.sucesso) {
-                cartinhasSucesso++;
-            } else {
-                console.error(`Erro ao adotar cartinha ${cartinhaPayload.id_cartinha}:`, data);
-                sucessoTotal = false;
-            }
-        } catch (err) {
-            console.error("Erro de conexão ao adotar:", err);
-            sucessoTotal = false;
-        }
-    }
+            if (resp.ok && data.sucesso) {
+                cartinhasSucesso++;
+            } else {
+                console.error(`Erro ao adotar cartinha ${cartinhaPayload.id_cartinha}:`, data);
+                sucessoTotal = false;
+            }
+        } catch (err) {
+            console.error("Erro de conexão ao adotar:", err);
+            sucessoTotal = false;
+        }
+    }
 
 
     if (sucessoTotal) {
@@ -260,7 +281,7 @@ document.addEventListener("DOMContentLoaded", () => {
         localStorage.removeItem("carrinho");
         
         // redirecionar
-        window.location.href = "index.html";
+        window.location.href = "../index.html"; // Volta para a raiz se o carrinho estiver em /pages/
     } else {
         const msg = cartinhasSucesso > 0 
           ? `⚠️ Adoção parcial. ${cartinhasSucesso} cartinha(s) foram registradas, mas houve falha nas demais. Tente novamente ou entre em contato.`
