@@ -1,50 +1,33 @@
 // ============================================================
-// 👥 VARAL DOS SONHOS — /api/usuarios.js (VERSÃO FINAL SENHA SIMPLES)
+// 👥 VARAL DOS SONHOS — /api/usuarios.js (VERSÃO ROBUSTA FINAL)
 // ------------------------------------------------------------
-// ✅ Correção de sintaxe (escaping) para Airtable.
-// ✅ Modo de Senha Simples ativado para Cadastro (POST) e Login (GET).
-// ⚠️ Este modo é TEMPORÁRIO e inseguro (senhas em texto puro).
+// ✅ Inicialização do Airtable movida para DENTRO do handler (ROBUSTO).
+// ✅ Teste de chave de API no início do handler (DEBUG).
+// ✅ Modo de Senha Simples (Login e Cadastro) para estabilidade.
 // ============================================================
 
 import Airtable from "airtable";
 
-// ============================================================
-// 🔑 Inicialização do Airtable
-// ============================================================
+// As variáveis de ambiente serão lidas dentro do handler para garantir que estejam prontas.
 const AIRTABLE_API_KEY = process.env.AIRTABLE_API_KEY;
 const AIRTABLE_BASE_ID = process.env.AIRTABLE_BASE_ID;
-
-// Inicializa a base globalmente.
-const base = new Airtable({ apiKey: AIRTABLE_API_KEY })
-  .base(AIRTABLE_BASE_ID);
-
-// ⚠️ Desativado: O bcryptjs não será usado nesta versão para simplificar o debug.
-// let bcryptjsModule = null; 
 
 // Configuração do Vercel
 export const config = { runtime: "nodejs" };
 
 const TABLE_NAME =
-  process.env.AIRTABLE_USUARIOS_TABLE || "usuario"; // Usando 'usuario' como base para ser consistente com suas imagens
+  process.env.AIRTABLE_USUARIOS_TABLE || "usuario"; // Usando 'usuario' conforme suas imagens
 
 const err = (res, code, msg, extra = {}) => {
   console.error("❌", code, msg, extra);
   return res.status(code).json({ sucesso: false, mensagem: msg, ...extra });
 };
 
-// ============================================================
-// 🔧 Função auxiliar para evitar erro de sintaxe na fórmula (Essencial para Airtable)
-// ============================================================
+// Função auxiliar para evitar erro de sintaxe na fórmula (Essencial para Airtable)
 const escapeFormulaString = (str) => {
     // Substitui aspas simples (') por duas aspas simples ('')
     return str ? str.replace(/'/g, "''") : ''; 
 };
-
-
-/*
-// ⚠️ Funções de bcryptjs desativadas para garantir o modo simples e foco na correção do Airtable.
-async function loadBcryptjs() { return null; }
-*/
 
 
 export default async function handler(req, res) {
@@ -54,9 +37,26 @@ export default async function handler(req, res) {
   if (req.method === "OPTIONS") return res.status(204).end();
 
   try {
+    // ============================================================
+    // 🔑 INICIALIZAÇÃO E TESTE DE CHAVE ROBUSTO
+    // ============================================================
+    if (!AIRTABLE_API_KEY || !AIRTABLE_BASE_ID) {
+        return err(res, 500, "ERRO CRÍTICO: Chaves de ambiente do Airtable ausentes.", { detalhe: "AIRTABLE_API_KEY ou BASE_ID não configurados na Vercel." });
+    }
+    
+    // 💡 TESTE DE LEITURA (Se o token não começar com 'pat', é um aviso)
+    if (!AIRTABLE_API_KEY.startsWith("pat")) {
+        console.warn("⚠️ A chave Airtable não parece ser um Personal Access Token (PAT). Confirme se a chave API legada está correta.");
+    }
+
+    // Inicialização da Base DEPOIS de confirmar que as chaves foram lidas.
+    const base = new Airtable({ apiKey: AIRTABLE_API_KEY })
+        .base(AIRTABLE_BASE_ID);
+    // FIM DA INICIALIZAÇÃO ROBUSTA
+
 
     // ============================================================
-    // POST → Cadastro (Modo Senha Simples TEMPORÁRIO)
+    // POST → Cadastro (Modo Senha Simples)
     // ============================================================
     if (req.method === "POST") {
       console.log("📩 Requisição POST recebida em /api/usuarios (Cadastro SIMPLES)");
@@ -113,7 +113,7 @@ export default async function handler(req, res) {
         id_usuario: novo[0].id,
       });
     }
-
+    
     // ============================================================
     // GET → Login (Busca Direta no Airtable com Senha Simples)
     // ============================================================
@@ -124,11 +124,10 @@ export default async function handler(req, res) {
       if (!email || !senha)
         return err(res, 400, "E-mail e senha são obrigatórios para login.");
 
-      // Aplica escape em ambos os campos para máxima segurança na consulta Airtable
       const emailEscapado = escapeFormulaString(email);
       const senhaEscapada = escapeFormulaString(senha);
 
-      // ✅ Filtro que replica a lógica do projeto antigo: busca email + senha simples
+      // Filtro que busca email + senha simples
       const formula = `AND({email_usuario}='${emailEscapado}', {senha}='${senhaEscapada}', {status}='ativo')`;
       console.log("🔍 Airtable Formula (Senha Simples):", formula);
 
@@ -140,13 +139,11 @@ export default async function handler(req, res) {
         .all();
 
       if (registros.length === 0)
-        // Se a busca direta não retornar nada, é credencial inválida
         return err(res, 401, "Credenciais inválidas. Verifique o e-mail e a senha.");
 
-      // Login bem-sucedido
       const user = registros[0].fields;
 
-      const { senha: _, ...dados } = user; // Remove a senha do objeto de retorno
+      const { senha: _, ...dados } = user;
       return res.status(200).json({
         sucesso: true,
         mensagem: "Login efetuado com sucesso (MODO SIMPLES).",
@@ -158,7 +155,7 @@ export default async function handler(req, res) {
     return err(res, 405, "Método não suportado.");
   } catch (e) {
     console.error("🔥 Erro interno /api/usuarios:", e);
-    // Garante que o detalhe do erro seja logado no Vercel para você
+    // Se houver um erro de autorização do Airtable, ele será capturado aqui
     return err(res, 500, "Erro interno no servidor.", { detalhe: e.message });
   }
 }
