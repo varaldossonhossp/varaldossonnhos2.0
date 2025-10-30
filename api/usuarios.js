@@ -1,135 +1,71 @@
 // ============================================================
-// 👥 VARAL DOS SONHOS — /api/usuarios.js (Vercel Backend)
+// 👥 VARAL DOS SONHOS — /api/usuarios.js (versão estável sem 500)
 // ------------------------------------------------------------
-// • Login compatível com senhas antigas (texto puro) e novas (bcrypt)
-// • Cadastro com checagem de duplicidade (email e telefone)
-// • Enriquecimento de endereço por CEP (ViaCEP) quando faltar
+// Login híbrido (texto puro ou bcrypt) e cadastro com validação.
 // ============================================================
 
 import Airtable from "airtable";
-import bcrypt from "bcryptjs";
+import bcryptjs from "bcryptjs"; // usar nome completo evita conflito no Vercel
 
 export const config = { runtime: "nodejs" };
-
 const TABLE_NAME = process.env.AIRTABLE_USUARIOS_TABLE || "usuario";
 
-// Util: resposta de erro padronizada sempre em JSON
 const err = (res, code, msg, extra = {}) =>
   res.status(code).json({ sucesso: false, mensagem: msg, ...extra });
 
-// Normalizadores
-const toLower = (s) => (s || "").toString().trim().toLowerCase();
-const onlyDigits = (s) => (s || "").toString().replace(/\D/g, "");
-
-// Busca endereço no ViaCEP (backend)
-async function buscarViaCEP(cep) {
-  const limpo = onlyDigits(cep);
-  if (limpo.length !== 8) return null;
-
-  try {
-    const r = await fetch(`https://viacep.com.br/ws/${limpo}/json/`);
-    if (!r.ok) return null;
-    const j = await r.json();
-    if (j.erro) return null;
-
-    return {
-      cep: limpo,
-      logradouro: j.logradouro || "",
-      bairro: j.bairro || "",
-      localidade: j.localidade || "",
-      uf: j.uf || "",
-    };
-  } catch {
-    return null;
-  }
-}
-
 export default async function handler(req, res) {
-  // CORS
+  // Permitir chamadas de qualquer origem (CORS)
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
   if (req.method === "OPTIONS") return res.status(204).end();
 
-  const base = new Airtable({ apiKey: process.env.AIRTABLE_API_KEY })
-    .base(process.env.AIRTABLE_BASE_ID);
-
   try {
+    const base = new Airtable({ apiKey: process.env.AIRTABLE_API_KEY })
+      .base(process.env.AIRTABLE_BASE_ID);
+
     // ============================================================
-    // 📝 CADASTRO (POST)
-    // Body esperado: { nome_usuario, email_usuario, telefone, senha, tipo_usuario, cidade, cep, endereco, numero }
-    // Regras:
-    //  - Email obrigatório e único
-    //  - Telefone obrigatório e único (considerando apenas dígitos)
-    //  - Se faltar endereço/cidade mas vier CEP válido -> preencher via ViaCEP
+    // 📝 CADASTRO
     // ============================================================
     if (req.method === "POST") {
-      const body = req.body || {};
-      const nome_usuario = (body.nome_usuario || "").trim();
-      const email_usuario = toLower(body.email_usuario);
-      const telefoneRaw = body.telefone || "";
-      const telefone_digits = onlyDigits(telefoneRaw);
-      const senha = body.senha || "";
-      const tipo_usuario = body.tipo_usuario || "doador";
-      let { cidade, cep, endereco, numero } = body;
+      const {
+        nome_usuario,
+        email_usuario,
+        telefone,
+        senha,
+        tipo_usuario,
+        cidade,
+        cep,
+        endereco,
+        numero,
+      } = req.body || {};
 
       if (!email_usuario || !senha)
-        return err(res, 400, "E-mail e senha são obrigatórios para o cadastro.");
+        return err(res, 400, "E-mail e senha são obrigatórios.");
 
-      if (!telefone_digits)
-        return err(res, 400, "Telefone é obrigatório para o cadastro.");
-
-      // 🔎 Checagem de duplicidade (email OU telefone)
-      // Usa REGEX_REPLACE no Airtable para comparar telefone apenas por dígitos
-      const dupFormula = `
+      // Checar duplicidade de e-mail e telefone
+      const formula = `
         OR(
-          LOWER({email_usuario}) = LOWER("${email_usuario}"),
-          REGEX_REPLACE({telefone}, "\\\\D", "") = "${telefone_digits}"
+          LOWER({email_usuario})='${email_usuario.toLowerCase()}',
+          REGEX_REPLACE({telefone}, "\\\\D", "")='${(telefone || "").replace(/\D/g, "")}'
         )
       `;
-      const existentes = await base(TABLE_NAME)
-        .select({ filterByFormula: dupFormula })
-        .all();
+      const existentes = await base(TABLE_NAME).select({ filterByFormula: formula }).all();
 
-      if (existentes.length > 0) {
-        // Descobrir qual campo conflitou para mensagem clara
-        const e = existentes[0].fields;
-        const conflitouEmail =
-          toLower(e.email_usuario) === email_usuario;
-        const conflitouTel =
-          onlyDigits(e.telefone) === telefone_digits;
+      if (existentes.length > 0)
+        return err(res, 409, "Já existe cadastro com este e-mail ou telefone.");
 
-        const qual = [
-          conflitouEmail ? "e-mail" : null,
-          conflitouTel ? "telefone" : null,
-        ]
-          .filter(Boolean)
-          .join(" e ");
+      // Criptografa nova senha
+      const hash = await bcryptjs.hash(senha, 8);
 
-        return err(res, 409, `Já existe cadastro com este ${qual}.`);
-      }
-
-      // 🧭 CEP -> completa endereço/cidade se necessário
-      if ((!endereco || !cidade) && cep) {
-        const via = await buscarViaCEP(cep);
-        if (via) {
-          cep = via.cep;
-          endereco = endereco || [via.logradouro, via.bairro].filter(Boolean).join(" - ");
-          cidade = cidade || [via.localidade, via.uf].filter(Boolean).join("/");
-        }
-      }
-
-      // 🔐 Hash da senha (cadastros novos sempre com bcrypt)
-      const hash = await bcrypt.hash(senha, 8);
-
-      const criado = await base(TABLE_NAME).create([
+      const novo = await base(TABLE_NAME).create([
         {
           fields: {
             nome_usuario,
             email_usuario,
-            telefone: telefoneRaw,
+            telefone,
             senha: hash,
-            tipo_usuario,
+            tipo_usuario: tipo_usuario || "doador",
             cidade,
             cep,
             endereco,
@@ -142,57 +78,57 @@ export default async function handler(req, res) {
       return res.status(201).json({
         sucesso: true,
         mensagem: "Usuário cadastrado com sucesso.",
-        id_usuario: criado[0].id,
+        id_usuario: novo[0].id,
       });
     }
 
     // ============================================================
-    // 🔑 LOGIN (GET)
-    // Query: ?email=...&senha=...
-    // Aceita senha antiga (texto puro) e nova (hash bcrypt)
+    // 🔑 LOGIN
     // ============================================================
     if (req.method === "GET") {
       const { email, senha } = req.query || {};
-      const email_q = toLower(email);
+      if (!email || !senha)
+        return err(res, 400, "E-mail e senha são obrigatórios para login.");
 
-      if (!email_q || !senha)
-        return err(res, 400, "E-mail e senha são obrigatórios para o login.");
-
+      // Busca usuário ativo
       const records = await base(TABLE_NAME)
         .select({
-          filterByFormula: `AND(LOWER({email_usuario}) = LOWER("${email_q}"), {status} = "ativo")`,
+          filterByFormula: `AND(LOWER({email_usuario})='${email.toLowerCase()}', {status}='ativo')`,
         })
         .all();
 
       if (records.length === 0)
         return err(res, 401, "Usuário não encontrado ou inativo.");
 
-      const rec = records[0];
-      const user = rec.fields;
+      const user = records[0].fields;
 
-      // 🔐 Comparação híbrida
+      if (!user.senha)
+        return err(res, 400, "Usuário sem senha cadastrada no banco de dados.");
+
+      // Comparação híbrida
       let match = false;
       try {
-        match = await bcrypt.compare(senha, user.senha || "");
-      } catch {
-        match = senha === (user.senha || "");
+        match = await bcryptjs.compare(senha, user.senha);
+      } catch (e) {
+        match = senha === user.senha;
       }
 
-      if (!match) return err(res, 401, "Senha incorreta.");
+      if (!match)
+        return err(res, 401, "Senha incorreta. Tente novamente.");
 
-      // Não retornar a senha
-      const { senha: _omit, ...usuarioDados } = user;
+      // Remove senha antes de retornar
+      const { senha: _, ...dados } = user;
 
       return res.status(200).json({
         sucesso: true,
-        usuario: usuarioDados,
-        id_usuario: rec.id,
+        usuario: dados,
+        id_usuario: records[0].id,
       });
     }
 
     return err(res, 405, "Método não suportado.");
   } catch (e) {
     console.error("🔥 Erro /api/usuarios:", e);
-    return err(res, 500, "Erro interno do servidor.", { detalhe: e.message });
+    return err(res, 500, "Erro interno no servidor.", { detalhe: e.message });
   }
 }
