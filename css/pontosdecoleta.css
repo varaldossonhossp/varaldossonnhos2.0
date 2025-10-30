@@ -1,292 +1,184 @@
 /* ============================================================
-💙 VARAL DOS SONHOS — PONTOSDECOLETA (ESTILO APRIMORADO)
+💙 VARAL DOS SONHOS — PONTOS DE COLETA (VERSÃO FOFINHA)
 ------------------------------------------------------------
-Melhorias visuais: sombras, gradientes, fitas, hover suave,
-botões mais elegantes, responsividade.
+Layout mais delicado, bordas arredondadas, cores suaves,
+animações leves e harmonia com o mascote Cloudinho.
 ============================================================ */
 
-/* Variáveis (ajuste no :root se quiser) */
-:root{
-  --azul-escuro: #153F5A;
-  --azul-cta: #8b4513;
-  --azul-royal: #3469C6;
-  --card-bg: #ffffff;
-  --card-radius: 14px;
-  --muted: #556;
-  --soft-shadow: 0 8px 24px rgba(31,48,70,0.08);
-  --glass: rgba(255,255,255,0.6);
+/* Paleta */
+:root {
+  --azul-claro: #eaf3fc;
+  --azul-medio: #8bbdf1;
+  --azul-escuro: #275d9c;
+  --branco: #fff;
+  --sombra-suave: 0 8px 24px rgba(39, 93, 156, 0.08);
+  --radius-grande: 20px;
 }
 
-/* --- Layout da Página --- */
+/* Corpo */
+body {
+  background: var(--azul-claro);
+  font-family: "Poppins", sans-serif;
+  color: #234;
+}
+
+/* Container */
 .container-pontos {
-    max-width: 1200px;
-    margin: 80px auto 80px;
-    padding: 20px;
-    text-align: center;
+  max-width: 1100px;
+  margin: 60px auto 100px;
+  padding: 10px 20px;
+  text-align: center;
 }
 
+/* Título */
 .titulo-pagina {
-    color: var(--azul-escuro);
-    margin-bottom: 0.4rem;
-    font-size: 2.4rem;
-    font-weight: 700;
-    letter-spacing: -0.5px;
+  font-size: 2.2rem;
+  color: var(--azul-escuro);
+  font-weight: 700;
+  letter-spacing: -0.5px;
 }
 
 .descricao {
-    margin-bottom: 1.8rem;
-    opacity: 0.85;
-    color: var(--muted);
+  color: #4a5a70;
+  font-size: 1rem;
+  margin-bottom: 1.8rem;
 }
 
-/* --- Efeito Varal --- */
+/* Varal */
 .varal-topo {
-    width: 100%;
-    height: 3px;
-    margin: 1.6rem 0;
-    background-image: linear-gradient(90deg, transparent 0%, var(--azul-cta) 12%, var(--azul-cta) 88%, transparent 100%);
-    box-shadow: 0 2px 6px rgba(47,128,237,0.08), inset 0 -1px 0 rgba(255,255,255,0.4);
-    border-radius: 3px;
+  width: 100%;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, var(--azul-medio), transparent);
+  margin: 1.4rem 0 2rem;
 }
 
-/* --- Grid dos Cards (carrossel horizontal) --- */
-.grid-pontos{
-    display: flex;
-    gap: 1.2rem;
-    overflow-x: auto;
-    overflow-y: hidden;
-    padding-bottom: 18px;
-    scroll-snap-type: x mandatory;
-    -webkit-overflow-scrolling: touch;
+/* Grid */
+.grid-pontos {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 22px;
 }
 
-/* espaçamento lateral para o carrossel "respirar" */
-.grid-pontos::before,
-.grid-pontos::after {
-  content: "";
-  flex: 0 0 12px;
-}
-
-/* --- Card de Ponto de Coleta --- */
+/* Card */
 .card-ponto {
-    flex: 0 0 260px;
-    scroll-snap-align: start;
-    position: relative;
-    background: linear-gradient(180deg, rgba(255,255,255,0.98) 0%, var(--card-bg) 100%);
-    border-radius: var(--card-radius);
-    padding: 1.5rem 1rem 1.4rem;
-    padding-top: 3rem; /* espaço p/ prendedor */
-    box-shadow: var(--soft-shadow);
-    transition: transform 0.45s cubic-bezier(.2,.9,.2,1), box-shadow 0.25s ease, filter 0.25s ease;
-    transform-origin: center top;
-    border: 1px solid rgba(20,60,90,0.05);
-    overflow: hidden;
-    min-height: 220px;
+  position: relative;
+  width: 240px;
+  background: var(--branco);
+  border-radius: var(--radius-grande);
+  padding: 1.6rem 1rem 1.4rem;
+  box-shadow: var(--sombra-suave);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  overflow: hidden;
 }
 
-/* variações sutis por card para sensação "artesanal" */
-.card-ponto:nth-child(3n+1){ transform: rotate(-0.8deg); }
-.card-ponto:nth-child(3n+2){ transform: rotate(0.3deg); }
-.card-ponto:nth-child(3n+3){ transform: rotate(0.5deg); }
-
-/* Hover — elevação + pequena rotação inversa */
 .card-ponto:hover {
-    box-shadow: 0 18px 40px rgba(31,48,70,0.12);
-    transform: translateY(-8px) rotate(0deg) scale(1.01);
-    filter: saturate(1.03);
+  transform: translateY(-6px);
+  box-shadow: 0 12px 28px rgba(39, 93, 156, 0.15);
 }
 
-/* Quando foco (acessibilidade teclado) */
-.card-ponto:focus-within {
-    outline: 3px solid rgba(47,128,237,0.12);
-    transform: translateY(-6px) rotate(0deg);
-}
-
-/* --- Prendedor no Card (ajustável) --- */
+/* Prendedor */
 .prendedor-card {
-    position: absolute;
-    top: -28px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 44px;
-    height: 44px;
-    z-index: 6;
-    display: block;
-    background-repeat: no-repeat;
-    background-size: contain;
-    background-position: center;
-    background-image: url('../imagens/prendedor.png');
-    filter: drop-shadow(0 4px 6px rgba(20,40,60,0.12));
+  position: absolute;
+  top: -22px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 38px;
+  height: 38px;
+  filter: drop-shadow(0 3px 4px rgba(0,0,0,0.12));
 }
 
-/* Pequena "fita" decorativa abaixo do prendedor (opcional) */
-.card-ponto::before {
-    content: "";
-    position: absolute;
-    top: -10px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 84%;
-    height: 18px;
-    border-radius: 10px;
-    background: linear-gradient(90deg, rgba(47,128,237,0.06), rgba(20,40,60,0.02));
-    z-index: 2;
-    pointer-events: none;
-}
-
-/* --- Conteúdo do Card --- */
+/* Conteúdo */
 .card-ponto h3 {
-    color: var(--azul-escuro);
-    margin: 0 0 0.35rem 0;
-    font-size: 1.1rem;
-    font-weight: 700;
-    letter-spacing: -0.2px;
-}
-
-.meta {
-    color: var(--muted);
-    font-size: 0.92rem;
-    margin: 0.1rem 0 0.65rem 0;
+  color: var(--azul-escuro);
+  font-size: 1.05rem;
+  margin-bottom: 0.4rem;
+  font-weight: 600;
 }
 
 .card-ponto p {
-    margin: 0.18rem 0;
-    color: #2c3e50;
-    font-size: 0.9rem;
-    line-height: 1.35;
+  color: #333;
+  font-size: 0.9rem;
+  line-height: 1.35;
+  margin: 0.3rem 0;
 }
 
-/* destaque de label (Endereço, Horário, etc) */
-.card-ponto .label {
-    font-weight: 700;
-    color: #213B52;
-    display: inline-block;
-    margin-right: 6px;
-    font-size: 0.92rem;
+.card-ponto strong {
+  color: var(--azul-escuro);
+  font-weight: 600;
 }
 
-/* Responsividade do texto */
-@media (max-width: 420px) {
-    .card-ponto { flex: 0 0 86%; padding: 1.2rem; padding-top: 3rem; }
-    .prendedor-card { width: 36px; top: -24px; }
-}
-
-/* --- Botão Localização --- */
+/* Botão */
 .btn-localizacao {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    margin-top: 1.05rem;
-    background: linear-gradient(180deg,var(--azul-cta),var(--azul-royal));
-    color: #fff;
-    padding: 10px 18px;
-    border-radius: 999px;
-    text-decoration: none;
-    font-weight: 700;
-    font-size: 0.95rem;
-    box-shadow: 0 8px 18px rgba(47,128,237,0.18), inset 0 -2px 0 rgba(255,255,255,0.06);
-    transition: transform 0.18s ease, box-shadow 0.18s ease, opacity 0.12s;
-    border: none;
-    cursor: pointer;
+  display: inline-block;
+  margin-top: 0.8rem;
+  background: linear-gradient(90deg, var(--azul-medio), var(--azul-escuro));
+  color: white;
+  padding: 8px 18px;
+  border-radius: 999px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-/* ícone do pino pode vir via pseudo-elemento ou texto */
-.btn-localizacao::before{
-    content: "📍";
-    display:inline-block;
+.btn-localizacao:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 20px rgba(39, 93, 156, 0.18);
 }
 
-/* hover / active / focus */
-.btn-localizacao:hover { transform: translateY(-3px) scale(1.02); box-shadow: 0 14px 30px rgba(47,128,237,0.18); }
-.btn-localizacao:active { transform: translateY(-1px) scale(0.995); }
-.btn-localizacao:focus-visible { outline: 3px solid rgba(47,128,237,0.18); }
-
-/* botão secundário (quando estiver desabilitado) */
-.btn-localizacao[disabled], .btn-localizacao.is-disabled {
-    opacity: 0.55;
-    cursor: not-allowed;
-    transform: none;
-    box-shadow: none;
+.btn-localizacao::before {
+  content: "💙";
+  margin-right: 6px;
 }
 
-/* --- Modal (mapa) — leve polimento --- */
+/* Modal */
 .modal {
-    position: fixed;
-    z-index: 1200;
-    left: 0; top: 0;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(180deg, rgba(6,18,34,0.45), rgba(6,18,34,0.6));
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    opacity: 0;
-    visibility: hidden;
-    transition: opacity .28s ease, visibility .28s ease;
-    padding: 28px;
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(0,0,0,0.45);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  visibility: hidden;
+  opacity: 0;
+  transition: opacity .25s ease, visibility .25s ease;
+  z-index: 1000;
 }
-.modal.is-open { opacity: 1; visibility: visible; }
+
+.modal.is-open {
+  visibility: visible;
+  opacity: 1;
+}
 
 .modal-content {
-    background: linear-gradient(180deg, rgba(255,255,255,0.98), #fff);
-    padding: 18px;
-    border-radius: 12px;
-    box-shadow: 0 22px 50px rgba(6,18,34,0.5);
-    width: min(1100px, 95%);
-    max-width: 900px;
-    position: relative;
-    transform: translateY(-18px);
-    transition: transform .28s cubic-bezier(.2,.9,.2,1);
+  background: var(--branco);
+  border-radius: var(--radius-grande);
+  padding: 20px;
+  max-width: 800px;
+  width: 90%;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+  position: relative;
 }
-.modal.is-open .modal-content { transform: translateY(0); }
 
-/* Close */
 .close {
-    color: #6c7b8a;
-    position: absolute;
-    top: 12px;
-    right: 16px;
-    font-size: 26px;
-    font-weight: 700;
-    background: none;
-    border: none;
-    cursor: pointer;
-}
-.close:hover { color: var(--azul-royal); transform: scale(1.02); }
-
-/* --- Esconder barra de rolagem (carrossel limpo) --- */
-.grid-pontos::-webkit-scrollbar { display: none; }
-.grid-pontos { -ms-overflow-style: none; scrollbar-width: none; }
-
-/* --- Ajustes de layout em telas maiores --- */
-@media (min-width: 1000px) {
-    .grid-pontos { gap: 2.5rem; }
-    .card-ponto { flex: 0 0 340px; }
+  position: absolute;
+  top: 10px;
+  right: 16px;
+  font-size: 26px;
+  color: var(--azul-escuro);
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: transform 0.2s ease;
 }
 
-/* --- Pequena etiqueta de "responsável" no rodapé do card --- */
-.card-footer {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-top: 12px;
-    gap: 8px;
-    font-size: 0.88rem;
-    color: #415468;
-}
+.close:hover { transform: scale(1.15); }
 
-/* --- Alternativa: fita superior (ribbon) --- */
-.ribbon {
-    position: absolute;
-    top: 10px;
-    left: 14px;
-    background: linear-gradient(90deg, #FFD79B, #FFB66B);
-    color: #5a3b00;
-    font-weight: 700;
-    padding: 6px 10px;
-    border-radius: 6px;
-    box-shadow: 0 6px 14px rgba(0,0,0,0.08);
-    font-size: 0.8rem;
-    transform: rotate(-2deg);
-    z-index: 8;
+/* Responsivo */
+@media (max-width: 600px) {
+  .card-ponto { width: 90%; }
 }
