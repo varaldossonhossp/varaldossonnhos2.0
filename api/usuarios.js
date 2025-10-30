@@ -1,28 +1,43 @@
 // ============================================================
-// 👥 VARAL DOS SONHOS — /api/usuarios.js (versão final logada e segura)
+// 👥 VARAL DOS SONHOS — /api/usuarios.js (VERSÃO FINAL E ROBUSTA)
 // ------------------------------------------------------------
-// Inclui validação de TODOS os campos obrigatórios e duplicidade (E-mail OU Telefone)
+// Corrige o erro 500 movendo a importação do bcryptjs.
 // ============================================================
 
 import Airtable from "airtable";
 
-let bcryptjs = null;
-try {
-  bcryptjs = await import("bcryptjs");
-  console.log("✅ bcryptjs carregado com sucesso");
-} catch {
-  console.warn("⚠️ bcryptjs não disponível — usando modo texto simples");
-}
+// Variável para armazenar o módulo bcryptjs (cache)
+let bcryptjsModule = null;
 
+// Configuração do Vercel
 export const config = { runtime: "nodejs" };
 
 const TABLE_NAME =
-  process.env.AIRTABLE_USUARIOS_TABLE || "usuarios"; // <-- com 's'
+  process.env.AIRTABLE_USUARIOS_TABLE || "usuarios";
 
 const err = (res, code, msg, extra = {}) => {
   console.error("❌", code, msg, extra);
   return res.status(code).json({ sucesso: false, mensagem: msg, ...extra });
 };
+
+// Função para carregar o bcryptjs com cache e tratar erros
+async function loadBcryptjs() {
+    if (bcryptjsModule) {
+        return bcryptjsModule; // Retorna o módulo em cache
+    }
+    
+    try {
+        // Importação dinâmica dentro da função, para evitar erro de topo de módulo
+        const bcryptjs = await import("bcryptjs");
+        bcryptjsModule = bcryptjs;
+        console.log("✅ bcryptjs carregado com sucesso");
+        return bcryptjs;
+    } catch (e) {
+        console.warn("⚠️ bcryptjs não disponível — usando modo texto simples. Erro:", e.message);
+        return null;
+    }
+}
+
 
 export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -41,34 +56,24 @@ export default async function handler(req, res) {
       console.log("📩 Requisição POST recebida em /api/usuarios");
 
       const {
-        nome_usuario,
-        email_usuario,
-        telefone,
-        senha,
-        tipo_usuario,
-        cidade,
-        cep,
-        endereco,
-        numero,
+        nome_usuario, email_usuario, telefone, senha, tipo_usuario,
+        cidade, cep, endereco, numero,
       } = req.body || {};
 
-      // 🚨 VALIDAÇÃO: Todos os campos são obrigatórios
-      const camposObrigatorios = { 
-          nome_usuario, email_usuario, telefone, senha, tipo_usuario, 
-          cidade, cep, endereco, numero 
-      };
+      // Carrega o bcryptjs apenas quando for fazer o hash da senha
+      const bcryptjs = await loadBcryptjs();
       
-      const camposFaltando = Object.keys(camposObrigatorios).filter(
-          key => !camposObrigatorios[key]
-      );
+      // Validação de TODOS os campos obrigatórios (mantida)
+      const camposObrigatorios = { nome_usuario, email_usuario, telefone, senha, tipo_usuario, cidade, cep, endereco, numero };
+      const camposFaltando = Object.keys(camposObrigatorios).filter(key => !camposObrigatorios[key]);
 
       if (camposFaltando.length > 0)
         return err(res, 400, "Todos os campos de cadastro são obrigatórios.", { campos_faltando: camposFaltando });
 
 
-      // 🔑 VERIFICAÇÃO DE DUPLICIDADE (E-MAIL OU TELEFONE)
+      // VERIFICAÇÃO DE DUPLICIDADE (E-MAIL OU TELEFONE) (mantida)
       const emailLower = email_usuario.toLowerCase();
-      const telefoneNumerico = telefone.replace(/\D/g, ""); // Remove máscara/formatação
+      const telefoneNumerico = telefone.replace(/\D/g, "");
 
       const formula = `
         OR(
@@ -76,16 +81,13 @@ export default async function handler(req, res) {
           REGEX_REPLACE({telefone}, "\\\\D", "")='${telefoneNumerico}'
         )
       `;
-      const existentes = await base(TABLE_NAME)
-        .select({ filterByFormula: formula })
-        .all();
+      const existentes = await base(TABLE_NAME).select({ filterByFormula: formula }).all();
 
       if (existentes.length > 0)
         return err(res, 409, "Já existe cadastro com este e-mail ou telefone.");
-      // ------------------------------------------------------------
 
 
-      // Criptografa a senha, se possível
+      // Criptografa a senha, se possível (agora usa o 'bcryptjs' carregado)
       let senhaFinal = senha;
       if (bcryptjs) {
         try {
@@ -95,19 +97,12 @@ export default async function handler(req, res) {
         }
       }
 
-      // Cria o registro no Airtable
+      // Cria o registro no Airtable (mantido)
       const novo = await base(TABLE_NAME).create([
         {
           fields: {
-            nome_usuario,
-            email_usuario,
-            telefone,
-            senha: senhaFinal,
-            tipo_usuario: tipo_usuario,
-            cidade,
-            cep,
-            endereco,
-            numero,
+            nome_usuario, email_usuario, telefone, senha: senhaFinal, 
+            tipo_usuario, cidade, cep, endereco, numero,
             status: "ativo",
             data_cadastro: new Date().toLocaleDateString("pt-BR"),
           },
@@ -124,10 +119,11 @@ export default async function handler(req, res) {
     }
 
     // ============================================================
-    // GET → Login
+    // GET → Login (Ajustado para usar o 'bcryptjs' carregado)
     // ============================================================
     if (req.method === "GET") {
       console.log("🔑 Requisição GET (login) recebida");
+      const bcryptjs = await loadBcryptjs();
 
       const { email, senha } = req.query || {};
       if (!email || !senha)
