@@ -1,28 +1,26 @@
 /* ============================================================
-💙 VARAL DOS SONHOS — PONTOS DE COLETA (VERSÃO FOFINHA)
+💙 VARAL DOS SONHOS — Pontos de Coleta (versão fofinha e leve)
 ------------------------------------------------------------
-Layout mais delicado, bordas arredondadas, cores suaves,
-animações leves e harmonia com o mascote Cloudinho.
+Cards menores, bordas suaves, sombras delicadas e harmonia
+com o mascote Cloudinho.
 ============================================================ */
 
-/* Paleta */
 :root {
   --azul-claro: #eaf3fc;
   --azul-medio: #8bbdf1;
   --azul-escuro: #275d9c;
   --branco: #fff;
-  --sombra-suave: 0 8px 24px rgba(39, 93, 156, 0.08);
-  --radius-grande: 20px;
+  --sombra-suave: 0 6px 16px rgba(39, 93, 156, 0.08);
+  --radius-grande: 18px;
 }
 
-/* Corpo */
+/* Layout */
 body {
   background: var(--azul-claro);
   font-family: "Poppins", sans-serif;
   color: #234;
 }
 
-/* Container */
 .container-pontos {
   max-width: 1100px;
   margin: 60px auto 100px;
@@ -30,7 +28,6 @@ body {
   text-align: center;
 }
 
-/* Título */
 .titulo-pagina {
   font-size: 2.2rem;
   color: var(--azul-escuro);
@@ -47,9 +44,10 @@ body {
 /* Varal */
 .varal-topo {
   width: 100%;
-  height: 3px;
+  height: 2px;
   background: linear-gradient(90deg, transparent, var(--azul-medio), transparent);
   margin: 1.4rem 0 2rem;
+  border-radius: 3px;
 }
 
 /* Grid */
@@ -63,44 +61,44 @@ body {
 /* Card */
 .card-ponto {
   position: relative;
-  width: 240px;
+  width: 230px;
   background: var(--branco);
   border-radius: var(--radius-grande);
-  padding: 1.6rem 1rem 1.4rem;
+  padding: 1.4rem 1rem 1.2rem;
   box-shadow: var(--sombra-suave);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  transition: all 0.3s ease;
   overflow: hidden;
 }
 
 .card-ponto:hover {
   transform: translateY(-6px);
-  box-shadow: 0 12px 28px rgba(39, 93, 156, 0.15);
+  box-shadow: 0 12px 26px rgba(39, 93, 156, 0.12);
 }
 
 /* Prendedor */
 .prendedor-card {
   position: absolute;
-  top: -22px;
+  top: -24px;
   left: 50%;
   transform: translateX(-50%);
   width: 38px;
   height: 38px;
-  filter: drop-shadow(0 3px 4px rgba(0,0,0,0.12));
+  filter: drop-shadow(0 3px 4px rgba(0, 0, 0, 0.12));
 }
 
 /* Conteúdo */
 .card-ponto h3 {
   color: var(--azul-escuro);
-  font-size: 1.05rem;
+  font-size: 1.02rem;
   margin-bottom: 0.4rem;
   font-weight: 600;
 }
 
 .card-ponto p {
   color: #333;
-  font-size: 0.9rem;
+  font-size: 0.88rem;
   line-height: 1.35;
-  margin: 0.3rem 0;
+  margin: 0.25rem 0;
 }
 
 .card-ponto strong {
@@ -111,41 +109,42 @@ body {
 /* Botão */
 .btn-localizacao {
   display: inline-block;
-  margin-top: 0.8rem;
-  background: linear-gradient(90deg, var(--azul-medio), var(--azul-escuro));
+  margin-top: 0.7rem;
+  background: linear-gradient(90deg, #89b9ff, #588fe4);
   color: white;
-  padding: 8px 18px;
+  padding: 8px 16px;
   border-radius: 999px;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   font-weight: 600;
   text-decoration: none;
   border: none;
   cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition: all 0.2s ease;
 }
 
 .btn-localizacao:hover {
   transform: translateY(-3px);
-  box-shadow: 0 10px 20px rgba(39, 93, 156, 0.18);
+  box-shadow: 0 8px 18px rgba(88, 143, 228, 0.18);
 }
 
 .btn-localizacao::before {
-  content: "💙";
-  margin-right: 6px;
+  content: "💙 ";
 }
 
 /* Modal */
 .modal {
   position: fixed;
-  top: 0; left: 0;
-  width: 100%; height: 100%;
-  background: rgba(0,0,0,0.45);
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.45);
   display: flex;
   justify-content: center;
   align-items: center;
   visibility: hidden;
   opacity: 0;
-  transition: opacity .25s ease, visibility .25s ease;
+  transition: opacity 0.25s ease, visibility 0.25s ease;
   z-index: 1000;
 }
 
@@ -160,7 +159,7 @@ body {
   padding: 20px;
   max-width: 800px;
   width: 90%;
-  box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
   position: relative;
 }
 
@@ -176,9 +175,13 @@ body {
   transition: transform 0.2s ease;
 }
 
-.close:hover { transform: scale(1.15); }
+.close:hover {
+  transform: scale(1.15);
+}
 
 /* Responsivo */
 @media (max-width: 600px) {
-  .card-ponto { width: 90%; }
+  .card-ponto {
+    width: 90%;
+  }
 }
