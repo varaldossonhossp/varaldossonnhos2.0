@@ -1,143 +1,76 @@
 // ============================================================
-// 💙 VARAL DOS SONHOS — /js/pontosdecoleta.js
+// 💙 VARAL DOS SONHOS — /js/pontosdecoleta.js (versão fofinha)
 // ------------------------------------------------------------
-// Página: Pontos de Coleta
-// Funções:
-//   • Buscar os pontos de coleta da API (/api/pontosdecoleta)
-//   • Renderizar cards no carrossel horizontal
-//   • Abrir modal com mapa (sem necessidade de chave API)
+// Busca os pontos de coleta no Airtable e exibe com pregadores
 // ============================================================
 
 document.addEventListener("DOMContentLoaded", () => {
-    carregarPontosDeColeta();
-    setupModalListeners();
+  carregarPontosDeColeta();
 });
 
-// ------------------------------------------------------------
-// 🗺️ VARIÁVEIS GLOBAIS (modal de mapa)
-// ------------------------------------------------------------
-const mapModal = document.getElementById('mapModal');
-const mapFrame = document.getElementById('mapFrame');
-const closeModalBtn = document.getElementById('closeModal');
-
-// ------------------------------------------------------------
-// 🔹 EVENTOS DO MODAL (abrir, fechar, esc, clique fora)
-// ------------------------------------------------------------
-function setupModalListeners() {
-    // 1. Botão "X" fecha o modal
-    closeModalBtn.addEventListener('click', fecharModal);
-
-    // 2. Clicar fora da área do modal também fecha
-    mapModal.addEventListener('click', (e) => {
-        if (e.target === mapModal) fecharModal();
-    });
-
-    // 3. Pressionar ESC fecha o modal
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && mapModal.classList.contains('is-open')) {
-            fecharModal();
-        }
-    });
-}
-
-// ------------------------------------------------------------
-// 📍 ABRIR MODAL COM MAPA DO GOOGLE (SEM CHAVE DE API)
-// ------------------------------------------------------------
-/**
- * Abre o modal e carrega o mapa com base no endereço.
- * @param {string} endereco Endereço completo do ponto de coleta
- */
-function abrirModalMapa(endereco) {
-    const enderecoFormatado = encodeURIComponent(endereco);
-
-    // ✅ URL pública do Google Maps (não requer API key)
-    const mapsUrl = `https://maps.google.com/maps?q=${enderecoFormatado}&t=&z=15&ie=UTF8&iwloc=&output=embed`;
-
-    mapFrame.src = mapsUrl;
-    mapModal.classList.add('is-open');
-    mapModal.setAttribute('aria-hidden', 'false');
-    document.body.style.overflow = 'hidden'; // trava scroll do body
-}
-
-// ------------------------------------------------------------
-// ❌ FECHAR MODAL E LIMPAR MAPA
-// ------------------------------------------------------------
-function fecharModal() {
-    mapModal.classList.remove('is-open');
-    mapModal.setAttribute('aria-hidden', 'true');
-    mapFrame.src = ""; // limpa iframe para evitar carregamento contínuo
-    document.body.style.overflow = ''; // restaura scroll
-}
-
-// ------------------------------------------------------------
-// 💾 BUSCAR E EXIBIR PONTOS DE COLETA (API → HTML)
-// ------------------------------------------------------------
+// 🔹 Função principal
 async function carregarPontosDeColeta() {
-    const listaPontos = document.getElementById("lista-pontos");
-    const statusMsg = document.getElementById("mensagem-status");
+  const lista = document.getElementById("lista-pontos");
+  const msg = document.getElementById("mensagem-status");
 
-    listaPontos.innerHTML = "<p style='text-align:center;'>Buscando pontos de coleta...</p>";
-    statusMsg.style.display = 'none';
+  lista.innerHTML = "<p class='placeholder'>Carregando pontos de coleta...</p>";
+  msg.style.display = "none";
 
-    try {
-        const resposta = await fetch("/api/pontosdecoleta");
+  try {
+    const resp = await fetch("/api/pontosdecoleta");
+    if (!resp.ok) throw new Error(`Erro HTTP ${resp.status}`);
+    const dados = await resp.json();
 
-        if (!resposta.ok) {
-            const texto = await resposta.text();
-            throw new Error(`Falha ao carregar. Status: ${resposta.status}. Resposta: ${texto.substring(0, 80)}...`);
-        }
+    if (!dados.sucesso || !dados.pontos) throw new Error("Resposta inválida da API.");
 
-        const dados = await resposta.json();
-
-        if (!dados.sucesso || !Array.isArray(dados.pontos)) {
-            throw new Error("A resposta da API não contém dados válidos.");
-        }
-
-        const pontosAtivos = dados.pontos.filter(p => 
-            p.status && p.status.toLowerCase() === 'ativo'
-        );
-
-        // Nenhum ponto ativo
-        if (pontosAtivos.length === 0) {
-            listaPontos.innerHTML = "";
-            statusMsg.textContent = "Nenhum ponto de coleta ativo encontrado no momento.";
-            statusMsg.style.display = 'block';
-            return;
-        }
-
-        // Cria os cards
-        const htmlCards = pontosAtivos.map(ponto => {
-            const enderecoCompleto = `${ponto.endereco}, ${ponto.nome_ponto}`;
-
-            return `
-                <div class="card-ponto">
-                    <img src="../imagens/prendedor.png" alt="Prendedor" class="prendedor-card">
-                    <h3>${ponto.nome_ponto}</h3>
-                    <p><strong>Endereço:</strong> ${ponto.endereco}</p>
-                    <p><strong>Horário:</strong> ${ponto.horario_funcionamento || ponto.horario || "—"}</p>
-                    <p><strong>Responsável:</strong> ${ponto.responsavel}</p>
-                    <p><strong>Telefone:</strong> ${ponto.telefone}</p>
-                    <button class="btn-localizacao" data-endereco="${enderecoCompleto}">
-                        📍 Localização no Mapa
-                    </button>
-                </div>
-            `;
-        }).join("");
-
-        listaPontos.innerHTML = htmlCards;
-
-        // Adiciona eventos de clique nos botões
-        document.querySelectorAll('.btn-localizacao').forEach(button => {
-            button.addEventListener('click', (e) => {
-                const endereco = e.currentTarget.getAttribute('data-endereco');
-                abrirModalMapa(endereco);
-            });
-        });
-
-    } catch (erro) {
-        console.error("⚠️ Erro ao carregar pontos de coleta:", erro);
-        listaPontos.innerHTML = "";
-        statusMsg.textContent = `Erro ao tentar carregar os pontos de coleta. Detalhe: ${erro.message}`;
-        statusMsg.style.display = 'block';
+    const ativos = dados.pontos.filter(p => p.status?.toLowerCase() === "ativo");
+    if (ativos.length === 0) {
+      lista.innerHTML = "<p class='placeholder erro'>Nenhum ponto ativo encontrado.</p>";
+      return;
     }
+
+    lista.innerHTML = ativos.map(p => `
+      <div class="card-coleta">
+        <h3 class="card-titulo">${p.nome_ponto}</h3>
+        <p class="card-linha"><strong>Endereço:</strong> ${p.endereco}</p>
+        <p class="card-linha"><strong>Horário:</strong> ${p.horario || p.horario_funcionamento || "Horário não informado"}</p>
+        <p class="card-linha"><strong>Responsável:</strong> ${p.responsavel || "—"}</p>
+        <p class="card-linha"><strong>Telefone:</strong> ${p.telefone || "—"}</p>
+        <div class="card-acoes">
+          <button class="btn-mapa" data-endereco="${p.endereco}, ${p.nome_ponto}">
+            💙 Ver no mapa
+          </button>
+        </div>
+      </div>
+    `).join("");
+
+    // Adiciona evento para abrir o mapa
+    document.querySelectorAll(".btn-mapa").forEach(btn => {
+      btn.addEventListener("click", e => abrirMapa(e.target.dataset.endereco));
+    });
+
+  } catch (err) {
+    console.error("Erro ao carregar pontos:", err);
+    lista.innerHTML = "<p class='placeholder erro'>Erro ao carregar pontos de coleta.</p>";
+  }
+}
+
+// 🔹 Modal simples do mapa
+function abrirMapa(endereco) {
+  let modal = document.querySelector(".modal");
+  if (!modal) {
+    modal = document.createElement("div");
+    modal.className = "modal";
+    modal.innerHTML = `
+      <div class="modal-content">
+        <button class="close" aria-label="Fechar mapa">&times;</button>
+        <iframe width="100%" height="450" style="border:0;" loading="lazy"
+                referrerpolicy="no-referrer-when-downgrade" allowfullscreen
+                src="https://maps.google.com/maps?q=${encodeURIComponent(endereco)}&z=15&output=embed">
+        </iframe>
+      </div>`;
+    document.body.appendChild(modal);
+    modal.querySelector(".close").addEventListener("click", () => modal.classList.remove("aberto"));
+  }
+  modal.classList.add("aberto");
 }
