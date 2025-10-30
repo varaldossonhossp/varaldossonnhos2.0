@@ -1,10 +1,22 @@
 // ============================================================
 // 👥 VARAL DOS SONHOS — /api/usuarios.js (VERSÃO FINAL E ROBUSTA)
 // ------------------------------------------------------------
-// Corrige o erro 500 movendo a importação do bcryptjs.
+// ✅ Inicialização do Airtable movida para o escopo global (como na API unificada)
+// ✅ Importação do bcryptjs movida para o handler (solução robusta para Vercel)
 // ============================================================
 
 import Airtable from "airtable";
+
+// ============================================================
+// 🔑 Inicialização do Airtable (LOGICA ANTIGA / GLOBAL)
+// ============================================================
+const AIRTABLE_API_KEY = process.env.AIRTABLE_API_KEY;
+const AIRTABLE_BASE_ID = process.env.AIRTABLE_BASE_ID;
+
+// Inicializa a base globalmente. Se a chave estiver ausente, ela retornará um erro,
+// mas a lógica de programaçao é a mesma que funcionava antes.
+const base = new Airtable({ apiKey: AIRTABLE_API_KEY })
+  .base(AIRTABLE_BASE_ID);
 
 // Variável para armazenar o módulo bcryptjs (cache)
 let bcryptjsModule = null;
@@ -23,11 +35,10 @@ const err = (res, code, msg, extra = {}) => {
 // Função para carregar o bcryptjs com cache e tratar erros
 async function loadBcryptjs() {
     if (bcryptjsModule) {
-        return bcryptjsModule; // Retorna o módulo em cache
+        return bcryptjsModule;
     }
     
     try {
-        // Importação dinâmica dentro da função, para evitar erro de topo de módulo
         const bcryptjs = await import("bcryptjs");
         bcryptjsModule = bcryptjs;
         console.log("✅ bcryptjs carregado com sucesso");
@@ -46,8 +57,7 @@ export default async function handler(req, res) {
   if (req.method === "OPTIONS") return res.status(204).end();
 
   try {
-    const base = new Airtable({ apiKey: process.env.AIRTABLE_API_KEY })
-      .base(process.env.AIRTABLE_BASE_ID);
+    // 💡 REMOVIDO: Inicialização do Airtable movida para o escopo global
 
     // ============================================================
     // POST → Cadastro
@@ -63,7 +73,7 @@ export default async function handler(req, res) {
       // Carrega o bcryptjs apenas quando for fazer o hash da senha
       const bcryptjs = await loadBcryptjs();
       
-      // Validação de TODOS os campos obrigatórios (mantida)
+      // Validação de TODOS os campos obrigatórios
       const camposObrigatorios = { nome_usuario, email_usuario, telefone, senha, tipo_usuario, cidade, cep, endereco, numero };
       const camposFaltando = Object.keys(camposObrigatorios).filter(key => !camposObrigatorios[key]);
 
@@ -71,7 +81,7 @@ export default async function handler(req, res) {
         return err(res, 400, "Todos os campos de cadastro são obrigatórios.", { campos_faltando: camposFaltando });
 
 
-      // VERIFICAÇÃO DE DUPLICIDADE (E-MAIL OU TELEFONE) (mantida)
+      // VERIFICAÇÃO DE DUPLICIDADE (E-MAIL OU TELEFONE)
       const emailLower = email_usuario.toLowerCase();
       const telefoneNumerico = telefone.replace(/\D/g, "");
 
@@ -87,7 +97,7 @@ export default async function handler(req, res) {
         return err(res, 409, "Já existe cadastro com este e-mail ou telefone.");
 
 
-      // Criptografa a senha, se possível (agora usa o 'bcryptjs' carregado)
+      // Criptografa a senha, se possível
       let senhaFinal = senha;
       if (bcryptjs) {
         try {
@@ -97,7 +107,7 @@ export default async function handler(req, res) {
         }
       }
 
-      // Cria o registro no Airtable (mantido)
+      // Cria o registro no Airtable
       const novo = await base(TABLE_NAME).create([
         {
           fields: {
@@ -119,7 +129,7 @@ export default async function handler(req, res) {
     }
 
     // ============================================================
-    // GET → Login (Ajustado para usar o 'bcryptjs' carregado)
+    // GET → Login
     // ============================================================
     if (req.method === "GET") {
       console.log("🔑 Requisição GET (login) recebida");
@@ -160,6 +170,7 @@ export default async function handler(req, res) {
     return err(res, 405, "Método não suportado.");
   } catch (e) {
     console.error("🔥 Erro interno /api/usuarios:", e);
+    // Garante que o detalhe do erro seja logado no Vercel para você
     return err(res, 500, "Erro interno no servidor.", { detalhe: e.message });
   }
 }
