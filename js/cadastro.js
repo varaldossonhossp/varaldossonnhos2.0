@@ -1,5 +1,7 @@
 // ============================================================
-// 👥 VARAL DOS SONHOS — /js/cadastro.js (versão REVISADA - Todos Obrigatórios)
+// 👥 VARAL DOS SONHOS — /js/cadastro.js (versão final)
+// ------------------------------------------------------------
+// Todos os campos verificados como obrigatórios
 // ============================================================
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -43,22 +45,23 @@ document.addEventListener("DOMContentLoaded", () => {
     e.preventDefault();
     feedbackMsg.classList.add("hidden");
 
-    // ATENÇÃO: Agora 'numero' está incluído, pois todos os campos são obrigatórios.
+    // Lista de IDs de campos OBRIGATÓRIOS (incluindo 'numero')
     const camposObrigatorios = [
-      "nome_usuario", "cep", "endereco", "numero", "cidade", // <-- 'numero' adicionado aqui
+      "nome_usuario", "cep", "endereco", "numero", "cidade",
       "email_usuario", "telefone", "tipo_usuario", "senha"
     ];
     
     // 1. Verifica todos os campos obrigatórios
     for (const id of camposObrigatorios) {
       const el = document.getElementById(id);
+      // Valida se o elemento existe E se seu valor está vazio
       if (!el || !el.value.trim()) {
         exibirFeedback("Por favor, preencha todos os campos obrigatórios.", "erro");
         return;
       }
     }
 
-    // 2. Prepara o Payload (agora é mais simples, pois são todos da mesma lista)
+    // 2. Prepara o Payload
     const payload = Object.fromEntries(
         camposObrigatorios.map(id => [id, document.getElementById(id).value.trim()])
     );
