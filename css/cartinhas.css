@@ -1,5 +1,5 @@
 /* ============================================================
-💙 VARAL DOS SONHOS — css/cartinhas.css 
+💙 VARAL DOS SONHOS — css/cartinhas.css (versão estável final)
 ============================================================ */
 
 :root {
@@ -12,30 +12,31 @@
 .varal-wrapper {
   background: linear-gradient(180deg, #e6f2ff 0%, #ffffff 100%);
   text-align: center;
-  padding: 80px 0 60px;
+  padding: 60px 0 60px;
   min-height: 100vh;
+  overflow: hidden;
 }
 
 .titulo-pagina {
   font-size: 2.2rem;
   color: var(--azul-escuro);
   font-weight: 700;
-  margin-bottom: 0.3rem;
-  margin-top: -10px; /* sobe o título */
+  margin-bottom: 0.4rem;
+  margin-top: -5px;
 }
 
 .descricao {
   color: #27425c;
   font-size: 1rem;
-  margin-bottom: 20px;
+  margin-bottom: 25px;
 }
 
 /* ====== CORDA ====== */
 .corda {
   width: 100%;
-  max-width: 950px;
+  max-width: 1000px;
   height: 5px;
-  margin: 0 auto 25px;
+  margin: 0 auto 20px;
   border-radius: 3px;
   background: linear-gradient(
     90deg,
@@ -51,65 +52,55 @@
 .varal-area {
   position: relative;
   width: 100%;
+  max-width: 1100px;
+  margin: 0 auto;
   overflow: hidden;
 }
 
 .trilho {
   display: flex;
   gap: 18px;
+  justify-content: center;
+  align-items: flex-start;
   overflow-x: auto;
   scroll-snap-type: x mandatory;
   -webkit-overflow-scrolling: touch;
-  padding: 0 40px;
-  justify-content: center;
+  padding: 0 40px 10px;
 }
 
-.trilho::-webkit-scrollbar { display: none; }
+.trilho::-webkit-scrollbar {
+  height: 6px;
+}
+.trilho::-webkit-scrollbar-thumb {
+  background: #b5cde0;
+  border-radius: 6px;
+}
+.trilho::-webkit-scrollbar-track {
+  background: transparent;
+}
 
 /* ====== LIMITA 4 CARTINHAS NA VISÃO INICIAL ====== */
 .trilho > .gancho {
-  flex: 0 0 calc(25% - 16px); /* 4 por linha */
+  flex: 0 0 calc(25% - 16px);
   scroll-snap-align: center;
-}
-
-/* ====== BOTÕES DE NAVEGAÇÃO ====== */
-.nav {
-  position: absolute;
-  top: 48%;
-  transform: translateY(-50%);
-  z-index: 10;
-  background: rgba(255, 255, 255, 0.9);
-  border: 1px solid #ddd;
-  border-radius: 50%;
-  width: 36px;
-  height: 36px;
-  font-size: 20px;
-  cursor: pointer;
-  transition: background 0.3s;
-  box-shadow: 0 3px 8px rgba(0,0,0,0.15);
-}
-.nav:hover { background: #fff; }
-.seta-esq { left: 6px; }
-.seta-dir { right: 6px; }
-
-/* ====== GANCHO (pregador) ====== */
-.gancho {
   position: relative;
 }
+
+/* ====== PREGADOR ====== */
 .gancho::before {
   content: "";
   position: absolute;
-  top: -25px;
+  top: -28px;
   left: 50%;
   transform: translateX(-50%);
-  width: 32px;
-  height: 32px;
-  background: url('../imagens/pregador.png') no-repeat center;
+  width: 35px;
+  height: 35px;
+  background: url("../imagens/pregador.png") no-repeat center;
   background-size: contain;
-  z-index: 5;
+  z-index: 10;
 }
 
-/* ====== CARD PRINCIPAL ====== */
+/* ====== CARD ====== */
 .card-cartinha {
   background: #fff;
   border-radius: 16px;
@@ -120,14 +111,14 @@
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  min-height: 420px;
-  margin-top: -5px; /* aproxima da corda */
+  min-height: 430px;
+  margin-top: -5px;
 }
 
-/* 🩵 Efeito de balanço lateral (para a esquerda) */
+/* 🩵 Efeito de balanço lateral (para esquerda) */
 .card-cartinha:hover {
   transform: rotate(-2deg);
-  box-shadow: 0 10px 25px rgba(0, 51, 102, 0.15);
+  box-shadow: 0 12px 28px rgba(0, 51, 102, 0.18);
 }
 
 /* ====== QUADRO INTERNO DA CARTINHA ====== */
@@ -142,6 +133,7 @@
   align-items: center;
   justify-content: center;
 }
+
 .cartinha-quadro img {
   width: 100%;
   height: 100%;
@@ -158,12 +150,14 @@
   padding: 10px 20px;
   text-align: center;
 }
+
 .info-cartinha h3 {
   color: var(--azul-escuro);
   font-size: 1.1rem;
   font-weight: 700;
   margin: 4px 0;
 }
+
 .info-cartinha p {
   margin: 2px 0;
   color: #27425c;
@@ -193,50 +187,14 @@
   cursor: not-allowed;
 }
 
-/* ====== MODAL ====== */
-.modal-zoom {
-  display: none;
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.75);
-  justify-content: center;
-  align-items: center;
-  z-index: 2000;
-}
-.modal-content-zoom {
-  max-width: 500px;
-  width: 90%;
-  position: relative;
-  background: #fff;
-  border-radius: 12px;
-  padding: 10px;
-  box-shadow: 0 6px 30px rgba(0,0,0,0.5);
-}
-#cartinha-zoom-img {
-  width: 100%;
-  border-radius: 8px;
-}
-.close-zoom {
-  position: absolute;
-  top: 6px;
-  right: 14px;
-  color: #333;
-  font-size: 28px;
-  cursor: pointer;
-}
-.close-zoom:hover { color: #888; }
-.nome-zoom {
-  text-align: center;
-  color: var(--azul-escuro);
-  margin-top: 8px;
-  font-size: 1rem;
-  font-weight: 600;
-}
-
 /* ====== RESPONSIVIDADE ====== */
 @media (max-width: 900px) {
-  .trilho > .gancho { flex: 0 0 45%; }
+  .trilho > .gancho {
+    flex: 0 0 45%;
+  }
 }
 @media (max-width: 600px) {
-  .trilho > .gancho { flex: 0 0 90%; }
+  .trilho > .gancho {
+    flex: 0 0 90%;
+  }
 }
