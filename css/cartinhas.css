@@ -1,6 +1,5 @@
 /* ============================================================
-💙 VARAL DOS SONHOS — css/cartinhas.css (versão final responsiva)
-------------------------------------------------------------
+💙 VARAL DOS SONHOS — css/cartinhas.css
 Compatível com Vercel + .NET MAUI WebView
 ============================================================ */
 
@@ -8,13 +7,14 @@ Compatível com Vercel + .NET MAUI WebView
   --azul-escuro: #153f5a;
   --azul-cta: #2f80ed;
   --corda-cor: #c49a6c;
+  --fundo: linear-gradient(180deg, #e6f2ff 0%, #ffffff 100%);
 }
 
-/* ====== LAYOUT GERAL ====== */
+/* ====== CONTAINER GERAL ====== */
 .varal-wrapper {
-  background: linear-gradient(180deg, #e6f2ff 0%, #ffffff 100%);
+  background: var(--fundo);
   text-align: center;
-  padding: 50px 0 60px;
+  padding: 40px 0 60px;
   min-height: 100vh;
   overflow-x: hidden;
 }
@@ -29,7 +29,7 @@ Compatível com Vercel + .NET MAUI WebView
 
 .descricao {
   display: inline;
-  margin-left: 8px;
+  margin-left: 6px;
   color: #27425c;
   font-size: 1.05rem;
   font-weight: 400;
@@ -37,100 +37,117 @@ Compatível com Vercel + .NET MAUI WebView
 
 /* ====== CORDA ====== */
 .corda {
-  width: 100%;
-  max-width: 950px;
-  height: 5px;
-  margin: 20px auto 15px;
-  border-radius: 3px;
+  width: 90%;
+  max-width: 1100px;
+  height: 4px;
+  margin: 16px auto 25px;
+  border-radius: 4px;
   background: linear-gradient(
     90deg,
     rgba(196,154,108,0) 0%,
-    var(--corda-cor) 15%,
-    var(--corda-cor) 85%,
+    var(--corda-cor) 10%,
+    var(--corda-cor) 90%,
     rgba(196,154,108,0) 100%
   );
-  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
 }
 
-/* ====== ÁREA DO CARROSSEL ====== */
+/* ====== ÁREA DO VARAL ====== */
 .varal-area {
   position: relative;
   width: 100%;
-  max-width: 1100px;
+  max-width: 1150px;
   margin: 0 auto;
   overflow: hidden;
 }
 
+/* ====== TRILHO DO CARROSSEL ====== */
 .trilho {
   display: flex;
-  gap: 18px;
+  gap: 26px;
   justify-content: flex-start;
   align-items: flex-start;
   overflow-x: auto;
   scroll-snap-type: x mandatory;
   -webkit-overflow-scrolling: touch;
-  padding: 0 60px 10px; /* 🔹 evita cortar a primeira cartinha */
+  padding: 0 60px 20px;
+  scroll-behavior: smooth;
 }
 
 .trilho::-webkit-scrollbar {
-  height: 6px;
+  height: 8px;
 }
 .trilho::-webkit-scrollbar-thumb {
-  background: #b5cde0;
+  background: rgba(47,128,237,0.35);
   border-radius: 6px;
 }
 .trilho::-webkit-scrollbar-track {
   background: transparent;
 }
 
-/* ====== GANCHO (pregador) ====== */
+/* ====== GANCHO (PRENDEDOR) ====== */
 .gancho {
-  flex: 0 0 calc(25% - 16px);
+  flex: 0 0 calc(25% - 20px);
   position: relative;
   scroll-snap-align: center;
 }
 
+/* Imagem principal do prendedor (para navegadores e WebView modernos) */
 .gancho::before {
   content: "";
   position: absolute;
-  top: -28px;
+  top: -32px;
   left: 50%;
   transform: translateX(-50%);
-  width: 35px;
-  height: 35px;
-  background: url("../imagens/pregador.png") no-repeat center;
+  width: 40px;
+  height: 40px;
+  background: url("../imagens/prendedor.png") no-repeat center;
   background-size: contain;
   z-index: 10;
 }
 
+/* Fallback para .NET MAUI WebView (caso o ::before não carregue) */
+.pregador {
+  position: absolute;
+  top: -32px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 40px;
+  height: 40px;
+  background: url("../imagens/prendedor.png") no-repeat center;
+  background-size: contain;
+  z-index: 10;
+  pointer-events: none;
+}
+
 /* ====== CARD ====== */
 .card-cartinha {
+  position: relative;
   background: #fff;
-  border-radius: 16px;
+  border-radius: 18px;
   border: 2px solid #d8e6f5;
-  box-shadow: 0 6px 18px rgba(0, 51, 102, 0.1);
-  overflow: hidden;
+  box-shadow: 0 4px 16px rgba(0,51,102,0.12);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  min-height: 430px;
+  min-height: 420px;
 }
 
-/* 🔹 Efeito suave no hover */
+/* Efeito suave */
 .card-cartinha:hover {
-  transform: rotate(-2deg);
-  box-shadow: 0 12px 28px rgba(0, 51, 102, 0.18);
+  transform: translateY(-4px);
+  box-shadow: 0 10px 25px rgba(0,51,102,0.2);
 }
 
-/* ====== QUADRO INTERNO ====== */
+/* ====== IMAGEM DA CARTINHA ====== */
 .cartinha-quadro {
-  margin: 16px;
+  margin: 14px;
   background: #f8fbff;
   border: 1px solid #dbe8f6;
-  border-radius: 12px;
+  border-radius: 14px;
   overflow: hidden;
-  height: 230px;
+  height: 220px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -145,12 +162,12 @@ Compatível com Vercel + .NET MAUI WebView
 }
 
 .cartinha-quadro:hover img {
-  transform: scale(1.05);
+  transform: scale(1.04);
 }
 
 /* ====== INFORMAÇÕES ====== */
 .info-cartinha {
-  padding: 10px 20px;
+  padding: 10px 18px;
   text-align: center;
 }
 
@@ -158,13 +175,13 @@ Compatível com Vercel + .NET MAUI WebView
   color: var(--azul-escuro);
   font-size: 1.1rem;
   font-weight: 700;
-  margin: 4px 0;
+  margin: 6px 0;
 }
 
 .info-cartinha p {
   margin: 2px 0;
   color: #27425c;
-  font-size: 0.9rem;
+  font-size: 0.93rem;
 }
 
 /* ====== BOTÃO ADOTAR ====== */
@@ -174,7 +191,7 @@ Compatível com Vercel + .NET MAUI WebView
   border: none;
   border-radius: 999px;
   padding: 10px 18px;
-  margin: 10px auto 16px;
+  margin: 14px auto 18px;
   cursor: pointer;
   font-weight: 600;
   box-shadow: 0 4px 12px rgba(47,128,237,0.25);
@@ -204,7 +221,7 @@ Compatível com Vercel + .NET MAUI WebView
 }
 
 .modal-content-zoom {
-  max-width: 500px;
+  max-width: 480px;
   width: 90%;
   position: relative;
   background: #fff;
@@ -240,26 +257,21 @@ Compatível com Vercel + .NET MAUI WebView
 }
 
 /* ====== RESPONSIVIDADE ====== */
-
-/* 📱 Tablets */
-@media (max-width: 900px) {
+@media (max-width: 950px) {
   .gancho {
-    flex: 0 0 calc(50% - 16px);
+    flex: 0 0 calc(50% - 20px);
   }
-
   .titulo-pagina {
-    font-size: 1.7rem;
+    font-size: 1.8rem;
   }
   .descricao {
     font-size: 0.95rem;
   }
-
   .corda {
-    max-width: 90%;
+    width: 95%;
   }
 }
 
-/* 📱 Celulares */
 @media (max-width: 600px) {
   .gancho {
     flex: 0 0 85%;
@@ -279,8 +291,8 @@ Compatível com Vercel + .NET MAUI WebView
   }
 
   .corda {
-    height: 4px;
-    margin: 10px auto 20px;
+    height: 3px;
+    margin: 12px auto 16px;
   }
 
   .cartinha-quadro {
