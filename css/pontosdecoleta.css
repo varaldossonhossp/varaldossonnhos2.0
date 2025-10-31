@@ -1,181 +1,201 @@
 /* ============================================================
-💙 VARAL DOS SONHOS — css/pontosdecoleta.css
+💙 VARAL DOS SONHOS — css/cartinhas.css 
 ============================================================ */
 
-/* 🌤️ Faixa hero da página */
-.hero-coleta {
-  background: linear-gradient(180deg, #d9ecff 0%, #ffffff 100%);
+:root {
+  --azul-escuro: #153f5a;
+  --azul-cta: #2f80ed;
+  --fundo-claro: #f0f8ff;
+  --corda-cor: #c49a6c;
+}
+
+/* ====== LAYOUT GERAL ====== */
+.varal-wrapper {
+  background: linear-gradient(180deg, #e6f2ff 0%, #ffffff 100%);
   text-align: center;
-  padding: 100px 20px 90px;
+  padding: 100px 0 80px;
+  min-height: 100vh;
 }
 
-.logo-coleta {
-  width: 180px;
-  height: auto;
-  filter: drop-shadow(0 2px 8px rgba(0,0,0,.08));
-  display: block;
-  margin-left: auto;
-  margin-right: auto;
+.titulo-pagina {
+  font-size: 2.2rem;
+  color: var(--azul-escuro);
+  font-weight: 700;
+  margin-bottom: 0.5rem;
 }
 
-
-.titulo-coleta {
-  margin: 12px 0 20px;
-  font-family: var(--fonte-titulo, 'Shadows Into Light Two', cursive);
-  color: var(--azul-escuro, #003366);
-  font-size: 1.7rem;
+.descricao {
+  color: #27425c;
+  font-size: 1rem;
+  margin-bottom: 30px;
 }
 
-/* 🧵 Corda do varal */
-.corda-varal {
+/* ====== CORDA ====== */
+.corda {
   width: 100%;
-  max-width: 980px;
+  max-width: 950px;
   height: 2px;
-  margin: 24px auto 34px;
-  background: linear-gradient(90deg, #caa57a, #e4c7a1, #caa57a);
+  background: var(--corda-cor);
+  margin: 0 auto 50px;
   border-radius: 2px;
+}
+
+/* ====== TRILHO ====== */
+.trilho {
+  display: flex;
+  gap: 24px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  padding: 10px 20px;
+  justify-content: center;
+}
+.trilho::-webkit-scrollbar { display: none; }
+
+/* ====== GANCHO (pregador) ====== */
+.gancho {
+  flex: 0 0 260px;
   position: relative;
+  scroll-snap-align: center;
 }
-
-/* 🧩 Grid dos cards */
-.cards-grid {
-  width: min(1200px, 92%);
-  margin: 0 auto;
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 18px;
-}
-
-.placeholder {
-  grid-column: 1 / -1;
-  padding: 16px;
-  background: #fff;
-  border: 1px solid var(--linha, #D7E6F5);
-  border-radius: 12px;
-  box-shadow: var(--sombra, 0 6px 20px rgba(0,51,102,.12));
-}
-
-.placeholder.erro { color: #b00020; }
-
-/* 🧷 Card com “pregador” e sombra suave */
-.card-coleta {
-  position: relative;
-  background: #fff;
-  border: 1px solid var(--linha, #D7E6F5);
-  border-radius: 16px;
-  box-shadow: var(--sombra, 0 6px 20px rgba(0,51,102,.12));
-  padding: 14px 14px 12px;
-  text-align: center;
-  transition: transform .25s ease, box-shadow .25s ease;
-}
-
-/* ✨ Pregador (topo central) */
-.card-coleta::before,
-.card-coleta::after {
+.gancho::before {
   content: "";
   position: absolute;
+  top: -30px;
   left: 50%;
   transform: translateX(-50%);
+  width: 32px;
+  height: 32px;
+  background: url('../imagens/pregador.png') no-repeat center;
+  background-size: contain;
+  z-index: 5;
 }
 
-/* "Madeira" do pregador */
-.card-coleta::before {
-  top: -22px;
-  width: 18px;
-  height: 26px;
-  background: linear-gradient(180deg, #E0B989 0%, #C99963 100%);
-  border-radius: 3px;
-  box-shadow: 0 3px 6px rgba(0,0,0,.15);
+/* ====== CARD PRINCIPAL ====== */
+.card-cartinha {
+  background: #fff;
+  border-radius: 18px;
+  border: 2px solid #d8e6f5;
+  box-shadow: 0 6px 18px rgba(0, 51, 102, 0.1);
+  overflow: hidden;
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 430px;
 }
 
-/* "Grampo" metálico do pregador */
-.card-coleta::after {
-  top: -12px;
-  width: 16px;
-  height: 2px;
-  background: #9aa3ad;
-  border-radius: 1px;
+.card-cartinha:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 12px 28px rgba(0, 51, 102, 0.15);
 }
 
-/* Hover suave */
-.card-coleta:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 10px 22px rgba(0, 51, 102, 0.16);
-}
-
-/* Conteúdo do card */
-.card-titulo {
-  font-weight: 700;
-  color: var(--azul-escuro, #003366);
-  margin-bottom: 8px;
-  font-size: 1rem;
-}
-
-.card-linha {
-  margin: 4px 0;
-  font-size: .92rem;
-  color: #27425c;
-}
-
-.card-acoes {
-  margin-top: 10px;
-}
-
-/* Botão "Ver no mapa" */
-.btn-mapa {
-  appearance: none;
-  border: none;
-  cursor: pointer;
-  padding: 8px 12px;
-  border-radius: 10px;
-  background: var(--azul-medio, #4A90E2);
-  color: #fff;
-  font-weight: 600;
-  box-shadow: 0 4px 12px rgba(74,144,226,.25);
-  transition: transform .15s ease, background .2s ease;
-}
-.btn-mapa:hover { background: var(--azul-escuro, #003366); transform: translateY(-1px); }
-
-/* 🪟 Modal do Google Maps */
-.modal {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,.35);
-  display: none;
+/* ====== QUADRO INTERNO DA CARTINHA ====== */
+.cartinha-quadro {
+  margin: 16px;
+  background: #f8fbff;
+  border: 1px solid #dbe8f6;
+  border-radius: 12px;
+  overflow: hidden;
+  height: 220px;
+  display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1200;
-}
-.modal.aberto { display: flex; }
-
-.modal-content {
-  width: min(960px, 92%);
-  background: #fff;
-  border-radius: 14px;
-  box-shadow: 0 12px 30px rgba(0,0,0,.3);
-  padding: 14px;
-  position: relative;
 }
 
-.close {
-  position: absolute;
-  top: 8px;
-  right: 10px;
-  border: none;
-  background: transparent;
-  font-size: 26px;
+.cartinha-quadro img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform .4s ease;
   cursor: pointer;
-  color: #27425c;
+}
+.cartinha-quadro:hover img {
+  transform: scale(1.05);
 }
 
-/* 📱 Responsividade */
-@media (max-width: 1100px) {
-  .cards-grid { grid-template-columns: repeat(3, 1fr); }
+/* ====== INFORMAÇÕES ====== */
+.info-cartinha {
+  padding: 10px 20px;
+  text-align: center;
 }
-@media (max-width: 820px) {
-  .cards-grid { grid-template-columns: repeat(2, 1fr); }
+
+.info-cartinha h3 {
+  color: var(--azul-escuro);
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin: 4px 0;
 }
-@media (max-width: 520px) {
-  .cards-grid { grid-template-columns: 1fr; }
-  .logo-coleta { width: 150px; }
+
+.info-cartinha p {
+  margin: 2px 0;
+  color: #27425c;
+  font-size: 0.95rem;
+}
+
+/* ====== BOTÃO ====== */
+.btn-adotar {
+  background: var(--azul-cta);
+  color: #fff;
+  border: none;
+  border-radius: 999px;
+  padding: 10px 18px;
+  margin: 16px auto 20px;
+  cursor: pointer;
+  font-weight: 600;
+  box-shadow: 0 4px 12px rgba(47,128,237,0.25);
+  transition: all 0.3s ease;
+  width: 80%;
+}
+.btn-adotar:hover {
+  background: var(--azul-escuro);
+  transform: translateY(-2px);
+}
+.btn-ocupada {
+  background: #f7a300;
+  cursor: not-allowed;
+}
+
+/* ====== MODAL DE ZOOM ====== */
+.modal-zoom {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.75);
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+}
+.modal-content-zoom {
+  max-width: 500px;
+  width: 90%;
+  position: relative;
+  background: #fff;
+  border-radius: 12px;
+  padding: 10px;
+  box-shadow: 0 6px 30px rgba(0,0,0,0.5);
+}
+#cartinha-zoom-img {
+  width: 100%;
+  border-radius: 8px;
+}
+.close-zoom {
+  position: absolute;
+  top: 6px;
+  right: 14px;
+  color: #333;
+  font-size: 28px;
+  cursor: pointer;
+}
+.close-zoom:hover { color: #888; }
+.nome-zoom {
+  text-align: center;
+  color: var(--azul-escuro);
+  margin-top: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+/* ====== RESPONSIVIDADE ====== */
+@media (max-width: 700px) {
+  .gancho { flex: 0 0 90%; }
 }
