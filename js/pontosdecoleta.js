@@ -1,7 +1,7 @@
 // ============================================================
 // 💙 VARAL DOS SONHOS — /js/pontosdecoleta.js (versão fofinha)
 // ------------------------------------------------------------
-// Busca os pontos de coleta no Airtable e exibe com pregadores
+// Busca os pontos de coleta no Airtable 
 // ============================================================
 
 document.addEventListener("DOMContentLoaded", () => {

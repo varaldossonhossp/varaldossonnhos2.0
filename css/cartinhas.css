@@ -1,282 +1,219 @@
 /* ============================================================
-💙 VARAL DOS SONHOS — cartinhas.css
----------------------------------------------------------------
-Estilo da página Varal Virtual (cartinhas disponíveis)
+💙 VARAL DOS SONHOS — css/cartinhas.css
 ============================================================ */
+
 :root {
-  --azul-escuro: #153f5a;
-  --azul-cta: #2f80ed;
-  --fundo-claro: #f0f8ff; /* Cor de fundo suave */
-  --corda-cor: #8b4513; /* Marrom para a corda */
+  --azul-escuro: #003366;
+  --azul-medio: #4a90e2;
+  --fundo-claro: #eaf3fc;
+  --corda-marrom: #caa57a;
 }
 
-/* --- Layout Principal --- */
+/* 🌤️ Layout geral */
 .varal-wrapper {
-  max-width: 1400px;
-  margin: 80px auto 80px;
-  padding: 20px;
+  background: linear-gradient(180deg, #d9ecff 0%, #ffffff 100%);
   text-align: center;
-  /* Fundo sutil */
-  background: radial-gradient(circle at top, rgba(230,242,255,0.8) 0%, rgba(255,255,255,0) 100%);
+  padding: 100px 0 80px;
+  min-height: 100vh;
 }
 
-.varal-title .titulo-pagina {
+.titulo-pagina {
+  font-family: var(--fonte-titulo, 'Shadows Into Light Two', cursive);
+  font-size: 2.4rem;
   color: var(--azul-escuro);
-  font-size: 2.8rem;
-  margin-bottom: 0.5rem;
+  margin-bottom: 8px;
 }
 
-.varal-title .descricao {
-  color: var(--azul-escuro);
-  opacity: 0.8;
-  font-size: 1.1rem;
-  margin-bottom: 30px;
+.descricao {
+  color: #27425c;
+  font-size: 1.05rem;
+  margin-bottom: 24px;
 }
 
-/* ====== ÁREA DO VARAL (Carrossel) ====== */
-.varal-area {
-  position: relative;
-  /* Ajusta a área para acomodar a corda e o trilho */
-  padding: 30px 0 50px; 
-}
-
-/* CORDA DO VARAL */
+/* 🧵 Corda do varal */
 .corda {
-  position: absolute;
-  top: 15px; /* Posição no topo dos cards */
-  left: 0;
-  right: 0;
+  width: 100%;
+  max-width: 1000px;
   height: 2px;
-  background-color: var(--corda-cor);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
-  z-index: 10;
+  background: linear-gradient(90deg, #caa57a, #e4c7a1, #caa57a);
+  margin: 20px auto 40px;
+  border-radius: 2px;
 }
 
-/* TRILHO (Onde os cards rolam) */
+/* ====== TRILHO / CARROSSEL ====== */
 .trilho {
   display: flex;
+  gap: 18px;
   overflow-x: auto;
   overflow-y: hidden;
-  gap: 20px; /* Espaçamento entre os cards */
-  padding: 40px 20px 20px; /* Padding para rolagem e visual */
   scroll-snap-type: x mandatory;
   -webkit-overflow-scrolling: touch;
+  padding: 10px 20px;
   justify-content: flex-start;
-  align-items: flex-start; /* Alinha o topo dos cards */
 }
 
-/* Esconder barra de rolagem (limpeza visual) */
 .trilho::-webkit-scrollbar { display: none; }
-.trilho { -ms-overflow-style: none; scrollbar-width: none; }
 
-/* Adiciona espaço nas extremidades do carrossel */
-.trilho::before,
-.trilho::after {
-  content: "";
-  flex: 0 0 30px; 
-}
-
-/* GANCHO / PRENDEDOR */
+/* ====== GANCHO ====== */
 .gancho {
+  flex: 0 0 260px;
   position: relative;
-  flex-shrink: 0;
-  width: 280px; /* Largura do item no trilho */
   scroll-snap-align: center;
-  /* Imagem do prendedor no topo */
 }
 .gancho::before {
   content: "";
   position: absolute;
-  top: -20px;
+  top: -24px;
   left: 50%;
   transform: translateX(-50%);
-  width: 30px;
-  height: 30px;
-  background-image: url('../imagens/prendedor.png'); /* Usar a imagem do prendedor */
-  background-size: contain;
-  background-repeat: no-repeat;
-  z-index: 15;
+  width: 18px;
+  height: 26px;
+  background: linear-gradient(180deg, #e0b989 0%, #c99963 100%);
+  border-radius: 3px;
+  box-shadow: 0 3px 6px rgba(0,0,0,.15);
+}
+.gancho::after {
+  content: "";
+  position: absolute;
+  top: -14px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 16px;
+  height: 2px;
+  background: #9aa3ad;
+  border-radius: 1px;
 }
 
-/* ====== CARD INDIVIDUAL ====== */
+/* ====== CARD ====== */
 .card-cartinha {
   background: #fff;
   border-radius: 16px;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.1);
-  width: 100%; /* Ocupa a largura total do .gancho */
+  box-shadow: 0 6px 20px rgba(0, 51, 102, 0.12);
   overflow: hidden;
-  transition: transform 0.3s, box-shadow 0.3s;
-  min-height: 400px; /* Altura mínima para padronizar */
+  transition: all 0.25s ease;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
 }
-
 .card-cartinha:hover {
-  transform: translateY(-5px); /* Efeito de elevação */
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+  transform: translateY(-5px);
+  box-shadow: 0 12px 26px rgba(0, 51, 102, 0.15);
 }
 
-/* ====== IMAGEM DA CARTINHA (Para zoom) ====== */
+/* ====== IMAGEM ====== */
 .cartinha-img-wrapper {
   position: relative;
+  height: 230px;
   overflow: hidden;
-  height: 240px;
   cursor: pointer;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid #e0e6ee;
 }
 .cartinha-img-wrapper img {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform 0.5s ease;
+  transition: transform .5s ease;
 }
 .cartinha-img-wrapper img:hover {
   transform: scale(1.05);
 }
 
-/* ====== INFORMAÇÕES DA CRIANÇA ====== */
+/* ====== INFORMAÇÕES ====== */
 .info-cartinha {
-  padding: 15px;
-  text-align: center;
-  flex-grow: 1;
+  padding: 14px;
+  color: #27425c;
 }
-
 .info-cartinha h3 {
   color: var(--azul-escuro);
-  margin: 0 0 0.2rem 0;
-  font-size: 1.5rem; /* Nome maior */
-  font-weight: 700;
+  margin-bottom: 4px;
+  font-size: 1.2rem;
 }
-
-.info-cartinha .detalhes {
-  margin: 5px 0 10px;
-  color: var(--azul-cta);
-  font-weight: 600;
-  font-size: 1rem;
-}
-
 .info-cartinha p {
-  margin: 2px 0;
-  color: #4a5c76;
-  font-size: 0.95rem;
+  margin: 3px 0;
+  font-size: 0.9rem;
 }
 
-/* ====== BOTÃO DE ADOÇÃO / STATUS ====== */
+/* ====== BOTÃO ====== */
 .btn-adotar {
-  display: block;
-  width: 80%;
-  margin: 0 auto 20px; /* Centralizado e espaçado do rodapé */
-  padding: 10px 15px;
-  border: none;
-  border-radius: 999px;
-  background-color: var(--azul-cta);
+  margin: 12px auto 18px;
+  background: var(--azul-medio);
   color: #fff;
-  font-weight: 700;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 999px;
+  font-weight: 600;
   cursor: pointer;
+  box-shadow: 0 4px 12px rgba(74,144,226,.25);
   transition: all 0.3s ease;
-  box-shadow: 0 4px 10px rgba(47, 128, 237, 0.2);
+  width: 80%;
 }
-
-.btn-adotar:hover:not(:disabled) {
-  background-color: var(--azul-escuro);
+.btn-adotar:hover {
+  background: var(--azul-escuro);
   transform: translateY(-2px);
-  box-shadow: 0 6px 15px rgba(47, 128, 237, 0.3);
 }
-
-.btn-adotar:disabled {
-  background-color: #ccc;
-  cursor: not-allowed;
-  box-shadow: none;
-}
-
-/* Botão quando já está no carrinho */
 .btn-ocupada {
-  background-color: #f7a300;
+  background: #f7a300;
+  cursor: not-allowed;
 }
 
-/* Botões de navegação (setas) */
+/* ====== SETAS ====== */
 .nav {
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
   z-index: 20;
-  background: rgba(255, 255, 255, 0.85);
+  background: rgba(255,255,255,0.85);
   border: 1px solid #ddd;
   border-radius: 50%;
   width: 40px;
   height: 40px;
   font-size: 24px;
   cursor: pointer;
-  transition: background 0.2s, transform 0.2s;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
-.nav:hover { background: #fff; }
-.seta-esq { left: 5px; }
-.seta-dir { right: 5px; }
+.seta-esq { left: 10px; }
+.seta-dir { right: 10px; }
 
-/* ============================================================
-* ESTILOS DO MODAL DE ZOOM (NOVO)
-* ============================================================ */
-
+/* ====== MODAL DE ZOOM ====== */
 .modal-zoom {
-  display: none; /* Escondido por padrão */
+  display: none;
   position: fixed;
-  z-index: 2000; /* Alto para sobrepor tudo */
-  left: 0;
-  top: 0;
-  width: 100%;
-  height: 100%;
-  overflow: auto;
-  background-color: rgba(0, 0, 0, 0.85); /* Fundo escuro */
+  inset: 0;
+  background: rgba(0,0,0,0.85);
   justify-content: center;
   align-items: center;
+  z-index: 2000;
 }
-
 .modal-content-zoom {
-  margin: auto;
-  display: block;
+  max-width: 800px;
   width: 90%;
-  max-width: 700px;
   position: relative;
 }
-
 #cartinha-zoom-img {
   width: 100%;
-  height: auto;
-  border-radius: 8px;
-  box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+  border-radius: 10px;
 }
-
 .close-zoom {
   position: absolute;
-  top: 15px;
-  right: 35px;
-  color: #f1f1f1;
-  font-size: 40px;
-  font-weight: bold;
+  top: 12px;
+  right: 20px;
+  color: #fff;
+  font-size: 34px;
+  cursor: pointer;
   transition: 0.3s;
-  cursor: pointer;
-  z-index: 2001;
 }
-
-.close-zoom:hover,
-.close-zoom:focus {
-  color: #bbb;
-  text-decoration: none;
-  cursor: pointer;
+.close-zoom:hover {
+  color: #ccc;
 }
-
 .nome-zoom {
   text-align: center;
   color: #fff;
-  padding: 10px 0;
-  font-size: 1.2rem;
+  font-size: 1.1rem;
+  margin-top: 10px;
 }
 
-/* Responsividade do Zoom */
-@media (max-width: 700px) {
-  .modal-content-zoom {
-    width: 95%;
-  }
+/* ====== RESPONSIVIDADE ====== */
+@media (max-width: 600px) {
+  .gancho { flex: 0 0 90%; }
+  .titulo-pagina { font-size: 1.8rem; }
 }

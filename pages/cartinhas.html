@@ -5,35 +5,40 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Varal Virtual 💌 | Adote um Sonho</title>
 
+  <!-- Estilos -->
   <link rel="stylesheet" href="../css/style.css" />
   <link rel="stylesheet" href="../css/cartinhas.css" />
-  <link rel="stylesheet" href="../css/cloudinho.css" /> 
+  <link rel="stylesheet" href="../css/cloudinho.css" />
   <link rel="icon" href="../imagens/favicon.png" type="image/png" />
-
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
-
 </head>
 
 <body>
+  <!-- Cabeçalho dinâmico -->
   <div id="header"></div>
 
+  <!-- 🌤️ Conteúdo principal -->
   <main class="varal-wrapper">
-    
     <div class="varal-title">
-      <h1 class="titulo-pagina">Varal Virtual</h1>
-      <p class="descricao">Arraste para o lado e escolha a cartinha que você deseja adotar.</p>
-    </div>
+      <h1 class="titulo-pagina">💌 Varal Virtual</h1>
+      <p class="descricao">
+        ✨ Aqui você encontra cartinhas escritas por crianças cheias de sonhos. Arraste para o lado e escolha uma cartinha 💙
+      </p>
+    </div>
 
-    <section class="varal-area">
-      <div class="corda"></div>
-            <button class="nav seta-esq">‹</button>
-      <button class="nav seta-dir">›</button>
-            <div id="trilho-varal" class="trilho snap">
-                <p style="text-align:center; padding: 20px;">Carregando cartinhas...</p>
-      </div>
-    </section>
-  </main>
-  
+    <!-- 🧵 Área do varal com setas -->
+    <section class="varal-area">
+      <div class="corda"></div>
+      <button class="nav seta-esq">‹</button>
+      <button class="nav seta-dir">›</button>
+
+      <div id="trilho-varal" class="trilho snap">
+        <p style="text-align:center; padding: 20px;">Carregando cartinhas...</p>
+      </div>
+    </section>
+  </main>
+
+  <!-- 🪄 Modal de Zoom -->
   <div id="modal-cartinha-zoom" class="modal-zoom">
     <div class="modal-content-zoom">
       <span class="close-zoom">&times;</span>
@@ -42,29 +47,24 @@
     </div>
   </div>
 
-  <div id="footer"></div>
-  <div id="cloudinho"></div>
+  <!-- Rodapé e assistente -->
+  <div id="footer"></div>
+  <div id="cloudinho"></div>
 
-   <script>
-        // Função universal para carregar componentes HTML.
-        async function carregarComponente(id, arquivo) {
-            // Caminho relativo para a pasta "componentes/"
-            const base = "../componentes/"; 
-            const resp = await fetch(base + arquivo);
-            if (resp.ok) {
-                document.getElementById(id).innerHTML = await resp.text();
-            } else {
-                console.error(`Erro ao carregar componente ${arquivo}. Status: ${resp.status}`);
-            }
-        }
-        
-        // Carrega HTML do Header, Footer e Cloudinho
-        carregarComponente("header", "header.html");
-        carregarComponente("footer", "footer.html");
-        carregarComponente("cloudinho", "cloudinho.html");
-    </script>
-    
-    <script src="../js/cloudinho.js"></script>
-  <script src="../js/cartinhas.js"></script>
+  <!-- Carregamento dos componentes -->
+  <script>
+    async function carregarComponente(id, arquivo) {
+      const base = "../componentes/";
+      const resp = await fetch(base + arquivo);
+      if (resp.ok) document.getElementById(id).innerHTML = await resp.text();
+    }
+    carregarComponente("header", "header.html");
+    carregarComponente("footer", "footer.html");
+    carregarComponente("cloudinho", "cloudinho.html");
+  </script>
+
+  <!-- Scripts -->
+  <script src="../js/cloudinho.js"></script>
+  <script src="../js/cartinhas.js"></script>
 </body>
 </html>
