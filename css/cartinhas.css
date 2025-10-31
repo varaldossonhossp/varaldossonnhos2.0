@@ -1,5 +1,7 @@
 /* ============================================================
-💙 VARAL DOS SONHOS — css/cartinhas.css (versão estável final)
+💙 VARAL DOS SONHOS — css/cartinhas.css (versão final responsiva)
+------------------------------------------------------------
+Compatível com Vercel + .NET MAUI WebView
 ============================================================ */
 
 :root {
@@ -12,31 +14,33 @@
 .varal-wrapper {
   background: linear-gradient(180deg, #e6f2ff 0%, #ffffff 100%);
   text-align: center;
-  padding: 60px 0 60px;
+  padding: 50px 0 60px;
   min-height: 100vh;
-  overflow: hidden;
+  overflow-x: hidden;
 }
 
+/* ====== TÍTULO E DESCRIÇÃO ====== */
 .titulo-pagina {
-  font-size: 2.2rem;
+  font-size: 2rem;
   color: var(--azul-escuro);
   font-weight: 700;
-  margin-bottom: 0.4rem;
-  margin-top: -5px;
+  display: inline;
 }
 
 .descricao {
+  display: inline;
+  margin-left: 8px;
   color: #27425c;
-  font-size: 1rem;
-  margin-bottom: 25px;
+  font-size: 1.05rem;
+  font-weight: 400;
 }
 
 /* ====== CORDA ====== */
 .corda {
   width: 100%;
-  max-width: 1000px;
+  max-width: 950px;
   height: 5px;
-  margin: 0 auto 20px;
+  margin: 20px auto 15px;
   border-radius: 3px;
   background: linear-gradient(
     90deg,
@@ -48,7 +52,7 @@
   box-shadow: 0 2px 6px rgba(0,0,0,0.1);
 }
 
-/* ====== TRILHO (CARROSSEL) ====== */
+/* ====== ÁREA DO CARROSSEL ====== */
 .varal-area {
   position: relative;
   width: 100%;
@@ -60,12 +64,12 @@
 .trilho {
   display: flex;
   gap: 18px;
-  justify-content: center;
+  justify-content: flex-start;
   align-items: flex-start;
   overflow-x: auto;
   scroll-snap-type: x mandatory;
   -webkit-overflow-scrolling: touch;
-  padding: 0 40px 10px;
+  padding: 0 60px 10px; /* 🔹 evita cortar a primeira cartinha */
 }
 
 .trilho::-webkit-scrollbar {
@@ -79,14 +83,13 @@
   background: transparent;
 }
 
-/* ====== LIMITA 4 CARTINHAS NA VISÃO INICIAL ====== */
-.trilho > .gancho {
+/* ====== GANCHO (pregador) ====== */
+.gancho {
   flex: 0 0 calc(25% - 16px);
-  scroll-snap-align: center;
   position: relative;
+  scroll-snap-align: center;
 }
 
-/* ====== PREGADOR ====== */
 .gancho::before {
   content: "";
   position: absolute;
@@ -107,21 +110,20 @@
   border: 2px solid #d8e6f5;
   box-shadow: 0 6px 18px rgba(0, 51, 102, 0.1);
   overflow: hidden;
-  transition: transform 0.4s ease, box-shadow 0.3s ease;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   min-height: 430px;
-  margin-top: -5px;
 }
 
-/* 🩵 Efeito de balanço lateral (para esquerda) */
+/* 🔹 Efeito suave no hover */
 .card-cartinha:hover {
   transform: rotate(-2deg);
   box-shadow: 0 12px 28px rgba(0, 51, 102, 0.18);
 }
 
-/* ====== QUADRO INTERNO DA CARTINHA ====== */
+/* ====== QUADRO INTERNO ====== */
 .cartinha-quadro {
   margin: 16px;
   background: #f8fbff;
@@ -141,6 +143,7 @@
   cursor: pointer;
   transition: transform 0.4s ease;
 }
+
 .cartinha-quadro:hover img {
   transform: scale(1.05);
 }
@@ -164,7 +167,7 @@
   font-size: 0.9rem;
 }
 
-/* ====== BOTÃO ====== */
+/* ====== BOTÃO ADOTAR ====== */
 .btn-adotar {
   background: var(--azul-cta);
   color: #fff;
@@ -178,23 +181,109 @@
   transition: all 0.3s ease;
   width: 80%;
 }
+
 .btn-adotar:hover {
   background: var(--azul-escuro);
   transform: translateY(-2px);
 }
+
 .btn-ocupada {
   background: #f7a300;
   cursor: not-allowed;
 }
 
+/* ====== MODAL DE ZOOM ====== */
+.modal-zoom {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.75);
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+}
+
+.modal-content-zoom {
+  max-width: 500px;
+  width: 90%;
+  position: relative;
+  background: #fff;
+  border-radius: 12px;
+  padding: 10px;
+  box-shadow: 0 6px 30px rgba(0,0,0,0.5);
+}
+
+#cartinha-zoom-img {
+  width: 100%;
+  border-radius: 8px;
+}
+
+.close-zoom {
+  position: absolute;
+  top: 6px;
+  right: 14px;
+  color: #333;
+  font-size: 28px;
+  cursor: pointer;
+}
+
+.close-zoom:hover {
+  color: #888;
+}
+
+.nome-zoom {
+  text-align: center;
+  color: var(--azul-escuro);
+  margin-top: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
 /* ====== RESPONSIVIDADE ====== */
+
+/* 📱 Tablets */
 @media (max-width: 900px) {
-  .trilho > .gancho {
-    flex: 0 0 45%;
+  .gancho {
+    flex: 0 0 calc(50% - 16px);
+  }
+
+  .titulo-pagina {
+    font-size: 1.7rem;
+  }
+  .descricao {
+    font-size: 0.95rem;
+  }
+
+  .corda {
+    max-width: 90%;
   }
 }
+
+/* 📱 Celulares */
 @media (max-width: 600px) {
-  .trilho > .gancho {
-    flex: 0 0 90%;
+  .gancho {
+    flex: 0 0 85%;
+  }
+
+  .titulo-pagina {
+    display: block;
+    font-size: 1.6rem;
+    margin-bottom: 6px;
+  }
+
+  .descricao {
+    display: block;
+    margin: 0 auto 10px;
+    font-size: 0.9rem;
+    width: 90%;
+  }
+
+  .corda {
+    height: 4px;
+    margin: 10px auto 20px;
+  }
+
+  .cartinha-quadro {
+    height: 200px;
   }
 }
