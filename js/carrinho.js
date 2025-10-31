@@ -1,300 +1,117 @@
 // ============================================================
-// 💙 VARAL DOS SONHOS — /js/carrinho.js (CORRIGIDO)
+// 💙 VARAL DOS SONHOS — js/carrinho.js
 // ------------------------------------------------------------
-// Lógica para listar cartinhas no carrinho, seleção de ponto de coleta e submissão da adoção.
+// Gerencia o carrinho de adoção e envia os dados para a API
+// /api/adocoes.js, que:
+//   1. Cria o registro na tabela "adocoes" (Airtable)
+//   2. Atualiza a cartinha (status = "adotada")
+//   3. Dispara e-mail para o ADMINISTRADOR
+// ------------------------------------------------------------
+// Mensagem final ao doador: "Doação registrada! Aguarde o e-mail
+// da Equipe dos Sonhos para confirmar a compra do presente."
 // ============================================================
 
 document.addEventListener("DOMContentLoaded", () => {
-  const carrinhoLista = document.getElementById("carrinhoLista");
-  const btnLimpar = document.getElementById("btnLimpar");
-  const btnConfirmar = document.getElementById("btnConfirmar");
-  const feedback = document.getElementById("feedback");
+  const btnFinalizar = document.getElementById("btn-finalizar");
+  if (!btnFinalizar) return;
 
-  const pontosPlaceholder = document.getElementById("pontosPlaceholder");
-  const pontosControls = document.getElementById("pontosControls");
-  const selectPontos = document.getElementById("selectPontos");
-  const verNoMapa = document.getElementById("verNoMapa");
+  btnFinalizar.addEventListener("click", async () => {
+    try {
+      // 🔹 Coleta os dados do formulário (ou do localStorage)
+      const id_cartinha   = localStorage.getItem("id_cartinha");
+      const nome_crianca  = localStorage.getItem("nome_crianca");
+      const sonho         = localStorage.getItem("sonho");
+      const id_usuario    = localStorage.getItem("id_usuario");
+      const nome_doador   = localStorage.getItem("nome_usuario");
+      const email_doador  = localStorage.getItem("email_usuario");
+      const telefone_doador = localStorage.getItem("telefone_usuario");
+      const ponto_coleta  = document.querySelector("#select-ponto")?.value || "Ponto Central";
 
-  // modal mapa.
-  const mapModal = document.getElementById("mapModal");
-  const mapFrame = document.getElementById("mapFrame");
-  const closeMap = document.getElementById("closeMap");
-  const mapBackdrop = document.getElementById("mapBackdrop");
-  const mapCaption = document.getElementById("mapCaption");
+      if (!id_cartinha || !id_usuario) {
+        alert("⚠️ Faltam informações para concluir a adoção.");
+        return;
+      }
 
-  // ============================================================
-  // 🛑 CORREÇÃO DE PERSISTÊNCIA DE LOGIN
-  // Lê as chaves salvas individualmente pelo login.js
-  // ============================================================
-  const idUsuario = localStorage.getItem("id_usuario_varal");
-  const nomeUsuario = localStorage.getItem("nome_usuario_varal");
-  const emailUsuario = localStorage.getItem("email_usuario_varal");
+      // 🔹 Monta o payload
+      const payload = {
+        id_cartinha,
+        id_usuario,
+        nome_doador,
+        email_doador,
+        telefone_doador,
+        ponto_coleta,
+        nome_crianca,
+        sonho,
+      };
 
-  // Monta o objeto 'usuario' com os dados lidos
-  const usuario = (idUsuario && nomeUsuario && emailUsuario) ? {
-    id: idUsuario,
-    nome: nomeUsuario,
-    email: emailUsuario,
-    tipo: localStorage.getItem("tipo_usuario_varal"),
-    // Adicionar telefone se estiver salvo:
-    telefone: localStorage.getItem("telefone_usuario_varal") || "N/A", 
-  } : null;
+      // 🔹 Envia para a API /api/adocoes
+      const resp = await fetch("/api/adocoes", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
 
-  // 🛑 Proteção de Página: Verifica o objeto montado
-  if (!usuario || !usuario.id) {
-    alert("Você precisa estar logado para acessar o carrinho."); //
-    // Usa a URL relativa que funciona de /pages/carrinho.html
-    window.location.href = "login.html"; 
-    return;
-  }
-  // ============================================================
-  // FIM DA CORREÇÃO
-  // ============================================================
+      const json = await resp.json();
 
+      if (!json.sucesso) {
+        alert("❌ Ocorreu um erro ao registrar a adoção.");
+        console.error(json.mensagem);
+        return;
+      }
 
-  // Carrega carrinho
-  let carrinho = JSON.parse(localStorage.getItem("carrinho")) || [];
+      // 🔹 Mensagem de sucesso
+      mostrarMensagemFinal("💙 Doação registrada com sucesso!<br>Aguarde o e-mail da Equipe dos Sonhos para confirmar a compra do presente.");
 
-  function renderCarrinho() {
-    carrinhoLista.innerHTML = "";
-    if (!Array.isArray(carrinho) || carrinho.length === 0) {
-      carrinhoLista.innerHTML = "<p>Seu carrinho está vazio 😢</p>";
-      pontosControls.classList.add("hidden"); // Esconde se vazio
-      btnLimpar.classList.add("hidden");
-      btnConfirmar.classList.add("hidden");
-      return;
-    }
-
-    carrinho.forEach((item, index) => {
-      const nome = item.nome || item.primeiro_nome || "Criança";
-      const imagem = item.imagem || item.imagem_cartinha || "imagens/sem-imagem.jpg";
-      const idade = item.idade || item.age || "";
-      const sexo = item.sexo || item.gender || "";
-
-      const div = document.createElement("div");
-      div.className = "carrinho-item";
-      div.innerHTML = `
-        <img src="${imagem}" alt="${nome}" class="cartinha-foto" />
-        <h3>${nome}</h3>
-        <p>${idade ? `<strong>Idade:</strong> ${idade} anos` : ""} ${sexo ? `<strong>Sexo:</strong> ${sexo}` : ""}</p>
-        <p class="mini">${item.sonho ? `<strong>Sonho:</strong> ${item.sonho}` : ""}</p>
-        <button class="remover" data-index="${index}">Remover</button>
-      `;
-      carrinhoLista.appendChild(div);
-    });
-    
-    // Mostra os controles se houver itens
-    pontosControls.classList.remove("hidden");
-    btnLimpar.classList.remove("hidden");
-    btnConfirmar.classList.remove("hidden");
-  }
-
-  renderCarrinho();
-
-  // remover item
-  carrinhoLista.addEventListener("click", (e) => {
-    if (e.target.classList.contains("remover")) {
-      const idx = Number(e.target.dataset.index);
-      carrinho.splice(idx, 1);
-      localStorage.setItem("carrinho", JSON.stringify(carrinho));
-      renderCarrinho();
-      checkConfirmEnabled();
-    }
-  });
-
-  // limpar carrinho
-  btnLimpar.addEventListener("click", () => {
-    if (confirm("Tem certeza que deseja limpar o carrinho?")) {
-      carrinho = [];
-      localStorage.removeItem("carrinho");
-      renderCarrinho();
-      checkConfirmEnabled();
-    }
-  });
-
-  // carregar pontos do servidor (API)
-  async function carregarPontos() {
-    pontosPlaceholder.classList.remove("hidden");
-    pontosControls.classList.add("hidden");
-    try {
-      const resp = await fetch("/api/pontosdecoleta");
-      if (!resp.ok) throw new Error("Erro ao buscar pontos");
-      const pontos = await resp.json();
-      // Assumindo que a API retorna { sucesso: true, pontos: [...] }
-      popularSelectPontos(pontos.pontos); 
-    } catch (err) {
-      console.error("Erro pontos:", err);
-      pontosPlaceholder.textContent = "Não foi possível carregar os pontos. Tente novamente mais tarde.";
-    }
-  }
-
-  function popularSelectPontos(pontos = []) {
-    const pontosAtivos = pontos.filter(p => p.status && p.status.toLowerCase() === 'ativo');
-
-    if (!Array.isArray(pontosAtivos) || pontosAtivos.length === 0) {
-      pontosPlaceholder.textContent = "Nenhum ponto de coleta disponível.";
-      return;
-    }
-
-    // limpa select preservando primeiro option
-    selectPontos.innerHTML = '<option value="">-- Selecione um ponto de coleta --</option>';
-    pontosAtivos.forEach((p, i) => {
-      const opt = document.createElement("option");
-      // guardamos o endereço e id no value (json string)
-      const payload = {
-        id: p.id || p.recordId || i,
-        nome: p.nome_ponto || p.nome || "Ponto",
-        endereco: `${p.endereco || ""}, ${p.cidade || ""}`, // Cria o endereço completo
-      };
-      opt.value = JSON.stringify(payload);
-      opt.textContent = `${payload.nome} — ${payload.endereco}`;
-      selectPontos.appendChild(opt);
-    });
-
-    pontosPlaceholder.classList.add("hidden");
-    pontosControls.classList.remove("hidden");
-  }
-
-  // ver no mapa
-  verNoMapa.addEventListener("click", () => {
-    const val = selectPontos.value;
-    if (!val) return;
-    const payload = JSON.parse(val);
-    abrirMapa(payload.endereco, payload.nome);
-  });
-
-  // abrir mapa (modal)
-  function abrirMapa(endereco, nome = "") {
-    // 🔑 Usando a URL de pesquisa do Google Maps que NÃO requer a chave de API
-    const url = `https://maps.google.com/maps?q=${encodeURIComponent(endereco)}&output=embed`;
-    
-    mapFrame.src = url;
-    mapCaption.textContent = nome || endereco;
-    mapModal.classList.add("aberto");
-    mapModal.setAttribute("aria-hidden", "false");
-    document.body.style.overflow = 'hidden'; // Bloqueia o scroll
-  }
-
-  // fechar modal mapa
-  function fecharMapa() {
-    mapModal.classList.remove("aberto");
-    mapModal.setAttribute("aria-hidden", "true");
-    mapFrame.src = "about:blank";
-    document.body.style.overflow = ''; // Restaura o scroll
-  }
-
-  closeMap.addEventListener("click", fecharMapa);
-  mapBackdrop.addEventListener("click", fecharMapa);
-  document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape" && mapModal.classList.contains("aberto")) fecharMapa();
-  });
-
-  // habilitar/desabilitar ver no mapa e confirmar
-  selectPontos.addEventListener("change", () => {
-    verNoMapa.disabled = !selectPontos.value;
-    checkConfirmEnabled();
-  });
-
-  function checkConfirmEnabled() {
-    // Confirmar habilitado apenas se 1) carrinho tem itens e 2) ponto selecionado
-    const pontoSelecionado = !!selectPontos.value;
-    btnConfirmar.disabled = !(carrinho.length > 0 && pontoSelecionado);
-  }
-
-  // confirmar adoção
-  btnConfirmar.addEventListener("click", async () => {
-    if (carrinho.length === 0) {
-      alert("Seu carrinho está vazio!");
-      return;
-    }
-    if (!selectPontos.value) {
-      alert("Por favor, selecione um ponto de coleta para continuar.");
-      return;
-    }
-
-    // pega os dados do ponto
-    const ponto = JSON.parse(selectPontos.value);
-
-    // montar payload — conforme sua API /api/adocoes espera
-    // Usa o objeto 'usuario' que foi montado corretamente no início
-    const payload = {
-      id_usuario: usuario.id, 
-      nome_doador: usuario.nome,
-      email_doador: usuario.email,
-      telefone_doador: usuario.telefone, // Usa o telefone do objeto 'usuario'
-      ponto_coleta: ponto.nome || ponto.endereco || "",
-    };
-    
-    // UX: feedback e desabilitar botões
-    btnConfirmar.disabled = true;
-    btnConfirmar.textContent = "Enviando...";
-    feedback.classList.add("hidden");
-
-    let sucessoTotal = true;
-    let cartinhasSucesso = 0;
-    
-    // Itera por cada cartinha no carrinho e envia uma requisição de adoção separada
-    for (const item of carrinho) {
-        // Campos que a API /api/adocoes.js precisa (id_cartinha, nome_crianca, sonho)
-        const cartinhaPayload = {
-            ...payload,
-            id_cartinha: item.id || item.id_cartinha || item.recordId, // Tenta usar o ID da cartinha
-            nome_crianca: item.nome || item.primeiro_nome || "Criança",
-            sonho: item.sonho || item.descricao || "Um presente",
-        };
-
-        try {
-            const resp = await fetch("/api/adocoes", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify(cartinhaPayload)
-            });
-
-            const data = await resp.json();
-
-            if (resp.ok && data.sucesso) {
-                cartinhasSucesso++;
-            } else {
-                console.error(`Erro ao adotar cartinha ${cartinhaPayload.id_cartinha}:`, data);
-                sucessoTotal = false;
-            }
-        } catch (err) {
-            console.error("Erro de conexão ao adotar:", err);
-            sucessoTotal = false;
-        }
-    }
-
-
-    if (sucessoTotal) {
-        // calcular pontuação (exemplo local): 10 pts por cartinha
-        const pontosGanhos = cartinhasSucesso * 10;
-        
-        // Simulação de gamificação local
-        const pontuacaoAtual = Number(localStorage.getItem("cloudinho_pontos") || 0);
-        const novaPontuacao = pontuacaoAtual + pontosGanhos;
-        localStorage.setItem("cloudinho_pontos", String(novaPontuacao));
-
-        // mostrar confirmação
-        alert(`💙 Adoção confirmada! ${cartinhasSucesso} cartinha(s) registradas com sucesso. Você ganhou ${pontosGanhos} pts de gamificação (total: ${novaPontuacao} pts). Verifique seu email para mais detalhes.`);
-        
-        // limpar carrinho
-        localStorage.removeItem("carrinho");
-        
-        // redirecionar
-        window.location.href = "../index.html"; // Volta para a raiz se o carrinho estiver em /pages/
-    } else {
-        const msg = cartinhasSucesso > 0 
-          ? `⚠️ Adoção parcial. ${cartinhasSucesso} cartinha(s) foram registradas, mas houve falha nas demais. Tente novamente ou entre em contato.`
-          : "❌ Erro grave ao registrar adoções. Tente novamente mais tarde.";
-
-        alert(msg);
-        
-        // Recarrega para mostrar as cartinhas que falharam (se não foram removidas do carrinho)
-        window.location.reload(); 
-    }
-  });
-
-  // iniciar
-  carregarPontos();
-  checkConfirmEnabled();
+      // 🔹 Limpa o carrinho (opcional)
+      localStorage.removeItem("id_cartinha");
+      localStorage.removeItem("nome_crianca");
+      localStorage.removeItem("sonho");
+    } catch (erro) {
+      console.error("Erro ao finalizar adoção:", erro);
+      alert("❌ Não foi possível concluir a adoção. Tente novamente.");
+    }
+  });
 });
+
+/**
+ * Exibe mensagem final na tela de forma amigável
+ */
+function mostrarMensagemFinal(msg) {
+  const container = document.querySelector(".container-carrinho");
+  if (!container) {
+    alert(msg.replace(/<br>/g, "\n"));
+    return;
+  }
+
+  container.innerHTML = `
+    <div class="mensagem-final" style="
+        text-align:center;
+        background:#f0f8ff;
+        border:2px solid #0078FF;
+        border-radius:16px;
+        padding:30px;
+        margin-top:20px;
+        color:#064785;
+        font-size:1.1rem;
+        line-height:1.6;
+        box-shadow:0 4px 12px rgba(0,0,0,0.1);
+    ">
+      <img src="../imagens/logo-sem-fundo.png" alt="Varal dos Sonhos" width="220" style="margin-bottom:15px;">
+      <p>${msg}</p>
+      <p style="font-size:0.95rem;margin-top:20px;color:#555;">
+        Você receberá um e-mail com os detalhes da sua adoção.<br>
+        Obrigado por espalhar amor e realizar sonhos! ✨
+      </p>
+      <a href="../index.html" style="
+          display:inline-block;
+          margin-top:18px;
+          background:#0078FF;
+          color:white;
+          text-decoration:none;
+          padding:10px 24px;
+          border-radius:30px;
+          font-weight:600;
+      ">Voltar ao início</a>
+    </div>
+  `;
+}
