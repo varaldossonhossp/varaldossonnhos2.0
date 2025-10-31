@@ -1,5 +1,10 @@
 /* ============================================================
-💙 VARAL DOS SONHOS — css/cartinhas.css (layout fixo tipo Ponto de Coleta)
+💙 VARAL DOS SONHOS — css/cartinhas.css (versão final refinada)
+------------------------------------------------------------
+• 4 cards centralizados no carrossel
+• Pregador.png visível nos cards
+• Corda com degradê nas pontas e mais grossa
+• Espaçamento suave e visual consistente com Pontos de Coleta
 ============================================================ */
 
 :root {
@@ -26,47 +31,59 @@
 .descricao {
   color: #27425c;
   font-size: 1rem;
-  margin-bottom: 30px;
+  margin-bottom: 25px;
 }
 
 /* ====== CORDA ====== */
 .corda {
   width: 100%;
-  max-width: 950px;
-  height: 2px;
-  background: var(--corda-cor);
-  margin: 0 auto 50px;
-  border-radius: 2px;
+  max-width: 980px;
+  height: 4px;
+  margin: 0 auto 40px;
+  border-radius: 3px;
+  background: linear-gradient(
+    90deg,
+    rgba(196,154,108,0) 0%,
+    var(--corda-cor) 20%,
+    var(--corda-cor) 80%,
+    rgba(196,154,108,0) 100%
+  );
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
-/* ====== TRILHO ====== */
+/* ====== TRILHO (CARROSSEL) ====== */
 .trilho {
-  display: flex;
-  gap: 24px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  justify-content: center;
+  gap: 20px;
+  width: min(1100px, 95%);
+  margin: 0 auto;
+  padding: 0 10px;
   overflow-x: auto;
   scroll-snap-type: x mandatory;
-  padding: 10px 20px;
-  justify-content: center;
+  -webkit-overflow-scrolling: touch;
 }
+
 .trilho::-webkit-scrollbar { display: none; }
 
 /* ====== GANCHO (pregador) ====== */
 .gancho {
-  flex: 0 0 280px;
   position: relative;
   scroll-snap-align: center;
 }
+
 .gancho::before {
   content: "";
   position: absolute;
-  top: -28px;
+  top: -30px;
   left: 50%;
   transform: translateX(-50%);
   width: 32px;
   height: 32px;
   background: url('../imagens/pregador.png') no-repeat center;
   background-size: contain;
-  z-index: 5;
+  z-index: 10;
 }
 
 /* ====== CARD PRINCIPAL ====== */
@@ -81,12 +98,14 @@
   flex-direction: column;
   justify-content: space-between;
   min-height: 440px;
+  width: 260px;
+  margin: 0 auto;
 }
 
-/* 🩵 Efeito suave de balanço lateral no hover */
+/* 🩵 Balanço lateral suave apenas no hover */
 .card-cartinha:hover {
   transform: rotate(-2deg);
-  box-shadow: 0 10px 25px rgba(0, 51, 102, 0.18);
+  box-shadow: 0 12px 28px rgba(0, 51, 102, 0.18);
 }
 
 /* ====== QUADRO INTERNO DA CARTINHA ====== */
@@ -201,6 +220,14 @@
 }
 
 /* ====== RESPONSIVIDADE ====== */
-@media (max-width: 700px) {
-  .gancho { flex: 0 0 90%; }
+@media (max-width: 1000px) {
+  .trilho {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+  }
+}
+@media (max-width: 600px) {
+  .trilho {
+    grid-template-columns: repeat(1, 1fr);
+  }
 }
