@@ -2,88 +2,81 @@
 <html lang="pt-BR">
 <head>
   <!-- ============================================================
-       💙 VARAL DOS SONHOS — Carrinho
+       💙 VARAL DOS SONHOS — Carrinho de Adoção
        ------------------------------------------------------------
-       - Lista cartinhas adicionadas (localStorage)
-       - Seleção de ponto de coleta (via /api/pontosdecoleta)
-       - Finalização: chama /api/adocoes (uma por cartinha)
-       - Modal de mapa (Google Maps sem chave)
+       Exibe as cartinhas selecionadas e permite finalizar a adoção.
+       Integra com /api/adocoes.js → cria registro no Airtable e envia
+       e-mail de confirmação ao administrador.
+       100% compatível com: Airtable, Vercel, .NET MAUI e EmailJS.
   ============================================================ -->
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="Revise e finalize a adoção das cartinhas escolhidas no Varal dos Sonhos." />
-  <title>Meu Carrinho 💙 | Varal dos Sonhos</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Finalize sua adoção e espalhe sonhos com amor 💙" />
+  <title>Carrinho | Fantástica Fábrica de Sonhos</title>
 
-  <!-- Estilos -->
+  <!-- 🎨 Estilos globais -->
   <link rel="stylesheet" href="../css/style.css" />
-  <link rel="stylesheet" href="../css/carrinho.css" />
   <link rel="stylesheet" href="../css/cloudinho.css" />
+  <link rel="stylesheet" href="../css/carrinho.css" />
   <link rel="icon" href="../imagens/favicon.png" type="image/png" />
 </head>
 
-<body>
-  <!-- Cabeçalho -->
+<body class="bg-gradiente">
+  <!-- ============================================================
+       🔝 Cabeçalho dinâmico (carregado via componentes.js)
+  ============================================================ -->
   <div id="header"></div>
 
-  <!-- Conteúdo principal -->
-  <main class="carrinho-container">
-    <section class="carrinho-section">
-      <h1>🧺 Meu Carrinho</h1>
-      <p class="sub">Revise as cartinhas escolhidas e selecione um ponto de coleta para finalizar a adoção.</p>
+  <!-- ============================================================
+       🛍️ Conteúdo principal — Carrinho de Adoção
+  ============================================================ -->
+  <main class="container-carrinho">
+    <section class="card-carrinho">
+      <h1>💙 Carrinho de Adoção</h1>
+      <p>Revise suas informações antes de finalizar a adoção da cartinha.</p>
 
-      <!-- Lista de cartinhas (preenchida via JS) -->
-      <div id="carrinhoLista" class="carrinho-lista" aria-live="polite"></div>
-
-      <!-- Seleção do ponto de coleta -->
-      <div class="pontos-box card">
-        <h2>📍 Escolha o ponto de coleta</h2>
-        <div id="pontosPlaceholder" class="placeholder">Carregando pontos de coleta…</div>
-
-        <div id="pontosControls" class="pontos-controls hidden">
-          <select id="selectPontos" aria-label="Selecione um ponto de coleta">
-            <option value="" data-endereco="">-- Selecione um ponto de coleta --</option>
-          </select>
-
-          <button id="verNoMapa" class="btn-outline" type="button" disabled>Ver no mapa</button>
-          <div class="obs">É obrigatório selecionar um ponto para finalizar a adoção.</div>
+      <!-- Cartinha selecionada -->
+      <div id="cartinha-selecionada" class="cartinha-selecionada">
+        <img id="img-cartinha" src="../imagens/cartinha-placeholder.png" alt="Cartinha selecionada" />
+        <div>
+          <h3 id="nome-crianca">Nome da Criança</h3>
+          <p id="sonho-crianca">Sonho: (a ser preenchido dinamicamente)</p>
         </div>
       </div>
 
-      <!-- Ações -->
-      <div class="acoes">
-        <button id="btnLimpar" class="btn btn-outline">🗑️ Limpar Carrinho</button>
-        <button id="btnConfirmar" class="btn btn-primary" disabled>✅ Confirmar Adoção</button>
+      <!-- Escolha do ponto de coleta -->
+      <div class="campo">
+        <label for="select-ponto">📦 Ponto de Coleta:</label>
+        <select id="select-ponto" required>
+          <option value="" selected disabled>Selecione um ponto...</option>
+          <option value="Ponto Central">Ponto Central</option>
+          <option value="Ponto Norte">Ponto Norte</option>
+          <option value="Ponto Sul">Ponto Sul</option>
+        </select>
       </div>
 
-      <!-- Feedback -->
-      <div id="feedback" class="feedback hidden"></div>
+      <!-- Botão de finalização -->
+      <button id="btn-finalizar" class="btn-finalizar">
+        ✨ Finalizar Adoção
+      </button>
     </section>
   </main>
 
-  <!-- Modal do mapa (mesmo padrão dos Pontos de Coleta) -->
-  <div id="mapModal" class="map-modal" aria-hidden="true">
-    <div class="map-backdrop" id="mapBackdrop"></div>
-    <div class="map-frame">
-      <button id="closeMap" class="map-close" aria-label="Fechar">✕</button>
-      <iframe id="mapFrame" src="about:blank" frameborder="0" allowfullscreen></iframe>
-      <div id="mapCaption" class="map-caption"></div>
-    </div>
-  </div>
-
-  <!-- Rodapé + Cloudinho -->
+  <!-- ============================================================
+       ☁️ Cloudinho (assistente) e Rodapé
+  ============================================================ -->
   <div id="footer"></div>
   <div id="cloudinho"></div>
 
-  <!-- Carregador de componentes (não alterar) -->
+  <!-- ============================================================
+       📜 Scripts dinâmicos — Componentes + Lógica do Carrinho
+  ============================================================ -->
   <script>
+    // Carrega header/footer/cloudinho dinamicamente
     async function carregarComponente(id, arquivo) {
       const base = "../componentes/";
       const resp = await fetch(base + arquivo);
-      if (resp.ok) {
-        document.getElementById(id).innerHTML = await resp.text();
-      } else {
-        console.error(`Erro ao carregar componente ${arquivo}. Status: ${resp.status}`);
-      }
+      if (resp.ok) document.getElementById(id).innerHTML = await resp.text();
     }
     carregarComponente("header", "header.html");
     carregarComponente("footer", "footer.html");
@@ -92,5 +85,20 @@
 
   <script src="../js/cloudinho.js"></script>
   <script src="../js/carrinho.js"></script>
+
+  <!-- ============================================================
+       🧠 Script de preenchimento automático (dados da cartinha)
+  ============================================================ -->
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const nome = localStorage.getItem("nome_crianca");
+      const sonho = localStorage.getItem("sonho");
+      const img = localStorage.getItem("imagem_cartinha");
+
+      if (nome) document.getElementById("nome-crianca").textContent = nome;
+      if (sonho) document.getElementById("sonho-crianca").textContent = "🎁 Sonho: " + sonho;
+      if (img) document.getElementById("img-cartinha").src = img;
+    });
+  </script>
 </body>
 </html>
