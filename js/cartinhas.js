@@ -57,9 +57,9 @@ document.addEventListener("DOMContentLoaded", async () => {
       gancho.className = "gancho";
 
       // Fallback visual do prendedor (para WebView MAUI)
-      const pregador = document.createElement("span");
-      pregador.className = "pregador";
-      gancho.appendChild(pregador);
+      const prendedor = document.createElement("span");
+      prendedor.className = "prendedor";
+      gancho.appendChild(prendedor);
 
       const card = document.createElement("div");
       card.className = "card-cartinha";
