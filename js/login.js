@@ -1,27 +1,25 @@
 // ============================================================
-// 🔐 VARAL DOS SONHOS — /js/login.js (versão TCC)
+// 💙 VARAL DOS SONHOS — /js/login.js (versão final TCC)
 // ------------------------------------------------------------
-// Controla o fluxo de login dos usuários.
-// Envia email/senha à rota /api/usuarios.js (GET) e valida retorno.
+// Realiza o login do usuário (via API /api/usuarios.js),
+// valida credenciais e exibe alerta emocional com gamificação.
 // ============================================================
 
 document.addEventListener("DOMContentLoaded", () => {
   const form = document.getElementById("formLogin");
-  const feedbackMsg = document.getElementById("feedback-msg");
+  const feedback = document.getElementById("feedback-msg");
 
-  // ============================================================
-  // 💬 Exibe mensagens ao usuário
-  // ============================================================
-  const exibirFeedback = (mensagem, tipo = "erro") => {
-    feedbackMsg.textContent = mensagem;
-    feedbackMsg.className = `feedback ${tipo}`;
-    feedbackMsg.classList.remove("hidden");
-    setTimeout(() => feedbackMsg.classList.add("hidden"), 4000);
+  if (!form) return;
+
+  // ---- Exibe mensagens temporárias de feedback ----
+  const mostrarFeedback = (msg, tipo = "sucesso") => {
+    feedback.textContent = msg;
+    feedback.className = `feedback ${tipo}`;
+    feedback.classList.remove("hidden");
+    setTimeout(() => feedback.classList.add("hidden"), 5000);
   };
 
-  // ============================================================
-  // 🚀 Evento de envio do formulário
-  // ============================================================
+  // ---- Ação principal de login ----
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
 
@@ -29,48 +27,52 @@ document.addEventListener("DOMContentLoaded", () => {
     const senha = document.getElementById("senha").value.trim();
 
     if (!email || !senha) {
-      exibirFeedback("Preencha todos os campos obrigatórios.", "erro");
+      mostrarFeedback("Por favor, preencha e-mail e senha.", "erro");
       return;
     }
 
-    const btn = form.querySelector("button");
-    btn.disabled = true;
-    btn.textContent = "Entrando...";
-
     try {
-      // 📡 Requisição para API de login
+      // 🔹 Consulta API de login
       const resp = await fetch(`/api/usuarios?email=${encodeURIComponent(email)}&senha=${encodeURIComponent(senha)}`);
       const data = await resp.json();
 
-      if (!resp.ok || !data.sucesso) {
-        exibirFeedback(data?.mensagem || "Credenciais inválidas.", "erro");
-        btn.disabled = false;
-        btn.textContent = "Entrar";
+      if (!data.sucesso) {
+        mostrarFeedback(data.mensagem || "Credenciais inválidas.", "erro");
         return;
       }
 
-      // ✅ Login realizado com sucesso
-      exibirFeedback("✅ Login efetuado com sucesso!", "sucesso");
-
-      // 💾 Armazena o usuário localmente (para futuras páginas)
+      // 🔐 Armazena dados do usuário no navegador
       localStorage.setItem("usuario", JSON.stringify(data.usuario));
 
-      // Redireciona conforme tipo de usuário
-      const tipo = data.usuario.tipo_usuario?.toLowerCase();
-      setTimeout(() => {
-        if (tipo === "administrador") {
-          window.location.href = "admin.html";
-        } else {
-          window.location.href = "../index.html";
-        }
-      }, 1200);
+      // 🪄 Exibe alerta motivacional com gamificação
+      try {
+        const id_usuario = data.id_usuario;
+        const gamiresp = await fetch(`/api/gamificacao?id_usuario=${id_usuario}`);
+        const gamiData = await gamiresp.json();
+        const gami = gamiData?.gamificacao;
 
-    } catch (err) {
-      console.error(err);
-      exibirFeedback("Erro de conexão. Tente novamente.", "erro");
-    } finally {
-      btn.disabled = false;
-      btn.textContent = "Entrar";
+        if (gami) {
+          alert(
+            `💙 Bem-vindo de volta, ${data.usuario.nome_usuario}!\n\n` +
+            `Você está no nível: ${gami.titulo_conquista}\n` +
+            `Pontos de coração: ${gami.pontos_coracao}\n\n` +
+            `✨ Continue espalhando sonhos — cada nova adoção te aproxima da próxima conquista! 💫`
+          );
+        } else {
+          alert(
+            `💙 Bem-vindo de volta, ${data.usuario.nome_usuario}!\n\n` +
+            `Sua jornada está só começando. 🌈 Adote uma nova cartinha e suba de nível na Fábrica dos Sonhos!`
+          );
+        }
+      } catch {
+        console.warn("Não foi possível carregar gamificação.");
+      }
+
+      // Redireciona após login
+      window.location.href = "index.html";
+    } catch (erro) {
+      console.error(erro);
+      mostrarFeedback("Erro ao conectar com o servidor.", "erro");
     }
   });
 });
