@@ -1,8 +1,5 @@
 // ============================================================
-// 💙 VARAL DOS SONHOS — /js/cartinhas.js (versão final estilizada)
-// ------------------------------------------------------------
-// Lista cartinhas, exibe cards, adiciona ao carrinho
-// e permite zoom da imagem. Compatível com Web + .NET MAUI WebView.
+// 💙 VARAL DOS SONHOS — /js/cartinhas.js (corrigido: prendedor.png)
 // ============================================================
 
 document.addEventListener("DOMContentLoaded", async () => {
@@ -10,7 +7,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   const btnEsq = document.querySelector(".seta-esq");
   const btnDir = document.querySelector(".seta-dir");
 
-  // Elementos do Modal de Zoom
+  // Modal Zoom
   const modalZoom = document.getElementById("modal-cartinha-zoom");
   const imgZoom = document.getElementById("cartinha-zoom-img");
   const nomeZoom = document.getElementById("nome-cartinha-zoom");
@@ -18,7 +15,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   let cartinhas = [];
 
-  // 1️⃣ Buscar dados da API
+  // 1) API
   try {
     const resp = await fetch("/api/cartinhas");
     if (!resp.ok) throw new Error(`Erro de conexão: ${resp.status}`);
@@ -36,7 +33,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     trilho.innerHTML = "<p style='padding:20px;'>❌ Falha ao conectar com o servidor.</p>";
   }
 
-  // 2️⃣ Montar cards no varal
+  // 2) Montagem dos cards
   function montarVaral(registros) {
     trilho.innerHTML = "";
 
@@ -52,18 +49,11 @@ document.addEventListener("DOMContentLoaded", async () => {
           ? r.imagem_cartinha[0].url
           : "../imagens/sem-foto.png";
 
-      // Estrutura principal
       const gancho = document.createElement("div");
-      gancho.className = "gancho";
-
-      // Fallback visual do prendedor (para WebView MAUI)
-      const prendedor = document.createElement("span");
-      prendedor.className = "prendedor";
-      gancho.appendChild(prendedor);
+      gancho.className = "gancho"; // o prendedor vem do CSS ::before
 
       const card = document.createElement("div");
       card.className = "card-cartinha";
-
       card.innerHTML = `
         <div class="cartinha-quadro" data-img="${foto}" data-nome="${nome}">
           <img src="${foto}" alt="Cartinha de ${nome}" loading="lazy" />
@@ -80,7 +70,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         <button class="btn-adotar" data-id="${r.id}">💙 Adotar</button>
       `;
 
-      // Função botão adotar
       const btn = card.querySelector(".btn-adotar");
       const cartItem = { id: r.id, id_cartinha: r.id_cartinha, fields: r };
 
@@ -94,11 +83,8 @@ document.addEventListener("DOMContentLoaded", async () => {
         adicionarAoCarrinho(cartItem, btn, nome);
       });
 
-      // Evento para abrir zoom da cartinha
       card.querySelector(".cartinha-quadro").addEventListener("click", (e) => {
-        const imgUrl = e.currentTarget.dataset.img;
-        const criancaNome = e.currentTarget.dataset.nome;
-        abrirModalZoom(imgUrl, criancaNome);
+        abrirModalZoom(e.currentTarget.dataset.img, e.currentTarget.dataset.nome);
       });
 
       gancho.appendChild(card);
@@ -106,7 +92,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
   }
 
-  // 3️⃣ Funções auxiliares
+  // 3) Helpers
   function estaNoCarrinho(id) {
     const carrinho = JSON.parse(localStorage.getItem("carrinho")) || [];
     return !!carrinho.find((i) => i.id === id);
@@ -124,29 +110,17 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   }
 
-  // 4️⃣ Modal de Zoom
+  // 4) Zoom
   function abrirModalZoom(imgUrl, nome) {
     imgZoom.src = imgUrl;
     nomeZoom.textContent = `Cartinha de ${nome}`;
     modalZoom.style.display = "flex";
   }
+  closeZoom.onclick = () => (modalZoom.style.display = "none");
+  window.onclick = (e) => { if (e.target === modalZoom) modalZoom.style.display = "none"; };
 
-  closeZoom.onclick = function () {
-    modalZoom.style.display = "none";
-  };
-
-  window.onclick = function (event) {
-    if (event.target == modalZoom) {
-      modalZoom.style.display = "none";
-    }
-  };
-
-  // 5️⃣ Controles do carrossel
+  // 5) Carrossel
   const passo = 320;
-  btnEsq.addEventListener("click", () => {
-    trilho.scrollBy({ left: -passo, behavior: "smooth" });
-  });
-  btnDir.addEventListener("click", () => {
-    trilho.scrollBy({ left: passo, behavior: "smooth" });
-  });
+  btnEsq.addEventListener("click", () => trilho.scrollBy({ left: -passo, behavior: "smooth" }));
+  btnDir.addEventListener("click", () => trilho.scrollBy({ left:  passo, behavior: "smooth" }));
 });
