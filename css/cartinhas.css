@@ -1,5 +1,5 @@
 /* ============================================================
-💙 VARAL DOS SONHOS — css/cartinhas.css
+💙 VARAL DOS SONHOS — css/cartinhas.css (versão ajustada final)
 Compatível com Vercel + .NET MAUI WebView
 ============================================================ */
 
@@ -14,7 +14,7 @@ Compatível com Vercel + .NET MAUI WebView
 .varal-wrapper {
   background: var(--fundo);
   text-align: center;
-  padding: 40px 0 60px;
+  padding: 80px 0 60px; /* desce um pouco pra não colar no header */
   min-height: 100vh;
   overflow-x: hidden;
 }
@@ -29,7 +29,7 @@ Compatível com Vercel + .NET MAUI WebView
 
 .descricao {
   display: inline;
-  margin-left: 6px;
+  margin-left: 8px;
   color: #27425c;
   font-size: 1.05rem;
   font-weight: 400;
@@ -39,14 +39,14 @@ Compatível com Vercel + .NET MAUI WebView
 .corda {
   width: 90%;
   max-width: 1100px;
-  height: 4px;
-  margin: 16px auto 25px;
+  height: 5px;
+  margin: 18px auto 25px;
   border-radius: 4px;
   background: linear-gradient(
     90deg,
     rgba(196,154,108,0) 0%,
-    var(--corda-cor) 10%,
-    var(--corda-cor) 90%,
+    var(--corda-cor) 15%,
+    var(--corda-cor) 85%,
     rgba(196,154,108,0) 100%
   );
   box-shadow: 0 2px 6px rgba(0,0,0,0.15);
@@ -92,28 +92,28 @@ Compatível com Vercel + .NET MAUI WebView
   scroll-snap-align: center;
 }
 
-/* Imagem principal do prendedor (para navegadores e WebView modernos) */
+/* prendedor sobre o card (sem cortar) */
 .gancho::before {
   content: "";
   position: absolute;
-  top: -32px;
+  top: -44px; /* sobe um pouco pra não cortar */
   left: 50%;
   transform: translateX(-50%);
-  width: 40px;
-  height: 40px;
+  width: 42px;
+  height: 42px;
   background: url("../imagens/prendedor.png") no-repeat center;
   background-size: contain;
   z-index: 10;
 }
 
-/* Fallback para .NET MAUI WebView (caso o ::before não carregue) */
+/* Fallback para MAUI WebView */
 .pregador {
   position: absolute;
-  top: -32px;
+  top: -44px;
   left: 50%;
   transform: translateX(-50%);
-  width: 40px;
-  height: 40px;
+  width: 42px;
+  height: 42px;
   background: url("../imagens/prendedor.png") no-repeat center;
   background-size: contain;
   z-index: 10;
@@ -134,13 +134,12 @@ Compatível com Vercel + .NET MAUI WebView
   min-height: 420px;
 }
 
-/* Efeito suave */
 .card-cartinha:hover {
-  transform: translateY(-4px);
+  transform: translateY(-5px);
   box-shadow: 0 10px 25px rgba(0,51,102,0.2);
 }
 
-/* ====== IMAGEM DA CARTINHA ====== */
+/* ====== IMAGEM ====== */
 .cartinha-quadro {
   margin: 14px;
   background: #f8fbff;
@@ -184,7 +183,7 @@ Compatível com Vercel + .NET MAUI WebView
   font-size: 0.93rem;
 }
 
-/* ====== BOTÃO ADOTAR ====== */
+/* ====== BOTÃO ====== */
 .btn-adotar {
   background: var(--azul-cta);
   color: #fff;
@@ -209,7 +208,32 @@ Compatível com Vercel + .NET MAUI WebView
   cursor: not-allowed;
 }
 
-/* ====== MODAL DE ZOOM ====== */
+/* ====== SETAS ====== */
+.seta-esq, .seta-dir {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: var(--azul-cta);
+  color: #fff;
+  border: none;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  font-weight: bold;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+  transition: background 0.3s ease;
+  z-index: 100;
+}
+
+.seta-esq:hover, .seta-dir:hover {
+  background: var(--azul-escuro);
+}
+
+.seta-esq { left: 15px; }
+.seta-dir { right: 15px; }
+
+/* ====== MODAL ZOOM ====== */
 .modal-zoom {
   display: none;
   position: fixed;
@@ -270,6 +294,10 @@ Compatível com Vercel + .NET MAUI WebView
   .corda {
     width: 95%;
   }
+  .seta-esq, .seta-dir {
+    width: 32px;
+    height: 32px;
+  }
 }
 
 @media (max-width: 600px) {
@@ -298,4 +326,7 @@ Compatível com Vercel + .NET MAUI WebView
   .cartinha-quadro {
     height: 200px;
   }
+
+  .seta-esq { left: 5px; }
+  .seta-dir { right: 5px; }
 }
