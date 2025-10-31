@@ -1,80 +1,96 @@
 // ============================================================
-// 💙 VARAL DOS SONHOS — /js/cartinhas.js (versão final TCC)
+// 💙 VARAL DOS SONHOS — /js/cartinhas.js (versão final estilizada)
 // ------------------------------------------------------------
-// Exibe o varal de cartinhas com prendedores, carrossel,
-// botão de adoção e zoom da imagem.
+// Lista cartinhas, exibe cards com estilo dos pontos de coleta,
+// adiciona ao carrinho e permite zoom da imagem.
 // ============================================================
 
 document.addEventListener("DOMContentLoaded", async () => {
   const trilho = document.getElementById("trilho-varal");
   const btnEsq = document.querySelector(".seta-esq");
   const btnDir = document.querySelector(".seta-dir");
+
+  // Elementos do Modal de Zoom
   const modalZoom = document.getElementById("modal-cartinha-zoom");
   const imgZoom = document.getElementById("cartinha-zoom-img");
   const nomeZoom = document.getElementById("nome-cartinha-zoom");
   const closeZoom = document.querySelector(".close-zoom");
 
+  let cartinhas = [];
+
+  // 1️⃣ Buscar dados da API
   try {
-    // 🔹 Busca cartinhas da API
     const resp = await fetch("/api/cartinhas");
-    if (!resp.ok) throw new Error(`Erro HTTP ${resp.status}`);
+    if (!resp.ok) throw new Error(`Erro de conexão: ${resp.status}`);
     const json = await resp.json();
 
-    if (!json.sucesso || !Array.isArray(json.cartinhas)) {
-      trilho.innerHTML = "<p style='padding:20px;color:#c0392b;'>⚠️ Nenhuma cartinha disponível.</p>";
+    if (!json?.sucesso || !Array.isArray(json.cartinhas)) {
+      trilho.innerHTML = "<p style='padding:20px;'>💔 Nenhuma cartinha disponível no momento.</p>";
       return;
     }
 
-    montarVaral(json.cartinhas);
+    cartinhas = json.cartinhas;
+    montarVaral(cartinhas);
   } catch (e) {
-    trilho.innerHTML = "<p style='padding:20px;color:#c0392b;'>❌ Falha ao carregar cartinhas.</p>";
-    console.error(e);
+    console.error("Erro ao carregar cartinhas:", e);
+    trilho.innerHTML = "<p style='padding:20px;'>❌ Falha ao conectar com o servidor.</p>";
   }
 
-  // ============================================================
-  // 🧷 Monta o varal com os cards de cartinhas
-  // ============================================================
+  // 2️⃣ Montar cards no varal
   function montarVaral(registros) {
     trilho.innerHTML = "";
-    registros.forEach(r => {
-      const nome = r.primeiro_nome || "Criança";
-      const idade = r.idade || "—";
-      const sonho = r.sonho || "Sonho não informado";
-      const irmaos = r.irmaos ? "Sim" : "Não";
-      const idadeIrmaos = r.idade_irmaos || "—";
-      const foto = (r.imagem_cartinha?.[0]?.url) || "/imagens/sem-foto.png";
 
+    registros.forEach((r) => {
+      const nome = (r.primeiro_nome || "").trim() || "Criança";
+      const idade = r.idade ?? "—";
+      const sonho = r.sonho || "Sonho não especificado.";
+
+      const foto =
+        Array.isArray(r.imagem_cartinha) && r.imagem_cartinha[0]
+          ? r.imagem_cartinha[0].url
+          : "../imagens/sem-foto.png";
+
+      // Estrutura principal
       const gancho = document.createElement("div");
       gancho.className = "gancho";
 
       const card = document.createElement("div");
       card.className = "card-cartinha";
+
+      // Layout inspirado nos pontos de coleta
       card.innerHTML = `
-        <div class="cartinha-img-wrapper" data-img="${foto}" data-nome="${nome}">
-          <img src="${foto}" alt="Cartinha de ${nome}">
+        <div class="cartinha-quadro" data-img="${foto}" data-nome="${nome}">
+          <img src="${foto}" alt="Cartinha de ${nome}" />
         </div>
+
         <div class="info-cartinha">
           <h3>${nome}</h3>
-          <p>🎂 ${idade} anos</p>
-          <p>💭 ${sonho}</p>
-          ${irmaos === "Sim" ? `<p>Irmãos: ${irmaos} (${idadeIrmaos} anos)</p>` : ""}
+          <p><strong>Idade:</strong> ${idade} anos</p>
+          <p><strong>Sonho:</strong> ${sonho}</p>
         </div>
-        <button class="btn-adotar" data-id="${r.id}">Adotar 💌</button>
+
+        <button class="btn-adotar" data-id="${r.id}">💙 Adotar</button>
       `;
 
-      // 💙 Evento de adoção
+      // Função botão adotar
       const btn = card.querySelector(".btn-adotar");
-      const cartItem = { id: r.id, fields: r };
+      const cartItem = { id: r.id, id_cartinha: r.id_cartinha, fields: r };
+
       if (estaNoCarrinho(r.id)) {
         btn.textContent = "No Carrinho 🧺";
-        btn.disabled = true;
         btn.classList.add("btn-ocupada");
+        btn.disabled = true;
       }
-      btn.addEventListener("click", () => adicionarAoCarrinho(cartItem, btn, nome));
 
-      // 🔍 Evento de zoom
-      card.querySelector(".cartinha-img-wrapper").addEventListener("click", e => {
-        abrirModalZoom(e.currentTarget.dataset.img, e.currentTarget.dataset.nome);
+      btn.addEventListener("click", () => {
+        adicionarAoCarrinho(cartItem, btn, nome);
+      });
+
+      // Evento para abrir zoom da cartinha
+      card.querySelector(".cartinha-quadro").addEventListener("click", (e) => {
+        const imgUrl = e.currentTarget.dataset.img;
+        const criancaNome = e.currentTarget.dataset.nome;
+        abrirModalZoom(imgUrl, criancaNome);
       });
 
       gancho.appendChild(card);
@@ -82,17 +98,15 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
   }
 
-  // ============================================================
-  // 🧺 Carrinho (LocalStorage)
-  // ============================================================
+  // 3️⃣ Funções auxiliares
   function estaNoCarrinho(id) {
     const carrinho = JSON.parse(localStorage.getItem("carrinho")) || [];
-    return !!carrinho.find(i => i.id === id);
+    return !!carrinho.find((i) => i.id === id);
   }
 
   function adicionarAoCarrinho(item, botao, nome) {
     const carrinho = JSON.parse(localStorage.getItem("carrinho")) || [];
-    if (!carrinho.find(i => i.id === item.id)) {
+    if (!carrinho.find((i) => i.id === item.id)) {
       carrinho.push(item);
       localStorage.setItem("carrinho", JSON.stringify(carrinho));
       botao.textContent = "No Carrinho 🧺";
@@ -102,22 +116,29 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   }
 
-  // ============================================================
-  // 🔍 Modal de Zoom
-  // ============================================================
+  // 4️⃣ Modal de Zoom
   function abrirModalZoom(imgUrl, nome) {
     imgZoom.src = imgUrl;
     nomeZoom.textContent = `Cartinha de ${nome}`;
     modalZoom.style.display = "flex";
   }
 
-  closeZoom.onclick = () => modalZoom.style.display = "none";
-  window.onclick = e => { if (e.target === modalZoom) modalZoom.style.display = "none"; };
+  closeZoom.onclick = function () {
+    modalZoom.style.display = "none";
+  };
 
-  // ============================================================
-  // 🎠 Navegação do carrossel
-  // ============================================================
+  window.onclick = function (event) {
+    if (event.target == modalZoom) {
+      modalZoom.style.display = "none";
+    }
+  };
+
+  // 5️⃣ Controles do carrossel
   const passo = 300;
-  btnEsq.addEventListener("click", () => trilho.scrollBy({ left: -passo, behavior: "smooth" }));
-  btnDir.addEventListener("click", () => trilho.scrollBy({ left: passo, behavior: "smooth" }));
+  btnEsq.addEventListener("click", () => {
+    trilho.scrollBy({ left: -passo, behavior: "smooth" });
+  });
+  btnDir.addEventListener("click", () => {
+    trilho.scrollBy({ left: passo, behavior: "smooth" });
+  });
 });

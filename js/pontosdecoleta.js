@@ -38,7 +38,7 @@ async function carregarPontosDeColeta() {
         <p class="card-linha"><strong>Telefone:</strong> ${p.telefone || "—"}</p>
         <div class="card-acoes">
           <button class="btn-mapa" data-endereco="${p.endereco}, ${p.nome_ponto}">
-            💙 Ver no mapa
+            📍 Ver no mapa
           </button>
         </div>
       </div>
