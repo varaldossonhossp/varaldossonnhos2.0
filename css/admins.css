@@ -1,0 +1,66 @@
+/* ============================================================
+💼 VARAL DOS SONHOS — /css/admin.css
+---------------------------------------------------------------
+Painel administrativo — estilo de tabela e botões.
+============================================================ */
+
+.admin-container {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 40px 20px;
+}
+
+.painel {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 25px;
+  width: 100%;
+  max-width: 960px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.painel h2 {
+  color: #0078ff;
+  font-weight: 700;
+  text-align: center;
+  margin-bottom: 10px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+}
+
+th {
+  background: #0078ff;
+  color: white;
+  padding: 10px;
+  text-align: left;
+  border-top-left-radius: 6px;
+  border-top-right-radius: 6px;
+}
+
+td {
+  padding: 8px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+tr:hover {
+  background-color: #f8faff;
+}
+
+.btn-confirmar {
+  background: #2ecc71;
+  color: white;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.btn-confirmar:hover {
+  background: #27ae60;
+}
