@@ -1,26 +1,22 @@
 // ============================================================
-// 💙 VARAL DOS SONHOS — /api/pontosdecoleta.js (versão final)
+// VARAL DOS SONHOS — API: Pontos de Coleta
 // ------------------------------------------------------------
-// Retorna pontos de coleta do Airtable (tabela: pontos_coleta)
-// Compatível com front web e app .NET MAUI
+// • Obtém os pontos cadastrados no Airtable.
+// • Filtra somente os ativos.
+// • Retorna dados padronizados para Web e .NET MAUI.
 // ============================================================
 
 import Airtable from "airtable";
 
-export const config = {
-  runtime: "nodejs",
-};
+export const config = { runtime: "nodejs" };
 
 export default async function handler(req, res) {
   try {
-    // 🔹 Conexão com Airtable
     const base = new Airtable({ apiKey: process.env.AIRTABLE_API_KEY })
       .base(process.env.AIRTABLE_BASE_ID);
 
-    // 🔹 Define tabela (padrão: pontos_coleta)
     const tabela = base(process.env.AIRTABLE_PONTOS_TABLE || "pontos_coleta");
 
-    // 🔹 Busca registros ordenados
     const registros = await tabela
       .select({
         maxRecords: 100,
@@ -28,7 +24,6 @@ export default async function handler(req, res) {
       })
       .all();
 
-    // 🔹 Mapeia campos usados no front
     const pontos = registros.map((r) => ({
       id_ponto: r.id,
       nome_ponto: r.get("nome_ponto") || "Ponto sem nome",
@@ -41,20 +36,17 @@ export default async function handler(req, res) {
       data_cadastro: r.get("data_cadastro") || r._rawJson.createdTime,
     }));
 
-    // 🔹 Filtra apenas ativos
     const ativos = pontos.filter(
       (p) => p.status && p.status.toLowerCase() === "ativo"
     );
 
-    // 🔹 Retorno padronizado (usado no front e no .NET MAUI)
     res.status(200).json({
       sucesso: true,
-      origem: "Airtable",
       total: ativos.length,
       pontos: ativos,
     });
   } catch (erro) {
-    console.error("❌ Erro na rota /api/pontosdecoleta:", erro);
+    console.error("Erro na rota /api/pontosdecoleta:", erro);
     res.status(500).json({
       sucesso: false,
       mensagem: "Erro ao buscar pontos de coleta.",
