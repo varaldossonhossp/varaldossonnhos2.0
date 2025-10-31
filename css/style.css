@@ -99,7 +99,7 @@ body, .bg-gradiente {
   gap: 36px;
   width: min(1150px, 94vw);
   align-items: center;
-  padding: 40px 2vw;
+  /* padding: 40px 2vw; */
 }
 
 @media (max-width: 1000px) {
@@ -126,11 +126,11 @@ body, .bg-gradiente {
 ☁️ NUVEM FLUTUANTE — animação e efeito de hover
 ============================================================ */
 .nuvem-flutuante {
-  width: 300px;
-  animation: flutuar 6s ease-in-out infinite;
+  width: 350px;
+  animation: flutuar 2s ease-in-out infinite;
   transition: transform 0.3s ease, filter 0.3s ease;
   filter: drop-shadow(0 6px 10px rgba(74, 144, 226, 0.25));
-  margin: 0 auto 10px;
+  margin: 0 auto 8px;
 }
 
 .nuvem-flutuante:hover {
@@ -220,10 +220,10 @@ body, .bg-gradiente {
 🎁 FAIXA DE EVENTOS (rodapé azul da seção)
 ============================================================ */
 .faixa-eventos {
-  margin-top: 40px;
+  margin-top: 10px;
   width: 100%;
-  text-align: center;
-  padding: 22px 12px;
+  text-align: left;
+  padding: 10px 80px;
   background: linear-gradient(90deg, #4A90E2, #6fb3ff);
   color: #fff;
   box-shadow: var(--sombra);

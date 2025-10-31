@@ -1,80 +1,96 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Revise e finalize a adoção das cartinhas escolhidas no Varal dos Sonhos." />
-    <title>Meu Carrinho 💙 | Varal dos Sonhos</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="../css/style.css" />
-    <link rel="stylesheet" href="../css/carrinho.css" />
-    <link rel="stylesheet" href="../css/cloudinho.css" /> 
-    <link rel="icon" href="../imagens/favicon.png" type="image/png" />
+  <!-- ============================================================
+       💙 VARAL DOS SONHOS — Carrinho
+       ------------------------------------------------------------
+       - Lista cartinhas adicionadas (localStorage)
+       - Seleção de ponto de coleta (via /api/pontosdecoleta)
+       - Finalização: chama /api/adocoes (uma por cartinha)
+       - Modal de mapa (Google Maps sem chave)
+  ============================================================ -->
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Revise e finalize a adoção das cartinhas escolhidas no Varal dos Sonhos." />
+  <title>Meu Carrinho 💙 | Varal dos Sonhos</title>
+
+  <!-- Estilos -->
+  <link rel="stylesheet" href="../css/style.css" />
+  <link rel="stylesheet" href="../css/carrinho.css" />
+  <link rel="stylesheet" href="../css/cloudinho.css" />
+  <link rel="icon" href="../imagens/favicon.png" type="image/png" />
 </head>
 
 <body>
-  <div id="header"></div>
+  <!-- Cabeçalho -->
+  <div id="header"></div>
 
-  <main class="carrinho-container">
-    <section class="carrinho-section">
-      <h1>🧺 Meu Carrinho</h1>
-      <p class="sub">Revise as cartinhas escolhidas e selecione um ponto de coleta para finalizar a adoção.</p>
+  <!-- Conteúdo principal -->
+  <main class="carrinho-container">
+    <section class="carrinho-section">
+      <h1>🧺 Meu Carrinho</h1>
+      <p class="sub">Revise as cartinhas escolhidas e selecione um ponto de coleta para finalizar a adoção.</p>
 
-            <div id="carrinhoLista" class="carrinho-lista" aria-live="polite"></div>
+      <!-- Lista de cartinhas (preenchida via JS) -->
+      <div id="carrinhoLista" class="carrinho-lista" aria-live="polite"></div>
 
-            <div class="pontos-box card">
-        <h2>📍 Escolha o ponto de coleta</h2>
-        <div id="pontosPlaceholder" class="placeholder">Carregando pontos de coleta…</div>
+      <!-- Seleção do ponto de coleta -->
+      <div class="pontos-box card">
+        <h2>📍 Escolha o ponto de coleta</h2>
+        <div id="pontosPlaceholder" class="placeholder">Carregando pontos de coleta…</div>
 
-        <div id="pontosControls" class="pontos-controls hidden">
-          <select id="selectPontos" aria-label="Selecione um ponto de coleta">
-            <option value="" data-endereco="">-- Selecione um ponto de coleta --</option>
-          </select>
+        <div id="pontosControls" class="pontos-controls hidden">
+          <select id="selectPontos" aria-label="Selecione um ponto de coleta">
+            <option value="" data-endereco="">-- Selecione um ponto de coleta --</option>
+          </select>
 
-                    <button id="verNoMapa" class="btn-outline" type="button" disabled>Ver no mapa</button>
-          <div class="obs">É obrigatório selecionar um ponto para finalizar a adoção.</div>
-        </div>
-      </div>
+          <button id="verNoMapa" class="btn-outline" type="button" disabled>Ver no mapa</button>
+          <div class="obs">É obrigatório selecionar um ponto para finalizar a adoção.</div>
+        </div>
+      </div>
 
-            <div class="acoes">
-        <button id="btnLimpar" class="btn btn-outline">🗑️ Limpar Carrinho</button>
-        <button id="btnConfirmar" class="btn btn-primary" disabled>✅ Confirmar Adoção</button>
-      </div>
-      
-      <div id="feedback" class="feedback hidden"></div>
-    </section>
-  </main>
+      <!-- Ações -->
+      <div class="acoes">
+        <button id="btnLimpar" class="btn btn-outline">🗑️ Limpar Carrinho</button>
+        <button id="btnConfirmar" class="btn btn-primary" disabled>✅ Confirmar Adoção</button>
+      </div>
 
-    <div id="mapModal" class="map-modal" aria-hidden="true">
-    <div class="map-backdrop" id="mapBackdrop"></div>
-    <div class="map-frame">
-      <button id="closeMap" class="map-close" aria-label="Fechar">✕</button>
-      <iframe id="mapFrame" src="about:blank" frameborder="0" allowfullscreen></iframe>
-      <div id="mapCaption" class="map-caption"></div>
-    </div>
-  </div>
+      <!-- Feedback -->
+      <div id="feedback" class="feedback hidden"></div>
+    </section>
+  </main>
 
-  <div id="footer"></div>
-  <div id="cloudinho"></div>
+  <!-- Modal do mapa (mesmo padrão dos Pontos de Coleta) -->
+  <div id="mapModal" class="map-modal" aria-hidden="true">
+    <div class="map-backdrop" id="mapBackdrop"></div>
+    <div class="map-frame">
+      <button id="closeMap" class="map-close" aria-label="Fechar">✕</button>
+      <iframe id="mapFrame" src="about:blank" frameborder="0" allowfullscreen></iframe>
+      <div id="mapCaption" class="map-caption"></div>
+    </div>
+  </div>
 
-  <script>
-    // [Manter sua função de carregarComponente aqui]
-    async function carregarComponente(id, arquivo) {
-        const base = "../componentes/"; 
-        const resp = await fetch(base + arquivo);
-        if (resp.ok) {
-            document.getElementById(id).innerHTML = await resp.text();
-        } else {
-            console.error(`Erro ao carregar componente ${arquivo}. Status: ${resp.status}`);
-        }
-    }
-    
-    carregarComponente("header", "header.html");
-    carregarComponente("footer", "footer.html");
-    carregarComponente("cloudinho", "cloudinho.html");
-  </script>
-    
-  <script src="../js/cloudinho.js"></script>
-  <script src="../js/carrinho.js"></script>
-  </body>
+  <!-- Rodapé + Cloudinho -->
+  <div id="footer"></div>
+  <div id="cloudinho"></div>
+
+  <!-- Carregador de componentes (não alterar) -->
+  <script>
+    async function carregarComponente(id, arquivo) {
+      const base = "../componentes/";
+      const resp = await fetch(base + arquivo);
+      if (resp.ok) {
+        document.getElementById(id).innerHTML = await resp.text();
+      } else {
+        console.error(`Erro ao carregar componente ${arquivo}. Status: ${resp.status}`);
+      }
+    }
+    carregarComponente("header", "header.html");
+    carregarComponente("footer", "footer.html");
+    carregarComponente("cloudinho", "cloudinho.html");
+  </script>
+
+  <script src="../js/cloudinho.js"></script>
+  <script src="../js/carrinho.js"></script>
+</body>
 </html>

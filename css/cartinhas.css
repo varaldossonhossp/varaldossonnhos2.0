@@ -91,11 +91,11 @@ Compatível com Vercel + .NET MAUI WebView
 .gancho::before {
   content: "";
   position: absolute;
-  top: -34px; /* afasta mais da corda */
+  /* top: -34px; afasta mais da corda */
   left: 50%;
   transform: translateX(-50%);
-  width: 34px;
-  height: 34px;
+  width: 30px;
+  height: 50px;
   background: url('../imagens/prendedor.png') no-repeat center;
   background-size: contain;
   z-index: 3; /* acima da corda */
@@ -316,7 +316,7 @@ Compatível com Vercel + .NET MAUI WebView
 
   .corda {
     height: 3px;
-    margin: 12px auto 16px;
+    /* margin: 12px auto 16px; */
   }
 
   .cartinha-quadro {
