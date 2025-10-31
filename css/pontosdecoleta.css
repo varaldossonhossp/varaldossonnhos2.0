@@ -1,201 +1,134 @@
 /* ============================================================
-💙 VARAL DOS SONHOS — css/cartinhas.css 
+💙 VARAL DOS SONHOS — /css/pontosdecoleta.css
 ============================================================ */
 
-:root {
-  --azul-escuro: #153f5a;
-  --azul-cta: #2f80ed;
-  --fundo-claro: #f0f8ff;
-  --corda-cor: #c49a6c;
-}
-
-/* ====== LAYOUT GERAL ====== */
-.varal-wrapper {
-  background: linear-gradient(180deg, #e6f2ff 0%, #ffffff 100%);
+.hero-coleta {
+  background: linear-gradient(180deg, #d9ecff 0%, #ffffff 100%);
   text-align: center;
-  padding: 100px 0 80px;
+  padding: 100px 20px 80px;
+  position: relative;
   min-height: 100vh;
 }
 
-.titulo-pagina {
-  font-size: 2.2rem;
-  color: var(--azul-escuro);
+.logo-coleta {
+  width: 160px;
+  height: auto;
+  filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.1));
+  margin-bottom: 10px;
+}
+
+.titulo-coleta {
+  color: var(--azul-escuro, #003366);
+  font-family: 'Poppins', sans-serif;
   font-weight: 700;
-  margin-bottom: 0.5rem;
+  margin-bottom: 10px;
+  font-size: 1.8rem;
 }
 
-.descricao {
-  color: #27425c;
-  font-size: 1rem;
-  margin-bottom: 30px;
-}
-
-/* ====== CORDA ====== */
+/* 🌈 Corda do varal */
 .corda {
   width: 100%;
-  max-width: 950px;
-  height: 2px;
-  background: var(--corda-cor);
-  margin: 0 auto 50px;
-  border-radius: 2px;
+  max-width: 960px;
+  height: 5px;
+  background: linear-gradient(to right, transparent, #d79e60, #b66b1b, #d79e60, transparent);
+  border-radius: 3px;
+  margin: 20px auto 40px;
+  box-shadow: 0 0 6px rgba(0, 0, 0, 0.2);
 }
 
-/* ====== TRILHO ====== */
-.trilho {
+/* 🧵 Trilho de cards */
+.cards-grid {
+  width: min(1200px, 90%);
+  margin: 0 auto;
   display: flex;
-  gap: 24px;
-  overflow-x: auto;
-  scroll-snap-type: x mandatory;
-  padding: 10px 20px;
+  flex-wrap: wrap;
   justify-content: center;
+  gap: 28px;
 }
-.trilho::-webkit-scrollbar { display: none; }
 
-/* ====== GANCHO (pregador) ====== */
+/* 🪶 Gancho + card */
 .gancho {
-  flex: 0 0 260px;
   position: relative;
-  scroll-snap-align: center;
+  width: 260px;
+  text-align: center;
+  animation: balance 3.5s ease-in-out infinite alternate;
 }
-.gancho::before {
-  content: "";
+
+@keyframes balance {
+  from { transform: rotate(0.8deg); }
+  to { transform: rotate(-0.8deg); }
+}
+
+/* ✨ prendedor.png */
+.prendedor {
   position: absolute;
-  top: -30px;
+  top: -32px;
   left: 50%;
   transform: translateX(-50%);
-  width: 32px;
-  height: 32px;
-  background: url('../imagens/prendedor.png') no-repeat center;
-  background-size: contain;
-  z-index: 5;
+  width: 36px;
+  height: auto;
+  z-index: 10;
 }
 
-/* ====== CARD PRINCIPAL ====== */
-.card-cartinha {
+/* 💌 Card */
+.card-coleta {
   background: #fff;
-  border-radius: 18px;
-  border: 2px solid #d8e6f5;
-  box-shadow: 0 6px 18px rgba(0, 51, 102, 0.1);
-  overflow: hidden;
+  border: 1px solid #d7e6f5;
+  border-radius: 16px;
+  box-shadow: 0 6px 18px rgba(0, 51, 102, 0.15);
+  padding: 16px 14px 18px;
   transition: all 0.3s ease;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  min-height: 430px;
+  text-align: left;
 }
 
-.card-cartinha:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 12px 28px rgba(0, 51, 102, 0.15);
+.card-coleta:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 24px rgba(0, 51, 102, 0.2);
 }
 
-/* ====== QUADRO INTERNO DA CARTINHA ====== */
-.cartinha-quadro {
-  margin: 16px;
-  background: #f8fbff;
-  border: 1px solid #dbe8f6;
-  border-radius: 12px;
-  overflow: hidden;
-  height: 220px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.cartinha-quadro img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transition: transform .4s ease;
-  cursor: pointer;
-}
-.cartinha-quadro:hover img {
-  transform: scale(1.05);
-}
-
-/* ====== INFORMAÇÕES ====== */
-.info-cartinha {
-  padding: 10px 20px;
+.card-titulo {
   text-align: center;
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: var(--azul-escuro, #003366);
+  margin-bottom: 10px;
 }
 
-.info-cartinha h3 {
-  color: var(--azul-escuro);
-  font-size: 1.2rem;
-  font-weight: 700;
+.card-coleta p {
+  font-size: 0.9rem;
+  color: #27425c;
   margin: 4px 0;
 }
 
-.info-cartinha p {
-  margin: 2px 0;
-  color: #27425c;
-  font-size: 0.95rem;
-}
-
-/* ====== BOTÃO ====== */
-.btn-adotar {
-  background: var(--azul-cta);
-  color: #fff;
-  border: none;
-  border-radius: 999px;
-  padding: 10px 18px;
-  margin: 16px auto 20px;
-  cursor: pointer;
-  font-weight: 600;
-  box-shadow: 0 4px 12px rgba(47,128,237,0.25);
-  transition: all 0.3s ease;
+.btn-mapa {
+  display: block;
   width: 80%;
+  margin: 12px auto 0;
+  border: none;
+  padding: 8px 10px;
+  border-radius: 12px;
+  background: var(--azul-medio, #4A90E2);
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.25s ease, transform 0.2s ease;
+  box-shadow: 0 4px 10px rgba(74, 144, 226, 0.3);
 }
-.btn-adotar:hover {
-  background: var(--azul-escuro);
+.btn-mapa:hover {
+  background: var(--azul-escuro, #003366);
   transform: translateY(-2px);
 }
-.btn-ocupada {
-  background: #f7a300;
-  cursor: not-allowed;
-}
 
-/* ====== MODAL DE ZOOM ====== */
-.modal-zoom {
-  display: none;
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.75);
-  justify-content: center;
-  align-items: center;
-  z-index: 2000;
-}
-.modal-content-zoom {
-  max-width: 500px;
-  width: 90%;
-  position: relative;
-  background: #fff;
-  border-radius: 12px;
-  padding: 10px;
-  box-shadow: 0 6px 30px rgba(0,0,0,0.5);
-}
-#cartinha-zoom-img {
-  width: 100%;
-  border-radius: 8px;
-}
-.close-zoom {
-  position: absolute;
-  top: 6px;
-  right: 14px;
-  color: #333;
-  font-size: 28px;
-  cursor: pointer;
-}
-.close-zoom:hover { color: #888; }
-.nome-zoom {
-  text-align: center;
-  color: var(--azul-escuro);
-  margin-top: 8px;
-  font-size: 1rem;
-  font-weight: 600;
-}
-
-/* ====== RESPONSIVIDADE ====== */
-@media (max-width: 700px) {
-  .gancho { flex: 0 0 90%; }
+/* 📱 Responsividade */
+@media (max-width: 768px) {
+  .cards-grid {
+    gap: 16px;
+  }
+  .gancho {
+    width: 90%;
+  }
+  .prendedor {
+    top: -26px;
+    width: 30px;
+  }
 }
