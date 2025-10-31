@@ -1,36 +1,54 @@
 /* ============================================================
-// 🎨 VARAL DOS SONHOS — /css/cadastro.css
-// ------------------------------------------------------------
-// Estilos para as páginas de Cadastro e Login (Formulários).
-// ============================================================ */
+   💙 VARAL DOS SONHOS — /css/cadastro.css (versão TCC)
+   ------------------------------------------------------------
+   Arquivo unificado de estilos para os formulários:
+   - Cadastro (pages/cadastro.html)
+   - Login (pages/login.html)
+   O design segue a identidade visual do projeto:
+   tons de azul, sombras suaves e tipografia Poppins.
+   ============================================================ */
 
-/* Variáveis de cor (se estiver usando Poppins no style.css, use-o aqui também) */
+/* 🎨 Paleta e tokens de design */
 :root {
-    --cor-primaria: #4A90E2;
-    --cor-secundaria: #1f355b;
-    --fundo-claro: #f0f8ff;
-    --borda-clara: #bcd3f7;
+    --cor-primaria: #4A90E2;      /* Azul claro - principal */
+    --cor-secundaria: #1f355b;    /* Azul escuro - títulos */
+    --fundo-claro: #f0f8ff;       /* Fundo de página */
+    --borda-clara: #bcd3f7;       /* Borda e campos */
     --sombra-card: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
+/* ============================================================
+   🧱 CONTAINER PRINCIPAL
+   ------------------------------------------------------------
+   Centraliza o conteúdo vertical e horizontalmente.
+   Aplica o fundo azul claro e garante responsividade.
+   ============================================================ */
 .form-container {
     padding: 40px 20px;
     background-color: var(--fundo-claro);
-    min-height: 80vh; /* Garante altura mínima para centralização */
+    min-height: 80vh; 
     display: flex;
     justify-content: center;
     align-items: center;
 }
 
-.login-card, .cadastro-card {
+/* ============================================================
+   🪄 CARD (CAIXA BRANCA DO FORMULÁRIO)
+   ------------------------------------------------------------
+   Usado tanto para login quanto para cadastro.
+   ============================================================ */
+.login-card, .cadastro-card, .form-section.card {
     background: #ffffff;
     border-radius: 12px;
     box-shadow: var(--sombra-card);
     padding: 40px;
     width: 100%;
-    max-width: 400px;
+    max-width: 420px;
 }
 
+/* ============================================================
+   🏷️ TÍTULOS E SUBTÍTULOS
+   ============================================================ */
 h2 {
     color: var(--cor-secundaria);
     font-weight: 700;
@@ -38,6 +56,11 @@ h2 {
     margin-bottom: 1.5rem;
 }
 
+/* ============================================================
+   📝 FORMULÁRIO
+   ------------------------------------------------------------
+   Campos, rótulos e espaçamento entre inputs.
+   ============================================================ */
 form {
     display: flex;
     flex-direction: column;
@@ -49,25 +72,32 @@ label {
     color: var(--cor-secundaria);
 }
 
+/* ============================================================
+   ⌨️ CAMPOS DE TEXTO E INPUTS
+   ============================================================ */
 input[type="email"],
 input[type="password"],
 input[type="text"],
 input[type="tel"],
 input[type="number"],
-input[type="date"] {
+input[type="date"],
+select {
     width: 100%;
     padding: 12px;
     border-radius: 6px;
     border: 1px solid var(--borda-clara);
     font-family: "Poppins", sans-serif;
-    transition: border-color 0.3s;
+    transition: border-color 0.3s ease;
 }
 
-input:focus {
+input:focus, select:focus {
     border-color: var(--cor-primaria);
     outline: none;
 }
 
+/* ============================================================
+   🔘 BOTÕES
+   ============================================================ */
 .btn-primary {
     background: var(--cor-primaria);
     color: #fff;
@@ -88,17 +118,9 @@ input:focus {
     cursor: not-allowed;
 }
 
-.text-center {
-    text-align: center;
-    font-size: 0.9rem;
-}
-
-.text-center a {
-    color: var(--cor-primaria);
-    text-decoration: none;
-    font-weight: 600;
-}
-
+/* ============================================================
+   💬 FEEDBACK (mensagens de erro/sucesso)
+   ============================================================ */
 .feedback {
     padding: 10px;
     border-radius: 6px;
@@ -124,6 +146,27 @@ input:focus {
     display: none !important;
 }
 
+/* ============================================================
+   🔗 LINKS E TEXTO INFORMATIVO
+   ============================================================ */
+.text-center {
+    text-align: center;
+    font-size: 0.9rem;
+}
+
+.text-center a {
+    color: var(--cor-primaria);
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.text-center a:hover {
+    text-decoration: underline;
+}
+
+/* ============================================================
+   ⚠️ ALERTAS (caso o back-end retorne erro de servidor)
+   ============================================================ */
 .alert-message {
     padding: 10px;
     border-radius: 6px;
@@ -134,12 +177,22 @@ input:focus {
     margin-top: 20px;
 }
 
-/* Estilos específicos para o Cadastro */
-.opcoes-contato {
-    display: flex;
-    gap: 20px;
-    align-items: center;
-}
-.opcoes-contato label {
-    font-weight: 400;
+/* ============================================================
+   🤝 LAYOUT RESPONSIVO
+   ------------------------------------------------------------
+   Garante leitura e acessibilidade em telas pequenas.
+   ============================================================ */
+@media (max-width: 480px) {
+    .login-card, .cadastro-card {
+        padding: 25px;
+    }
+
+    h2 {
+        font-size: 1.3rem;
+    }
+
+    .btn-primary {
+        font-size: 0.95rem;
+        padding: 10px;
+    }
 }
