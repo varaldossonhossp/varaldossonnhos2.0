@@ -67,8 +67,7 @@ document.addEventListener("DOMContentLoaded", async () => {
           <h3>${nome}</h3>
           <p><strong>Idade:</strong> ${idade} anos</p>
           <p><strong>Sonho:</strong> ${sonho}</p>
-          <p><strong>Irmãos:</strong> ${irmaos}</p>${irmaos === 'SIM' ? `
-          <p><strong>Idade dos irmãos:</strong> ${idadeIrmaos}</p>` : ''}
+         
 
         </div>
 
