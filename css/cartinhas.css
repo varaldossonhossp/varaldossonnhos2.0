@@ -1,15 +1,15 @@
 /* ============================================================
-💙 VARAL DOS SONHOS — css/cartinhas.css
+💙 VARAL DOS SONHOS — css/cartinhas.css 
 ============================================================ */
 
 :root {
   --azul-escuro: #003366;
   --azul-medio: #4a90e2;
-  --fundo-claro: #eaf3fc;
   --corda-marrom: #caa57a;
+  --sombra-card: 0 6px 18px rgba(0, 51, 102, 0.12);
 }
 
-/* 🌤️ Layout geral */
+/* 🌤️ Seção principal */
 .varal-wrapper {
   background: linear-gradient(180deg, #d9ecff 0%, #ffffff 100%);
   text-align: center;
@@ -19,91 +19,90 @@
 
 .titulo-pagina {
   font-family: var(--fonte-titulo, 'Shadows Into Light Two', cursive);
-  font-size: 2.4rem;
+  font-size: 2.2rem;
   color: var(--azul-escuro);
-  margin-bottom: 8px;
+  margin-bottom: 6px;
 }
 
 .descricao {
   color: #27425c;
-  font-size: 1.05rem;
-  margin-bottom: 24px;
+  font-size: 1rem;
+  margin-bottom: 26px;
 }
 
-/* 🧵 Corda do varal */
+/* 🧵 Corda */
 .corda {
   width: 100%;
-  max-width: 1000px;
+  max-width: 960px;
   height: 2px;
+  margin: 0 auto 40px;
   background: linear-gradient(90deg, #caa57a, #e4c7a1, #caa57a);
-  margin: 20px auto 40px;
   border-radius: 2px;
 }
 
-/* ====== TRILHO / CARROSSEL ====== */
+/* ====== TRILHO ====== */
 .trilho {
   display: flex;
   gap: 18px;
   overflow-x: auto;
-  overflow-y: hidden;
   scroll-snap-type: x mandatory;
-  -webkit-overflow-scrolling: touch;
-  padding: 10px 20px;
-  justify-content: flex-start;
+  padding: 20px;
+  justify-content: center;
 }
-
 .trilho::-webkit-scrollbar { display: none; }
 
 /* ====== GANCHO ====== */
 .gancho {
-  flex: 0 0 260px;
+  flex: 0 0 240px;
   position: relative;
   scroll-snap-align: center;
 }
 .gancho::before {
   content: "";
   position: absolute;
-  top: -24px;
+  top: -35px;
   left: 50%;
   transform: translateX(-50%);
-  width: 18px;
-  height: 26px;
-  background: linear-gradient(180deg, #e0b989 0%, #c99963 100%);
-  border-radius: 3px;
-  box-shadow: 0 3px 6px rgba(0,0,0,.15);
-}
-.gancho::after {
-  content: "";
-  position: absolute;
-  top: -14px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 16px;
-  height: 2px;
-  background: #9aa3ad;
-  border-radius: 1px;
+  width: 36px;
+  height: 36px;
+  background-image: url('../imagens/pregador.png');
+  background-size: contain;
+  background-repeat: no-repeat;
+  z-index: 5;
 }
 
 /* ====== CARD ====== */
 .card-cartinha {
   background: #fff;
-  border-radius: 16px;
-  box-shadow: 0 6px 20px rgba(0, 51, 102, 0.12);
+  border-radius: 18px;
+  border: 2px solid #d8e6f5;
+  box-shadow: var(--sombra-card);
   overflow: hidden;
-  transition: all 0.25s ease;
+  transition: all 0.35s ease;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  transform-origin: top center;
+  animation: flutuar 4s ease-in-out infinite;
 }
+
+/* 🌬️ Balanço suave ao passar o mouse */
 .card-cartinha:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 12px 26px rgba(0, 51, 102, 0.15);
+  transform: rotateZ(2deg) translateY(-6px);
+  box-shadow: 0 10px 28px rgba(0, 51, 102, 0.18);
+}
+
+/* Pequeno balanço constante simulando vento */
+@keyframes flutuar {
+  0% { transform: rotate(0deg); }
+  50% { transform: rotate(0.6deg); }
+  100% { transform: rotate(0deg); }
 }
 
 /* ====== IMAGEM ====== */
 .cartinha-img-wrapper {
   position: relative;
-  height: 230px;
+  height: 200px;
   overflow: hidden;
   cursor: pointer;
   border-bottom: 1px solid #e0e6ee;
@@ -112,24 +111,25 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform .5s ease;
+  transition: transform .4s ease;
 }
-.cartinha-img-wrapper img:hover {
+.cartinha-img-wrapper:hover img {
   transform: scale(1.05);
 }
 
 /* ====== INFORMAÇÕES ====== */
 .info-cartinha {
-  padding: 14px;
+  padding: 12px;
   color: #27425c;
+  text-align: center;
 }
 .info-cartinha h3 {
   color: var(--azul-escuro);
+  font-size: 1.1rem;
   margin-bottom: 4px;
-  font-size: 1.2rem;
 }
 .info-cartinha p {
-  margin: 3px 0;
+  margin: 2px 0;
   font-size: 0.9rem;
 }
 
@@ -139,7 +139,7 @@
   background: var(--azul-medio);
   color: #fff;
   border: none;
-  padding: 8px 16px;
+  padding: 8px 14px;
   border-radius: 999px;
   font-weight: 600;
   cursor: pointer;
@@ -162,58 +162,63 @@
   top: 50%;
   transform: translateY(-50%);
   z-index: 20;
-  background: rgba(255,255,255,0.85);
+  background: rgba(255,255,255,0.9);
   border: 1px solid #ddd;
   border-radius: 50%;
-  width: 40px;
-  height: 40px;
+  width: 38px;
+  height: 38px;
   font-size: 24px;
   cursor: pointer;
+  transition: background 0.2s, transform 0.2s;
   box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
-.seta-esq { left: 10px; }
-.seta-dir { right: 10px; }
+.nav:hover { background: #fff; transform: scale(1.1); }
+.seta-esq { left: 8px; }
+.seta-dir { right: 8px; }
 
 /* ====== MODAL DE ZOOM ====== */
 .modal-zoom {
   display: none;
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.85);
+  background: rgba(0,0,0,0.75);
   justify-content: center;
   align-items: center;
   z-index: 2000;
 }
 .modal-content-zoom {
-  max-width: 800px;
+  max-width: 500px;
   width: 90%;
   position: relative;
+  background: #fff;
+  border-radius: 12px;
+  padding: 8px;
+  box-shadow: 0 6px 30px rgba(0,0,0,0.5);
 }
 #cartinha-zoom-img {
   width: 100%;
-  border-radius: 10px;
+  border-radius: 8px;
 }
 .close-zoom {
   position: absolute;
-  top: 12px;
-  right: 20px;
-  color: #fff;
-  font-size: 34px;
+  top: 6px;
+  right: 14px;
+  color: #333;
+  font-size: 28px;
   cursor: pointer;
   transition: 0.3s;
 }
-.close-zoom:hover {
-  color: #ccc;
-}
+.close-zoom:hover { color: #888; }
 .nome-zoom {
   text-align: center;
-  color: #fff;
-  font-size: 1.1rem;
-  margin-top: 10px;
+  color: #003366;
+  margin-top: 8px;
+  font-size: 1rem;
+  font-weight: 600;
 }
 
 /* ====== RESPONSIVIDADE ====== */
-@media (max-width: 600px) {
+@media (max-width: 650px) {
   .gancho { flex: 0 0 90%; }
   .titulo-pagina { font-size: 1.8rem; }
 }
