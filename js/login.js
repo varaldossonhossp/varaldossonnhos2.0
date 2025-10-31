@@ -1,25 +1,20 @@
 // ============================================================
-// 💙 VARAL DOS SONHOS — /js/login.js (versão final TCC)
+// 💙 VARAL DOS SONHOS — /js/login.js
 // ------------------------------------------------------------
-// Realiza o login do usuário (via API /api/usuarios.js),
-// valida credenciais e exibe alerta emocional com gamificação.
+// Função: autenticar o usuário com base nos dados do Airtable
+// e salvar a sessão local (localStorage) para uso global.
+// Após login bem-sucedido, mostra mensagem motivacional
+// e redireciona o doador à página principal.
 // ============================================================
 
 document.addEventListener("DOMContentLoaded", () => {
   const form = document.getElementById("formLogin");
-  const feedback = document.getElementById("feedback-msg");
 
-  if (!form) return;
+  if (!form) {
+    console.error("❌ Formulário de login não encontrado!");
+    return;
+  }
 
-  // ---- Exibe mensagens temporárias de feedback ----
-  const mostrarFeedback = (msg, tipo = "sucesso") => {
-    feedback.textContent = msg;
-    feedback.className = `feedback ${tipo}`;
-    feedback.classList.remove("hidden");
-    setTimeout(() => feedback.classList.add("hidden"), 5000);
-  };
-
-  // ---- Ação principal de login ----
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
 
@@ -27,52 +22,44 @@ document.addEventListener("DOMContentLoaded", () => {
     const senha = document.getElementById("senha").value.trim();
 
     if (!email || !senha) {
-      mostrarFeedback("Por favor, preencha e-mail e senha.", "erro");
+      alert("⚠️ Preencha todos os campos para continuar!");
       return;
     }
 
     try {
-      // 🔹 Consulta API de login
-      const resp = await fetch(`/api/usuarios?email=${encodeURIComponent(email)}&senha=${encodeURIComponent(senha)}`);
-      const data = await resp.json();
+      const resp = await fetch("/api/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email_usuario: email, senha }),
+      });
 
-      if (!data.sucesso) {
-        mostrarFeedback(data.mensagem || "Credenciais inválidas.", "erro");
+      const dados = await resp.json();
+
+      if (!dados.sucesso) {
+        alert("❌ E-mail ou senha incorretos. Tente novamente.");
         return;
       }
 
-      // 🔐 Armazena dados do usuário no navegador
-      localStorage.setItem("usuario", JSON.stringify(data.usuario));
+      // ============================================================
+      // 💾 Salva a sessão no localStorage (persistência simples)
+      // ============================================================
+      localStorage.setItem("usuario_logado", JSON.stringify({
+        nome: dados.usuario.nome_usuario,
+        email: dados.usuario.email_usuario,
+        tipo: dados.usuario.tipo_usuario,
+      }));
 
-      // 🪄 Exibe alerta motivacional com gamificação
-      try {
-        const id_usuario = data.id_usuario;
-        const gamiresp = await fetch(`/api/gamificacao?id_usuario=${id_usuario}`);
-        const gamiData = await gamiresp.json();
-        const gami = gamiData?.gamificacao;
+      // ============================================================
+      // 💬 Mensagem de boas-vindas com apelo emocional
+      // ============================================================
+      alert(`💙 Bem-vindo(a), ${dados.usuario.nome_usuario}!\n\nSua generosidade ilumina caminhos e faz o mundo sonhar mais alto. Continue espalhando esperança!`);
 
-        if (gami) {
-          alert(
-            `💙 Bem-vindo de volta, ${data.usuario.nome_usuario}!\n\n` +
-            `Você está no nível: ${gami.titulo_conquista}\n` +
-            `Pontos de coração: ${gami.pontos_coracao}\n\n` +
-            `✨ Continue espalhando sonhos — cada nova adoção te aproxima da próxima conquista! 💫`
-          );
-        } else {
-          alert(
-            `💙 Bem-vindo de volta, ${data.usuario.nome_usuario}!\n\n` +
-            `Sua jornada está só começando. 🌈 Adote uma nova cartinha e suba de nível na Fábrica dos Sonhos!`
-          );
-        }
-      } catch {
-        console.warn("Não foi possível carregar gamificação.");
-      }
-
-      // Redireciona após login
+      // Redireciona à página inicial
       window.location.href = "../index.html";
-    } catch (erro) {
-      console.error(erro);
-      mostrarFeedback("Erro ao conectar com o servidor.", "erro");
+
+    } catch (err) {
+      console.error("Erro ao efetuar login:", err);
+      alert("⚠️ Erro ao conectar com o servidor. Tente novamente mais tarde.");
     }
   });
 });

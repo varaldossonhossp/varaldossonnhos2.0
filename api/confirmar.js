@@ -1,121 +1,202 @@
 // ============================================================
-// ✅ VARAL DOS SONHOS — /api/confirmar.js
+// 💌 VARAL DOS SONHOS — /api/confirmar.js (Versão Final — TCC)
 // ------------------------------------------------------------
-// 1) Admin clica no botão do e-mail -> GET /api/confirmar?id_adocao=recXXXXX
-// 2) Atualiza "status_adocao = confirmada" na tabela "adocoes" "confirmada"
-// 3) Envia e-mail ao DOADOR com instruções para compra do presente
-// 4) Exibe HTML de sucesso/erro
+// Objetivo: confirmar adoções pelo link enviado ao ADMIN via e-mail.
+// Funções principais:
+//   1️⃣ Recebe o ID da adoção (via URL ou corpo da requisição);
+//   2️⃣ Atualiza o status da adoção → "confirmada";
+//   3️⃣ Envia e-mail automático ao doador (confirmação e instruções);
+//   4️⃣ Atualiza pontuação de gamificação.
+// ------------------------------------------------------------
+// Integrações:
+//   - Airtable (dados)
+//   - EmailJS (envio do e-mail ao doador)
+//   - API /api/gamificacao (pontuação)
 // ============================================================
 
 import Airtable from "airtable";
 
 export const config = { runtime: "nodejs" };
 
-// -------- resposta HTML curta --------
-function page(title, body, ok = true) {
-  return `
-<!doctype html><html lang="pt-BR"><head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>${title}</title>
-<style>
-  body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:#f7fbff;margin:0;padding:40px;color:#123;}
-  .card{max-width:720px;margin:auto;background:#fff;border:1px solid #e5eef9;border-radius:14px;padding:28px;box-shadow:0 10px 28px rgba(9,30,66,.08)}
-  h1{margin:0 0 8px;font-size:1.6rem;color:${ok ? "#0a8754" : "#b00020"}}
-  p{margin:.5rem 0 0;line-height:1.55}
-  a.btn{display:inline-block;margin-top:18px;padding:10px 16px;border-radius:999px;text-decoration:none;border:2px solid #2f80ed;color:#2f80ed}
-  a.btn:hover{background:#2f80ed;color:#fff}
-</style>
-</head><body><div class="card">
-  <h1>${title}</h1>
-  <p>${body}</p>
-  <a class="btn" href="${process.env.APP_BASE_URL || "/"}">Voltar ao site</a>
-</div></body></html>`;
-}
+// ============================================================
+// 🔧 Utilitários HTTP
+// ============================================================
+const ok  = (res, data)          => res.status(200).json(data);
+const err = (res, code, message) => res.status(code).json({ sucesso: false, mensagem: message });
 
-// -------- e-mail ao doador via EmailJS --------
+// ============================================================
+// 💌 Envio de e-mail ao Doador
+// ------------------------------------------------------------
+// Template: "Order Confirmation (Doador)"
+// Mostra os detalhes da cartinha, ponto de coleta e bloco
+// de gamificação com o nível, pontos e próxima meta.
+// ============================================================
 async function enviarEmailDoador(params) {
   const payload = {
     service_id: process.env.EMAILJS_SERVICE_ID,
-    template_id: process.env.EMAILJS_TEMPLATE_ID_USER, // template_4yfc839
+    template_id: process.env.EMAILJS_TEMPLATE_ID_DOADOR, // Ex: "template_order_confirm"
     user_id: process.env.EMAILJS_PUBLIC_KEY,
     template_params: {
-      to_name:       params.nome_doador || "",
-      to_email:      params.email_doador || "",
-      order_id:      params.id_adocao || "",
-      child_name:    params.nome_crianca || "",
-      child_gift:    params.sonho || "",
-      deadline:      params.data_limite || "",
-      pickup_name:   params.ponto_coleta?.nome     || params.ponto_coleta || "",
-      pickup_address:params.ponto_coleta?.endereco || params.ponto_coleta || "",
-      pickup_phone:  params.ponto_coleta?.telefone || "",
-      score_points:  params.pontos || "10",
-      score_level:   params.nivel  || "1",
+      to_name: params.nome_doador,
+      to_email: params.email_doador,
+      child_name: params.nome_crianca,
+      child_age: params.idade || "",
+      child_gift: params.sonho,
+      deadline: params.data_limite || "",
+      order_id: params.id_adocao,
+      pickup_name: params.ponto_coleta?.nome || params.ponto_coleta || "",
+      pickup_address: params.ponto_coleta?.endereco || "",
+      pickup_phone: params.ponto_coleta?.telefone || "",
+      pickup_map_url: params.ponto_coleta?.mapa_url || "",
+
+      // Bloco de gamificação (opcional)
+      gami_level: params.gami_level || 1,
+      gami_points: params.gami_points || 10,
+      gami_badge_title: params.gami_badge_title || "💙 Iniciante Solidário",
+      gami_next_goal: params.gami_next_goal || "Adote mais uma cartinha para subir de nível!",
     },
   };
 
   try {
-    const r = await fetch("https://api.emailjs.com/api/v1.0/email/send", {
+    await fetch("https://api.emailjs.com/api/v1.0/email/send", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     });
-    if (!r.ok) console.warn("EmailJS (user) falhou:", r.status);
+    console.log("📧 E-mail de confirmação enviado ao doador:", params.email_doador);
   } catch (e) {
-    console.warn("EmailJS (user) erro:", e.message);
+    console.error("⚠️ Erro ao enviar e-mail ao doador:", e.message);
   }
 }
 
+// ============================================================
+// 🧩 Handler Principal
+// ============================================================
 export default async function handler(req, res) {
-  try {
-    const id_adocao = (req.query?.id_adocao || "").trim();
-    if (!id_adocao) {
-      res.setHeader("Content-Type", "text/html; charset=utf-8");
-      return res.status(400).send(page("Link inválido", "O identificador da adoção não foi informado.", false));
-    }
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+  if (req.method === "OPTIONS") return res.status(204).end();
 
-    // ------ Airtable ------
+  // Permite confirmação via GET (pelo link do e-mail)
+  const metodo = req.method;
+  if (metodo !== "GET" && metodo !== "POST") return err(res, 405, "Método não suportado.");
+
+  try {
+    // ============================================================
+    // 1️⃣ Conexão com Airtable
+    // ============================================================
     const base = new Airtable({ apiKey: process.env.AIRTABLE_API_KEY })
       .base(process.env.AIRTABLE_BASE_ID);
 
     const T_ADOCOES = "adocoes";
 
-    // Recupera a adoção
-    const rec = await base(T_ADOCOES).find(id_adocao);
-    const fields = rec.fields || {};
+    // ============================================================
+    // 2️⃣ Captura o ID da adoção
+    // ============================================================
+    const id_adocao = req.query.id_adocao || req.body?.id_adocao;
+    if (!id_adocao) return err(res, 400, "ID da adoção ausente.");
 
-    // Se já confirmada, apenas mostra a mensagem
-    if ((fields.status_adocao || "").toLowerCase() === "confirmada") {
-      res.setHeader("Content-Type", "text/html; charset=utf-8");
-      return res.status(200).send(page("Adoção já confirmada",
-        "Esta adoção já foi confirmada anteriormente e o doador já deve ter sido notificado."));
-    }
+    // ============================================================
+    // 3️⃣ Busca o registro correspondente
+    // ============================================================
+    const registro = await base(T_ADOCOES).find(id_adocao);
+    if (!registro) return err(res, 404, "Adoção não encontrada.");
 
-    // Atualiza para confirmada
+    const dados = registro.fields;
+
+    // ============================================================
+    // 4️⃣ Atualiza status → confirmada
+    // ============================================================
     await base(T_ADOCOES).update([{ id: id_adocao, fields: { status_adocao: "confirmada" } }]);
+    console.log(`✅ Adoção ${id_adocao} confirmada pelo ADMIN.`);
 
-    // Dispara e-mail ao doador com gamificação básica
-    await enviarEmailDoador({
+    // ============================================================
+    // 5️⃣ Envia e-mail de confirmação ao doador
+    // ============================================================
+    enviarEmailDoador({
       id_adocao,
-      nome_doador:   fields.nome_doador,
-      email_doador:  fields.email_doador,
-      nome_crianca:  fields.nome_crianca,
-      sonho:         fields.sonho,
-      ponto_coleta:  { nome: fields.ponto_coleta || "" }, // se desejar guardar endereço/telefone, inclua na adoção
-      data_limite:   fields.data_limite_recebimento || "",
-      pontos:        "10",
-      nivel:         "1",
+      nome_doador: dados.nome_doador,
+      email_doador: dados.email_doador,
+      nome_crianca: dados.nome_crianca,
+      sonho: dados.sonho,
+      ponto_coleta: dados.ponto_coleta,
+      data_limite: dados.data_limite_recebimento || "",
     });
 
-    res.setHeader("Content-Type", "text/html; charset=utf-8");
-    return res
-      .status(200)
-      .send(page("Adoção confirmada com sucesso",
-        "O status foi atualizado para <b>confirmada</b> e o e-mail foi enviado ao doador com as instruções para compra do presente."));
+    // ============================================================
+    // 6️⃣ Atualiza Gamificação do Doador
+    // ------------------------------------------------------------
+    // Conta quantas adoções confirmadas o doador possui e
+    // ajusta automaticamente o nível e a pontuação.
+    // ============================================================
+    try {
+      const adocoesConfirmadas = await base(T_ADOCOES)
+        .select({
+          filterByFormula: `AND({email_doador}='${dados.email_doador}', {status_adocao}='confirmada')`,
+        })
+        .all();
+
+      const total = adocoesConfirmadas.length;
+      const pontos_coracao = total * 10;
+
+      let titulo_conquista = "💙 Iniciante Solidário";
+      if (total >= 5) titulo_conquista = "👑 Lenda dos Sonhos";
+      else if (total >= 4) titulo_conquista = "🌟 Guardião dos Sonhos";
+      else if (total >= 3) titulo_conquista = "🏅 Mestre dos Sonhos";
+      else if (total >= 2) titulo_conquista = "💛 Segundo Gesto de Amor";
+
+      await fetch(`${process.env.APP_BASE_URL}/api/gamificacao`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id_usuario: dados.id_usuario,
+          pontos_coracao,
+          total_cartinhas_adotadas: total,
+          titulo_conquista,
+        }),
+      });
+
+      console.log("🏆 Gamificação atualizada após confirmação:", dados.email_doador);
+    } catch (gamiErr) {
+      console.error("⚠️ Erro ao atualizar gamificação:", gamiErr);
+    }
+
+    // ============================================================
+    // 7️⃣ Resposta final ao navegador
+    // ============================================================
+    if (req.method === "GET") {
+      // Exibe página simples de sucesso (para o admin ver no navegador)
+      res.setHeader("Content-Type", "text/html; charset=utf-8");
+      return res.end(`
+        <html lang="pt-BR">
+          <head>
+            <title>Adoção Confirmada 💙</title>
+            <meta charset="utf-8" />
+            <style>
+              body { font-family: 'Poppins', sans-serif; background: #f0f7ff; text-align: center; padding: 60px; color: #123456; }
+              .card { background: #fff; border-radius: 16px; display:inline-block; padding: 40px; box-shadow:0 4px 10px rgba(0,0,0,.08); }
+              h1 { color:#1f6fe5; margin-bottom:10px; }
+              p { font-size:16px; }
+              a { background:#1f6fe5; color:#fff; text-decoration:none; padding:10px 18px; border-radius:24px; font-weight:600; display:inline-block; margin-top:20px; }
+            </style>
+          </head>
+          <body>
+            <div class="card">
+              <h1>💙 Adoção Confirmada com Sucesso!</h1>
+              <p>O doador será notificado por e-mail e a pontuação foi atualizada.</p>
+              <a href="${process.env.APP_BASE_URL || ""}/pages/admin.html">Voltar ao Painel</a>
+            </div>
+          </body>
+        </html>
+      `);
+    }
+
+    // Retorno padrão (JSON)
+    return ok(res, { sucesso: true, mensagem: "Adoção confirmada e e-mail enviado." });
+
   } catch (e) {
-    console.error("Erro /api/confirmar:", e);
-    res.setHeader("Content-Type", "text/html; charset=utf-8");
-    return res
-      .status(500)
-      .send(page("Erro ao confirmar", "Ocorreu um erro ao processar a confirmação. Tente novamente.", false));
+    console.error("🔥 Erro /api/confirmar:", e);
+    return err(res, 500, "Erro ao confirmar adoção.");
   }
 }

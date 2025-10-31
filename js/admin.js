@@ -1,180 +1,107 @@
 // ============================================================
-// 💼 VARAL DOS SONHOS — /js/admin.js (versão TCC)
+// 💼 VARAL DOS SONHOS — /js/admin.js
 // ------------------------------------------------------------
-// Este script controla o Painel Administrativo.
-// Permite ao administrador:
-//   - Validar o token de acesso
-//   - Criar, listar, destacar e encerrar eventos
-//   - Excluir eventos da base Airtable
+// Painel de administração: lista e confirma adoções.
+// Ao confirmar, muda o status no Airtable e dispara e-mail
+// de confirmação automática para o doador.
 // ============================================================
 
-document.addEventListener("DOMContentLoaded", () => {
-  const tokenInput = document.getElementById("token");
-  const btnLogin = document.getElementById("btnLogin");
-  const authMsg = document.getElementById("authMsg");
-  const formEvento = document.getElementById("formEvento");
-  const msg = document.getElementById("msg");
-  const divEventos = document.getElementById("eventos");
-  const listaEventos = document.getElementById("listaEventos");
-
-  let tokenAdmin = "";
+document.addEventListener("DOMContentLoaded", async () => {
+  const tabela = document.querySelector("#tabelaAdocoes tbody");
 
   // ============================================================
-  // 🔑 LOGIN ADMINISTRATIVO
+  // 1️⃣ Valida o tipo de usuário (apenas administradores)
   // ============================================================
-  btnLogin.addEventListener("click", async () => {
-    tokenAdmin = tokenInput.value.trim();
-    if (!tokenAdmin) {
-      authMsg.textContent = "⚠️ Informe o token administrativo.";
-      authMsg.style.color = "red";
-      return;
-    }
+  const usuario = JSON.parse(localStorage.getItem("usuario_logado"));
+  if (!usuario || usuario.tipo !== "administrador") {
+    alert("⛔ Acesso restrito! Somente administradores podem acessar esta área.");
+    window.location.href = "../index.html";
+    return;
+  }
 
+  // ============================================================
+  // 2️⃣ Função para carregar todas as adoções da API
+  // ============================================================
+  async function carregarAdocoes() {
     try {
-      const url = `/api/admin?tipo=eventos&token_admin=${encodeURIComponent(tokenAdmin)}`;
-      const resp = await fetch(url);
-      if (!resp.ok) throw new Error("Token inválido");
+      const resp = await fetch("/api/adocoes");
+      const dados = await resp.json();
 
-      authMsg.textContent = "✅ Acesso liberado!";
-      authMsg.style.color = "green";
-      tokenInput.disabled = true;
-      btnLogin.disabled = true;
-      formEvento.style.display = "grid";
-      listaEventos.style.display = "block";
-      carregarEventos();
-    } catch {
-      authMsg.textContent = "❌ Token inválido. Tente novamente.";
-      authMsg.style.color = "red";
-    }
-  });
-
-  // ============================================================
-  // 📅 CRIAR NOVO EVENTO
-  // ============================================================
-  formEvento.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    msg.textContent = "⏳ Enviando...";
-
-    const payload = {
-      acao: "criar",
-      token_admin: tokenAdmin,
-      nome_evento: document.getElementById("titulo").value.trim(),
-      local_evento: document.getElementById("local").value.trim(),
-      descricao: document.getElementById("descricao").value.trim(),
-      data_evento: document.getElementById("data_evento").value,
-      data_limite_recebimento: document.getElementById("data_limite_recebimento").value,
-      destacar_na_homepage: document.getElementById("destacar").checked,
-      imagem: document.getElementById("imagens").value
-        .split(",")
-        .filter(Boolean)
-        .map(u => ({ url: u.trim() })),
-    };
-
-    try {
-      const resp = await fetch("/api/admin", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-      const data = await resp.json();
-
-      if (data.sucesso) {
-        msg.textContent = "✅ Evento criado com sucesso!";
-        msg.style.color = "green";
-        formEvento.reset();
-        carregarEventos();
-      } else throw new Error(data.mensagem);
-    } catch (e) {
-      msg.textContent = "❌ Erro ao criar evento.";
-      msg.style.color = "red";
-      console.error(e);
-    }
-  });
-
-  // ============================================================
-  // 📋 LISTAR EVENTOS
-  // ============================================================
-  window.carregarEventos = async function () {
-    divEventos.innerHTML = "<p>⏳ Carregando eventos...</p>";
-    try {
-      const url = `/api/admin?tipo=eventos&token_admin=${encodeURIComponent(tokenAdmin)}`;
-      const resp = await fetch(url);
-      const json = await resp.json();
-
-      if (!json.sucesso) throw new Error("Erro ao carregar.");
-
-      if (!json.eventos?.length) {
-        divEventos.innerHTML = "<p>Nenhum evento cadastrado 💙</p>";
+      if (!dados.sucesso || !dados.adocoes.length) {
+        tabela.innerHTML = `<tr><td colspan="7" style="text-align:center;">Nenhuma adoção pendente 💌</td></tr>`;
         return;
       }
 
-      divEventos.innerHTML = "";
-      json.eventos.forEach((ev) => {
-        const f = ev.fields || {};
-        const imgs = f.imagem || [];
+      tabela.innerHTML = ""; // limpa
 
-        const bloco = document.createElement("div");
-        bloco.className = "evento";
-        bloco.innerHTML = `
-          <h3>${f.nome_evento || "Sem título"} (${ev.id})</h3>
-          <p><b>Status:</b> ${f.status_evento || "—"} ${f.destacar_na_homepage ? "⭐" : ""}</p>
-          <p>📍 ${f.local_evento || "—"}</p>
-          <p>📅 ${f.data_evento ? new Date(f.data_evento).toLocaleDateString("pt-BR") : "—"}</p>
-          <p>⏳ Recebimento: ${f.data_limite_recebimento ? new Date(f.data_limite_recebimento).toLocaleDateString("pt-BR") : "—"}</p>
-          <p>${f.descricao || ""}</p>
-          <div class="fotos">${imgs.map(img => `<img src="${img.url}" />`).join("")}</div>
-          <div class="acoes">
-            <button class="destacar" data-id="${ev.id}">${f.destacar_na_homepage ? "🔽 Remover destaque" : "⭐ Destacar"}</button>
-            <button class="encerrar" data-id="${ev.id}">🚫 Encerrar</button>
-            <button class="excluir" data-id="${ev.id}">🗑️ Excluir</button>
-          </div>
+      dados.adocoes.forEach((a) => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${a.nome_crianca || "-"}</td>
+          <td>${a.sonho || "-"}</td>
+          <td>${a.nome_doador || "-"}<br><small>${a.email_doador || ""}</small></td>
+          <td>${a.ponto_coleta || "-"}</td>
+          <td>${new Date(a.data_adocao).toLocaleDateString("pt-BR")}</td>
+          <td>${a.status_adocao}</td>
+          <td>
+            ${
+              a.status_adocao === "aguardando confirmacao"
+                ? `<button class="btn-confirmar" data-id="${a.id_adocao}" data-email="${a.email_doador}" data-cartinha="${a.id_cartinha}">Confirmar ✅</button>`
+                : `<span style="color:#2ecc71;">✔️ Confirmada</span>`
+            }
+          </td>
         `;
-
-        // Botões
-        bloco.querySelector(".destacar").addEventListener("click", () => atualizar(ev.id, { destacar_na_homepage: !f.destacar_na_homepage }));
-        bloco.querySelector(".encerrar").addEventListener("click", () => atualizar(ev.id, { status_evento: "encerrado" }));
-        bloco.querySelector(".excluir").addEventListener("click", () => excluir(ev.id));
-
-        divEventos.appendChild(bloco);
+        tabela.appendChild(tr);
       });
-    } catch (e) {
-      divEventos.innerHTML = "<p>❌ Falha ao carregar eventos.</p>";
-      console.error(e);
-    }
-  };
 
-  // ============================================================
-  // 🔄 ATUALIZAR CAMPOS DO EVENTO
-  // ============================================================
-  async function atualizar(id_evento, fields) {
-    try {
-      const resp = await fetch("/api/admin", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ acao: "atualizar", token_admin: tokenAdmin, id_evento, fields }),
-      });
-      const data = await resp.json();
-      if (data.sucesso) carregarEventos();
-    } catch (e) {
-      console.error("Erro ao atualizar:", e);
+      adicionarEventosConfirmar();
+    } catch (erro) {
+      console.error("Erro ao carregar adoções:", erro);
+      tabela.innerHTML = `<tr><td colspan="7" style="text-align:center;color:red;">Erro ao buscar dados.</td></tr>`;
     }
   }
 
   // ============================================================
-  // 🗑️ EXCLUIR EVENTO
+  // 3️⃣ Confirmação da adoção + atualização no Airtable
   // ============================================================
-  async function excluir(id_evento) {
-    if (!confirm("Excluir este evento?")) return;
-    try {
-      const resp = await fetch("/api/admin", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ acao: "excluir", token_admin: tokenAdmin, id_evento }),
+  function adicionarEventosConfirmar() {
+    document.querySelectorAll(".btn-confirmar").forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        const id = btn.dataset.id;
+        const email = btn.dataset.email;
+        const cartinha = btn.dataset.cartinha;
+
+        if (!confirm("Deseja confirmar esta adoção e enviar o e-mail ao doador?")) return;
+
+        try {
+          const resp = await fetch("/api/adocoes", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              acao: "confirmar",
+              id_adocao: id,
+              email_doador: email,
+              id_cartinha: cartinha,
+            }),
+          });
+
+          const resultado = await resp.json();
+          if (resultado.sucesso) {
+            alert("💙 Adoção confirmada com sucesso!\nE-mail enviado ao doador com instruções.");
+            carregarAdocoes();
+          } else {
+            alert("⚠️ Erro ao confirmar adoção: " + resultado.mensagem);
+          }
+        } catch (e) {
+          console.error("Erro ao confirmar:", e);
+          alert("❌ Falha ao enviar confirmação. Tente novamente.");
+        }
       });
-      const data = await resp.json();
-      if (data.sucesso) carregarEventos();
-    } catch (e) {
-      console.error("Erro ao excluir:", e);
-    }
+    });
   }
+
+  // ============================================================
+  // 4️⃣ Inicialização
+  // ============================================================
+  carregarAdocoes();
 });

@@ -1,198 +1,82 @@
 /* ============================================================
-   💙 VARAL DOS SONHOS — /css/cadastro.css (versão TCC)
-   ------------------------------------------------------------
-   Arquivo unificado de estilos para os formulários:
-   - Cadastro (pages/cadastro.html)
-   - Login (pages/login.html)
-   O design segue a identidade visual do projeto:
-   tons de azul, sombras suaves e tipografia Poppins.
-   ============================================================ */
+💙 VARAL DOS SONHOS — /css/cadastro.css
+---------------------------------------------------------------
+Estilo do formulário de cadastro
+============================================================ */
 
-/* 🎨 Paleta e tokens de design */
-:root {
-    --cor-primaria: #4A90E2;      /* Azul claro - principal */
-    --cor-secundaria: #1f355b;    /* Azul escuro - títulos */
-    --fundo-claro: #f0f8ff;       /* Fundo de página */
-    --borda-clara: #bcd3f7;       /* Borda e campos */
-    --sombra-card: 0 4px 12px rgba(0, 0, 0, 0.1);
+body {
+  font-family: 'Poppins', sans-serif;
+  background: linear-gradient(180deg, #f0f7ff 0%, #e6f0ff 100%);
+  color: #123456;
+  margin: 0;
+  padding: 0;
 }
 
-/* ============================================================
-   🧱 CONTAINER PRINCIPAL
-   ------------------------------------------------------------
-   Centraliza o conteúdo vertical e horizontalmente.
-   Aplica o fundo azul claro e garante responsividade.
-   ============================================================ */
-.form-container {
-    padding: 40px 20px;
-    background-color: var(--fundo-claro);
-    min-height: 80vh; 
-    display: flex;
-    justify-content: center;
-    align-items: center;
+.container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 80vh;
 }
 
-/* ============================================================
-   🪄 CARD (CAIXA BRANCA DO FORMULÁRIO)
-   ------------------------------------------------------------
-   Usado tanto para login quanto para cadastro.
-   ============================================================ */
-.login-card, .cadastro-card, .form-section.card {
-    background: #ffffff;
-    border-radius: 12px;
-    box-shadow: var(--sombra-card);
-    padding: 40px;
-    width: 100%;
-    max-width: 420px;
+.form-section {
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+  padding: 30px;
+  width: 100%;
+  max-width: 420px;
+  text-align: left;
 }
 
-/* ============================================================
-   🏷️ TÍTULOS E SUBTÍTULOS
-   ============================================================ */
-h2 {
-    color: var(--cor-secundaria);
-    font-weight: 700;
-    text-align: center;
-    margin-bottom: 1.5rem;
+.form-section h2 {
+  color: #0078ff;
+  font-weight: 700;
+  margin-bottom: 8px;
+  text-align: center;
 }
 
-/* ============================================================
-   📝 FORMULÁRIO
-   ------------------------------------------------------------
-   Campos, rótulos e espaçamento entre inputs.
-   ============================================================ */
-form {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
+.form-section p {
+  color: #4a4a4a;
+  text-align: center;
+  margin-bottom: 20px;
 }
 
 label {
-    font-weight: 500;
-    color: var(--cor-secundaria);
+  display: block;
+  margin-top: 12px;
+  font-weight: 600;
+  color: #123456;
 }
 
-/* ============================================================
-   ⌨️ CAMPOS DE TEXTO E INPUTS
-   ============================================================ */
-input[type="email"],
-input[type="password"],
-input[type="text"],
-input[type="tel"],
-input[type="number"],
-input[type="date"],
-select {
-    width: 100%;
-    padding: 12px;
-    border-radius: 6px;
-    border: 1px solid var(--borda-clara);
-    font-family: "Poppins", sans-serif;
-    transition: border-color 0.3s ease;
+input, select {
+  width: 100%;
+  padding: 10px;
+  margin-top: 6px;
+  border: 1px solid #d0d8e0;
+  border-radius: 8px;
+  font-size: 15px;
+  outline: none;
+  transition: border-color 0.2s;
 }
 
 input:focus, select:focus {
-    border-color: var(--cor-primaria);
-    outline: none;
+  border-color: #0078ff;
 }
 
-/* ============================================================
-   🔘 BOTÕES
-   ============================================================ */
-.btn-primary {
-    background: var(--cor-primaria);
-    color: #fff;
-    padding: 12px;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    font-weight: 600;
-    transition: background-color 0.3s;
+.btn-cadastrar {
+  background: #0078ff;
+  color: white;
+  border: none;
+  padding: 12px;
+  width: 100%;
+  border-radius: 8px;
+  font-weight: 600;
+  margin-top: 20px;
+  cursor: pointer;
+  transition: background 0.3s;
 }
 
-.btn-primary:hover:not(:disabled) {
-    background: #3b7bd6;
-}
-
-.btn-primary:disabled {
-    background: #aab8c2;
-    cursor: not-allowed;
-}
-
-/* ============================================================
-   💬 FEEDBACK (mensagens de erro/sucesso)
-   ============================================================ */
-.feedback {
-    padding: 10px;
-    border-radius: 6px;
-    text-align: center;
-    font-weight: 600;
-    margin-top: 10px;
-    font-size: 0.9rem;
-}
-
-.feedback.sucesso {
-    background-color: #e6ffed;
-    color: #008000;
-    border: 1px solid #008000;
-}
-
-.feedback.erro {
-    background-color: #ffe6e6;
-    color: #ff0000;
-    border: 1px solid #ff0000;
-}
-
-.hidden {
-    display: none !important;
-}
-
-/* ============================================================
-   🔗 LINKS E TEXTO INFORMATIVO
-   ============================================================ */
-.text-center {
-    text-align: center;
-    font-size: 0.9rem;
-}
-
-.text-center a {
-    color: var(--cor-primaria);
-    text-decoration: none;
-    font-weight: 600;
-}
-
-.text-center a:hover {
-    text-decoration: underline;
-}
-
-/* ============================================================
-   ⚠️ ALERTAS (caso o back-end retorne erro de servidor)
-   ============================================================ */
-.alert-message {
-    padding: 10px;
-    border-radius: 6px;
-    background-color: #fff3cd;
-    color: #856404;
-    border: 1px solid #ffeeba;
-    text-align: center;
-    margin-top: 20px;
-}
-
-/* ============================================================
-   🤝 LAYOUT RESPONSIVO
-   ------------------------------------------------------------
-   Garante leitura e acessibilidade em telas pequenas.
-   ============================================================ */
-@media (max-width: 480px) {
-    .login-card, .cadastro-card {
-        padding: 25px;
-    }
-
-    h2 {
-        font-size: 1.3rem;
-    }
-
-    .btn-primary {
-        font-size: 0.95rem;
-        padding: 10px;
-    }
+.btn-cadastrar:hover {
+  background: #005fcc;
 }
