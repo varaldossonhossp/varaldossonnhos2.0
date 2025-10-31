@@ -85,25 +85,25 @@ Compatível com Vercel + .NET MAUI WebView
   background: transparent;
 }
 
-/* ====== GANCHO (PRENDEDOR) ====== */
+/* ====== GANCHO (prendedor) ====== */
 .gancho {
-  flex: 0 0 calc(25% - 20px);
+  flex: 0 0 260px;
   position: relative;
   scroll-snap-align: center;
 }
 
-/* prendedor sobre o card (sem cortar) */
+/* prendedor pendurado acima do card */
 .gancho::before {
   content: "";
   position: absolute;
-  top: -44px; /* sobe um pouco pra não cortar */
+  top: -28px;              
   left: 50%;
   transform: translateX(-50%);
-  width: 42px;
-  height: 42px;
-  background: url("../imagens/prendedor.png") no-repeat center;
+  width: 32px;
+  height: 32px;
+  background: url('../imagens/prendedor.png') no-repeat center; 
   background-size: contain;
-  z-index: 10;
+  z-index: 5;
 }
 
 /* Fallback para MAUI WebView */
