@@ -41,7 +41,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // Ação de logout
     document.getElementById("btn-sair").addEventListener("click", () => {
       localStorage.removeItem("usuario");
-      window.location.href = "/index.html";
+      window.location.href = "../index.html";
     });
   }
 });
@@ -107,7 +107,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       sairLink.addEventListener("click", (e) => {
         e.preventDefault();
         localStorage.removeItem("usuario");
-        window.location.href = "/index.html";
+        window.location.href = "../index.html";
       });
 
     } else {
