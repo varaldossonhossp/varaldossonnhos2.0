@@ -1,104 +1,102 @@
 // ============================================================
-// 👥 VARAL DOS SONHOS — /api/usuarios.js (VERSÃO FINAL COM NOMES EXATOS)
+// 👥 VARAL DOS SONHOS — /api/usuarios.js (versão TCC)
 // ------------------------------------------------------------
-// ✅ Tabela: 'usuario' (singular).
-// ✅ Campo Senha: {senha} (minúsculo).
-// ✅ Inicialização robusta e Modo Senha Simples.
+// Backend serverless (Vercel) para Cadastro e Login.
+// Tabela Airtable: "usuario"
+// Campos: nome_usuario, email_usuario, telefone, senha, tipo_usuario, cidade, cep, endereco, numero, status
 // ============================================================
 
 import Airtable from "airtable";
-
-// Variáveis de ambiente
-const AIRTABLE_API_KEY = process.env.AIRTABLE_API_KEY;
-const AIRTABLE_BASE_ID = process.env.AIRTABLE_BASE_ID;
-
-// Configuração do Vercel
 export const config = { runtime: "nodejs" };
 
-// 🚨 TABLE_NAME: 'usuario' (Deve ser consistente com Airtable e Vercel)
-const TABLE_NAME =
-  process.env.AIRTABLE_USUARIO_TABLE || "usuario"; // Usando AIRTABLE_USUARIO_TABLE conforme seu .env.local
+// ============================================================
+// 🔐 Configurações de ambiente (definidas no painel Vercel)
+// ============================================================
+const AIRTABLE_API_KEY = process.env.AIRTABLE_API_KEY;
+const AIRTABLE_BASE_ID = process.env.AIRTABLE_BASE_ID;
+const TABLE_NAME = process.env.AIRTABLE_USUARIO_TABLE || "usuario";
 
+// ============================================================
+// 🧰 Funções utilitárias
+// ============================================================
 const err = (res, code, msg, extra = {}) => {
-  console.error("❌", code, msg, extra);
-  return res.status(code).json({ sucesso: false, mensagem: msg, ...extra });
+  console.error("❌", code, msg, extra);
+  return res.status(code).json({ sucesso: false, mensagem: msg, ...extra });
 };
 
-// Função auxiliar para evitar erro de sintaxe na fórmula
-const escapeFormulaString = (str) => {
-    // Substitui aspas simples (') por duas aspas simples ('') para evitar erros na fórmula
-    return str ? str.replace(/'/g, "''") : ''; 
-};
+const escapeFormulaString = (str) => str ? str.replace(/'/g, "''") : "";
 
-
+// ============================================================
+// 🧩 FUNÇÃO PRINCIPAL
+// ============================================================
 export default async function handler(req, res) {
-  res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
-  if (req.method === "OPTIONS") return res.status(204).end();
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+  if (req.method === "OPTIONS") return res.status(204).end();
 
-  try {
-    // 🔑 INICIALIZAÇÃO E TESTE DE CHAVE ROBUSTO
-    if (!AIRTABLE_API_KEY || !AIRTABLE_BASE_ID) {
-        return err(res, 500, "ERRO CRÍTICO: Chaves de ambiente do Airtable ausentes.", { detalhe: "AIRTABLE_API_KEY ou BASE_ID não configurados na Vercel." });
+  try {
+    if (!AIRTABLE_API_KEY || !AIRTABLE_BASE_ID)
+      return err(res, 500, "Chaves Airtable ausentes.");
+
+    const base = new Airtable({ apiKey: AIRTABLE_API_KEY }).base(AIRTABLE_BASE_ID);
+
+    // ============================================================
+    // POST → CADASTRO DE USUÁRIO
+    // ============================================================
+    if (req.method === "POST") {
+      const {
+        nome_usuario, email_usuario, telefone, senha,
+        tipo_usuario, cidade, cep, endereco, numero
+      } = req.body || {};
+
+      if (!nome_usuario || !email_usuario || !senha)
+        return err(res, 400, "Campos obrigatórios ausentes.");
+
+      const novo = await base(TABLE_NAME).create([{
+        fields: {
+          nome_usuario, email_usuario, telefone,
+          senha, tipo_usuario, cidade, cep, endereco, numero,
+          status: "ativo"
+        }
+      }]);
+
+      return res.status(201).json({
+        sucesso: true,
+        mensagem: "Usuário cadastrado com sucesso.",
+        id_usuario: novo[0].id
+      });
     }
 
-    const base = new Airtable({ apiKey: AIRTABLE_API_KEY })
-        .base(AIRTABLE_BASE_ID);
+    // ============================================================
+    // GET → LOGIN DO USUÁRIO
+    // ============================================================
+    if (req.method === "GET") {
+      const { email, senha } = req.query || {};
+      if (!email || !senha)
+        return err(res, 400, "E-mail e senha são obrigatórios.");
 
-    // ============================================================
-    // POST → Cadastro (Modo Senha Simples)
-    // ============================================================
-    if (req.method === "POST") {
-      const { nome_usuario, email_usuario, telefone, senha, tipo_usuario, cidade, cep, endereco, numero } = req.body || {};
-      
-      // Validação
-      const camposObrigatorios = { nome_usuario, email_usuario, telefone, senha, tipo_usuario, cidade, cep, endereco, numero };
-      const camposFaltando = Object.keys(camposObrigatorios).filter(key => !camposObrigatorios[key]);
-      if (camposFaltando.length > 0) return err(res, 400, "Todos os campos de cadastro são obrigatórios.");
+      const emailEsc = escapeFormulaString(email);
+      const senhaEsc = escapeFormulaString(senha);
 
+      const formula = `AND({email_usuario}='${emailEsc}', {senha}='${senhaEsc}', {status}='ativo')`;
+      const registros = await base(TABLE_NAME).select({ filterByFormula: formula, maxRecords: 1 }).all();
 
-      // VERIFICAÇÃO DE DUPLICIDADE (Omitida por brevidade, mas está correta)
-      // ...
+      if (!registros.length) return err(res, 401, "Credenciais inválidas.");
 
-      // Cria o registro no Airtable
-      const novo = await base(TABLE_NAME).create([
-        { fields: { 
-            nome_usuario, email_usuario, telefone, 
-            'senha': senha, // Usando 'senha' para criação
-            tipo_usuario, cidade, cep, endereco, numero, status: "ativo" 
-        }},
-      ]);
-      return res.status(201).json({ sucesso: true, mensagem: "Usuário cadastrado com sucesso.", id_usuario: novo[0].id });
-    }
-    
-    // ============================================================
-    // GET → Login
-    // ============================================================
-    if (req.method === "GET") {
-      const { email, senha } = req.query || {};
-      if (!email || !senha) return err(res, 400, "E-mail e senha são obrigatórios para login.");
+      const user = registros[0].fields;
+      const { senha: _, ...dados } = user;
+      return res.status(200).json({
+        sucesso: true,
+        mensagem: "Login efetuado com sucesso.",
+        usuario: dados,
+        id_usuario: registros[0].id
+      });
+    }
 
-      const emailEscapado = escapeFormulaString(email);
-      const senhaEscapada = escapeFormulaString(senha);
-
-      // 🚨 FÓRMULA CORRIGIDA: {senha} minúsculo
-      const formula = `AND({email_usuario}='${emailEscapado}', {senha}='${senhaEscapada}', {status}='ativo')`;
-
-      const registros = await base(TABLE_NAME)
-        .select({ filterByFormula: formula, maxRecords: 1 }).all();
-
-      if (registros.length === 0) return err(res, 401, "Credenciais inválidas.");
-
-      const user = registros[0].fields;
-      // Ajuste para remover a senha do retorno
-      const { senha: _, ...dados } = user; 
-      return res.status(200).json({ sucesso: true, mensagem: "Login efetuado com sucesso.", usuario: dados, id_usuario: registros[0].id });
-    }
-
-    return err(res, 405, "Método não suportado.");
-  } catch (e) {
-    console.error("🔥 Erro interno /api/usuarios:", e);
-    return err(res, 500, "Erro interno no servidor.", { detalhe: e.message });
-  }
+    return err(res, 405, "Método não suportado.");
+  } catch (e) {
+    console.error("🔥 Erro interno /api/usuarios:", e);
+    return err(res, 500, "Erro interno no servidor.", { detalhe: e.message });
+  }
 }

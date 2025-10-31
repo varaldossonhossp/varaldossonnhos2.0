@@ -1,61 +1,76 @@
 // ============================================================
-// 🔑 VARAL DOS SONHOS — /js/login.js (CORRETO)
+// 🔐 VARAL DOS SONHOS — /js/login.js (versão TCC)
+// ------------------------------------------------------------
+// Controla o fluxo de login dos usuários.
+// Envia email/senha à rota /api/usuarios.js (GET) e valida retorno.
 // ============================================================
 
 document.addEventListener("DOMContentLoaded", () => {
-  const form = document.getElementById("formLogin");
-  const feedbackMsg = document.getElementById("feedback-msg");
-  if (!form) return;
+  const form = document.getElementById("formLogin");
+  const feedbackMsg = document.getElementById("feedback-msg");
 
-  const exibirFeedback = (mensagem, tipo = "sucesso") => {
-    if (!feedbackMsg) return alert(mensagem);
-    feedbackMsg.textContent = mensagem;
-    feedbackMsg.className = `feedback ${tipo}`;
-    feedbackMsg.classList.remove("hidden");
-    setTimeout(() => feedbackMsg.classList.add("hidden"), 5000);
-  };
+  // ============================================================
+  // 💬 Exibe mensagens ao usuário
+  // ============================================================
+  const exibirFeedback = (mensagem, tipo = "erro") => {
+    feedbackMsg.textContent = mensagem;
+    feedbackMsg.className = `feedback ${tipo}`;
+    feedbackMsg.classList.remove("hidden");
+    setTimeout(() => feedbackMsg.classList.add("hidden"), 4000);
+  };
 
-  form.addEventListener("submit", async (e) => {
-    e.preventDefault();
+  // ============================================================
+  // 🚀 Evento de envio do formulário
+  // ============================================================
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
 
-    const email = document.getElementById("email")?.value.trim();
-    const senha = document.getElementById("senha")?.value.trim();
-    if (!email || !senha) return exibirFeedback("Preencha e-mail e senha.", "erro");
+    const email = document.getElementById("email").value.trim();
+    const senha = document.getElementById("senha").value.trim();
 
-    const btn = form.querySelector('button[type="submit"]');
-    btn.disabled = true; btn.textContent = "Verificando...";
+    if (!email || !senha) {
+      exibirFeedback("Preencha todos os campos obrigatórios.", "erro");
+      return;
+    }
 
-    try {
-      const params = new URLSearchParams({ email, senha });
-      const resp = await fetch(`/api/usuarios?${params.toString()}`, { method: "GET" });
+    const btn = form.querySelector("button");
+    btn.disabled = true;
+    btn.textContent = "Entrando...";
 
-      // 👇 NÃO tente fazer .json() se a resposta não for OK
-      const payload = resp.ok ? await resp.json() : { sucesso: false, mensagem: await resp.text() };
+    try {
+      // 📡 Requisição para API de login
+      const resp = await fetch(`/api/usuarios?email=${encodeURIComponent(email)}&senha=${encodeURIComponent(senha)}`);
+      const data = await resp.json();
 
-      if (!resp.ok || !payload.sucesso) {
-        const msg = payload?.mensagem || `Erro de login (HTTP ${resp.status})`;
-        return exibirFeedback(msg, "erro");
-      }
+      if (!resp.ok || !data.sucesso) {
+        exibirFeedback(data?.mensagem || "Credenciais inválidas.", "erro");
+        btn.disabled = false;
+        btn.textContent = "Entrar";
+        return;
+      }
 
-      const { usuario, id_usuario } = payload;
-      localStorage.setItem("id_usuario_varal", id_usuario);
-      localStorage.setItem("nome_usuario_varal", usuario.nome_usuario || "");
-      localStorage.setItem("email_usuario_varal", usuario.email_usuario || "");
-      localStorage.setItem("tipo_usuario_varal", usuario.tipo_usuario || "doador");
+      // ✅ Login realizado com sucesso
+      exibirFeedback("✅ Login efetuado com sucesso!", "sucesso");
 
-      exibirFeedback(`🎉 Bem-vindo, ${ (usuario.nome_usuario||"").split(" ")[0] }!`, "sucesso");
+      // 💾 Armazena o usuário localmente (para futuras páginas)
+      localStorage.setItem("usuario", JSON.stringify(data.usuario));
 
-      setTimeout(() => {
-        const redirectUrl = (usuario.tipo_usuario === "administrador" || usuario.tipo_usuario === "voluntario")
-          ? "admin.html"
-          : "../index.html";
-        window.location.href = redirectUrl;
-      }, 800);
-    } catch (e2) {
-      console.error("Erro de rede:", e2);
-      exibirFeedback("Erro de conexão. Tente novamente.", "erro");
-    } finally {
-      btn.disabled = false; btn.textContent = "Entrar";
-    }
-  });
+      // Redireciona conforme tipo de usuário
+      const tipo = data.usuario.tipo_usuario?.toLowerCase();
+      setTimeout(() => {
+        if (tipo === "administrador") {
+          window.location.href = "admin.html";
+        } else {
+          window.location.href = "../index.html";
+        }
+      }, 1200);
+
+    } catch (err) {
+      console.error(err);
+      exibirFeedback("Erro de conexão. Tente novamente.", "erro");
+    } finally {
+      btn.disabled = false;
+      btn.textContent = "Entrar";
+    }
+  });
 });

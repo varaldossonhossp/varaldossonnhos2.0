@@ -1,10 +1,17 @@
 <!doctype html>
 <html lang="pt-BR">
 <head>
+    <!-- ============================================================
+         💙 VARAL DOS SONHOS — Cadastro de Usuário
+         ------------------------------------------------------------
+         Página de criação de conta de doadores, voluntários e admin.
+         Conecta-se ao back-end via /api/usuarios.js (Vercel + Airtable).
+    ============================================================ -->
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>Cadastro | Varal dos Sonhos 💙</title>
 
+    <!-- 🎨 Estilos globais -->
     <link rel="stylesheet" href="../css/style.css" />
     <link rel="stylesheet" href="../css/cadastro.css" />
     <link rel="stylesheet" href="../css/cloudinho.css" /> 
@@ -13,8 +20,17 @@
 </head>
 
 <body>
+    <!-- ============================================================
+         🔝 Cabeçalho dinâmico carregado via componentes.js
+    ============================================================ -->
     <div id="header"></div>
 
+    <!-- ============================================================
+         🧾 FORMULÁRIO DE CADASTRO
+         ------------------------------------------------------------
+         Todos os campos são obrigatórios.
+         Campos de endereço são completados automaticamente via ViaCEP.
+    ============================================================ -->
     <main class="container form-container">
         <section class="form-section card">
             <h2>💙 Crie sua conta</h2>
@@ -61,28 +77,29 @@
         </section>
     </main>
 
+    <!-- ============================================================
+         🔚 Rodapé e mascote Cloudinho
+    ============================================================ -->
     <div id="footer"></div>
     <div id="cloudinho"></div>
     
-        <script>
-        // Função universal para carregar componentes HTML.
+    <!-- ============================================================
+         📜 Carregamento de componentes dinâmicos (Header/Footer)
+    ============================================================ -->
+    <script>
         async function carregarComponente(id, arquivo) {
-            // Caminho relativo para a pasta "componentes/"
             const base = "../componentes/"; 
             const resp = await fetch(base + arquivo);
-            if (resp.ok) {
-                document.getElementById(id).innerHTML = await resp.text();
-            } else {
-                console.error(`Erro ao carregar componente ${arquivo}. Status: ${resp.status}`);
-            }
+            if (resp.ok) document.getElementById(id).innerHTML = await resp.text();
         }
-        
-        // Carrega HTML do Header, Footer e Cloudinho
         carregarComponente("header", "header.html");
         carregarComponente("footer", "footer.html");
         carregarComponente("cloudinho", "cloudinho.html");
     </script>
     
+    <!-- ============================================================
+         🚀 Scripts do sistema
+    ============================================================ -->
     <script type="module" src="../js/componentes.js"></script>
     <script src="../js/cloudinho.js"></script>
     <script src="../js/cadastro.js"></script>

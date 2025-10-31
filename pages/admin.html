@@ -1,161 +1,178 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Painel Administrativo 💼 | Varal dos Sonhos</title>
-    <link rel="icon" href="../imagens/favicon.png" type="image/png" />
-    <link rel="stylesheet" href="../css/style.css" />
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet" />
+  <!-- ============================================================
+       💼 VARAL DOS SONHOS — Painel Administrativo
+       ------------------------------------------------------------
+       Permite ao administrador criar, listar, destacar e encerrar
+       eventos. Acesso restrito por token (ADMIN_SECRET).
+       Tabela: "eventos" no Airtable.
+  ============================================================ -->
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Painel Administrativo 💼 | Varal dos Sonhos</title>
+  <link rel="icon" href="../imagens/favicon.png" type="image/png" />
+  <link rel="stylesheet" href="../css/style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet" />
 
-    <style>
-        /* ============================== */
-        /* 🎨 ESTILO EXCLUSIVO DO PAINEL */
-        /* ============================== */
-        .admin-container {
-            max-width: 900px;
-            margin: 50px auto;
-            background: #ffffff;
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-            padding: 30px;
-        }
+  <style>
+    /* ============================================================
+       🎨 ESTILO EXCLUSIVO DO PAINEL ADMIN
+       ------------------------------------------------------------
+       Interface limpa, intuitiva e responsiva para gerenciamento
+       de eventos.
+    ============================================================ */
+    .admin-container {
+      max-width: 900px;
+      margin: 50px auto;
+      background: #ffffff;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      padding: 30px;
+    }
 
-        h1 {
-            color: #1f355b;
-            text-align: center;
-            margin-bottom: 30px;
-        }
+    h1 {
+      color: #1f355b;
+      text-align: center;
+      margin-bottom: 30px;
+    }
 
-        form {
-            display: grid;
-            gap: 15px;
-        }
+    form {
+      display: grid;
+      gap: 15px;
+    }
 
-        label {
-            font-weight: 600;
-            color: #1f355b;
-        }
+    label {
+      font-weight: 600;
+      color: #1f355b;
+    }
 
-        input, textarea {
-            width: 100%;
-            padding: 10px;
-            border-radius: 6px;
-            border: 1px solid #bcd3f7;
-            font-family: "Poppins", sans-serif;
-        }
+    input, textarea {
+      width: 100%;
+      padding: 10px;
+      border-radius: 6px;
+      border: 1px solid #bcd3f7;
+      font-family: "Poppins", sans-serif;
+    }
 
-        button {
-            background: #4A90E2;
-            color: #fff;
-            padding: 12px 25px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: all 0.3s ease;
-        }
+    button {
+      background: #4A90E2;
+      color: #fff;
+      padding: 12px 25px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.3s ease;
+    }
 
-        button:hover {
-            background: #3b7bd6;
-        }
+    button:hover {
+      background: #3b7bd6;
+    }
 
-        .lista-eventos {
-            margin-top: 40px;
-        }
+    .lista-eventos {
+      margin-top: 40px;
+    }
 
-        .evento {
-            border: 1px solid #d9e7ff;
-            border-radius: 10px;
-            padding: 15px;
-            margin-bottom: 15px;
-            background: #f7faff;
-        }
+    .evento {
+      border: 1px solid #d9e7ff;
+      border-radius: 10px;
+      padding: 15px;
+      margin-bottom: 15px;
+      background: #f7faff;
+    }
 
-        .evento .fotos img {
-            max-width: 100px;
-            border-radius: 6px;
-            margin-right: 10px;
-        }
+    .evento .fotos img {
+      max-width: 100px;
+      border-radius: 6px;
+      margin-right: 10px;
+    }
 
-        .acoes {
-            margin-top: 10px;
-            display: flex; /* Para alinhar os botões */
-            flex-wrap: wrap;
-            gap: 8px;
-        }
+    .acoes {
+      margin-top: 10px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
 
-        .acoes button {
-            background: #1f355b;
-            padding: 8px 12px;
-            font-size: 0.85rem;
-        }
+    .acoes button {
+      background: #1f355b;
+      padding: 8px 12px;
+      font-size: 0.85rem;
+    }
 
-        .acoes button.excluir {
-            background: #e74c3c;
-        }
-        
-        /* Estilo para checkboxes */
-        .checkbox-group {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
+    .acoes button.excluir {
+      background: #e74c3c;
+    }
 
-        .mensagem {
-            text-align: center;
-            margin-top: 10px;
-            font-weight: 500;
-        }
-    </style>
+    .checkbox-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .mensagem {
+      text-align: center;
+      margin-top: 10px;
+      font-weight: 500;
+    }
+  </style>
 </head>
 <body>
-    <div class="admin-container">
-        <h1>🎛️ Painel Administrativo — Varal dos Sonhos</h1>
+  <!-- ============================================================
+       🎛️ CONTAINER DO PAINEL ADMINISTRATIVO
+  ============================================================ -->
+  <div class="admin-container">
+    <h1>🎛️ Painel Administrativo — Varal dos Sonhos</h1>
 
-        <div id="auth-section">
-            <label for="token">🔒 Informe o token administrativo:</label>
-            <input type="password" id="token" placeholder="Cole aqui seu ADMIN_SECRET..." />
-            <button id="btnLogin">Entrar</button>
-            <p id="authMsg" class="mensagem"></p>
-        </div>
-
-        <form id="formEvento" style="display:none;">
-            <h2>📅 Criar Novo Evento</h2>
-            <label>Título:</label>
-            <input type="text" id="titulo" required />
-
-            <label>Local:</label>
-            <input type="text" id="local" placeholder="Ex: Praça Central, Sede do Projeto" required />
-
-            <label>Descrição:</label>
-            <textarea id="descricao" rows="3" required></textarea>
-
-            <label>Data do Evento (Quando ele acontece):</label>
-            <input type="date" id="data_evento" required />
-
-            <label>Data Limite de Recebimento de Presentes:</label>
-            <input type="date" id="data_limite_recebimento" />
-            
-            <div class="checkbox-group">
-                <input type="checkbox" id="destacar">
-                <label for="destacar" style="font-weight: 400; color: #666;">Destacar este evento na Home Page</label>
-            </div>
-
-            <label>Imagens (URLs separadas por vírgula):</label>
-            <input type="text" id="imagens" placeholder="https://exemplo.com/imagem1.jpg, https://exemplo.com/imagem2.jpg" />
-
-            <button type="submit">💾 Salvar Evento</button>
-            <p id="msg" class="mensagem"></p>
-        </form>
-
-        <div id="listaEventos" class="lista-eventos" style="display:none;">
-            <h2>🗂️ Eventos Cadastrados</h2>
-            <button onclick="carregarEventos()">🔄 Recarregar Eventos</button> 
-            <div id="eventos"></div>
-        </div>
+    <!-- 🔐 Autenticação do token administrativo -->
+    <div id="auth-section">
+      <label for="token">🔒 Informe o token administrativo:</label>
+      <input type="password" id="token" placeholder="Cole aqui seu ADMIN_SECRET..." />
+      <button id="btnLogin">Entrar</button>
+      <p id="authMsg" class="mensagem"></p>
     </div>
 
-    <script src="../js/admin.js"></script>
+    <!-- 🗓️ Formulário de criação de eventos -->
+    <form id="formEvento" style="display:none;">
+      <h2>📅 Criar Novo Evento</h2>
+
+      <label>Título:</label>
+      <input type="text" id="titulo" required />
+
+      <label>Local:</label>
+      <input type="text" id="local" placeholder="Ex: Praça Central, Sede do Projeto" required />
+
+      <label>Descrição:</label>
+      <textarea id="descricao" rows="3" required></textarea>
+
+      <label>Data do Evento:</label>
+      <input type="date" id="data_evento" required />
+
+      <label>Data Limite de Recebimento:</label>
+      <input type="date" id="data_limite_recebimento" />
+
+      <div class="checkbox-group">
+        <input type="checkbox" id="destacar">
+        <label for="destacar" style="font-weight: 400; color: #666;">Destacar este evento na Home Page</label>
+      </div>
+
+      <label>Imagens (URLs separadas por vírgula):</label>
+      <input type="text" id="imagens" placeholder="https://exemplo.com/imagem1.jpg, https://exemplo.com/imagem2.jpg" />
+
+      <button type="submit">💾 Salvar Evento</button>
+      <p id="msg" class="mensagem"></p>
+    </form>
+
+    <!-- 📋 Listagem dinâmica de eventos -->
+    <div id="listaEventos" class="lista-eventos" style="display:none;">
+      <h2>🗂️ Eventos Cadastrados</h2>
+      <button onclick="carregarEventos()">🔄 Recarregar Eventos</button>
+      <div id="eventos"></div>
+    </div>
+  </div>
+
+  <!-- Script de controle -->
+  <script src="../js/admin.js"></script>
 </body>
 </html>

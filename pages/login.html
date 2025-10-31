@@ -1,71 +1,75 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="pt-BR">
-
 <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Login | Varal dos Sonhos 💙</title>  
+  <!-- ============================================================
+       💙 VARAL DOS SONHOS — Página de Login
+       ------------------------------------------------------------
+       Interface de entrada dos usuários (doadores, voluntários e admin).
+       Conecta-se à API /api/usuarios.js para autenticação.
+  ============================================================ -->
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Login | Varal dos Sonhos 💙</title>
 
-    <link rel="stylesheet" href="../css/style.css" />
-    <link rel="stylesheet" href="../css/cadastro.css" />
-    <link rel="stylesheet" href="../css/cloudinho.css" /> 
-    <link rel="icon" href="../imagens/favicon.png" type="image/png" />
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <!-- 🎨 Estilos -->
+  <link rel="stylesheet" href="../css/style.css" />
+  <link rel="stylesheet" href="../css/cadastro.css" />
+  <link rel="stylesheet" href="../css/cloudinho.css" />
+  <link rel="icon" href="../imagens/favicon.png" type="image/png" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
 </head>
 
 <body>
-    <div id="header"></div>
+  <div id="header"></div>
 
-    <main class="container form-container">
-        <section class="login-card card">
-            <h2 style="margin-bottom: 0.5rem;">Bem-vindo de volta!</h2>
-            <p style="margin-bottom: 2rem; color: #666;">Entre na sua conta para continuar a jornada.</p>
+  <!-- ============================================================
+       🔑 FORMULÁRIO DE LOGIN
+       ------------------------------------------------------------
+       Envia credenciais para /api/usuarios.js (GET com email/senha)
+  ============================================================ -->
+  <main class="container form-container">
+    <section class="form-section card">
+      <h2>💙 Acesse sua conta</h2>
+      <p>Bem-vindo(a) de volta à Fantástica Fábrica de Sonhos!</p>
 
-            <form id="formLogin">
-                <label for="email">E-mail</label>
-                <input type="email" id="email" name="email" placeholder="Seu e-mail de cadastro" required>
+      <form id="formLogin">
+        <label for="email">E-mail</label>
+        <input type="email" id="email" name="email" placeholder="Digite seu e-mail" required />
 
-                <label for="senha">Senha</label>
-                <input type="password" id="senha" name="senha" placeholder="Sua senha secreta" required>
+        <label for="senha">Senha</label>
+        <input type="password" id="senha" name="senha" placeholder="Digite sua senha" required />
 
-                <button type="submit" class="btn btn-primary" style="margin-top: 1.5rem;">Entrar</button>
-            </form>
+        <button type="submit" class="btn btn-primary">Entrar</button>
+      </form>
 
-            <p id="feedback-msg" class="feedback hidden" style="margin-top: 1rem;"></p>
-            
-            <p class="text-center" style="margin-top: 1.5rem;">
-                Não tem uma conta? <a href="cadastro.html">Cadastre-se aqui</a>
-            </p>
-            <p class="text-center">
-                <a href="#">Esqueci minha senha</a>
-            </p>
-        </section>
-    </main>
+      <p class="text-center">
+        Ainda não possui conta?
+        <a href="cadastro.html">Cadastre-se</a>
+      </p>
 
-    <div id="footer"></div>
-    <div id="cloudinho"></div>
+      <p id="feedback-msg" class="feedback hidden"></p>
+    </section>
+  </main>
 
-        <script>
-        // Função universal para carregar componentes HTML.
-        async function carregarComponente(id, arquivo) {
-            // Caminho relativo para a pasta "componentes/"
-            const base = "../componentes/"; 
-            const resp = await fetch(base + arquivo);
-            if (resp.ok) {
-                document.getElementById(id).innerHTML = await resp.text();
-            } else {
-                console.error(`Erro ao carregar componente ${arquivo}. Status: ${resp.status}`);
-            }
-        }
-        
-        // Carrega HTML do Header, Footer e Cloudinho
-        carregarComponente("header", "header.html");
-        carregarComponente("footer", "footer.html");
-        carregarComponente("cloudinho", "cloudinho.html");
-    </script>
-    
-    <script type="module" src="../js/componentes.js"></script>
-    <script src="../js/cloudinho.js"></script>
-    <script src="../js/login.js"></script>
+  <div id="footer"></div>
+  <div id="cloudinho"></div>
+
+  <!-- ============================================================
+       🧩 Carregamento dinâmico de componentes (header/footer)
+  ============================================================ -->
+  <script>
+    async function carregarComponente(id, arquivo) {
+      const base = "../componentes/";
+      const resp = await fetch(base + arquivo);
+      if (resp.ok)
+        document.getElementById(id).innerHTML = await resp.text();
+    }
+    carregarComponente("header", "header.html");
+    carregarComponente("footer", "footer.html");
+    carregarComponente("cloudinho", "cloudinho.html");
+  </script>
+
+  <script src="../js/cloudinho.js"></script>
+  <script src="../js/login.js"></script>
 </body>
 </html>
