@@ -69,7 +69,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       // Redireciona após login
-      window.location.href = "index.html";
+      window.location.href = "../index.html";
     } catch (erro) {
       console.error(erro);
       mostrarFeedback("Erro ao conectar com o servidor.", "erro");
