@@ -1,10 +1,14 @@
 // ============================================================
-// 💙 VARAL DOS SONHOS — /js/login.js
+// 💙 VARAL DOS SONHOS — /js/login.js (Versão Final TCC)
 // ------------------------------------------------------------
-// Função: autenticar o usuário com base nos dados do Airtable
-// e salvar a sessão local (localStorage) para uso global.
-// Após login bem-sucedido, mostra mensagem motivacional
-// e redireciona o doador à página principal.
+// Função: autentica o usuário (doador, voluntário ou admin)
+// usando a rota unificada /api/usuarios.
+// Fluxo:
+//   1️⃣ Valida campos do formulário
+//   2️⃣ Envia dados à API com acao="login"
+//   3️⃣ Salva a sessão no localStorage
+//   4️⃣ Exibe mensagem motivacional 💌
+//   5️⃣ Redireciona para a página inicial
 // ============================================================
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -18,6 +22,9 @@ document.addEventListener("DOMContentLoaded", () => {
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
 
+    // ============================================================
+    // 1️⃣ Captura e validação dos campos
+    // ============================================================
     const email = document.getElementById("email").value.trim();
     const senha = document.getElementById("senha").value.trim();
 
@@ -27,38 +34,74 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     try {
-      const resp = await fetch("/api/login", {
+      // ============================================================
+      // 2️⃣ Envio dos dados ao servidor
+      // ------------------------------------------------------------
+      // Importante: como o login está dentro da rota /api/usuarios,
+      // enviamos o campo 'acao: "login"' para que a API saiba
+      // qual bloco de código executar.
+      // ============================================================
+      const resp = await fetch("/api/usuarios", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email_usuario: email, senha }),
+        body: JSON.stringify({
+          acao: "login",
+          email_usuario: email,
+          senha: senha,
+        }),
       });
+
+      if (!resp.ok) {
+        throw new Error(`Erro HTTP ${resp.status}`);
+      }
 
       const dados = await resp.json();
 
-      if (!dados.sucesso) {
-        alert("❌ E-mail ou senha incorretos. Tente novamente.");
+      // ============================================================
+      // 3️⃣ Validação da resposta
+      // ============================================================
+      if (!dados.sucesso || !dados.usuario) {
+        alert("❌ E-mail ou senha incorretos. Verifique e tente novamente.");
         return;
       }
 
       // ============================================================
-      // 💾 Salva a sessão no localStorage (persistência simples)
+      // 4️⃣ Salva dados da sessão no localStorage
+      // ------------------------------------------------------------
+      // Armazena as informações essenciais do usuário logado
+      // para uso global (exibição no header, carrinho, etc.).
       // ============================================================
-      localStorage.setItem("usuario_logado", JSON.stringify({
-        nome: dados.usuario.nome_usuario,
-        email: dados.usuario.email_usuario,
-        tipo: dados.usuario.tipo_usuario,
-      }));
+      localStorage.setItem(
+        "usuario_logado",
+        JSON.stringify({
+          id: dados.usuario.id || "",
+          nome: dados.usuario.nome_usuario || "",
+          email: dados.usuario.email_usuario || "",
+          tipo: dados.usuario.tipo_usuario || "doador",
+        })
+      );
 
       // ============================================================
-      // 💬 Mensagem de boas-vindas com apelo emocional
+      // 5️⃣ Mensagem emocional personalizada
+      // ------------------------------------------------------------
+      // Pequeno toque afetivo alinhado à identidade solidária
+      // do projeto "Fantástica Fábrica de Sonhos".
       // ============================================================
-      alert(`💙 Bem-vindo(a), ${dados.usuario.nome_usuario}!\n\nSua generosidade ilumina caminhos e faz o mundo sonhar mais alto. Continue espalhando esperança!`);
+      const nome = dados.usuario.nome_usuario.split(" ")[0];
+      alert(
+        `💙 Bem-vindo(a), ${nome}!\n\nSua generosidade ilumina caminhos e faz o mundo sonhar mais alto.\nContinue espalhando esperança! 🌟`
+      );
 
-      // Redireciona à página inicial
-      window.location.href = "../index.html";
-
+      // ============================================================
+      // 6️⃣ Redirecionamento conforme tipo de usuário
+      // ============================================================
+      if (dados.usuario.tipo_usuario === "administrador") {
+        window.location.href = "../pages/admin.html";
+      } else {
+        window.location.href = "../index.html";
+      }
     } catch (err) {
-      console.error("Erro ao efetuar login:", err);
+      console.error("⚠️ Erro ao efetuar login:", err);
       alert("⚠️ Erro ao conectar com o servidor. Tente novamente mais tarde.");
     }
   });
