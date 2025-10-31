@@ -65,7 +65,7 @@
   transform: translateX(-50%);
   width: 32px;
   height: 32px;
-  background: url('../imagens/pregador.png') no-repeat center;
+  background: url('../imagens/prendedor.png') no-repeat center;
   background-size: contain;
   z-index: 5;
 }
