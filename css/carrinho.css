@@ -1,307 +1,193 @@
 /* ============================================================
-💙 VARAL DOS SONHOS — css/carrinho.css (COMPLETO)
+   💙 VARAL DOS SONHOS — carrinho.css
+   ------------------------------------------------------------
+   Estilo visual do carrinho de adoção
+   Responsivo e compatível com .NET MAUI e web mobile
+   ------------------------------------------------------------
+   Paleta:
+     Azul-claro:  #f0f8ff
+     Azul-médio:  #0078ff
+     Azul-escuro: #064785
+     Neutros:     #fff, #f2f8ff, #ccc
 ============================================================ */
 
-/* --- Base & Container --- */
-body {
-  background: #E6F2FF; /* Fundo azul claro suave */
-  font-family: "Poppins", sans-serif;
-  color: #1f355b;
+body.bg-gradiente {
+  background: linear-gradient(180deg, #e8f3ff 0%, #ffffff 100%);
+  font-family: 'Poppins', Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+  color: #064785;
 }
 
-.carrinho-container {
-  max-width: 900px;
-  margin: 40px auto;
-  background: #fff;
-  border-radius: 16px;
-  box-shadow: 0 8px 25px rgba(0,0,0,0.15); /* Sombra mais destacada */
-  padding: 30px;
-}
-
-h1 { 
-    margin-top: 0; 
-    text-align: center; 
-    font-size: 2.2rem;
-    color: #153f5a; /* Azul escuro */
-}
-
-.carrinho-container .sub {
-    text-align: center;
-    color: #555;
-    margin-bottom: 30px;
-    font-size: 0.95rem;
-}
-
-
-/* --- Lista de Cartinhas no Carrinho --- */
-.carrinho-lista {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 25px;
-  justify-content: center;
-  margin-top: 20px;
-}
-
-/* Card Individual */
-.card-carrinho {
-  background: #f9f9ff;
-  border-radius: 14px;
-  width: 250px;
-  overflow: hidden;
-  box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+/* Container principal */
+.container-carrinho {
+  max-width: 600px;
+  margin: 60px auto;
+  background: #ffffffd8;
+  border-radius: 18px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  padding: 35px;
   text-align: center;
-  padding-bottom: 10px;
+  color: #064785;
+  animation: fadeIn 0.6s ease;
 }
 
-.card-carrinho img {
+/* Título e subtítulo */
+.card-carrinho h1 {
+  margin-top: 0;
+  color: #0078ff;
+  font-size: 1.8rem;
+}
+
+.card-carrinho p {
+  font-size: 1rem;
+  color: #345;
+}
+
+/* Cartinha exibida */
+.cartinha-selecionada {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  background: #f2f8ff;
+  border: 2px dashed #aad4ff;
+  border-radius: 14px;
+  padding: 15px;
+  margin: 25px 0;
+  text-align: left;
+  transition: all 0.3s ease;
+}
+
+.cartinha-selecionada:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 4px 12px rgba(0, 120, 255, 0.2);
+}
+
+.cartinha-selecionada img {
+  width: 100px;
+  border-radius: 12px;
+  border: 2px solid #0078ff15;
+}
+
+.cartinha-selecionada h3 {
+  margin: 0;
+  color: #064785;
+}
+
+.cartinha-selecionada p {
+  margin: 5px 0 0;
+  font-size: 0.95rem;
+  color: #345;
+}
+
+/* Campo de seleção */
+.campo {
+  margin: 15px 0;
+  text-align: left;
+}
+
+.campo label {
+  font-weight: 600;
+  display: block;
+  margin-bottom: 5px;
+  color: #064785;
+}
+
+select {
   width: 100%;
-  height: 150px;
-  object-fit: cover;
-  border-bottom: 1px solid #e0e0e0;
-}
-
-.card-carrinho h3 { 
-    margin: 10px 0 5px; 
-    font-size: 1.3rem;
-    color: #1f355b;
-}
-.card-carrinho p { 
-    font-size: 14px; 
-    margin: 2px 0; 
-    color:#3b4f7a; 
-}
-
-/* Botão Remover */
-.btn-remover {
-  background: #ff4d4d;
-  color: white;
-  border: none;
-  padding: 5px 10px;
-  border-radius: 10px;
-  font-size: 12px;
-  margin-top: 10px;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #ccd;
+  font-size: 1rem;
+  color: #064785;
+  background-color: #fff;
   cursor: pointer;
-  transition: background .3s;
-}
-.btn-remover:hover {
-  background: #cc0000;
 }
 
-/* Carrinho Vazio */
-.carrinho-vazio {
+select:focus {
+  outline: none;
+  border-color: #0078ff;
+  box-shadow: 0 0 0 3px #0078ff30;
+}
+
+/* Botão de finalização */
+.btn-finalizar {
+  margin-top: 20px;
+  background: #0078ff;
+  color: #fff;
+  border: none;
+  padding: 12px 26px;
+  border-radius: 28px;
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: all 0.3s;
+  font-weight: 600;
+}
+
+.btn-finalizar:hover {
+  background: #005dc3;
+  box-shadow: 0 4px 12px rgba(0, 93, 195, 0.3);
+}
+
+/* Mensagem final de sucesso */
+.mensagem-final {
+  text-align: center;
+  background: #f0f8ff;
+  border: 2px solid #0078ff;
+  border-radius: 16px;
+  padding: 35px;
+  margin-top: 20px;
+  color: #064785;
+  font-size: 1.1rem;
+  line-height: 1.6;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  animation: fadeInUp 0.7s ease;
+}
+
+.mensagem-final img {
+  margin-bottom: 15px;
+  width: 220px;
+}
+
+.mensagem-final a {
+  display: inline-block;
+  margin-top: 18px;
+  background: #0078ff;
+  color: white;
+  text-decoration: none;
+  padding: 10px 24px;
+  border-radius: 30px;
+  font-weight: 600;
+}
+
+.mensagem-final a:hover {
+  background: #005dc3;
+}
+
+/* Animações sutis */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Responsividade */
+@media (max-width: 600px) {
+  .cartinha-selecionada {
+    flex-direction: column;
     text-align: center;
-    padding: 40px;
-    border: 1px dashed #ccc;
-    border-radius: 10px;
-    margin: 20px auto;
-    width: 80%;
-}
-.carrinho-vazio p {
-    font-size: 1.1rem;
-    color: #1f355b;
-    margin-bottom: 15px;
-}
-.carrinho-vazio .btn {
-    display: inline-block;
-    padding: 10px 20px;
-}
+  }
 
-/* --- Seleção de Ponto de Coleta --- */
+  .cartinha-selecionada img {
+    width: 80px;
+  }
 
-.pontos-box {
-    margin-top: 40px;
+  .container-carrinho {
+    margin: 30px 15px;
     padding: 25px;
-    border: 1px solid #ddd;
-    border-radius: 10px;
-    background: #f7f9ff; /* Fundo suave para a caixa */
-    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-}
-.pontos-box h2 {
-    font-size: 1.5rem;
-    margin-top: 0;
-    color: #153f5a;
-}
-.pontos-controls {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 10px;
-}
-.placeholder {
-    color: #999;
-    font-style: italic;
-    padding: 10px 0;
-}
-
-#selectPontos {
-    flex-grow: 1;
-    min-width: 250px;
-    background: white;
-    padding: 10px 15px;
-    border: 2px solid #4A90E2;
-    border-radius: 25px;
-    font-family: "Poppins", sans-serif;
-    font-size: 14px;
-    height: 45px;
-}
-
-.pontos-controls .obs {
-    width: 100%;
-    font-size: 0.85rem;
-    color: #999;
-    text-align: left;
-    margin-top: 5px;
-}
-
-/* --- Botões Genéricos --- */
-.btn-outline { /* Botão "Ver no Mapa" e "Limpar Carrinho" */
-    background: none;
-    color: #4A90E2;
-    border: 2px solid #4A90E2;
-    padding: 10px 18px;
-    border-radius: 25px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all .3s;
-    text-decoration: none; /* Para usar em tags <a> ou <button> */
-    white-space: nowrap;
-}
-.btn-outline:hover:not(:disabled) {
-    background: #4A90E2;
-    color: white;
-}
-
-.btn-primary { /* Botão "Confirmar Adoção" */
-    background: #4A90E2;
-    color: white;
-    border: none;
-    padding: 12px 25px;
-    border-radius: 25px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background .3s;
-    text-decoration: none;
-}
-.btn-primary:hover:not(:disabled) { background: #3b7bd6; }
-
-/* Botões Desabilitados */
-.btn-outline:disabled,
-.btn-primary:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-}
-
-/* --- Área de Ações (Limpar e Confirmar) --- */
-.acoes {
-    display: flex;
-    justify-content: space-between;
-    margin-top: 30px;
-    border-top: 1px solid #eee;
-    padding-top: 20px;
-    align-items: center;
-}
-
-
-/* --- Feedback e Mensagens --- */
-.feedback {
-    padding: 15px;
-    border-radius: 8px;
-    margin-top: 20px;
-    font-weight: 600;
-    text-align: center;
-}
-.feedback.sucesso {
-    background-color: #e6ffe6;
-    color: #28a745;
-}
-.feedback.erro {
-    background-color: #ffe6e6;
-    color: #dc3545;
-}
-.hidden {
-    display: none !important;
-}
-
-/* --- Modal do Mapa --- */
-.map-modal {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: 9999;
-    display: none;
-    justify-content: center;
-    align-items: center;
-}
-.map-modal.visivel {
-    display: flex;
-}
-.map-backdrop {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.7);
-}
-.map-frame {
-    position: relative;
-    background: #fff;
-    border-radius: 10px;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
-    width: 90%;
-    max-width: 800px;
-    height: 80%;
-    z-index: 10000;
-}
-.map-frame iframe {
-    width: 100%;
-    height: calc(100% - 40px);
-    border-radius: 10px 10px 0 0;
-}
-.map-close {
-    position: absolute;
-    top: -10px;
-    right: -10px;
-    background: white;
-    border: 2px solid #ccc;
-    border-radius: 50%;
-    width: 30px;
-    height: 30px;
-    cursor: pointer;
-    font-size: 1.2rem;
-    line-height: 1;
-    z-index: 10001;
-}
-.map-caption {
-    padding: 10px;
-    text-align: center;
-    font-weight: 600;
-    color: #1f355b;
-}
-
-/* --- Responsividade --- */
-@media (max-width: 768px) {
-    .carrinho-container {
-        margin: 20px;
-        padding: 20px;
-    }
-    .acoes {
-        flex-direction: column-reverse;
-        gap: 15px;
-    }
-    .btn-primary, .btn-outline {
-        width: 100%;
-        text-align: center;
-        margin: 0;
-    }
-    .pontos-controls {
-        flex-direction: column;
-        align-items: stretch;
-    }
-    #selectPontos, .btn-outline {
-        min-width: unset;
-        width: 100%;
-    }
+  }
 }
