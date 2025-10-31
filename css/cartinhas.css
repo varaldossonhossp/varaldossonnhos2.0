@@ -1,10 +1,5 @@
 /* ============================================================
-💙 VARAL DOS SONHOS — css/cartinhas.css (versão final refinada)
-------------------------------------------------------------
-• 4 cards centralizados no carrossel
-• Pregador.png visível nos cards
-• Corda com degradê nas pontas e mais grossa
-• Espaçamento suave e visual consistente com Pontos de Coleta
+💙 VARAL DOS SONHOS — css/cartinhas.css 
 ============================================================ */
 
 :root {
@@ -17,7 +12,7 @@
 .varal-wrapper {
   background: linear-gradient(180deg, #e6f2ff 0%, #ffffff 100%);
   text-align: center;
-  padding: 100px 0 80px;
+  padding: 80px 0 60px;
   min-height: 100vh;
 }
 
@@ -25,65 +20,93 @@
   font-size: 2.2rem;
   color: var(--azul-escuro);
   font-weight: 700;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.3rem;
+  margin-top: -10px; /* sobe o título */
 }
 
 .descricao {
   color: #27425c;
   font-size: 1rem;
-  margin-bottom: 25px;
+  margin-bottom: 20px;
 }
 
 /* ====== CORDA ====== */
 .corda {
   width: 100%;
-  max-width: 980px;
-  height: 4px;
-  margin: 0 auto 40px;
+  max-width: 950px;
+  height: 5px;
+  margin: 0 auto 25px;
   border-radius: 3px;
   background: linear-gradient(
     90deg,
     rgba(196,154,108,0) 0%,
-    var(--corda-cor) 20%,
-    var(--corda-cor) 80%,
+    var(--corda-cor) 15%,
+    var(--corda-cor) 85%,
     rgba(196,154,108,0) 100%
   );
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
 }
 
 /* ====== TRILHO (CARROSSEL) ====== */
+.varal-area {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+}
+
 .trilho {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  justify-content: center;
-  gap: 20px;
-  width: min(1100px, 95%);
-  margin: 0 auto;
-  padding: 0 10px;
+  display: flex;
+  gap: 18px;
   overflow-x: auto;
   scroll-snap-type: x mandatory;
   -webkit-overflow-scrolling: touch;
+  padding: 0 40px;
+  justify-content: center;
 }
 
 .trilho::-webkit-scrollbar { display: none; }
 
-/* ====== GANCHO (pregador) ====== */
-.gancho {
-  position: relative;
+/* ====== LIMITA 4 CARTINHAS NA VISÃO INICIAL ====== */
+.trilho > .gancho {
+  flex: 0 0 calc(25% - 16px); /* 4 por linha */
   scroll-snap-align: center;
 }
 
+/* ====== BOTÕES DE NAVEGAÇÃO ====== */
+.nav {
+  position: absolute;
+  top: 48%;
+  transform: translateY(-50%);
+  z-index: 10;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid #ddd;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  font-size: 20px;
+  cursor: pointer;
+  transition: background 0.3s;
+  box-shadow: 0 3px 8px rgba(0,0,0,0.15);
+}
+.nav:hover { background: #fff; }
+.seta-esq { left: 6px; }
+.seta-dir { right: 6px; }
+
+/* ====== GANCHO (pregador) ====== */
+.gancho {
+  position: relative;
+}
 .gancho::before {
   content: "";
   position: absolute;
-  top: -30px;
+  top: -25px;
   left: 50%;
   transform: translateX(-50%);
   width: 32px;
   height: 32px;
   background: url('../imagens/pregador.png') no-repeat center;
   background-size: contain;
-  z-index: 10;
+  z-index: 5;
 }
 
 /* ====== CARD PRINCIPAL ====== */
@@ -97,15 +120,14 @@
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  min-height: 440px;
-  width: 260px;
-  margin: 0 auto;
+  min-height: 420px;
+  margin-top: -5px; /* aproxima da corda */
 }
 
-/* 🩵 Balanço lateral suave apenas no hover */
+/* 🩵 Efeito de balanço lateral (para a esquerda) */
 .card-cartinha:hover {
   transform: rotate(-2deg);
-  box-shadow: 0 12px 28px rgba(0, 51, 102, 0.18);
+  box-shadow: 0 10px 25px rgba(0, 51, 102, 0.15);
 }
 
 /* ====== QUADRO INTERNO DA CARTINHA ====== */
@@ -120,7 +142,6 @@
   align-items: center;
   justify-content: center;
 }
-
 .cartinha-quadro img {
   width: 100%;
   height: 100%;
@@ -128,7 +149,6 @@
   cursor: pointer;
   transition: transform 0.4s ease;
 }
-
 .cartinha-quadro:hover img {
   transform: scale(1.05);
 }
@@ -138,18 +158,16 @@
   padding: 10px 20px;
   text-align: center;
 }
-
 .info-cartinha h3 {
   color: var(--azul-escuro);
-  font-size: 1.2rem;
+  font-size: 1.1rem;
   font-weight: 700;
   margin: 4px 0;
 }
-
 .info-cartinha p {
   margin: 2px 0;
   color: #27425c;
-  font-size: 0.95rem;
+  font-size: 0.9rem;
 }
 
 /* ====== BOTÃO ====== */
@@ -159,7 +177,7 @@
   border: none;
   border-radius: 999px;
   padding: 10px 18px;
-  margin: 16px auto 20px;
+  margin: 10px auto 16px;
   cursor: pointer;
   font-weight: 600;
   box-shadow: 0 4px 12px rgba(47,128,237,0.25);
@@ -175,7 +193,7 @@
   cursor: not-allowed;
 }
 
-/* ====== MODAL DE ZOOM ====== */
+/* ====== MODAL ====== */
 .modal-zoom {
   display: none;
   position: fixed;
@@ -185,7 +203,6 @@
   align-items: center;
   z-index: 2000;
 }
-
 .modal-content-zoom {
   max-width: 500px;
   width: 90%;
@@ -195,12 +212,10 @@
   padding: 10px;
   box-shadow: 0 6px 30px rgba(0,0,0,0.5);
 }
-
 #cartinha-zoom-img {
   width: 100%;
   border-radius: 8px;
 }
-
 .close-zoom {
   position: absolute;
   top: 6px;
@@ -210,7 +225,6 @@
   cursor: pointer;
 }
 .close-zoom:hover { color: #888; }
-
 .nome-zoom {
   text-align: center;
   color: var(--azul-escuro);
@@ -220,14 +234,9 @@
 }
 
 /* ====== RESPONSIVIDADE ====== */
-@media (max-width: 1000px) {
-  .trilho {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 16px;
-  }
+@media (max-width: 900px) {
+  .trilho > .gancho { flex: 0 0 45%; }
 }
 @media (max-width: 600px) {
-  .trilho {
-    grid-template-columns: repeat(1, 1fr);
-  }
+  .trilho > .gancho { flex: 0 0 90%; }
 }
