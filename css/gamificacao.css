@@ -1,0 +1,64 @@
+/* ============================================================
+   💙 VARAL DOS SONHOS — css/gamificacao.css (versão TCC)
+   ------------------------------------------------------------
+   Estilo do painel de gamificação do usuário.
+============================================================ */
+.painel-gamificacao {
+  background: #f9fbff;
+  border: 1px solid #cce2ff;
+  border-radius: 16px;
+  padding: 20px;
+  max-width: 700px;
+  margin: 20px auto;
+  box-shadow: 0 2px 6px rgba(0, 0, 50, 0.05);
+  font-family: 'Poppins', sans-serif;
+  color: #333;
+}
+
+.gamificacao-card h3 {
+  color: #0078ff;
+  margin-bottom: 10px;
+  text-align: center;
+}
+
+.status {
+  background: #fff;
+  border-radius: 12px;
+  padding: 15px;
+  margin-bottom: 20px;
+  text-align: center;
+  line-height: 1.5;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+}
+
+.conquistas-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.conquista {
+  display: flex;
+  align-items: center;
+  background: #fff;
+  border-radius: 12px;
+  padding: 10px 15px;
+  border: 1px dashed #cce2ff;
+  transition: all 0.3s ease;
+}
+
+.conquista.ativa {
+  background: linear-gradient(90deg, #cce2ff, #e6f0ff);
+  border-color: #0078ff;
+  box-shadow: 0 2px 8px rgba(0, 120, 255, 0.1);
+}
+
+.conquista .icone {
+  font-size: 22px;
+  margin-right: 12px;
+}
+
+.conquista .detalhes {
+  flex: 1;
+  font-size: 14px;
+}
