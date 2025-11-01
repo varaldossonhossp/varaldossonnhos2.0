@@ -1,18 +1,15 @@
 // ============================================================
-// 💙 VARAL DOS SONHOS — /js/carrinho.js (versão final)
+// 💙 VARAL DOS SONHOS — /js/carrinho.js (versão final corrigida)
 // ------------------------------------------------------------
-// 1️⃣ Carrega a cartinha salva no localStorage
-// 2️⃣ Exibe dados na tela
+// 1️⃣ Lista todas as cartinhas salvas no localStorage
+// 2️⃣ Exibe cada uma visualmente no carrinho
 // 3️⃣ Lista pontos de coleta via /api/pontosdecoleta
-// 4️⃣ Mostra mapa do ponto selecionado
-// 5️⃣ Finaliza adoção (POST /api/adocoes)
-// 6️⃣ Limpa carrinho
+// 4️⃣ Mostra mapa do ponto selecionado (sem API key)
+// 5️⃣ Finaliza cada adoção separadamente via /api/adocoes
 // ============================================================
 
 document.addEventListener("DOMContentLoaded", async () => {
-  const imgCartinha = document.getElementById("cartinha-img");
-  const nomeSpan = document.getElementById("nome-crianca");
-  const sonhoSpan = document.getElementById("sonho-crianca");
+  const listaCartinhas = document.getElementById("cartinhaSelecionada");
   const selectPonto = document.getElementById("select-ponto");
   const btnFinalizar = document.getElementById("btn-finalizar");
   const btnLimpar = document.getElementById("btn-limpar");
@@ -24,30 +21,41 @@ document.addEventListener("DOMContentLoaded", async () => {
   const backdrop = document.getElementById("mapBackdrop");
 
   // ============================================================
-  // 1️⃣ Recupera cartinha do localStorage
+  // 1️⃣ Recupera cartinhas do localStorage
   // ============================================================
   const carrinho = JSON.parse(localStorage.getItem("carrinho")) || [];
-  if (carrinho.length === 0) {
-    nomeSpan.textContent = "(nenhuma cartinha selecionada)";
-    sonhoSpan.textContent = "Selecione uma cartinha no Varal Virtual.";
+
+  if (!Array.isArray(carrinho) || carrinho.length === 0) {
+    listaCartinhas.innerHTML = `
+      <p>💌 Nenhuma cartinha selecionada.</p>
+      <p>Adote uma no Varal Virtual.</p>
+    `;
     btnFinalizar.disabled = true;
     return;
   }
 
-  const ultima = carrinho[carrinho.length - 1];
-  const dados = ultima.fields || ultima;
+  // Limpa container e exibe todas as cartinhas
+  listaCartinhas.innerHTML = "";
+  carrinho.forEach((item, i) => {
+    const dados = item.fields || item;
+    const imagem =
+      (dados.imagem_cartinha &&
+        Array.isArray(dados.imagem_cartinha) &&
+        dados.imagem_cartinha[0]?.url) ||
+      dados.foto ||
+      "../imagens/sem-foto.png";
 
-  // 🔹 Corrige imagem da cartinha
-  const imagem =
-    (dados.imagem_cartinha &&
-      Array.isArray(dados.imagem_cartinha) &&
-      dados.imagem_cartinha[0]?.url) ||
-    dados.foto ||
-    "../imagens/sem-foto.png";
-
-  imgCartinha.src = imagem;
-  nomeSpan.textContent = dados.nome_crianca || "Criança sem nome";
-  sonhoSpan.textContent = "Sonho: " + (dados.sonho || "Não informado");
+    const card = document.createElement("div");
+    card.className = "cartinha-card";
+    card.innerHTML = `
+      <img src="${imagem}" alt="${dados.nome_crianca || "Criança"}" />
+      <div>
+        <strong>${dados.nome_crianca || "Criança"}</strong>
+        <p>Sonho: ${dados.sonho || "Não informado"}</p>
+      </div>
+    `;
+    listaCartinhas.appendChild(card);
+  });
 
   // ============================================================
   // 2️⃣ Carrega pontos de coleta da API
@@ -56,7 +64,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     const resp = await fetch("/api/pontosdecoleta");
     const json = await resp.json();
 
-    // Aceita tanto "pontos" quanto "records"
     const lista =
       json.pontos ||
       (json.records
@@ -70,16 +77,16 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     if (Array.isArray(lista) && lista.length > 0) {
       lista.forEach((p) => {
-        if (!p.nome_ponto) return; // ignora registros incompletos
+        if (!p.nome_ponto) return;
         const opt = document.createElement("option");
         opt.value = p.nome_ponto;
         opt.textContent = p.nome_ponto;
         opt.dataset.endereco = p.endereco || "";
         opt.dataset.telefone = p.telefone || "";
         opt.dataset.email = p.email_ponto || "";
-        opt.dataset.mapa = `https://www.google.com/maps?q=${encodeURIComponent(
+        opt.dataset.mapa = `https://maps.google.com/maps?q=${encodeURIComponent(
           p.endereco || p.nome_ponto
-        )}`;
+        )}&t=&z=15&ie=UTF8&iwloc=&output=embed`;
         selectPonto.appendChild(opt);
       });
     } else {
@@ -107,7 +114,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   backdrop.addEventListener("click", () => (mapModal.style.display = "none"));
 
   // ============================================================
-  // 4️⃣ Finaliza a adoção
+  // 4️⃣ Finaliza adoção (uma por uma)
   // ============================================================
   btnFinalizar.addEventListener("click", async () => {
     const opt = selectPonto.options[selectPonto.selectedIndex];
@@ -122,40 +129,49 @@ document.addEventListener("DOMContentLoaded", async () => {
       return;
     }
 
-    const payload = {
-      id_cartinha: ultima.id,
-      id_usuario: usuario.id,
-      nome_doador: usuario.nome_usuario || usuario.nome,
-      email_doador: usuario.email_usuario || usuario.email,
-      telefone_doador: usuario.telefone || "",
-      ponto_coleta: {
-        nome: opt.value,
-        endereco: opt.dataset.endereco,
-        telefone: opt.dataset.telefone,
-        email: opt.dataset.email,
-      },
-      nome_crianca: dados.nome_crianca,
-      sonho: dados.sonho,
-    };
+    btnFinalizar.disabled = true;
+    btnFinalizar.textContent = "Enviando...";
 
     try {
-      const resp = await fetch("/api/adocoes", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-      const json = await resp.json();
+      for (const cartinha of carrinho) {
+        const dados = cartinha.fields || cartinha;
+        const payload = {
+          id_cartinha: cartinha.id,
+          id_usuario: usuario.id,
+          nome_doador: usuario.nome_usuario || usuario.nome,
+          email_doador: usuario.email_usuario || usuario.email,
+          telefone_doador: usuario.telefone || "",
+          ponto_coleta: {
+            nome: opt.value,
+            endereco: opt.dataset.endereco,
+            telefone: opt.dataset.telefone,
+            email: opt.dataset.email,
+          },
+          nome_crianca: dados.nome_crianca,
+          sonho: dados.sonho,
+        };
 
-      if (!json.sucesso) throw new Error(json.mensagem || "Falha na adoção");
+        const resp = await fetch("/api/adocoes", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+
+        const json = await resp.json();
+        if (!json.sucesso) throw new Error(json.mensagem || "Erro na adoção");
+      }
 
       mostrarMensagemFinal(
-        "💙 Adoção registrada com sucesso!<br>O administrador foi notificado por e-mail."
+        "💙 Todas as adoções foram registradas com sucesso!<br>O administrador foi notificado por e-mail."
       );
       localStorage.removeItem("carrinho");
       setTimeout(() => (window.location.href = "../index.html"), 5000);
     } catch (erro) {
       console.error("Erro ao finalizar adoção:", erro);
       alert("❌ Não foi possível concluir a adoção. Tente novamente.");
+    } finally {
+      btnFinalizar.disabled = false;
+      btnFinalizar.textContent = "✨ Finalizar Adoção";
     }
   });
 
@@ -170,7 +186,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 });
 
 // ============================================================
-// Mensagem de sucesso
+// Mensagem final após adoção
 // ============================================================
 function mostrarMensagemFinal(msg) {
   const container = document.querySelector(".container-carrinho");

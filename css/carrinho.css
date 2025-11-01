@@ -1,5 +1,5 @@
 /* ============================================================
-   💙 VARAL DOS SONHOS — carrinho.css
+   💙 VARAL DOS SONHOS — carrinho.css (versão final revisada)
    ------------------------------------------------------------
    Estilo visual do carrinho de adoção
    Responsivo e compatível com .NET MAUI e web mobile
@@ -19,9 +19,11 @@ body.bg-gradiente {
   color: #064785;
 }
 
-/* Container principal */
+/* ============================================================
+   🧺 Container principal
+============================================================ */
 .container-carrinho {
-  max-width: 600px;
+  max-width: 700px;
   margin: 100px auto;
   background: #ffffffd8;
   border-radius: 18px;
@@ -32,55 +34,69 @@ body.bg-gradiente {
   animation: fadeIn 0.6s ease;
 }
 
-/* Título e subtítulo */
-.card-carrinho h1 {
+.titulo-pagina {
   margin-top: 0;
   color: #0078ff;
-  font-size: 1.8rem;
+  font-size: 1.9rem;
+  font-weight: 600;
 }
 
-.card-carrinho p {
-  font-size: 1rem;
-  color: #345;
-}
-
-/* Cartinha exibida */
+/* ============================================================
+   💌 Lista de cartinhas no carrinho
+============================================================ */
 .cartinha-selecionada {
-  display: flex;
-  align-items: center;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
   gap: 18px;
   background: #f2f8ff;
   border: 2px dashed #aad4ff;
   border-radius: 14px;
-  padding: 15px;
+  padding: 20px;
   margin: 25px 0;
-  text-align: left;
   transition: all 0.3s ease;
 }
 
-.cartinha-selecionada:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 4px 12px rgba(0, 120, 255, 0.2);
-}
-
-.cartinha-selecionada img {
-  width: 100px;
+/* Cada cartinha */
+.cartinha-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: #ffffff;
   border-radius: 12px;
   border: 2px solid #0078ff15;
+  padding: 12px;
+  box-shadow: 0 4px 8px rgba(0, 120, 255, 0.08);
+  transition: all 0.3s ease;
 }
 
-.cartinha-selecionada h3 {
-  margin: 0;
+.cartinha-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 14px rgba(0, 120, 255, 0.2);
+}
+
+.cartinha-card img {
+  width: 100px;
+  border-radius: 12px;
+  border: 2px solid #0078ff25;
+  margin-bottom: 10px;
+}
+
+.cartinha-card strong {
   color: #064785;
+  font-size: 1.05rem;
+  margin-bottom: 4px;
 }
 
-.cartinha-selecionada p {
-  margin: 5px 0 0;
-  font-size: 0.95rem;
+.cartinha-card p {
+  margin: 0;
+  font-size: 0.9rem;
   color: #345;
+  text-align: center;
 }
 
-/* Campo de seleção */
+/* ============================================================
+   📦 Campo de seleção de ponto de coleta
+============================================================ */
 .campo {
   margin: 15px 0;
   text-align: left;
@@ -110,7 +126,9 @@ select:focus {
   box-shadow: 0 0 0 3px #0078ff30;
 }
 
-/* Botão de finalização */
+/* ============================================================
+   ✨ Botões principais
+============================================================ */
 .btn-finalizar {
   margin-top: 20px;
   background: #0078ff;
@@ -129,7 +147,24 @@ select:focus {
   box-shadow: 0 4px 12px rgba(0, 93, 195, 0.3);
 }
 
-/* Mensagem final de sucesso */
+.btn-secundario {
+  border: none;
+  border-radius: 25px;
+  padding: 10px 22px;
+  margin: 8px;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.btn-secundario:hover {
+  opacity: 0.9;
+}
+
+/* ============================================================
+   💌 Mensagem final de sucesso
+============================================================ */
 .mensagem-final {
   text-align: center;
   background: #f0f8ff;
@@ -164,7 +199,9 @@ select:focus {
   background: #005dc3;
 }
 
-/* Animações sutis */
+/* ============================================================
+   🌈 Animações sutis
+============================================================ */
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: translateY(0); }
@@ -175,25 +212,31 @@ select:focus {
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* Responsividade */
-@media (max-width: 600px) {
+/* ============================================================
+   📱 Responsividade
+============================================================ */
+@media (max-width: 700px) {
   .cartinha-selecionada {
-    flex-direction: column;
-    text-align: center;
+    grid-template-columns: 1fr;
+    padding: 15px;
   }
 
-  .cartinha-selecionada img {
-    width: 80px;
+  .cartinha-card img {
+    width: 90px;
   }
 
   .container-carrinho {
-    margin: 30px 15px;
+    margin: 40px 15px;
     padding: 25px;
+  }
+
+  .titulo-pagina {
+    font-size: 1.5rem;
   }
 }
 
 /* ============================================================
-   💙 Modal do Mapa
+   🗺 Modal do Mapa
 ============================================================ */
 .map-modal {
   display: none;
@@ -204,10 +247,12 @@ select:focus {
   justify-content: center;
   z-index: 9999;
 }
+
 .map-backdrop {
   position: absolute;
   inset: 0;
 }
+
 .map-frame {
   position: relative;
   background: #fff;
@@ -218,17 +263,21 @@ select:focus {
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
   z-index: 10000;
 }
+
 .map-frame iframe {
   width: 100%;
   height: 350px;
   border-radius: 12px;
+  border: none;
 }
+
 .map-caption {
   margin-top: 8px;
   font-size: 0.9rem;
   color: #064785;
   text-align: center;
 }
+
 .map-close {
   position: absolute;
   top: 10px;
@@ -239,6 +288,7 @@ select:focus {
   color: #064785;
   cursor: pointer;
 }
+
 .map-close:hover {
   color: #0078ff;
 }
