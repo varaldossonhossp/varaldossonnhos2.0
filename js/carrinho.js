@@ -1,5 +1,5 @@
 // ============================================================
-// 💙 VARAL DOS SONHOS — /js/carrinho.js (versão final corrigida)
+// 💙 VARAL DOS SONHOS — /js/carrinho.js (versão final e segura)
 // ------------------------------------------------------------
 // 1️⃣ Lista todas as cartinhas salvas no localStorage
 // 2️⃣ Exibe cada uma visualmente no carrinho
@@ -36,7 +36,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   // Limpa container e exibe todas as cartinhas
   listaCartinhas.innerHTML = "";
-  carrinho.forEach((item, i) => {
+  carrinho.forEach((item) => {
     const dados = item.fields || item;
     const imagem =
       (dados.imagem_cartinha &&
@@ -135,8 +135,10 @@ document.addEventListener("DOMContentLoaded", async () => {
     try {
       for (const cartinha of carrinho) {
         const dados = cartinha.fields || cartinha;
+
+        // ✅ Solução segura: usa o autonumber se existir
         const payload = {
-          id_cartinha: cartinha.id,
+          id_cartinha: dados.id_cartinha || cartinha.id_cartinha || cartinha.id,
           id_usuario: usuario.id,
           nome_doador: usuario.nome_usuario || usuario.nome,
           email_doador: usuario.email_usuario || usuario.email,

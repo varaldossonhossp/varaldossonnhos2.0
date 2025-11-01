@@ -71,7 +71,7 @@ export default async function handler(req, res) {
       .base(process.env.AIRTABLE_BASE_ID);
 
     const T_ADOCOES   = "adocoes";
-    const T_CARTINHAS = "cartinhas";
+    const T_CARTINHA = "cartinha";
 
     // ------------------------------------------------------------
     // 1️⃣ Captura dados do corpo
@@ -99,7 +99,7 @@ export default async function handler(req, res) {
       ? `{id_cartinha}='${id_cartinha}'`
       : `{nome_crianca}='${nome_crianca}'`;
 
-    const encontrados = await base(T_CARTINHAS)
+    const encontrados = await base(T_CARTINHA)
       .select({ filterByFormula: filtro, maxRecords: 1 })
       .firstPage();
 
@@ -133,7 +133,7 @@ export default async function handler(req, res) {
     // 4️⃣ Atualiza a cartinha para "adotada"
     // ------------------------------------------------------------
     if (recordId) {
-      await base(T_CARTINHAS).update([{ id: recordId, fields: { status: "adotada" } }]);
+      await base(T_CARTINHA).update([{ id: recordId, fields: { status: "adotada" } }]);
       console.log("🎀 Cartinha marcada como adotada.");
     }
 
