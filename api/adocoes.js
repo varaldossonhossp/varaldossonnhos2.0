@@ -1,17 +1,14 @@
 // ============================================================
-// 💌 VARAL DOS SONHOS — /api/adocoes.js (Versão Final — TCC)
+// 💌 VARAL DOS SONHOS — /api/adocoes.js (Versão Final Revisada)
 // ------------------------------------------------------------
-// Objetivo: Gerenciar o ciclo de uma nova adoção.
+// Objetivo: Registrar adoções no Airtable, atualizar cartinha,
+// enviar e-mail ao admin e atualizar gamificação do doador.
+// ------------------------------------------------------------
 // Fluxo completo:
 //   1️⃣ Cria o registro na tabela "adocoes"
 //   2️⃣ Atualiza a cartinha para status = "adotada"
-//   3️⃣ Envia e-mail ao ADMIN com botão "Confirmar Adoção"
-//   4️⃣ Atualiza automaticamente a gamificação do doador
-// ------------------------------------------------------------
-// Integrações:
-//   - Airtable (base de dados)
-//   - EmailJS (envio de e-mails automáticos)
-//   - API /api/gamificacao.js (para pontuação do doador)
+//   3️⃣ Envia e-mail ao ADMIN
+//   4️⃣ Atualiza gamificação do doador
 // ============================================================
 
 import Airtable from "airtable";
@@ -21,7 +18,7 @@ const ok  = (res, data)          => res.status(200).json(data);
 const err = (res, code, message) => res.status(code).json({ sucesso: false, mensagem: message });
 
 // ============================================================
-// 💌 Envio de e-mail ao ADMIN (igual à sua versão atual)
+// 💌 Envio de e-mail ao ADMIN (igual à versão funcional)
 // ============================================================
 async function enviarEmailAdmin(params) {
   const payload = {
@@ -70,11 +67,11 @@ export default async function handler(req, res) {
     const base = new Airtable({ apiKey: process.env.AIRTABLE_API_KEY })
       .base(process.env.AIRTABLE_BASE_ID);
 
-    const T_ADOCOES   = "adocoes";
+    const T_ADOCOES  = "adocoes";
     const T_CARTINHA = "cartinha";
 
     // ------------------------------------------------------------
-    // 1️⃣ Captura dados do corpo
+    // 1️⃣ Captura dados do corpo da requisição
     // ------------------------------------------------------------
     const {
       id_cartinha,
@@ -88,16 +85,19 @@ export default async function handler(req, res) {
     } = req.body || {};
 
     if (!id_usuario || (!id_cartinha && !nome_crianca)) {
+      console.error("❌ Dados ausentes no corpo:", req.body);
       return err(res, 400, "Faltam dados obrigatórios.");
     }
 
     // ------------------------------------------------------------
-    // 2️⃣ Busca o recordId real da cartinha no Airtable
+    // 2️⃣ Busca o registro da cartinha no Airtable
     // ------------------------------------------------------------
     let recordId = null;
     const filtro = id_cartinha
-      ? `{id_cartinha}='${id_cartinha}'`
+      ? `OR({id_cartinha}=${Number(id_cartinha)}, {id_cartinha}='${id_cartinha}')`
       : `{nome_crianca}='${nome_crianca}'`;
+
+    console.log("🔍 Filtro de busca:", filtro);
 
     const encontrados = await base(T_CARTINHA)
       .select({ filterByFormula: filtro, maxRecords: 1 })
@@ -105,8 +105,9 @@ export default async function handler(req, res) {
 
     if (encontrados.length > 0) {
       recordId = encontrados[0].id;
+      console.log("📄 Cartinha encontrada:", recordId);
     } else {
-      console.warn("⚠️ Cartinha não encontrada:", id_cartinha || nome_crianca);
+      console.warn("⚠️ Nenhuma cartinha encontrada com filtro:", filtro);
     }
 
     // ------------------------------------------------------------
@@ -134,7 +135,9 @@ export default async function handler(req, res) {
     // ------------------------------------------------------------
     if (recordId) {
       await base(T_CARTINHA).update([{ id: recordId, fields: { status: "adotada" } }]);
-      console.log("🎀 Cartinha marcada como adotada.");
+      console.log("🎀 Cartinha marcada como adotada:", recordId);
+    } else {
+      console.warn("⚠️ Cartinha não encontrada para atualização.");
     }
 
     // ------------------------------------------------------------
@@ -151,7 +154,7 @@ export default async function handler(req, res) {
     });
 
     // ------------------------------------------------------------
-    // 6️⃣ Atualiza gamificação do doador (sem quebrar fluxo)
+    // 6️⃣ Atualiza gamificação (tentativa segura)
     // ------------------------------------------------------------
     try {
       const adocoesConfirmadas = await base(T_ADOCOES)
@@ -180,7 +183,7 @@ export default async function handler(req, res) {
       });
       console.log("🏆 Gamificação atualizada:", email_doador);
     } catch (gamiErr) {
-      console.warn("⚠️ Gamificação falhou:", gamiErr);
+      console.warn("⚠️ Gamificação falhou:", gamiErr.message);
     }
 
     return ok(res, { sucesso: true, id_adocao });
