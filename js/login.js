@@ -1,20 +1,12 @@
 // ============================================================
-// 💙 VARAL DOS SONHOS — /js/login.js (Versão Final Corrigida TCC)
+// 💙 VARAL DOS SONHOS — /js/login.js (Versão compatível com header.js)
 // ------------------------------------------------------------
-// Fluxo:
-//   1️⃣ Valida campos
-//   2️⃣ Envia dados à API /api/usuarios (acao = "login")
-//   3️⃣ Salva sessão no localStorage ("usuario")
-//   4️⃣ Mostra mensagem de boas-vindas
-//   5️⃣ Redireciona e mantém usuário logado no header
+// Faz login, salva sessão em "usuario_logado" e redireciona.
 // ============================================================
 
 document.addEventListener("DOMContentLoaded", () => {
   const form = document.getElementById("formLogin");
-  if (!form) {
-    console.error("❌ Formulário de login não encontrado!");
-    return;
-  }
+  if (!form) return console.warn("⚠️ Formulário de login não encontrado.");
 
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -23,12 +15,11 @@ document.addEventListener("DOMContentLoaded", () => {
     const senha = document.getElementById("senha").value.trim();
 
     if (!email || !senha) {
-      alert("⚠️ Preencha todos os campos para continuar!");
+      alert("⚠️ Preencha todos os campos!");
       return;
     }
 
     try {
-      // Envia para a API unificada /api/usuarios
       const resp = await fetch("/api/usuarios", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -41,45 +32,36 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const dados = await resp.json();
       if (!dados.sucesso || !dados.usuario) {
-        alert("❌ E-mail ou senha incorretos. Verifique e tente novamente.");
+        alert("❌ E-mail ou senha incorretos.");
         return;
       }
 
-      // ============================================================
-      // 💾 SALVA NO LOCALSTORAGE (padronizado como "usuario")
-      // ============================================================
+      // 💾 Salva sessão usando o mesmo nome de chave do header.js
       localStorage.setItem(
-        "usuario",
+        "usuario_logado",
         JSON.stringify({
-          id: dados.usuario.id || "",
-          nome: dados.usuario.nome_usuario || "",
-          email: dados.usuario.email_usuario || "",
-          tipo: dados.usuario.tipo_usuario || "doador",
+          id: dados.usuario.id,
+          nome: dados.usuario.nome_usuario,
+          email: dados.usuario.email_usuario,
+          tipo: dados.usuario.tipo_usuario,
         })
       );
 
-      // 💬 Mensagem motivacional
+      // 💬 Boas-vindas
       const nome = dados.usuario.nome_usuario.split(" ")[0];
-      alert(
-        `💙 Bem-vindo(a), ${nome}!\n\nSonhar é o primeiro passo para mudar o mundo. Ajudar alguém a sonhar é o segundo.🌟`
-      );
+      alert(`💙 Bem-vindo(a), ${nome}!\nContinue espalhando sonhos! 🌟`);
 
-      // ============================================================
-      // ⏳ PEQUENO ATRASO ANTES DO REDIRECIONAMENTO
-      // ------------------------------------------------------------
-      // Garante que o navegador salve o localStorage antes de
-      // trocar de página, evitando perda do estado de login.
-      // ============================================================
+      // ✅ Redireciona após garantir o salvamento
       setTimeout(() => {
         if (dados.usuario.tipo_usuario === "administrador") {
-          window.location.href = "../pages/admin.html";
+          window.location.href = "/pages/admin.html";
         } else {
-          window.location.href = "../index.html";
+          window.location.href = "/index.html";
         }
-      }, 500); // meio segundo basta
-    } catch (err) {
-      console.error("⚠️ Erro ao efetuar login:", err);
-      alert("⚠️ Erro ao conectar com o servidor. Tente novamente mais tarde.");
+      }, 500);
+    } catch (erro) {
+      console.error("⚠️ Erro ao efetuar login:", erro);
+      alert("⚠️ Falha ao conectar com o servidor. Tente novamente mais tarde.");
     }
   });
 });

@@ -1,9 +1,9 @@
 // ============================================================
-// 💙 VARAL DOS SONHOS — /js/componentes.js (Versão Final TCC)
+// 💙 VARAL DOS SONHOS — /js/componentes.js (Versão Revisada TCC)
 // ------------------------------------------------------------
-// Função: carrega dinamicamente os componentes fixos
-// (header, footer e cloudinho) e mantém o estado de login
-// persistente entre as páginas.
+// Carrega dinamicamente header, footer e cloudinho e
+// garante que o nome do usuário logado seja exibido
+// corretamente em qualquer página.
 // ============================================================
 
 async function carregarComponente(id, arquivo) {
@@ -12,14 +12,13 @@ async function carregarComponente(id, arquivo) {
     if (!resp.ok) throw new Error(`Erro ao carregar ${arquivo}`);
 
     const html = await resp.text();
-    const elemento = document.getElementById(id);
+    const el = document.getElementById(id);
+    if (!el) return console.warn(`Elemento #${id} não encontrado.`);
 
-    if (elemento) {
-      elemento.innerHTML = html;
+    el.innerHTML = html;
 
-      // 👇 Atualiza o estado de login assim que o header é inserido
-      if (id === "header") atualizarLogin();
-    }
+    // Assim que o header for carregado, atualiza login
+    if (id === "header") setTimeout(atualizarLogin, 200);
   } catch (erro) {
     console.error("❌ Erro ao carregar componente:", erro);
   }
@@ -29,10 +28,13 @@ document.addEventListener("DOMContentLoaded", async () => {
   await carregarComponente("header", "header.html");
   await carregarComponente("footer", "footer.html");
   await carregarComponente("cloudinho", "cloudinho.html");
+
+  // Segurança extra: executa novamente após tudo carregado
+  window.addEventListener("load", atualizarLogin);
 });
 
 // ============================================================
-// 👤 Atualiza saudação e botão "Sair" no header
+// 👤 Atualiza a saudação e o botão "Sair"
 // ============================================================
 function atualizarLogin() {
   const usuarioData =
@@ -45,18 +47,18 @@ function atualizarLogin() {
 
   if (usuarioData) {
     const usuario = JSON.parse(usuarioData);
-
     usuarioNome.textContent = `Olá, ${usuario.nome.split(" ")[0]}! 💙`;
     usuarioNome.style.display = "inline-block";
     loginLink.style.display = "none";
     btnLogout.style.display = "inline-block";
 
-    btnLogout.addEventListener("click", () => {
+    // Botão de logout
+    btnLogout.onclick = () => {
       localStorage.removeItem("usuario");
       localStorage.removeItem("usuario_logado");
       alert("💙 Você saiu com sucesso!");
-      window.location.href = "../index.html";
-    });
+      window.location.href = "/index.html";
+    };
   } else {
     usuarioNome.style.display = "none";
     loginLink.style.display = "inline-block";
