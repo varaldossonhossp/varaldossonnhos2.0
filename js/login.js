@@ -1,44 +1,24 @@
 // ============================================================
-// 💙 VARAL DOS SONHOS — /js/login.js (Versão Final TCC)
+// 💙 VARAL DOS SONHOS — /js/login.js (Versão Final Corrigida TCC)
 // ------------------------------------------------------------
-// Função: autentica o usuário (doador, voluntário ou admin)
-// usando a rota unificada /api/usuarios.
-//
-// Este módulo é responsável por validar as credenciais,
-// enviar os dados à API, salvar a sessão do usuário no
-// navegador (localStorage) e redirecionar conforme o tipo
-// de perfil.
-//
-// Fluxo principal:
-//   1️⃣ Captura e validação dos campos do formulário
-//   2️⃣ Comunicação com a API (acao = "login")
-//   3️⃣ Armazenamento da sessão no localStorage
-//   4️⃣ Exibição de mensagem motivacional 💌
-//   5️⃣ Redirecionamento (Home ou Painel Admin)
+// Fluxo:
+//   1️⃣ Valida campos
+//   2️⃣ Envia dados à API /api/usuarios (acao = "login")
+//   3️⃣ Salva sessão no localStorage ("usuario")
+//   4️⃣ Mostra mensagem de boas-vindas
+//   5️⃣ Redireciona e mantém usuário logado no header
 // ============================================================
 
 document.addEventListener("DOMContentLoaded", () => {
   const form = document.getElementById("formLogin");
-
-  // 🔍 Verificação de segurança — garante que o script
-  // só execute se o formulário estiver presente no DOM.
   if (!form) {
     console.error("❌ Formulário de login não encontrado!");
     return;
   }
 
-  // ------------------------------------------------------------
-  // 🎯 EVENTO DE SUBMISSÃO DO FORMULÁRIO
-  // ------------------------------------------------------------
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
 
-    // ============================================================
-    // 1️⃣ CAPTURA E VALIDAÇÃO DOS CAMPOS
-    // ------------------------------------------------------------
-    // Garante que o usuário preencheu os campos obrigatórios
-    // antes de enviar a requisição ao servidor.
-    // ============================================================
     const email = document.getElementById("email").value.trim();
     const senha = document.getElementById("senha").value.trim();
 
@@ -48,13 +28,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     try {
-      // ============================================================
-      // 2️⃣ ENVIO DOS DADOS À API
-      // ------------------------------------------------------------
-      // O sistema utiliza a rota unificada /api/usuarios.
-      // O campo “acao: login” indica ao servidor que se trata
-      // de uma autenticação (e não cadastro).
-      // ============================================================
+      // Envia para a API unificada /api/usuarios
       const resp = await fetch("/api/usuarios", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -65,30 +39,14 @@ document.addEventListener("DOMContentLoaded", () => {
         }),
       });
 
-      // Retorna erro em caso de falha HTTP
-      if (!resp.ok) throw new Error(`Erro HTTP ${resp.status}`);
-
       const dados = await resp.json();
-
-      // ============================================================
-      // 3️⃣ VALIDAÇÃO DA RESPOSTA
-      // ------------------------------------------------------------
-      // Verifica se o servidor respondeu com sucesso e se o
-      // objeto “usuario” foi retornado corretamente.
-      // ============================================================
       if (!dados.sucesso || !dados.usuario) {
         alert("❌ E-mail ou senha incorretos. Verifique e tente novamente.");
         return;
       }
 
       // ============================================================
-      // 4️⃣ SALVAMENTO DA SESSÃO NO LOCALSTORAGE
-      // ------------------------------------------------------------
-      // Os dados essenciais do usuário são salvos localmente
-      // para manter o estado de login ativo entre páginas.
-      //
-      // Observação: padronizado com a chave “usuario” para
-      // compatibilidade com o header (componentes.js).
+      // 💾 SALVA NO LOCALSTORAGE (padronizado como "usuario")
       // ============================================================
       localStorage.setItem(
         "usuario",
@@ -100,35 +58,26 @@ document.addEventListener("DOMContentLoaded", () => {
         })
       );
 
-      // ============================================================
-      // 5️⃣ MENSAGEM EMOCIONAL PERSONALIZADA
-      // ------------------------------------------------------------
-      // Expressa a identidade afetiva e solidária do projeto,
-      // reforçando o propósito social da plataforma.
-      // ============================================================
+      // 💬 Mensagem motivacional
       const nome = dados.usuario.nome_usuario.split(" ")[0];
       alert(
-        `💙 Bem-vindo(a), ${nome}!\n\nSua generosidade ilumina caminhos e faz o mundo sonhar mais alto.\nContinue espalhando esperança! 🌟`
+        `💙 Bem-vindo(a), ${nome}!\n\nSonhar é o primeiro passo para mudar o mundo. Ajudar alguém a sonhar é o segundo.🌟`
       );
 
       // ============================================================
-      // 6️⃣ REDIRECIONAMENTO CONFORME O TIPO DE USUÁRIO
+      // ⏳ PEQUENO ATRASO ANTES DO REDIRECIONAMENTO
       // ------------------------------------------------------------
-      // Após login, o usuário é levado para a página adequada
-      // conforme seu perfil: administrador → painel /pages/admin.html,
-      // demais → página inicial.
+      // Garante que o navegador salve o localStorage antes de
+      // trocar de página, evitando perda do estado de login.
       // ============================================================
-      if (dados.usuario.tipo_usuario === "administrador") {
-        window.location.href = "../pages/admin.html";
-      } else {
-        window.location.href = "../index.html";
-      }
+      setTimeout(() => {
+        if (dados.usuario.tipo_usuario === "administrador") {
+          window.location.href = "../pages/admin.html";
+        } else {
+          window.location.href = "../index.html";
+        }
+      }, 500); // meio segundo basta
     } catch (err) {
-      // ============================================================
-      // ⚠️ TRATAMENTO DE ERROS GERAIS
-      // ------------------------------------------------------------
-      // Exibe mensagens de falha na comunicação ou exceções do servidor.
-      // ============================================================
       console.error("⚠️ Erro ao efetuar login:", err);
       alert("⚠️ Erro ao conectar com o servidor. Tente novamente mais tarde.");
     }
