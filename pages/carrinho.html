@@ -1,11 +1,13 @@
-  <!-- ============================================================
-       💙 VARAL DOS SONHOS — Carrinho de Adoção
-       ------------------------------------------------------------
-       Esta página é responsável pela etapa final do fluxo de adoção.
-       O usuário revisa a cartinha selecionada, escolhe o ponto de coleta,
-       e confirma a adoção, que é registrada na API e dispara um e-mail
-       de confirmação via EmailJS.
-  ============================================================ -->
+<!-- ============================================================
+     💙 VARAL DOS SONHOS — Carrinho de Adoção (versão final inteligente)
+     ------------------------------------------------------------
+     Fluxo:
+       1️⃣ Exibe a cartinha selecionada do localStorage
+       2️⃣ Lista pontos de coleta do Airtable
+       3️⃣ Abre modal com mapa do ponto selecionado
+       4️⃣ Finaliza adoção via /api/adocoes
+       5️⃣ Notifica o admin e limpa o carrinho
+============================================================ -->
 
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -14,145 +16,72 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>💙 Carrinho de Adoção | Varal dos Sonhos</title>
 
-  <!-- 🎨 FONTES E ESTILOS GERAIS -->
+  <!-- 🎨 Fontes e estilos -->
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet" />
   <link rel="icon" href="../imagens/favicon.png" type="image/png" />
   <link rel="stylesheet" href="../css/style.css" />
+  <link rel="stylesheet" href="../css/carrinho.css" />
   <link rel="stylesheet" href="../css/cloudinho.css" />
 </head>
 
 <body class="bg-gradiente">
-    <div id="header"></div>
+  <div id="header"></div>
 
-  <!-- ============================================================
-       💙 SEÇÃO PRINCIPAL DO CARRINHO
-       ------------------------------------------------------------
-       O conteúdo principal apresenta as informações da cartinha
-       selecionada e o formulário de finalização da adoção.
-  ============================================================ -->
   <main class="container container-carrinho">
-
     <h2 class="titulo-pagina">💙 Carrinho de Adoção</h2>
     <p>Revise suas informações antes de finalizar a adoção da cartinha.</p>
 
-    <div class="cartinha-selecionada" style="
-        border: 2px dashed #0078ff;
-        border-radius: 12px;
-        padding: 20px;
-        margin: 20px auto;
-        max-width: 600px;
-        background: #f8fbff;
-        display: flex;
-        align-items: center;
-        gap: 20px;
-        justify-content: center;
-        flex-wrap: wrap;
-    ">
-      <!-- Imagem dinâmica da cartinha -->
-      <img
-        id="cartinha-img"
-        src="../imagens/cartinha-placeholder.png"
-        alt="Cartinha selecionada"
-        style="width: 160px; height: auto; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);"
-      />
-
-      <!-- Informações dinâmicas: nome e sonho -->
-      <div class="info-cartinha">
-        <strong id="nome-crianca" style="display:block; font-size:1.2rem; color:#004aad; margin-bottom:6px;">Nome da Criança</strong>
-        <span id="sonho-crianca" style="color:#555;">Sonho: (a ser preenchido dinamicamente)</span>
+    <!-- Cartinha Selecionada -->
+    <div class="cartinha-selecionada" id="cartinhaSelecionada">
+      <img id="cartinha-img" src="../imagens/sem-foto.png" alt="Cartinha selecionada" />
+      <div>
+        <strong id="nome-crianca">Nome da Criança</strong>
+        <p id="sonho-crianca">Sonho: —</p>
       </div>
     </div>
 
-    <!-- ============================================================
-         📦 SEÇÃO DE PONTOS DE COLETA
-         ------------------------------------------------------------
-         Carregada automaticamente a partir da API /api/pontosdecoleta.
-         O usuário deve selecionar um ponto de entrega para o presente.
-    ============================================================ -->
-    <div class="ponto-coleta" style="margin: 20px auto; max-width: 400px;">
-      <label for="select-ponto" style="font-weight:600; color:#003d7a;">
-        📦 Ponto de Coleta:
-      </label>
-      <select id="select-ponto" style="
-          width:100%;
-          padding:10px;
-          margin-top:6px;
-          border:1px solid #0078ff;
-          border-radius:8px;
-          font-size:1rem;
-          color:#003d7a;
-      ">
+    <!-- Ponto de Coleta -->
+    <div class="campo">
+      <label for="select-ponto">📦 Ponto de Coleta:</label>
+      <select id="select-ponto">
         <option>Selecione um ponto...</option>
       </select>
     </div>
 
-    <!-- ============================================================
-         ✨ BOTÃO DE FINALIZAÇÃO
-         ------------------------------------------------------------
-         Ao clicar, o script js/carrinho.js envia as informações para:
-          • /api/adocoes.js  → cria registro da adoção no Airtable
-          • EmailJS          → envia confirmação ao doador
-         Após sucesso, exibe mensagem e redireciona o usuário.
-    ============================================================ -->
-    <div style="text-align:center; margin-top:30px;">
-      <button id="btn-finalizar" class="btn-acao principal" style="
-          background:#0078ff;
-          border:none;
-          border-radius:30px;
-          padding:12px 30px;
-          color:white;
-          font-size:1.1rem;
-          font-weight:600;
-          cursor:pointer;
-          transition:0.3s;
-      ">
-        ✨ Finalizar Adoção
-      </button>
+    <!-- Botões -->
+    <div style="text-align:center; margin-top:20px;">
+      <button id="btn-ver-mapa" class="btn-secundario" style="background:#00a0ff; color:white;">📍 Ver Localização</button>
+      <button id="btn-finalizar" class="btn-finalizar">✨ Finalizar Adoção</button>
+      <button id="btn-limpar" class="btn-secundario" style="background:#ff5c5c; color:white;">🗑 Limpar Carrinho</button>
     </div>
   </main>
 
-  <!-- ============================================================
-       🔹 FOOTER DINÂMICO
-       ------------------------------------------------------------
-       O rodapé institucional também é um componente HTML externo,
-       carregado automaticamente do diretório /componentes/footer.html.
-       Contém informações sobre o projeto e créditos.
-  ============================================================ -->
+  <!-- Modal / iframe do Google Maps -->
+  <div id="mapModal" class="map-modal" aria-hidden="true">
+    <div class="map-backdrop" id="mapBackdrop"></div>
+    <div class="map-frame">
+      <button id="closeMap" class="map-close" aria-label="Fechar">✕</button>
+      <iframe id="mapFrame" src="about:blank" frameborder="0" allowfullscreen></iframe>
+      <div id="mapCaption" class="map-caption"></div>
+    </div>
+  </div>
+
   <div id="footer"></div>
   <div id="cloudinho"></div>
 
-  <!-- ============================================================
-       ⚙️ SCRIPT DE COMPONENTES DINÂMICOS
-       ------------------------------------------------------------
-       Este bloco carrega automaticamente header, footer e cloudinho
-       de forma modular, tanto na raiz quanto dentro de /pages/.
-  ============================================================ -->
+  <!-- Carrega componentes dinâmicos -->
   <script>
     async function carregarComponente(id, arquivo) {
-      // Determina o caminho base (ajuste automático para subpastas)
       const base = location.pathname.includes("/pages/") ? "../componentes/" : "componentes/";
       const resp = await fetch(base + arquivo);
-      if (resp.ok) {
-        document.getElementById(id).innerHTML = await resp.text();
-      }
+      if (resp.ok) document.getElementById(id).innerHTML = await resp.text();
     }
-
-    // Carregamento dos três componentes principais
     carregarComponente("header", "header.html");
     carregarComponente("footer", "footer.html");
     carregarComponente("cloudinho", "cloudinho.html");
   </script>
 
-  <!-- ============================================================
-       📜 SCRIPTS FUNCIONAIS DO CARRINHO
-       ------------------------------------------------------------
-       O arquivo js/carrinho.js implementa toda a lógica da página:
-        • Leitura do localStorage (cartinha selecionada)
-        • Preenchimento dos campos na tela
-        • Comunicação com APIs (pontos e adoção)
-        • Envio de e-mail de confirmação
-        • Limpeza e redirecionamento final
-  ============================================================ -->
+  <!-- Scripts funcionais -->
   <script src="../js/carrinho.js"></script>
   <script src="../js/cloudinho.js"></script>
   <script src="../js/header.js"></script>
