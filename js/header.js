@@ -1,81 +1,63 @@
 // ============================================================
-// 💙 VARAL DOS SONHOS — /js/header.js
+// 💙 VARAL DOS SONHOS — /js/header.js (Versão compatível modular)
 // ------------------------------------------------------------
-// Exibe o nome do usuário logado, mostra/oculta menus
-// conforme o tipo (administrador / doador / visitante).
+// Lê o login salvo e atualiza o menu do header dinamicamente.
 // ============================================================
 
-document.addEventListener("DOMContentLoaded", async () => {
-  const header = document.getElementById("header");
-  if (!header) {
-    console.warn("⚠️ Elemento #header não encontrado na página.");
+async function inicializarHeader() {
+  // Espera o header carregar no DOM
+  const headerDiv = document.getElementById("header");
+  if (!headerDiv || !headerDiv.innerHTML.trim()) {
+    setTimeout(inicializarHeader, 150);
     return;
   }
 
-  try {
-    // ============================================================
-    // 1️⃣ Carrega o HTML do cabeçalho dinâmico
-    // ============================================================
-    const resposta = await fetch("/componentes/header.html");
-    if (!resposta.ok) throw new Error("Erro ao carregar header.html");
-    const html = await resposta.text();
-    header.innerHTML = html;
+  // Espera o HTML ser realmente injetado
+  const saudacao = document.getElementById("saudacaoUsuario");
+  const linkLogin = document.getElementById("linkLogin");
+  const linkCadastro = document.getElementById("linkCadastro");
+  const linkSair = document.getElementById("linkSair");
+  const linkPainelAdmin = document.getElementById("linkPainelAdmin");
+  const linkRanking = document.getElementById("linkRanking");
 
-    // ============================================================
-    // 2️⃣ Referências dos elementos
-    // ============================================================
-    const usuarioLogado = JSON.parse(localStorage.getItem("usuario_logado"));
-    const loginLink = document.getElementById("linkLogin");
-    const cadastroLink = document.getElementById("linkCadastro");
-    const saudacao = document.getElementById("saudacaoUsuario");
-    const sairLink = document.getElementById("linkSair");
-    const painelAdmin = document.getElementById("linkPainelAdmin");
-    const rankingLink = document.getElementById("linkRanking");
+  if (!saudacao) return;
 
-    // ============================================================
-    // 3️⃣ Exibição condicional
-    // ============================================================
-    if (usuarioLogado && usuarioLogado.nome) {
-      const nomeCurto = usuarioLogado.nome.split(" ")[0];
-      saudacao.textContent = `👋 Olá, ${nomeCurto}!`;
-      saudacao.style.display = "inline-block";
-      loginLink.style.display = "none";
-      cadastroLink.style.display = "none";
-      sairLink.style.display = "inline-block";
+  const usuario = JSON.parse(localStorage.getItem("usuario_logado"));
 
-      // Tipo do usuário
-      if (usuarioLogado.tipo === "administrador") {
-        painelAdmin.style.display = "inline-block";
-      } else if (usuarioLogado.tipo === "doador") {
-        rankingLink.style.display = "inline-block";
-      }
+  if (usuario && usuario.nome) {
+    const nomeCurto = usuario.nome.split(" ")[0];
+    saudacao.textContent = `👋 Olá, ${nomeCurto}!`;
+    saudacao.style.display = "inline-block";
+    linkLogin.style.display = "none";
+    linkCadastro.style.display = "none";
+    linkSair.style.display = "inline-block";
 
-      // ============================================================
-      // 4️⃣ Função de logout
-      // ============================================================
-      sairLink.addEventListener("click", (e) => {
-        e.preventDefault();
-        if (confirm("Deseja encerrar sua sessão? 💭")) {
-          localStorage.removeItem("usuario_logado");
-          window.location.href = "/index.html";
-        }
-      });
+    // Exibe menus conforme tipo
+    if (usuario.tipo === "administrador") {
+      linkPainelAdmin.style.display = "inline-block";
     } else {
-      // Visitante
-      saudacao.style.display = "none";
-      sairLink.style.display = "none";
-      painelAdmin.style.display = "none";
-      rankingLink.style.display = "none";
-      loginLink.style.display = "inline-block";
-      cadastroLink.style.display = "inline-block";
+      linkRanking.style.display = "inline-block";
     }
 
-  } catch (erro) {
-    console.error("❌ Erro ao carregar o cabeçalho:", erro);
-    header.innerHTML = `
-      <header style="background:#4A90E2;color:white;text-align:center;padding:10px;">
-        <h2>💙 Fantástica Fábrica de Sonhos</h2>
-      </header>
-    `;
+    // Logout
+    linkSair.addEventListener("click", (e) => {
+      e.preventDefault();
+      localStorage.removeItem("usuario_logado");
+      alert("💙 Sessão encerrada com sucesso!");
+      window.location.href = "/index.html";
+    });
+  } else {
+    // Visitante
+    saudacao.style.display = "none";
+    linkSair.style.display = "none";
+    linkPainelAdmin.style.display = "none";
+    linkRanking.style.display = "none";
+    linkLogin.style.display = "inline-block";
+    linkCadastro.style.display = "inline-block";
   }
+}
+
+// Executa após o carregamento total da página
+document.addEventListener("DOMContentLoaded", () => {
+  inicializarHeader();
 });
