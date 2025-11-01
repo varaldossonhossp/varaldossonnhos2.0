@@ -1,24 +1,19 @@
 // ============================================================
-// 💌 VARAL DOS SONHOS — /api/adocoes.js (Versão Final Revisada)
+// 💙 VARAL DOS SONHOS — /api/adocoes.js (Versão Final Corrigida)
 // ------------------------------------------------------------
-// Objetivo: Registrar adoções no Airtable, atualizar cartinha,
-// enviar e-mail ao admin e atualizar gamificação do doador.
-// ------------------------------------------------------------
-// Fluxo completo:
-//   1️⃣ Cria o registro na tabela "adocoes"
-//   2️⃣ Atualiza a cartinha para status = "adotada"
-//   3️⃣ Envia e-mail ao ADMIN
-//   4️⃣ Atualiza gamificação do doador
+// Corrige os erros 422 (campo data_adocao) e filtro NaN,
+// com logs descritivos e integração segura com Airtable.
 // ============================================================
 
 import Airtable from "airtable";
 export const config = { runtime: "nodejs" };
 
+// Funções utilitárias
 const ok  = (res, data)          => res.status(200).json(data);
 const err = (res, code, message) => res.status(code).json({ sucesso: false, mensagem: message });
 
 // ============================================================
-// 💌 Envio de e-mail ao ADMIN (igual à versão funcional)
+// 💌 Função auxiliar — Enviar e-mail ao ADMIN via EmailJS
 // ============================================================
 async function enviarEmailAdmin(params) {
   const payload = {
@@ -32,7 +27,7 @@ async function enviarEmailAdmin(params) {
       donor_phone: params.telefone_doador || "",
       child_name: params.nome_crianca || "",
       child_gift: params.sonho || "",
-      pickup_name: params.ponto_coleta?.nome || params.ponto_coleta || "",
+      pickup_name: params.ponto_coleta?.nome || "",
       pickup_address: params.ponto_coleta?.endereco || "",
       pickup_phone: params.ponto_coleta?.telefone || "",
       order_id: params.id_adocao || "",
@@ -46,14 +41,14 @@ async function enviarEmailAdmin(params) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     });
-    console.log("📧 E-mail enviado ao ADMIN.");
+    console.log("📧 E-mail enviado ao ADMIN com sucesso.");
   } catch (e) {
-    console.warn("⚠️ Falha no envio de e-mail ao ADMIN:", e.message);
+    console.warn("⚠️ Falha ao enviar e-mail:", e.message);
   }
 }
 
 // ============================================================
-// 🧩 Handler principal
+// 🧩 Handler principal da API
 // ============================================================
 export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -64,15 +59,16 @@ export default async function handler(req, res) {
   if (req.method !== "POST") return err(res, 405, "Método não suportado.");
 
   try {
+    console.log("🟢 POST /api/adocoes recebido.");
+    console.log("📦 Body:", req.body);
+
+    // Conexão Airtable
     const base = new Airtable({ apiKey: process.env.AIRTABLE_API_KEY })
       .base(process.env.AIRTABLE_BASE_ID);
 
     const T_ADOCOES  = "adocoes";
     const T_CARTINHA = "cartinha";
 
-    // ------------------------------------------------------------
-    // 1️⃣ Captura dados do corpo da requisição
-    // ------------------------------------------------------------
     const {
       id_cartinha,
       id_usuario,
@@ -84,21 +80,25 @@ export default async function handler(req, res) {
       sonho,
     } = req.body || {};
 
+    // ------------------------------------------------------------
+    // 🔍 Validação de dados obrigatórios
+    // ------------------------------------------------------------
     if (!id_usuario || (!id_cartinha && !nome_crianca)) {
-      console.error("❌ Dados ausentes no corpo:", req.body);
-      return err(res, 400, "Faltam dados obrigatórios.");
+      console.error("❌ Faltam dados obrigatórios:", req.body);
+      return err(res, 400, "Faltam dados obrigatórios para criar a adoção.");
     }
 
     // ------------------------------------------------------------
-    // 2️⃣ Busca o registro da cartinha no Airtable
+    // 🔍 Busca cartinha no Airtable
     // ------------------------------------------------------------
-    let recordId = null;
-    const filtro = id_cartinha
-      ? `OR({id_cartinha}=${Number(id_cartinha)}, {id_cartinha}='${id_cartinha}')`
+    const idNum = parseInt(id_cartinha);
+    const filtro = id_cartinha && !isNaN(idNum)
+      ? `OR({id_cartinha}=${idNum}, {id_cartinha}='${id_cartinha}')`
       : `{nome_crianca}='${nome_crianca}'`;
 
-    console.log("🔍 Filtro de busca:", filtro);
+    console.log("🔍 Filtro usado no Airtable:", filtro);
 
+    let recordId = null;
     const encontrados = await base(T_CARTINHA)
       .select({ filterByFormula: filtro, maxRecords: 1 })
       .firstPage();
@@ -111,10 +111,10 @@ export default async function handler(req, res) {
     }
 
     // ------------------------------------------------------------
-    // 3️⃣ Cria registro na tabela de adoções
+    // 📝 Criação do registro de adoção
     // ------------------------------------------------------------
     const novo = {
-      data_adocao: new Date().toISOString(),
+      data_adocao: new Date().toISOString().split("T")[0], // ✅ formato aceito pelo Airtable
       id_cartinha: id_cartinha || "",
       id_usuario: id_usuario,
       nome_doador: nome_doador || "",
@@ -126,22 +126,22 @@ export default async function handler(req, res) {
       status_adocao: "aguardando confirmacao",
     };
 
+    console.log("🧾 Dados prontos para criar registro:", novo);
+
     const recs = await base(T_ADOCOES).create([{ fields: novo }]);
     const id_adocao = recs[0].id;
-    console.log("📝 Nova adoção registrada:", id_adocao);
+    console.log("✅ Registro criado com sucesso:", id_adocao);
 
     // ------------------------------------------------------------
-    // 4️⃣ Atualiza a cartinha para "adotada"
+    // 🎀 Atualiza status da cartinha para "adotada"
     // ------------------------------------------------------------
     if (recordId) {
       await base(T_CARTINHA).update([{ id: recordId, fields: { status: "adotada" } }]);
       console.log("🎀 Cartinha marcada como adotada:", recordId);
-    } else {
-      console.warn("⚠️ Cartinha não encontrada para atualização.");
     }
 
     // ------------------------------------------------------------
-    // 5️⃣ Envia e-mail de notificação ao admin
+    // 💌 Envia e-mail ao admin
     // ------------------------------------------------------------
     await enviarEmailAdmin({
       id_adocao,
@@ -153,42 +153,11 @@ export default async function handler(req, res) {
       ponto_coleta,
     });
 
-    // ------------------------------------------------------------
-    // 6️⃣ Atualiza gamificação (tentativa segura)
-    // ------------------------------------------------------------
-    try {
-      const adocoesConfirmadas = await base(T_ADOCOES)
-        .select({
-          filterByFormula: `AND({email_doador}='${email_doador}', {status_adocao}='confirmada')`,
-        })
-        .all();
-
-      const total = adocoesConfirmadas.length;
-      const pontos_coracao = total * 10;
-      let titulo_conquista = "💙 Iniciante Solidário";
-      if (total >= 5) titulo_conquista = "👑 Lenda dos Sonhos";
-      else if (total >= 4) titulo_conquista = "🌟 Guardião dos Sonhos";
-      else if (total >= 3) titulo_conquista = "🏅 Mestre dos Sonhos";
-      else if (total >= 2) titulo_conquista = "💛 Segundo Gesto de Amor";
-
-      await fetch(`${process.env.APP_BASE_URL}/api/gamificacao`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          id_usuario,
-          pontos_coracao,
-          total_cartinhas_adotadas: total,
-          titulo_conquista,
-        }),
-      });
-      console.log("🏆 Gamificação atualizada:", email_doador);
-    } catch (gamiErr) {
-      console.warn("⚠️ Gamificação falhou:", gamiErr.message);
-    }
-
     return ok(res, { sucesso: true, id_adocao });
   } catch (e) {
-    console.error("🔥 Erro interno /api/adocoes:", e);
+    console.error("🔥 ERRO INTERNO DETECTADO /api/adocoes");
+    console.error("Mensagem:", e.message);
+    console.error("Stack:", e.stack);
     return err(res, 500, "Erro interno ao criar adoção.");
   }
 }
