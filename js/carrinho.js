@@ -23,7 +23,9 @@ document.addEventListener("DOMContentLoaded", async () => {
   const closeMap = document.getElementById("closeMap");
   const backdrop = document.getElementById("mapBackdrop");
 
-  // 🧺 1️⃣ Ler carrinho
+  // ============================================================
+  // 1️⃣ Recupera cartinha do localStorage
+  // ============================================================
   const carrinho = JSON.parse(localStorage.getItem("carrinho")) || [];
   if (carrinho.length === 0) {
     nomeSpan.textContent = "(nenhuma cartinha selecionada)";
@@ -35,49 +37,78 @@ document.addEventListener("DOMContentLoaded", async () => {
   const ultima = carrinho[carrinho.length - 1];
   const dados = ultima.fields || ultima;
 
-  // 2️⃣ Exibir cartinha
-  imgCartinha.src = dados.imagem_cartinha?.[0]?.url || "../imagens/sem-foto.png";
+  // 🔹 Corrige imagem da cartinha
+  const imagem =
+    (dados.imagem_cartinha &&
+      Array.isArray(dados.imagem_cartinha) &&
+      dados.imagem_cartinha[0]?.url) ||
+    dados.foto ||
+    "../imagens/sem-foto.png";
+
+  imgCartinha.src = imagem;
   nomeSpan.textContent = dados.nome_crianca || "Criança sem nome";
   sonhoSpan.textContent = "Sonho: " + (dados.sonho || "Não informado");
 
-  // 3️⃣ Carregar pontos de coleta
+  // ============================================================
+  // 2️⃣ Carrega pontos de coleta da API
+  // ============================================================
   try {
     const resp = await fetch("/api/pontosdecoleta");
     const json = await resp.json();
-    if (json.sucesso && Array.isArray(json.pontos)) {
-      json.pontos.forEach((p) => {
+
+    // Aceita tanto "pontos" quanto "records"
+    const lista =
+      json.pontos ||
+      (json.records
+        ? json.records.map((r) => ({
+            nome_ponto: r.fields?.nome_ponto,
+            endereco: r.fields?.endereco,
+            telefone: r.fields?.telefone,
+            email_ponto: r.fields?.email_ponto,
+          }))
+        : []);
+
+    if (Array.isArray(lista) && lista.length > 0) {
+      lista.forEach((p) => {
+        if (!p.nome_ponto) return; // ignora registros incompletos
         const opt = document.createElement("option");
         opt.value = p.nome_ponto;
+        opt.textContent = p.nome_ponto;
         opt.dataset.endereco = p.endereco || "";
         opt.dataset.telefone = p.telefone || "";
         opt.dataset.email = p.email_ponto || "";
-        opt.dataset.mapa = `https://www.google.com/maps?q=${encodeURIComponent(p.endereco)}`;
-        opt.textContent = p.nome_ponto;
+        opt.dataset.mapa = `https://www.google.com/maps?q=${encodeURIComponent(
+          p.endereco || p.nome_ponto
+        )}`;
         selectPonto.appendChild(opt);
       });
+    } else {
+      console.warn("⚠️ Nenhum ponto de coleta encontrado.");
     }
   } catch (erro) {
-    console.warn("Erro ao carregar pontos de coleta:", erro);
+    console.error("❌ Erro ao carregar pontos de coleta:", erro);
   }
 
-  // 4️⃣ Abrir modal do mapa
+  // ============================================================
+  // 3️⃣ Abre modal do mapa
+  // ============================================================
   btnVerMapa.addEventListener("click", () => {
     const opt = selectPonto.options[selectPonto.selectedIndex];
     if (!opt || opt.value === "Selecione um ponto...") {
       alert("⚠️ Escolha um ponto de coleta primeiro!");
       return;
     }
-    const mapaURL = opt.dataset.mapa;
-    const endereco = opt.dataset.endereco || "";
-    mapFrame.src = mapaURL;
-    mapCaption.textContent = endereco;
+    mapFrame.src = opt.dataset.mapa;
+    mapCaption.textContent = opt.dataset.endereco || opt.value;
     mapModal.style.display = "flex";
   });
 
   closeMap.addEventListener("click", () => (mapModal.style.display = "none"));
   backdrop.addEventListener("click", () => (mapModal.style.display = "none"));
 
-  // 5️⃣ Finalizar adoção
+  // ============================================================
+  // 4️⃣ Finaliza a adoção
+  // ============================================================
   btnFinalizar.addEventListener("click", async () => {
     const opt = selectPonto.options[selectPonto.selectedIndex];
     if (!opt || opt.value === "Selecione um ponto...") {
@@ -117,7 +148,9 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       if (!json.sucesso) throw new Error(json.mensagem || "Falha na adoção");
 
-      mostrarMensagemFinal("💙 Adoção registrada com sucesso!<br>O administrador foi notificado por e-mail.");
+      mostrarMensagemFinal(
+        "💙 Adoção registrada com sucesso!<br>O administrador foi notificado por e-mail."
+      );
       localStorage.removeItem("carrinho");
       setTimeout(() => (window.location.href = "../index.html"), 5000);
     } catch (erro) {
@@ -126,7 +159,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   });
 
-  // 6️⃣ Limpar carrinho
+  // ============================================================
+  // 5️⃣ Botão limpar carrinho
+  // ============================================================
   btnLimpar.addEventListener("click", () => {
     localStorage.removeItem("carrinho");
     alert("🧺 Carrinho limpo!");
