@@ -1,31 +1,30 @@
 // ============================================================
-// 👥 VARAL DOS SONHOS — /api/usuarios.js (versão 100% compatível)
+// 👥 VARAL DOS SONHOS — /api/usuarios.js (versão funcional final)
 // ------------------------------------------------------------
-// API Serverless (Vercel) para Cadastro e Login de usuários.
-// Corrigido: erro "res.status is not a function" no ambiente ESM.
+// Rotas:
+//   • POST /api/usuarios   → acao: "cadastro" ou "login"
 // ============================================================
 
 import Airtable from "airtable";
 export const config = { runtime: "nodejs" };
 
 // ============================================================
-// 🔐 Variáveis de ambiente
+// 🔐 Configurações
 // ============================================================
 const AIRTABLE_API_KEY = process.env.AIRTABLE_API_KEY;
 const AIRTABLE_BASE_ID = process.env.AIRTABLE_BASE_ID;
 const TABLE_NAME = process.env.AIRTABLE_USUARIO_TABLE || "usuario";
 
 // ============================================================
-// 🧰 Funções utilitárias
+// 🧰 Utilitários de resposta (compatível Node 20 / Vercel)
 // ============================================================
 function sendJson(res, code, data) {
   res.statusCode = code;
-  res.setHeader("Content-Type", "application/json");
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+  res.setHeader("Content-Type", "application/json; charset=utf-8");
   res.end(JSON.stringify(data));
-}
-
-function ok(res, data) {
-  sendJson(res, 200, data);
 }
 
 function err(res, code, msg, extra = {}) {
@@ -33,38 +32,51 @@ function err(res, code, msg, extra = {}) {
   sendJson(res, code, { sucesso: false, mensagem: msg, ...extra });
 }
 
-const escapeFormulaString = (s) => (s ? s.replace(/'/g, "''") : "");
+function ok(res, data) {
+  sendJson(res, 200, { sucesso: true, ...data });
+}
+
+const escapeFormulaString = (str) => (str ? str.replace(/'/g, "''") : "");
 
 // ============================================================
-// 🧩 Handler principal
+// 🔧 Função auxiliar para ler corpo JSON (req.body)
+// ============================================================
+async function getBody(req) {
+  try {
+    const chunks = [];
+    for await (const chunk of req) chunks.push(chunk);
+    const data = Buffer.concat(chunks).toString();
+    return JSON.parse(data || "{}");
+  } catch (e) {
+    console.error("⚠️ Erro ao ler body:", e);
+    return {};
+  }
+}
+
+// ============================================================
+// 🌈 Handler principal
 // ============================================================
 export default async function handler(req, res) {
-  try {
-    // ------------------------------------------------------------
-    // Cabeçalhos CORS
-    // ------------------------------------------------------------
-    res.setHeader("Access-Control-Allow-Origin", "*");
-    res.setHeader("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
-    res.setHeader("Access-Control-Allow-Headers", "Content-Type");
-    if (req.method === "OPTIONS") {
-      res.statusCode = 204;
-      return res.end();
-    }
+  // CORS básico
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+  if (req.method === "OPTIONS") return res.end();
 
-    if (!AIRTABLE_API_KEY || !AIRTABLE_BASE_ID) {
-      return err(res, 500, "Variáveis Airtable ausentes.");
-    }
+  try {
+    if (!AIRTABLE_API_KEY || !AIRTABLE_BASE_ID)
+      return err(res, 500, "Chaves Airtable ausentes.");
 
     const base = new Airtable({ apiKey: AIRTABLE_API_KEY }).base(AIRTABLE_BASE_ID);
 
     // ============================================================
-    // POST → LOGIN e CADASTRO
+    // POST → CADASTRO ou LOGIN
     // ============================================================
     if (req.method === "POST") {
-      const body = await getRequestBody(req);
+      const body = await getBody(req);
       const { acao } = body || {};
 
-      // --------------------- CADASTRO ---------------------
+      // ----------------------------- CADASTRO -----------------------------
       if (acao === "cadastro") {
         const {
           nome_usuario,
@@ -81,16 +93,15 @@ export default async function handler(req, res) {
         if (!nome_usuario || !email_usuario || !senha)
           return err(res, 400, "Campos obrigatórios ausentes.");
 
-        // Verifica se e-mail já existe
+        const emailEsc = escapeFormulaString(email_usuario);
         const existe = await base(TABLE_NAME)
           .select({
-            filterByFormula: `{email_usuario}='${escapeFormulaString(email_usuario)}'`,
+            filterByFormula: `{email_usuario}='${emailEsc}'`,
             maxRecords: 1,
           })
           .all();
 
-        if (existe.length > 0)
-          return err(res, 409, "E-mail já cadastrado.");
+        if (existe.length > 0) return err(res, 409, "E-mail já cadastrado.");
 
         const novo = await base(TABLE_NAME).create([
           {
@@ -105,18 +116,18 @@ export default async function handler(req, res) {
               endereco,
               numero,
               status: "ativo",
+              data_cadastro: new Date().toISOString().split("T")[0],
             },
           },
         ]);
 
         return ok(res, {
-          sucesso: true,
           mensagem: "Usuário cadastrado com sucesso.",
           id_usuario: novo[0].id,
         });
       }
 
-      // ----------------------- LOGIN ----------------------
+      // ------------------------------- LOGIN -------------------------------
       if (acao === "login") {
         const { email_usuario, senha } = body || {};
         if (!email_usuario || !senha)
@@ -126,65 +137,49 @@ export default async function handler(req, res) {
         const senhaEsc = escapeFormulaString(senha);
 
         const formula = `AND({email_usuario}='${emailEsc}', {senha}='${senhaEsc}', {status}='ativo')`;
-        console.log("🧩 Login formula:", formula, "tabela:", TABLE_NAME);
-
         const registros = await base(TABLE_NAME)
           .select({ filterByFormula: formula, maxRecords: 1 })
           .all();
 
-        if (!registros || registros.length === 0)
-          return err(res, 401, "Credenciais inválidas.");
+        if (registros.length === 0)
+          return err(res, 401, "E-mail ou senha incorretos.");
 
-        const user = registros[0].fields;
-        const { senha: _, ...dados } = user;
+        const usuario = registros[0].fields;
 
         return ok(res, {
-          sucesso: true,
           mensagem: "Login efetuado com sucesso.",
-          usuario: dados,
-          id_usuario: registros[0].id,
+          usuario: {
+            id: registros[0].id,
+            nome_usuario: usuario.nome_usuario,
+            email_usuario: usuario.email_usuario,
+            tipo_usuario: usuario.tipo_usuario || "doador",
+          },
         });
       }
 
-      // Ação inválida
-      return err(res, 400, "Ação inválida. Use 'login' ou 'cadastro'.");
+      // ------------------------------- INVÁLIDO -------------------------------
+      return err(res, 400, "Ação inválida. Use 'cadastro' ou 'login'.");
     }
 
     // ============================================================
-    // GET → Retorna lista (teste)
+    // GET → (opcional) listar usuários
     // ============================================================
     if (req.method === "GET") {
       const registros = await base(TABLE_NAME)
         .select({ maxRecords: 5 })
         .all();
+
       const usuarios = registros.map((r) => ({
         id: r.id,
         ...r.fields,
       }));
-      return ok(res, { sucesso: true, usuarios });
+
+      return ok(res, { total: usuarios.length, usuarios });
     }
 
-    // ============================================================
-    // Método não suportado
-    // ============================================================
     return err(res, 405, "Método não suportado.");
   } catch (e) {
     console.error("🔥 Erro interno /api/usuarios:", e);
     err(res, 500, "Erro interno no servidor.", { detalhe: e.message });
-  }
-}
-
-// ============================================================
-// 🧩 Leitura segura do corpo da requisição (req.body em ESM)
-// ============================================================
-async function getRequestBody(req) {
-  try {
-    const chunks = [];
-    for await (const chunk of req) chunks.push(chunk);
-    const data = Buffer.concat(chunks).toString();
-    return JSON.parse(data || "{}");
-  } catch (err) {
-    console.error("⚠️ Erro ao ler body:", err);
-    return {};
   }
 }
