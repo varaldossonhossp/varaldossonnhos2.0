@@ -75,21 +75,22 @@ try {
   // Monta o select
   if (lista.length > 0) {
     lista.forEach((p) => {
-      const opt = document.createElement("option");
-      opt.value = p.id || "";
-      opt.textContent = p.nome_ponto || "Sem nome";
-      opt.dataset.endereco = p.endereco || "";
-      opt.dataset.telefone = p.telefone || "";
-      opt.dataset.email = p.email_ponto || "";
-      selectPonto.appendChild(opt);
+        const opt = document.createElement("option");
+        opt.value = p.id || p.nome_ponto || "";  // ✅ garante que tenha valor
+        opt.textContent = p.nome_ponto || "Sem nome";
+        opt.dataset.endereco = p.endereco || "";
+        opt.dataset.telefone = p.telefone || "";
+        opt.dataset.email = p.email_ponto || "";
+        selectPonto.appendChild(opt);
     });
-  } else {
+    } else {
     selectPonto.innerHTML = "<option>Nenhum ponto de coleta disponível</option>";
-  }
-} catch (erro) {
-  console.error("❌ Erro ao carregar pontos de coleta:", erro);
-  selectPonto.innerHTML = "<option>Erro ao carregar pontos</option>";
-}
+    }
+
+    } catch (erro) {
+    console.error("❌ Erro ao carregar pontos de coleta:", erro);
+    selectPonto.innerHTML = "<option>Erro ao carregar pontos</option>";
+    }
 
 
   // ============================================================
