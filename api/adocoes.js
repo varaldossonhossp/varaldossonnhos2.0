@@ -1,9 +1,5 @@
 // ============================================================
-// 💙 VARAL DOS SONHOS — /api/adocoes.js (versão final para Vercel)
-// ------------------------------------------------------------
-//  1️⃣ Cria o registro na tabela "adocoes"
-//  2️⃣ Atualiza a cartinha para status "adotada"
-//  3️⃣ Envia e-mail ao administrador via EmailJS REST API
+// 💙 VARAL DOS SONHOS — /api/adocoes.js (versão ajustada aos campos reais)
 // ============================================================
 
 import Airtable from "airtable";
@@ -22,12 +18,12 @@ export default async function handler(req, res) {
     }).base(process.env.AIRTABLE_BASE_ID);
 
     const {
-      id_cartinha,
-      id_usuario,
+      id_cartinha, // recordId da cartinha
+      id_usuario, // recordId do usuário
       nome_doador,
       email_doador,
       telefone_doador,
-      ponto_coleta,
+      ponto_coleta, // { nome, endereco, telefone, email }
       nome_crianca,
       sonho,
     } = req.body;
@@ -38,15 +34,12 @@ export default async function handler(req, res) {
     const novaAdocao = await base("adocoes").create([
       {
         fields: {
-          id_cartinha: id_cartinha,
-          usuario: [id_usuario],
+          nome_crianca: [id_cartinha], // ✅ correto — link para tabela “cartinhas”
+          nome_usuario: [id_usuario], // ✅ correto — link para tabela “usuarios”
+          pontos_coleta: ponto_coleta?.id ? [ponto_coleta.id] : undefined, // opcional se tiver o recordId
           nome_doador,
           email_doador,
           telefone_doador,
-          ponto_coleta:
-            typeof ponto_coleta === "object" ? ponto_coleta.nome : ponto_coleta,
-          nome_crianca,
-          sonho,
           status_adocao: "aguardando confirmacao",
           data_adocao: new Date().toISOString().split("T")[0],
         },
@@ -54,7 +47,7 @@ export default async function handler(req, res) {
     ]);
 
     // ============================================================
-    // 2️⃣ Atualiza cartinha → status = "adotada"
+    // 2️⃣ Atualiza a cartinha → status = "adotada"
     // ============================================================
     await base("cartinhas").update([
       {
@@ -64,39 +57,35 @@ export default async function handler(req, res) {
     ]);
 
     // ============================================================
-    // 3️⃣ Envia e-mail ao ADMINISTRADOR (via REST EmailJS)
+    // 3️⃣ Envia e-mail para o ADMINISTRADOR via API REST EmailJS
     // ============================================================
     const serviceId = process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID;
     const templateId = process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ADMIN;
     const publicKey = process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY;
 
-    const emailData = {
-      service_id: serviceId,
-      template_id: templateId,
-      user_id: publicKey,
-      template_params: {
-        nome_doador,
-        email_doador,
-        nome_crianca,
-        sonho,
-        ponto_coleta:
-          typeof ponto_coleta === "object" ? ponto_coleta.nome : ponto_coleta,
-      },
-    };
-
     const emailResp = await fetch("https://api.emailjs.com/api/v1.0/email/send", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(emailData),
+      body: JSON.stringify({
+        service_id: serviceId,
+        template_id: templateId,
+        user_id: publicKey,
+        template_params: {
+          nome_doador,
+          email_doador,
+          nome_crianca,
+          sonho,
+          ponto_coleta: ponto_coleta?.nome || "não informado",
+        },
+      }),
     });
 
     if (!emailResp.ok) {
-      const errText = await emailResp.text();
-      console.error("⚠️ Falha ao enviar e-mail:", errText);
+      console.error("⚠️ Falha ao enviar e-mail:", await emailResp.text());
     }
 
     // ============================================================
-    // ✅ Retorna sucesso ao front
+    // ✅ Retorno final
     // ============================================================
     return res.status(200).json({
       sucesso: true,
