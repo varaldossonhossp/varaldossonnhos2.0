@@ -1,5 +1,5 @@
 // ============================================================
-// 💙 VARAL DOS SONHOS — /api/adocoes.js (final compatível com campo "crianca")
+// 💙 VARAL DOS SONHOS — /api/adocoes.js (versão estável e mínima)
 // ============================================================
 
 import Airtable from "airtable";
@@ -18,12 +18,12 @@ export default async function handler(req, res) {
     }).base(process.env.AIRTABLE_BASE_ID);
 
     const {
-      id_cartinha, // recordId do Airtable (ex: recA4B7xy1zTzKpZL)
-      id_usuario, // recordId do doador
+      id_cartinha, // recordId da cartinha (ex: recxxxx)
+      id_usuario,  // recordId do usuário
       nome_doador,
       email_doador,
       telefone_doador,
-      ponto_coleta, // objeto { nome, endereco, telefone, email }
+      ponto_coleta, // objeto com nome, email, etc.
       nome_crianca,
       sonho,
     } = req.body;
@@ -36,25 +36,25 @@ export default async function handler(req, res) {
     }
 
     // ============================================================
-    // 1️⃣ Cria o registro de adoção
+    // 1️⃣ Cria o registro de adoção na tabela "adocoes"
     // ============================================================
     const novaAdocao = await base("adocoes").create([
       {
         fields: {
-          crianca: [id_cartinha], // ✅ campo correto de link com tabela “cartinhas”
-          nome_usuario: [id_usuario], // ✅ link com a tabela “usuarios”
-          pontos_coleta: ponto_coleta?.id ? [ponto_coleta.id] : undefined,
+          crianca: [id_cartinha],        // ✅ campo correto no Airtable
+          nome_usuario: [id_usuario],    // ✅ link com tabela de usuários
           nome_doador,
           email_doador,
           telefone_doador,
           status_adocao: "aguardando confirmacao",
           data_adocao: new Date().toISOString().split("T")[0],
+          ponto_coleta: ponto_coleta?.nome || "", // salva nome simples se quiser ver no Airtable
         },
       },
     ]);
 
     // ============================================================
-    // 2️⃣ Atualiza a cartinha → status "adotada"
+    // 2️⃣ Atualiza status da cartinha para "adotada"
     // ============================================================
     await base("cartinhas").update([
       {
@@ -64,37 +64,7 @@ export default async function handler(req, res) {
     ]);
 
     // ============================================================
-    // 3️⃣ Envia e-mail via EmailJS (opcional)
-    // ============================================================
-    try {
-      const serviceId = process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID;
-      const templateId = process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ADMIN;
-      const publicKey = process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY;
-
-      if (serviceId && templateId && publicKey) {
-        await fetch("https://api.emailjs.com/api/v1.0/email/send", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            service_id: serviceId,
-            template_id: templateId,
-            user_id: publicKey,
-            template_params: {
-              nome_doador,
-              email_doador,
-              nome_crianca,
-              sonho,
-              ponto_coleta: ponto_coleta?.nome || "não informado",
-            },
-          }),
-        });
-      }
-    } catch (emailErro) {
-      console.warn("⚠️ Falha ao enviar e-mail:", emailErro);
-    }
-
-    // ============================================================
-    // ✅ Retorno final
+    // ✅ Retorno de sucesso
     // ============================================================
     return res.status(200).json({
       sucesso: true,
