@@ -1,11 +1,11 @@
 // ============================================================
-// 💙 VARAL DOS SONHOS — /js/carrinho.js (versão segura)
+// 💙 VARAL DOS SONHOS — /js/carrinho.js (versão final e segura)
 // ------------------------------------------------------------
-// 1️⃣ Lista todas as cartinhas do localStorage
-// 2️⃣ Exibe visualmente no carrinho
+// 1️⃣ Lista todas as cartinhas salvas no localStorage
+// 2️⃣ Exibe cada uma visualmente no carrinho
 // 3️⃣ Lista pontos de coleta via /api/pontosdecoleta
-// 4️⃣ Mostra mapa do ponto selecionado
-// 5️⃣ Finaliza adoção e envia e-mail via EmailJS (usando .env)
+// 4️⃣ Mostra mapa do ponto selecionado (sem API key)
+// 5️⃣ Finaliza cada adoção via /api/adocoes e envia e-mail via EmailJS
 // ============================================================
 
 document.addEventListener("DOMContentLoaded", async () => {
@@ -34,6 +34,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     return;
   }
 
+  // Limpa container e exibe todas as cartinhas
   listaCartinhas.innerHTML = "";
   carrinho.forEach((item) => {
     const dados = item.fields || item;
@@ -113,7 +114,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   backdrop.addEventListener("click", () => (mapModal.style.display = "none"));
 
   // ============================================================
-  // 4️⃣ Finaliza adoção
+  // 4️⃣ Finaliza adoção (uma por uma)
   // ============================================================
   btnFinalizar.addEventListener("click", async () => {
     const opt = selectPonto.options[selectPonto.selectedIndex];
@@ -151,7 +152,9 @@ document.addEventListener("DOMContentLoaded", async () => {
           sonho: dados.sonho,
         };
 
-        // 💾 Envia para o backend
+        // ========================================================
+        // 💾 Envia dados da adoção para o servidor (Airtable)
+        // ========================================================
         const resp = await fetch("/api/adocoes", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -161,24 +164,29 @@ document.addEventListener("DOMContentLoaded", async () => {
         const json = await resp.json();
         if (!json.sucesso) throw new Error(json.mensagem || "Erro na adoção");
 
-        // 💌 Envia e-mail via EmailJS (usando .env local)
-        const serviceID = import.meta.env?.NEXT_PUBLIC_EMAILJS_SERVICE_ID;
-        const templateID = import.meta.env?.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID;
-        const publicKey = import.meta.env?.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY;
-
-        emailjs.init(publicKey);
-        await emailjs.send(serviceID, templateID, {
-          to_name: usuario.nome_usuario || usuario.nome,
-          to_email: usuario.email_usuario || usuario.email,
-          nome_crianca: dados.nome_crianca,
-          sonho: dados.sonho,
-          ponto_coleta: opt.value,
-          endereco_ponto: opt.dataset.endereco,
-        });
+        // ========================================================
+        // 💌 Envia e-mail de confirmação via EmailJS (Front-end)
+        // ========================================================
+        await emailjs.send(
+          "service_xxxxxx", // 👉 coloque seu ID de serviço
+          "template_xxxxxx", // 👉 coloque seu ID de template
+          {
+            to_name: usuario.nome_usuario || usuario.nome,
+            to_email: usuario.email_usuario || usuario.email,
+            nome_crianca: dados.nome_crianca,
+            sonho: dados.sonho,
+            ponto_coleta: opt.value,
+            endereco_ponto: opt.dataset.endereco,
+          },
+          "PUBLIC_KEY_AQUI" // 👉 substitua pela sua Public Key EmailJS
+        );
       }
 
+      // ========================================================
+      // Mensagem final e redirecionamento
+      // ========================================================
       mostrarMensagemFinal(
-        "💙 Adoção registrada com sucesso! Você receberá um e-mail de confirmação."
+        "💙 Todas as adoções foram registradas com sucesso!<br>Você receberá um e-mail de confirmação em instantes."
       );
       localStorage.removeItem("carrinho");
       setTimeout(() => (window.location.href = "../index.html"), 6000);
@@ -192,7 +200,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   });
 
   // ============================================================
-  // 5️⃣ Limpa o carrinho
+  // 5️⃣ Botão limpar carrinho
   // ============================================================
   btnLimpar.addEventListener("click", () => {
     localStorage.removeItem("carrinho");
@@ -201,6 +209,9 @@ document.addEventListener("DOMContentLoaded", async () => {
   });
 });
 
+// ============================================================
+// Mensagem final após adoção
+// ============================================================
 function mostrarMensagemFinal(msg) {
   const container = document.querySelector(".container-carrinho");
   container.innerHTML = `
@@ -208,7 +219,7 @@ function mostrarMensagemFinal(msg) {
       <img src="../imagens/logo.png" alt="Varal dos Sonhos" width="200" />
       <p>${msg}</p>
       <p style="font-size:0.95rem;margin-top:15px;color:#555;">
-        O administrador será notificado e o status atualizado. ✨
+        O administrador foi notificado e o status da sua adoção será atualizado em breve. ✨
       </p>
       <a href="../index.html">Voltar ao Início</a>
     </div>
