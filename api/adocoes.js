@@ -26,7 +26,7 @@ export default async function handler(req, res) {
       ponto_coleta, // objeto com nome, email, etc.
       nome_crianca,
       sonho,
-    } = req.body;
+    } = req.body || {};
 
     if (!id_cartinha || !id_usuario) {
       return res.status(400).json({
@@ -37,18 +37,20 @@ export default async function handler(req, res) {
 
     // ============================================================
     // 1️⃣ Cria o registro de adoção na tabela "adocoes"
+    //    IMPORTANTE: campo de link para cartinhas chama-se "crianca"
     // ============================================================
     const novaAdocao = await base("adocoes").create([
       {
         fields: {
-          crianca: [id_cartinha],        // ✅ campo correto no Airtable
+          crianca: [id_cartinha],        // ✅ link correto para a cartinha
           nome_usuario: [id_usuario],    // ✅ link com tabela de usuários
-          nome_doador,
-          email_doador,
-          telefone_doador,
+          nome_doador: nome_doador || "",
+          email_doador: email_doador || "",
+          telefone_doador: telefone_doador || "",
           status_adocao: "aguardando confirmacao",
           data_adocao: new Date().toISOString().split("T")[0],
-          ponto_coleta: ponto_coleta?.nome || "", // salva nome simples se quiser ver no Airtable
+          ponto_coleta: ponto_coleta?.nome || "", // salva nome simples para auditoria
+          // (se quiser salvar o recordId do ponto no futuro: pontos_coleta: [ponto_coleta.id])
         },
       },
     ]);
@@ -57,10 +59,7 @@ export default async function handler(req, res) {
     // 2️⃣ Atualiza status da cartinha para "adotada"
     // ============================================================
     await base("cartinhas").update([
-      {
-        id: id_cartinha,
-        fields: { status: "adotada" },
-      },
+      { id: id_cartinha, fields: { status: "adotada" } },
     ]);
 
     // ============================================================
@@ -72,11 +71,12 @@ export default async function handler(req, res) {
       id_adocao: novaAdocao[0].id,
     });
   } catch (erro) {
+    // Se a função quebrar, garanta JSON no retorno pro front não falhar no parse
     console.error("❌ ERRO INTERNO /api/adocoes:", erro);
     return res.status(500).json({
       sucesso: false,
       mensagem: "Erro interno ao criar adoção.",
-      erro: erro.message,
+      erro: String(erro?.message || erro),
     });
   }
 }
