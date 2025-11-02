@@ -1,5 +1,5 @@
 // ============================================================
-// 💙 VARAL DOS SONHOS — /api/adocoes.js (versão estável e mínima)
+// 💙 VARAL DOS SONHOS — /api/adocoes.js (Airtable + EmailJS)
 // ============================================================
 
 import Airtable from "airtable";
@@ -13,17 +13,23 @@ export default async function handler(req, res) {
   }
 
   try {
+    // ============================================================
+    // 🔑 Conexão Airtable
+    // ============================================================
     const base = new Airtable({
       apiKey: process.env.AIRTABLE_API_KEY,
     }).base(process.env.AIRTABLE_BASE_ID);
 
+    // ============================================================
+    // 📦 Dados do corpo da requisição
+    // ============================================================
     const {
-      id_cartinha, // recordId da cartinha (ex: recxxxx)
-      id_usuario,  // recordId do usuário
+      id_cartinha,
+      id_usuario,
       nome_doador,
       email_doador,
       telefone_doador,
-      ponto_coleta, // objeto com nome, email, etc.
+      ponto_coleta,
       nome_crianca,
       sonho,
     } = req.body || {};
@@ -36,47 +42,79 @@ export default async function handler(req, res) {
     }
 
     // ============================================================
-    // 1️⃣ Cria o registro de adoção na tabela "adocoes"
-    //    IMPORTANTE: campo de link para cartinhas chama-se "crianca"
+    // 1️⃣ Cria registro na tabela “adocoes”
     // ============================================================
     const novaAdocao = await base("adocoes").create([
       {
         fields: {
-          crianca: [id_cartinha],        // ✅ link correto para a cartinha
-          nome_usuario: [id_usuario],    // ✅ link com tabela de usuários
+          nome_crianca: [id_cartinha],   // ✅ campo linkado certo
+          nome_usuario: [id_usuario],    // ✅ link com usuários
+          pontos_coleta: ponto_coleta?.id ? [ponto_coleta.id] : undefined,
           nome_doador: nome_doador || "",
           email_doador: email_doador || "",
           telefone_doador: telefone_doador || "",
           status_adocao: "aguardando confirmacao",
           data_adocao: new Date().toISOString().split("T")[0],
-          ponto_coleta: ponto_coleta?.nome || "", // salva nome simples para auditoria
-          // (se quiser salvar o recordId do ponto no futuro: pontos_coleta: [ponto_coleta.id])
         },
       },
     ]);
 
     // ============================================================
-    // 2️⃣ Atualiza status da cartinha para "adotada"
+    // 2️⃣ Atualiza cartinha para status “adotada”
     // ============================================================
     await base("cartinhas").update([
       { id: id_cartinha, fields: { status: "adotada" } },
     ]);
 
     // ============================================================
-    // ✅ Retorno de sucesso
+    // 3️⃣ Envia e-mail ao administrador (EmailJS)
+    // ============================================================
+    try {
+      const serviceId = process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID;
+      const templateId = process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ADMIN;
+      const publicKey = process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY;
+
+      const emailResp = await fetch("https://api.emailjs.com/api/v1.0/email/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          service_id: serviceId,
+          template_id: templateId,
+          user_id: publicKey,
+          template_params: {
+            nome_doador,
+            email_doador,
+            telefone_doador,
+            nome_crianca,
+            sonho,
+            ponto_coleta: ponto_coleta?.nome || "não informado",
+          },
+        }),
+      });
+
+      if (!emailResp.ok) {
+        console.error("⚠️ Falha ao enviar e-mail:", await emailResp.text());
+      } else {
+        console.log("📨 E-mail de notificação enviado ao administrador.");
+      }
+    } catch (err) {
+      console.error("⚠️ Erro ao enviar e-mail:", err.message);
+    }
+
+    // ============================================================
+    // ✅ Retorno final
     // ============================================================
     return res.status(200).json({
       sucesso: true,
-      mensagem: "Adoção registrada com sucesso!",
+      mensagem: "Adoção registrada com sucesso e e-mail enviado ao administrador.",
       id_adocao: novaAdocao[0].id,
     });
   } catch (erro) {
-    // Se a função quebrar, garanta JSON no retorno pro front não falhar no parse
     console.error("❌ ERRO INTERNO /api/adocoes:", erro);
     return res.status(500).json({
       sucesso: false,
       mensagem: "Erro interno ao criar adoção.",
-      erro: String(erro?.message || erro),
+      erro: erro.message,
     });
   }
 }
