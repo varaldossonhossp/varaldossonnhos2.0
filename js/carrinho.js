@@ -1,5 +1,5 @@
 // ============================================================
-// 💙 VARAL DOS SONHOS — js/carrinho.js (compatível com IDs Airtable)
+// 💙 VARAL DOS SONHOS — /js/carrinho.js (versão final 2025-11-02)
 // ============================================================
 
 document.addEventListener("DOMContentLoaded", async () => {
@@ -7,17 +7,19 @@ document.addEventListener("DOMContentLoaded", async () => {
   const selectPonto = document.getElementById("select-ponto");
   const btnFinalizar = document.getElementById("btn-finalizar");
   const btnLimpar = document.getElementById("btn-limpar");
+  const btnVerMapa = document.getElementById("btn-ver-mapa");
+  const mapModal = document.getElementById("mapModal");
+  const mapFrame = document.getElementById("mapFrame");
+  const mapCaption = document.getElementById("mapCaption");
+  const closeMap = document.getElementById("closeMap");
+  const backdrop = document.getElementById("mapBackdrop");
 
   // ============================================================
-  // 1️⃣ Recupera carrinho
+  // 1️⃣ Recupera cartinhas do localStorage
   // ============================================================
   const carrinho = JSON.parse(localStorage.getItem("carrinho")) || [];
-
   if (!Array.isArray(carrinho) || carrinho.length === 0) {
-    listaCartinhas.innerHTML = `
-      <p>💌 Nenhuma cartinha selecionada.</p>
-      <p>Adote uma no Varal Virtual.</p>
-    `;
+    listaCartinhas.innerHTML = `<p>💌 Nenhuma cartinha selecionada.</p><p>Adote uma no Varal Virtual.</p>`;
     btnFinalizar.disabled = true;
     return;
   }
@@ -26,86 +28,95 @@ document.addEventListener("DOMContentLoaded", async () => {
   carrinho.forEach((item) => {
     const dados = item.fields || item;
     const imagem =
-      dados.imagem_cartinha?.[0]?.url || "../imagens/sem-foto.png";
-    listaCartinhas.innerHTML += `
-      <div class="cartinha-card">
-        <img src="${imagem}" alt="${dados.nome_crianca}" />
-        <div>
-          <strong>${dados.nome_crianca}</strong>
-          <p>Sonho: ${dados.sonho}</p>
-        </div>
+      (dados.imagem_cartinha && dados.imagem_cartinha[0]?.url) ||
+      dados.foto?.[0]?.url ||
+      "../imagens/sem-foto.png";
+
+    const card = document.createElement("div");
+    card.className = "cartinha-card";
+    card.innerHTML = `
+      <img src="${imagem}" alt="${dados.nome_crianca || "Criança"}" />
+      <div>
+        <strong>${dados.nome_crianca || "Criança"}</strong>
+        <p>Sonho: ${dados.sonho || "Não informado"}</p>
       </div>
     `;
+    listaCartinhas.appendChild(card);
   });
 
-// ============================================================
-// 2️⃣ Carrega pontos de coleta — compatível com todos os formatos
-// ============================================================
-try {
-  const resp = await fetch("/api/pontosdecoleta", { cache: "no-store" });
-  const json = await resp.json();
+  // ============================================================
+  // 2️⃣ Carrega pontos de coleta com IDs reais
+  // ============================================================
+  try {
+    const resp = await fetch("/api/pontosdecoleta", { cache: "no-store" });
+    const json = await resp.json();
 
-  let lista = [];
+    let lista = [];
+    if (json?.records && Array.isArray(json.records)) {
+      lista = json.records.map((r) => ({
+        id: r.id,
+        nome_ponto: r.fields?.nome_ponto,
+        endereco: r.fields?.endereco,
+        telefone: r.fields?.telefone,
+        email_ponto: r.fields?.email_ponto,
+      }));
+    }
 
-  // 🔍 1. Formato padrão do Airtable
-  if (json?.records && Array.isArray(json.records)) {
-    lista = json.records.map((r) => ({
-      id: r.id,
-      nome_ponto: r.fields?.nome_ponto || "Ponto sem nome",
-      endereco: r.fields?.endereco || "",
-      telefone: r.fields?.telefone || "",
-      email_ponto: r.fields?.email_ponto || "",
-    }));
-  }
-  // 🔍 2. Caso o backend devolva array direto
-  else if (Array.isArray(json)) {
-    lista = json;
-  }
-  // 🔍 3. Caso venha dentro de outro campo (ex: { pontos: [...] })
-  else if (Array.isArray(json?.pontos)) {
-    lista = json.pontos;
-  }
-  // 🔍 4. Caso venha dentro de { data: [...] }
-  else if (Array.isArray(json?.data)) {
-    lista = json.data;
-  }
+    console.log("🗺️ Pontos carregados:", lista);
 
-  console.log("🗺️ Pontos carregados:", lista); // 👀 Log no console para debug
-
-  // Monta o select
-  if (lista.length > 0) {
     lista.forEach((p) => {
-        const opt = document.createElement("option");
-        opt.value = p.id || p.nome_ponto || "";  // ✅ garante que tenha valor
-        opt.textContent = p.nome_ponto || "Sem nome";
-        opt.dataset.endereco = p.endereco || "";
-        opt.dataset.telefone = p.telefone || "";
-        opt.dataset.email = p.email_ponto || "";
-        selectPonto.appendChild(opt);
+      const opt = document.createElement("option");
+      opt.value = p.id;
+      opt.textContent = p.nome_ponto;
+      opt.dataset.endereco = p.endereco;
+      opt.dataset.telefone = p.telefone;
+      opt.dataset.email = p.email_ponto;
+      selectPonto.appendChild(opt);
     });
-    } else {
-    selectPonto.innerHTML = "<option>Nenhum ponto de coleta disponível</option>";
-    }
-
-    } catch (erro) {
+  } catch (erro) {
     console.error("❌ Erro ao carregar pontos de coleta:", erro);
-    selectPonto.innerHTML = "<option>Erro ao carregar pontos</option>";
-    }
-
+  }
 
   // ============================================================
-  // 3️⃣ Finaliza adoção
+  // 3️⃣ Ver localização (abre modal com mapa)
+  // ============================================================
+  btnVerMapa.addEventListener("click", () => {
+    const opt = selectPonto.options[selectPonto.selectedIndex];
+    if (!opt || !opt.dataset.endereco) {
+      alert("Selecione um ponto de coleta para visualizar o mapa.");
+      return;
+    }
+
+    const endereco = encodeURIComponent(opt.dataset.endereco);
+    mapFrame.src = `https://www.google.com/maps?q=${endereco}&output=embed`;
+    mapCaption.textContent = `📍 ${opt.textContent}`;
+    mapModal.style.display = "block";
+    backdrop.style.display = "block";
+  });
+
+  closeMap.addEventListener("click", () => {
+    mapModal.style.display = "none";
+    backdrop.style.display = "none";
+  });
+
+  backdrop.addEventListener("click", () => {
+    mapModal.style.display = "none";
+    backdrop.style.display = "none";
+  });
+
+  // ============================================================
+  // 4️⃣ Finaliza adoção
   // ============================================================
   btnFinalizar.addEventListener("click", async () => {
     const pontoId = selectPonto.value;
-    if (!pontoId || pontoId === "Selecione um ponto...") {
+    if (!pontoId) {
       alert("⚠️ Escolha um ponto de coleta antes de finalizar.");
       return;
     }
 
     const usuario = JSON.parse(localStorage.getItem("usuario_logado")) || {};
     if (!usuario.id) {
-      alert("⚠️ Faça login antes de adotar.");
+      alert("⚠️ Faça login antes de adotar uma cartinha.");
       return;
     }
 
@@ -128,11 +139,11 @@ try {
         });
 
         const json = await resp.json();
-        if (!json.sucesso) throw new Error(json.mensagem);
+        if (!json.success) throw new Error(json.message);
       }
 
       mostrarMensagemFinal(
-        "💙 Adoção registrada com sucesso!<br>O administrador foi notificado por e-mail."
+        "💙 Todas as adoções foram registradas com sucesso!<br>O administrador foi notificado por e-mail."
       );
       localStorage.removeItem("carrinho");
       setTimeout(() => (window.location.href = "../index.html"), 5000);
@@ -145,6 +156,9 @@ try {
     }
   });
 
+  // ============================================================
+  // 5️⃣ Limpar carrinho
+  // ============================================================
   btnLimpar.addEventListener("click", () => {
     localStorage.removeItem("carrinho");
     alert("🧺 Carrinho limpo!");
@@ -152,11 +166,14 @@ try {
   });
 });
 
+// ============================================================
+// Função de mensagem final
+// ============================================================
 function mostrarMensagemFinal(msg) {
   const container = document.querySelector(".container-carrinho");
   container.innerHTML = `
     <div class="mensagem-final">
-      <img src="../imagens/logo.png" width="180" />
+      <img src="../imagens/logo.png" alt="Varal dos Sonhos" width="200" />
       <p>${msg}</p>
       <a href="../index.html">Voltar ao Início</a>
     </div>
