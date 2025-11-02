@@ -1,9 +1,9 @@
 // ============================================================
-// VARAL DOS SONHOS — API: Pontos de Coleta
+// 💙 VARAL DOS SONHOS — API: Pontos de Coleta (versão final)
 // ------------------------------------------------------------
-// • Obtém os pontos cadastrados no Airtable.
-// • Filtra somente os ativos.
-// • Retorna dados padronizados para Web e .NET MAUI.
+// • Lê tabela "pontos_coleta" no Airtable
+// • Retorna pontos ativos (status = "ativo")
+// • Compatível com o carrinho.js e .NET MAUI
 // ============================================================
 
 import Airtable from "airtable";
@@ -40,13 +40,13 @@ export default async function handler(req, res) {
       (p) => p.status && p.status.toLowerCase() === "ativo"
     );
 
-    res.status(200).json({
+    return res.status(200).json({
       sucesso: true,
       total: ativos.length,
       pontos: ativos,
     });
   } catch (erro) {
-    console.error("Erro na rota /api/pontosdecoleta:", erro);
+    console.error("❌ Erro na rota /api/pontosdecoleta:", erro);
     res.status(500).json({
       sucesso: false,
       mensagem: "Erro ao buscar pontos de coleta.",

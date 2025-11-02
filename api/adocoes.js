@@ -1,12 +1,19 @@
 // ============================================================
 // 💙 VARAL DOS SONHOS — /api/adocoes.js (versão final 2025-11-02)
+// ------------------------------------------------------------
+// • Cria registro na tabela "adocoes"
+// • Atualiza cartinha -> status "adotada"
+// • Envia e-mail de notificação ao administrador via EmailJS
 // ============================================================
 
 import Airtable from "airtable";
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
-    return res.status(405).json({ success: false, message: "Método não suportado." });
+    return res.status(405).json({
+      success: false,
+      message: "Método não suportado.",
+    });
   }
 
   try {
@@ -16,14 +23,11 @@ export default async function handler(req, res) {
     const base = new Airtable({ apiKey: process.env.AIRTABLE_API_KEY })
       .base(process.env.AIRTABLE_BASE_ID);
 
-    // ============================================================
-    // 📦 Dados recebidos do frontend
-    // ============================================================
     const {
-      nome_crianca_id,   // ID do registro da cartinha (ex: recXXXX)
-      nome_usuario_id,   // ID do registro do usuário (ex: recXXXX)
-      pontos_coleta_id,  // ID do ponto de coleta (opcional)
-      data_evento_id,    // ID do evento (opcional)
+      nome_crianca_id,
+      nome_usuario_id,
+      pontos_coleta_id,
+      data_evento_id,
     } = req.body || {};
 
     if (!nome_crianca_id || !nome_usuario_id) {
@@ -35,13 +39,10 @@ export default async function handler(req, res) {
 
     // ============================================================
     // 1️⃣ Cria registro na tabela “adocoes”
-    //    Usar NAMES dos campos (evita problemas de fldIDs e unknown field)
     // ============================================================
     const fieldsToCreate = {
-      // nomes exatos dos campos na tabela 'adocoes'
-      data_adocao: new Date().toISOString().split("T")[0], // YYYY-MM-DD
-      // envie a opção sem acento exatamente como configurado no Airtable
-      status_adocao: "aguardando confirmacao",
+      data_adocao: new Date().toISOString().split("T")[0],
+      status_adocao: "aguardando confirmacao", // sem acento!
       nome_crianca: [nome_crianca_id],
       nome_usuario: [nome_usuario_id],
     };
@@ -49,26 +50,21 @@ export default async function handler(req, res) {
     if (data_evento_id) fieldsToCreate.data_evento = [data_evento_id];
     if (pontos_coleta_id) fieldsToCreate.pontos_coleta = [pontos_coleta_id];
 
-    const created = await base("adocoes").create([{ fields: fieldsToCreate }]);
-    const novoRegistro = created && created[0] ? created[0] : null;
+    const novaAdocao = await base("adocoes").create([{ fields: fieldsToCreate }]);
 
     // ============================================================
-    // 2️⃣ Atualiza cartinha → status “adotada”
+    // 2️⃣ Atualiza status da cartinha
     // ============================================================
     try {
       await base("cartinhas").update([
-        {
-          id: nome_crianca_id,
-          fields: { status: "adotada" },
-        },
+        { id: nome_crianca_id, fields: { status: "adotada" } },
       ]);
     } catch (errCart) {
-      // não falhar toda a operação se update da cartinha falhar: log e segue
-      console.warn("⚠️ Falha ao atualizar status da cartinha:", errCart?.message || errCart);
+      console.warn("⚠️ Falha ao atualizar status da cartinha:", errCart);
     }
 
     // ============================================================
-    // 3️⃣ Envia e-mail ao administrador (EmailJS) — opcional
+    // 3️⃣ Envia e-mail ao administrador (EmailJS)
     // ============================================================
     try {
       const serviceId = process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID;
@@ -84,11 +80,11 @@ export default async function handler(req, res) {
             template_id: templateId,
             user_id: publicKey,
             template_params: {
-              assunto: "Nova adoção registrada 💙",
-              mensagem: `Uma nova adoção foi registrada no Varal dos Sonhos.`,
+              assunto: "💙 Nova adoção registrada",
+              mensagem: "Uma nova adoção foi registrada no Varal dos Sonhos.",
               id_cartinha: nome_crianca_id,
               id_usuario: nome_usuario_id,
-              ponto_coleta: pontos_coleta_id || "não informado"
+              ponto_coleta: pontos_coleta_id || "não informado",
             },
           }),
         });
@@ -96,13 +92,11 @@ export default async function handler(req, res) {
         if (!emailResp.ok) {
           console.error("⚠️ Falha ao enviar e-mail:", await emailResp.text());
         } else {
-          console.log("📨 E-mail de notificação enviado ao administrador.");
+          console.log("📨 E-mail enviado com sucesso ao administrador.");
         }
-      } else {
-        console.log("EmailJS não configurado (variáveis de ambiente faltando).");
       }
     } catch (errEmail) {
-      console.warn("⚠️ Erro ao enviar e-mail:", errEmail?.message || errEmail);
+      console.warn("⚠️ Erro ao enviar e-mail:", errEmail.message);
     }
 
     // ============================================================
@@ -111,16 +105,14 @@ export default async function handler(req, res) {
     return res.status(200).json({
       success: true,
       message: "Adoção criada com sucesso!",
-      record: novoRegistro
+      id_adocao: novaAdocao[0].id,
     });
-
   } catch (error) {
     console.error("❌ ERRO INTERNO /api/adocoes:", error);
-    // se o erro vier do Airtable (ex: INVALID_MULTIPLE_CHOICE_OPTIONS), ele virá aqui
     return res.status(500).json({
       success: false,
       message: "Erro interno ao criar adoção.",
-      error: error?.message || String(error)
+      error: error.message,
     });
   }
 }
