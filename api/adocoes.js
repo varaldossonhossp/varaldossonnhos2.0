@@ -1,28 +1,18 @@
 // ============================================================
-// 💙 VARAL DOS SONHOS — /api/adocoes.js (Airtable + EmailJS)
+// 💙 VARAL DOS SONHOS — /api/adocoes.js (estável com e-mail + fallback seguro)
 // ============================================================
 
 import Airtable from "airtable";
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
-    return res.status(405).json({
-      sucesso: false,
-      mensagem: "Método não suportado.",
-    });
+    return res.status(405).json({ sucesso: false, mensagem: "Método não suportado." });
   }
 
   try {
-    // ============================================================
-    // 🔑 Conexão Airtable
-    // ============================================================
-    const base = new Airtable({
-      apiKey: process.env.AIRTABLE_API_KEY,
-    }).base(process.env.AIRTABLE_BASE_ID);
+    const base = new Airtable({ apiKey: process.env.AIRTABLE_API_KEY })
+      .base(process.env.AIRTABLE_BASE_ID);
 
-    // ============================================================
-    // 📦 Dados do corpo da requisição
-    // ============================================================
     const {
       id_cartinha,
       id_usuario,
@@ -41,14 +31,12 @@ export default async function handler(req, res) {
       });
     }
 
-    // ============================================================
-    // 1️⃣ Cria registro na tabela “adocoes”
-    // ============================================================
+    // 1️⃣ Cria registro no Airtable
     const novaAdocao = await base("adocoes").create([
       {
         fields: {
-          nome_crianca: [id_cartinha],   // ✅ campo linkado certo
-          nome_usuario: [id_usuario],    // ✅ link com usuários
+          nome_crianca: [id_cartinha],
+          nome_usuario: [id_usuario],
           pontos_coleta: ponto_coleta?.id ? [ponto_coleta.id] : undefined,
           nome_doador: nome_doador || "",
           email_doador: email_doador || "",
@@ -59,28 +47,20 @@ export default async function handler(req, res) {
       },
     ]);
 
-    // ============================================================
-    // 2️⃣ Atualiza cartinha para status “adotada”
-    // ============================================================
+    // 2️⃣ Atualiza a cartinha
     await base("cartinhas").update([
       { id: id_cartinha, fields: { status: "adotada" } },
     ]);
 
-    // ============================================================
-    // 3️⃣ Envia e-mail ao administrador (EmailJS)
-    // ============================================================
+    // 3️⃣ Envia e-mail (sem quebrar se falhar)
     try {
-      const serviceId = process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID;
-      const templateId = process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ADMIN;
-      const publicKey = process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY;
-
       const emailResp = await fetch("https://api.emailjs.com/api/v1.0/email/send", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          service_id: serviceId,
-          template_id: templateId,
-          user_id: publicKey,
+          service_id: process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID,
+          template_id: process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ADMIN,
+          user_id: process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY,
           template_params: {
             nome_doador,
             email_doador,
@@ -91,22 +71,17 @@ export default async function handler(req, res) {
           },
         }),
       });
-
       if (!emailResp.ok) {
-        console.error("⚠️ Falha ao enviar e-mail:", await emailResp.text());
-      } else {
-        console.log("📨 E-mail de notificação enviado ao administrador.");
+        console.warn("⚠️ Falha no envio de e-mail:", await emailResp.text());
       }
     } catch (err) {
-      console.error("⚠️ Erro ao enviar e-mail:", err.message);
+      console.warn("⚠️ Erro ao tentar enviar e-mail:", err.message);
     }
 
-    // ============================================================
-    // ✅ Retorno final
-    // ============================================================
+    // 4️⃣ Retorno final
     return res.status(200).json({
       sucesso: true,
-      mensagem: "Adoção registrada com sucesso e e-mail enviado ao administrador.",
+      mensagem: "Adoção registrada e notificação enviada ao administrador.",
       id_adocao: novaAdocao[0].id,
     });
   } catch (erro) {
