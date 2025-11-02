@@ -101,3 +101,98 @@ export default async function handler(req, res) {
     });
   }
 }
+// ============================================================
+// 💙 VARAL DOS SONHOS — /api/adocoes.js (versão final com campo "crianca")
+// ------------------------------------------------------------
+// Fluxo:
+// 1️⃣ Recebe dados do carrinho
+// 2️⃣ Cria registro na tabela "adocoes"
+// 3️⃣ Atualiza status da cartinha para "adotada"
+// 4️⃣ Retorna sucesso
+// ============================================================
+
+import Airtable from "airtable";
+
+export default async function handler(req, res) {
+  // Permite apenas método POST
+  if (req.method !== "POST") {
+    return res.status(405).json({
+      sucesso: false,
+      mensagem: "Método não suportado.",
+    });
+  }
+
+  try {
+    // ============================================================
+    // 🔑 Conexão com o Airtable
+    // ============================================================
+    const base = new Airtable({
+      apiKey: process.env.AIRTABLE_API_KEY,
+    }).base(process.env.AIRTABLE_BASE_ID);
+
+    // ============================================================
+    // 📨 Dados enviados pelo front-end (carrinho.js)
+    // ============================================================
+    const {
+      id_cartinha,
+      id_usuario,
+      nome_doador,
+      email_doador,
+      telefone_doador,
+      ponto_coleta,
+      nome_crianca,
+      sonho,
+    } = req.body;
+
+    if (!id_cartinha || !id_usuario) {
+      return res.status(400).json({
+        sucesso: false,
+        mensagem: "Campos obrigatórios ausentes (id_cartinha ou id_usuario).",
+      });
+    }
+
+    // ============================================================
+    // 1️⃣ Cria o registro de adoção
+    // ============================================================
+    const novaAdocao = await base("adocoes").create([
+      {
+        fields: {
+          crianca: [id_cartinha], // ✅ novo nome do campo de link
+          nome_usuario: [id_usuario], // link com o doador
+          pontos_coleta: ponto_coleta?.id ? [ponto_coleta.id] : undefined,
+          nome_doador,
+          email_doador,
+          telefone_doador,
+          status_adocao: "aguardando confirmacao",
+          data_adocao: new Date().toISOString().split("T")[0],
+        },
+      },
+    ]);
+
+    // ============================================================
+    // 2️⃣ Atualiza a cartinha para status "adotada"
+    // ============================================================
+    await base("cartinhas").update([
+      {
+        id: id_cartinha,
+        fields: { status: "adotada" },
+      },
+    ]);
+
+    // ============================================================
+    // ✅ Retorna sucesso
+    // ============================================================
+    return res.status(200).json({
+      sucesso: true,
+      mensagem: "Adoção registrada com sucesso!",
+      id_adocao: novaAdocao[0].id,
+    });
+  } catch (erro) {
+    console.error("❌ ERRO INTERNO /api/adocoes:", erro);
+    return res.status(500).json({
+      sucesso: false,
+      mensagem: "Erro interno ao criar adoção.",
+      erro: erro.message,
+    });
+  }
+}
