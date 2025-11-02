@@ -38,31 +38,59 @@ document.addEventListener("DOMContentLoaded", async () => {
     `;
   });
 
-  // ============================================================
-  // 2️⃣ Carrega pontos de coleta
-  // ============================================================
-  try {
-    const resp = await fetch("/api/pontosdecoleta");
-    const json = await resp.json();
-    const lista = json.records?.map((r) => ({
-      id: r.id,
-      nome_ponto: r.fields?.nome_ponto,
-      endereco: r.fields?.endereco,
-    })) || [];
+// ============================================================
+// 2️⃣ Carrega pontos de coleta — compatível com todos os formatos
+// ============================================================
+try {
+  const resp = await fetch("/api/pontosdecoleta", { cache: "no-store" });
+  const json = await resp.json();
 
-    if (lista.length > 0) {
-      lista.forEach((p) => {
-        const opt = document.createElement("option");
-        opt.value = p.id;
-        opt.textContent = p.nome_ponto;
-        selectPonto.appendChild(opt);
-      });
-    } else {
-      selectPonto.innerHTML = "<option>Nenhum ponto disponível</option>";
-    }
-  } catch (erro) {
-    console.error("❌ Erro ao carregar pontos:", erro);
+  let lista = [];
+
+  // 🔍 1. Formato padrão do Airtable
+  if (json?.records && Array.isArray(json.records)) {
+    lista = json.records.map((r) => ({
+      id: r.id,
+      nome_ponto: r.fields?.nome_ponto || "Ponto sem nome",
+      endereco: r.fields?.endereco || "",
+      telefone: r.fields?.telefone || "",
+      email_ponto: r.fields?.email_ponto || "",
+    }));
   }
+  // 🔍 2. Caso o backend devolva array direto
+  else if (Array.isArray(json)) {
+    lista = json;
+  }
+  // 🔍 3. Caso venha dentro de outro campo (ex: { pontos: [...] })
+  else if (Array.isArray(json?.pontos)) {
+    lista = json.pontos;
+  }
+  // 🔍 4. Caso venha dentro de { data: [...] }
+  else if (Array.isArray(json?.data)) {
+    lista = json.data;
+  }
+
+  console.log("🗺️ Pontos carregados:", lista); // 👀 Log no console para debug
+
+  // Monta o select
+  if (lista.length > 0) {
+    lista.forEach((p) => {
+      const opt = document.createElement("option");
+      opt.value = p.id || "";
+      opt.textContent = p.nome_ponto || "Sem nome";
+      opt.dataset.endereco = p.endereco || "";
+      opt.dataset.telefone = p.telefone || "";
+      opt.dataset.email = p.email_ponto || "";
+      selectPonto.appendChild(opt);
+    });
+  } else {
+    selectPonto.innerHTML = "<option>Nenhum ponto de coleta disponível</option>";
+  }
+} catch (erro) {
+  console.error("❌ Erro ao carregar pontos de coleta:", erro);
+  selectPonto.innerHTML = "<option>Erro ao carregar pontos</option>";
+}
+
 
   // ============================================================
   // 3️⃣ Finaliza adoção
