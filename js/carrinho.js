@@ -1,5 +1,5 @@
 // ============================================================
-// 💙 VARAL DOS SONHOS — /js/carrinho.js (versão revisada mínima)
+// 💙 VARAL DOS SONHOS — js/carrinho.js (versão final completa)
 // ============================================================
 
 document.addEventListener("DOMContentLoaded", async () => {
@@ -51,80 +51,30 @@ document.addEventListener("DOMContentLoaded", async () => {
   });
 
   // ============================================================
-  // 2️⃣ Carrega pontos de coleta (compatível com records/pontos/array)
+  // 2️⃣ Carrega pontos de coleta
   // ============================================================
   try {
-    // limpa opções antigas (mantém a primeira "Selecione um ponto...")
-    while (selectPonto.options.length > 1) selectPonto.remove(1);
-
-    const resp = await fetch("/api/pontosdecoleta", { cache: "no-store" });
+    const resp = await fetch("/api/pontosdecoleta");
     const json = await resp.json();
 
-    let lista = [];
-
-    // Formato Airtable: { records: [{fields:{...}}] }
-    if (json?.records) {
-      lista = json.records.map((r) => ({
-        nome_ponto: r.fields?.nome_ponto || "Ponto sem nome",
-        endereco: r.fields?.endereco || "",
-        telefone: r.fields?.telefone || "",
-        email_ponto: r.fields?.email_ponto || "",
-      }));
-    }
-    // Formato simples: { pontos: [...] }
-    else if (Array.isArray(json?.pontos)) {
-      lista = json.pontos;
-    }
-    // Formato array direto: [...]
-    else if (Array.isArray(json)) {
-      lista = json;
-    }
-    // Formato alternativo: { data: [...] }
-    else if (Array.isArray(json?.data)) {
-      lista = json.data;
-    }
-
-    if (Array.isArray(lista) && lista.length > 0) {
-      lista.forEach((p) => {
-        if (!p?.nome_ponto) return;
+    if (json?.records?.length) {
+      json.records.forEach((r) => {
+        const p = r.fields;
+        if (!p.nome_ponto) return;
         const opt = document.createElement("option");
         opt.value = p.nome_ponto;
         opt.textContent = p.nome_ponto;
+        opt.dataset.id = r.id; // ✅ ID real do Airtable
         opt.dataset.endereco = p.endereco || "";
-        opt.dataset.telefone = p.telefone || "";
-        opt.dataset.email = p.email_ponto || "";
         selectPonto.appendChild(opt);
       });
     } else {
-      console.warn("⚠️ Nenhum ponto de coleta encontrado na API:", json);
+      selectPonto.innerHTML = "<option>Nenhum ponto disponível</option>";
     }
   } catch (erro) {
     console.error("❌ Erro ao carregar pontos de coleta:", erro);
+    selectPonto.innerHTML = "<option>Erro ao carregar pontos</option>";
   }
-
-  // ============================================================
-  // (Opcional) Ver Mapa do ponto
-  // ============================================================
-  btnVerMapa?.addEventListener("click", () => {
-    const opt = selectPonto.options[selectPonto.selectedIndex];
-    if (!opt || opt.value === "Selecione um ponto...") {
-      alert("⚠️ Escolha um ponto de coleta primeiro!");
-      return;
-    }
-    const endereco = opt.dataset.endereco || opt.value;
-    const urlMapa = `https://maps.google.com/maps?q=${encodeURIComponent(
-      endereco
-    )}&t=&z=15&ie=UTF8&iwloc=&output=embed`;
-
-    if (mapFrame && mapCaption && mapModal) {
-      mapFrame.src = urlMapa;
-      mapCaption.textContent = endereco;
-      mapModal.style.display = "flex";
-    }
-  });
-
-  closeMap?.addEventListener("click", () => (mapModal.style.display = "none"));
-  backdrop?.addEventListener("click", () => (mapModal.style.display = "none"));
 
   // ============================================================
   // 3️⃣ Finaliza adoção
@@ -147,49 +97,21 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     try {
       for (const cartinha of carrinho) {
-        const dados = cartinha.fields || cartinha;
-
-        // 🔧 Garantindo recordId do Airtable
-        const idCartinha =
-          cartinha.id || dados.id_cartinha || dados.recordId || dados.id;
-
-        if (!idCartinha) {
-          throw new Error("Cartinha sem recordId válido.");
-        }
-
+        const idCartinha = cartinha.id || cartinha.fields?.id_cartinha;
         const payload = {
           id_cartinha: idCartinha,
           id_usuario: usuario.id,
-          nome_doador: usuario.nome_usuario || usuario.nome,
-          email_doador: usuario.email_usuario || usuario.email,
-          telefone_doador: usuario.telefone || "",
-          ponto_coleta: {
-            nome: opt.value,
-            endereco: opt.dataset.endereco || "",
-            telefone: opt.dataset.telefone || "",
-            email: opt.dataset.email || "",
-          },
-          nome_crianca: dados.nome_crianca,
-          sonho: dados.sonho,
+          ponto_coleta: { id: opt.dataset.id, nome: opt.value },
         };
 
-        const r = await fetch("/api/adocoes", {
+        const resp = await fetch("/api/adocoes", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
         });
 
-        // Se a função serverless quebrar, o body pode não ser JSON.
-        let j;
-        try {
-          j = await r.json();
-        } catch {
-          const texto = await r.text();
-          throw new Error(
-            "A server retornou erro 500. Detalhes: " + (texto || "sem detalhes")
-          );
-        }
-        if (!j?.sucesso) throw new Error(j?.mensagem || "Erro na adoção");
+        const json = await resp.json();
+        if (!json.sucesso) throw new Error(json.mensagem);
       }
 
       mostrarMensagemFinal(
