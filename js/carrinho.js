@@ -50,31 +50,54 @@ document.addEventListener("DOMContentLoaded", async () => {
     listaCartinhas.appendChild(card);
   });
 
-  // ============================================================
-  // 2️⃣ Carrega pontos de coleta
-  // ============================================================
-  try {
-    const resp = await fetch("/api/pontosdecoleta");
-    const json = await resp.json();
+// ============================================================
+// 2️⃣ Carrega pontos de coleta (compatível com qualquer formato de API)
+// ============================================================
+try {
+  const resp = await fetch("/api/pontosdecoleta", { cache: "no-store" });
+  const json = await resp.json();
 
-    if (json?.records?.length) {
-      json.records.forEach((r) => {
-        const p = r.fields;
-        if (!p.nome_ponto) return;
-        const opt = document.createElement("option");
-        opt.value = p.nome_ponto;
-        opt.textContent = p.nome_ponto;
-        opt.dataset.id = r.id; // ✅ ID real do Airtable
-        opt.dataset.endereco = p.endereco || "";
-        selectPonto.appendChild(opt);
-      });
-    } else {
-      selectPonto.innerHTML = "<option>Nenhum ponto disponível</option>";
-    }
-  } catch (erro) {
-    console.error("❌ Erro ao carregar pontos de coleta:", erro);
-    selectPonto.innerHTML = "<option>Erro ao carregar pontos</option>";
+  let lista = [];
+
+  if (json?.records) {
+    // ✅ Formato Airtable padrão
+    lista = json.records.map((r) => ({
+      id: r.id,
+      nome_ponto: r.fields?.nome_ponto,
+      endereco: r.fields?.endereco,
+      telefone: r.fields?.telefone,
+    }));
+  } else if (Array.isArray(json)) {
+    // ✅ Formato array direto
+    lista = json;
+  } else if (json?.pontos) {
+    // ✅ Formato { pontos: [...] }
+    lista = json.pontos;
+  } else if (json?.data) {
+    // ✅ Formato { data: [...] }
+    lista = json.data;
   }
+
+  // 🧩 Monta as opções do <select>
+  if (Array.isArray(lista) && lista.length > 0) {
+    lista.forEach((p) => {
+      if (!p?.nome_ponto) return;
+      const opt = document.createElement("option");
+      opt.value = p.nome_ponto;
+      opt.textContent = p.nome_ponto;
+      opt.dataset.id = p.id || "";
+      opt.dataset.endereco = p.endereco || "";
+      opt.dataset.telefone = p.telefone || "";
+      selectPonto.appendChild(opt);
+    });
+  } else {
+    selectPonto.innerHTML = "<option>Nenhum ponto de coleta disponível</option>";
+  }
+} catch (erro) {
+  console.error("❌ Erro ao carregar pontos de coleta:", erro);
+  selectPonto.innerHTML = "<option>Erro ao carregar pontos</option>";
+}
+
 
   // ============================================================
   // 3️⃣ Finaliza adoção
