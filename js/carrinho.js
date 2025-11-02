@@ -1,12 +1,5 @@
 // ============================================================
-// 💙 VARAL DOS SONHOS — /js/carrinho.js (versão estável revisada)
-// ------------------------------------------------------------
-// Fluxo completo:
-// 1️⃣ Exibe todas as cartinhas salvas no localStorage
-// 2️⃣ Carrega pontos de coleta da API
-// 3️⃣ Mostra mapa (Google Maps)
-// 4️⃣ Finaliza adoção → cria registro + envia e-mail ao admin
-// 5️⃣ Permite limpar o carrinho
+// 💙 VARAL DOS SONHOS — /js/carrinho.js (versão revisada mínima)
 // ============================================================
 
 document.addEventListener("DOMContentLoaded", async () => {
@@ -58,69 +51,34 @@ document.addEventListener("DOMContentLoaded", async () => {
   });
 
   // ============================================================
-  // 2️⃣ Carrega pontos de coleta da API
+  // 2️⃣ Carrega pontos de coleta
   // ============================================================
   try {
     const resp = await fetch("/api/pontosdecoleta");
     const json = await resp.json();
+    const lista =
+      json?.records?.map((r) => ({
+        nome_ponto: r.fields?.nome_ponto,
+        endereco: r.fields?.endereco,
+        telefone: r.fields?.telefone,
+        email_ponto: r.fields?.email_ponto,
+      })) || [];
 
-    let lista = [];
-
-    // Compatibilidade com formato Airtable (records → fields)
-    if (json?.records) {
-      lista = json.records.map((r) => ({
-        nome_ponto: r.fields?.nome_ponto || "Ponto sem nome",
-        endereco: r.fields?.endereco || "",
-        telefone: r.fields?.telefone || "",
-        email_ponto: r.fields?.email_ponto || "",
-        responsavel: r.fields?.responsavel || "",
-      }));
-    } else if (json?.pontos) {
-      lista = json.pontos;
-    }
-
-    if (Array.isArray(lista) && lista.length > 0) {
-      lista.forEach((p) => {
-        const opt = document.createElement("option");
-        opt.value = p.nome_ponto;
-        opt.textContent = p.nome_ponto;
-        opt.dataset.endereco = p.endereco;
-        opt.dataset.telefone = p.telefone;
-        opt.dataset.email = p.email_ponto;
-        selectPonto.appendChild(opt);
-      });
-    } else {
-      console.warn("⚠️ Nenhum ponto de coleta encontrado.");
-    }
+    lista.forEach((p) => {
+      const opt = document.createElement("option");
+      opt.value = p.nome_ponto;
+      opt.textContent = p.nome_ponto;
+      opt.dataset.endereco = p.endereco;
+      opt.dataset.telefone = p.telefone;
+      opt.dataset.email = p.email_ponto;
+      selectPonto.appendChild(opt);
+    });
   } catch (erro) {
     console.error("❌ Erro ao carregar pontos de coleta:", erro);
   }
 
   // ============================================================
-  // 3️⃣ Abre modal do mapa
-  // ============================================================
-  btnVerMapa.addEventListener("click", () => {
-    const opt = selectPonto.options[selectPonto.selectedIndex];
-    if (!opt || opt.value === "Selecione um ponto...") {
-      alert("⚠️ Escolha um ponto de coleta primeiro!");
-      return;
-    }
-
-    const endereco = opt.dataset.endereco || opt.value;
-    const urlMapa = `https://maps.google.com/maps?q=${encodeURIComponent(
-      endereco
-    )}&t=&z=15&ie=UTF8&iwloc=&output=embed`;
-
-    mapFrame.src = urlMapa;
-    mapCaption.textContent = endereco;
-    mapModal.style.display = "flex";
-  });
-
-  closeMap.addEventListener("click", () => (mapModal.style.display = "none"));
-  backdrop.addEventListener("click", () => (mapModal.style.display = "none"));
-
-  // ============================================================
-  // 4️⃣ Finaliza adoção (uma por uma)
+  // 3️⃣ Finaliza adoção
   // ============================================================
   btnFinalizar.addEventListener("click", async () => {
     const opt = selectPonto.options[selectPonto.selectedIndex];
@@ -142,8 +100,11 @@ document.addEventListener("DOMContentLoaded", async () => {
       for (const cartinha of carrinho) {
         const dados = cartinha.fields || cartinha;
 
+        // 🔧 Garantindo recordId do Airtable
+        const idCartinha = cartinha.id || dados.id_cartinha;
+
         const payload = {
-          id_cartinha: dados.id_cartinha || cartinha.id_cartinha || cartinha.id,
+          id_cartinha: idCartinha,
           id_usuario: usuario.id,
           nome_doador: usuario.nome_usuario || usuario.nome,
           email_doador: usuario.email_usuario || usuario.email,
@@ -165,7 +126,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         });
 
         const json = await resp.json();
-        if (!json.sucesso) throw new Error(json.mensagem || "Erro na adoção");
+        if (!json.sucesso) throw new Error(json.mensagem);
       }
 
       mostrarMensagemFinal(
@@ -174,8 +135,8 @@ document.addEventListener("DOMContentLoaded", async () => {
       localStorage.removeItem("carrinho");
       setTimeout(() => (window.location.href = "../index.html"), 5000);
     } catch (erro) {
-      console.error("Erro ao finalizar adoção:", erro);
-      alert("❌ Não foi possível concluir a adoção. Tente novamente.");
+      console.error("❌ Erro ao finalizar adoção:", erro);
+      alert("❌ Não foi possível concluir a adoção. Verifique os dados e tente novamente.");
     } finally {
       btnFinalizar.disabled = false;
       btnFinalizar.textContent = "✨ Finalizar Adoção";
@@ -183,7 +144,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   });
 
   // ============================================================
-  // 5️⃣ Botão limpar carrinho
+  // 4️⃣ Limpar carrinho
   // ============================================================
   btnLimpar.addEventListener("click", () => {
     localStorage.removeItem("carrinho");
@@ -193,7 +154,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 });
 
 // ============================================================
-// Mensagem final após adoção
+// Mensagem final
 // ============================================================
 function mostrarMensagemFinal(msg) {
   const container = document.querySelector(".container-carrinho");
@@ -201,9 +162,6 @@ function mostrarMensagemFinal(msg) {
     <div class="mensagem-final">
       <img src="../imagens/logo.png" alt="Varal dos Sonhos" width="200" />
       <p>${msg}</p>
-      <p style="font-size:0.95rem;margin-top:15px;color:#555;">
-        Você receberá um e-mail assim que a adoção for confirmada. ✨
-      </p>
       <a href="../index.html">Voltar ao Início</a>
     </div>
   `;
