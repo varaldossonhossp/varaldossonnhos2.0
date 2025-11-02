@@ -1,11 +1,12 @@
 // ============================================================
-// 💙 VARAL DOS SONHOS — /js/carrinho.js (versão final e segura)
+// 💙 VARAL DOS SONHOS — /js/carrinho.js (versão estável revisada)
 // ------------------------------------------------------------
-// 1️⃣ Lista todas as cartinhas salvas no localStorage
-// 2️⃣ Exibe cada uma visualmente no carrinho
-// 3️⃣ Lista pontos de coleta via /api/pontosdecoleta
-// 4️⃣ Mostra mapa do ponto selecionado (sem API key)
-// 5️⃣ Finaliza cada adoção via /api/adocoes e envia e-mail via EmailJS
+// Fluxo completo:
+// 1️⃣ Exibe todas as cartinhas salvas no localStorage
+// 2️⃣ Carrega pontos de coleta da API
+// 3️⃣ Mostra mapa (Google Maps)
+// 4️⃣ Finaliza adoção → cria registro + envia e-mail ao admin
+// 5️⃣ Permite limpar o carrinho
 // ============================================================
 
 document.addEventListener("DOMContentLoaded", async () => {
@@ -34,7 +35,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     return;
   }
 
-  // Limpa container e exibe todas as cartinhas
   listaCartinhas.innerHTML = "";
   carrinho.forEach((item) => {
     const dados = item.fields || item;
@@ -64,29 +64,29 @@ document.addEventListener("DOMContentLoaded", async () => {
     const resp = await fetch("/api/pontosdecoleta");
     const json = await resp.json();
 
-    const lista =
-      json.pontos ||
-      (json.records
-        ? json.records.map((r) => ({
-            nome_ponto: r.fields?.nome_ponto,
-            endereco: r.fields?.endereco,
-            telefone: r.fields?.telefone,
-            email_ponto: r.fields?.email_ponto,
-          }))
-        : []);
+    let lista = [];
+
+    // Compatibilidade com formato Airtable (records → fields)
+    if (json?.records) {
+      lista = json.records.map((r) => ({
+        nome_ponto: r.fields?.nome_ponto || "Ponto sem nome",
+        endereco: r.fields?.endereco || "",
+        telefone: r.fields?.telefone || "",
+        email_ponto: r.fields?.email_ponto || "",
+        responsavel: r.fields?.responsavel || "",
+      }));
+    } else if (json?.pontos) {
+      lista = json.pontos;
+    }
 
     if (Array.isArray(lista) && lista.length > 0) {
       lista.forEach((p) => {
-        if (!p.nome_ponto) return;
         const opt = document.createElement("option");
         opt.value = p.nome_ponto;
         opt.textContent = p.nome_ponto;
-        opt.dataset.endereco = p.endereco || "";
-        opt.dataset.telefone = p.telefone || "";
-        opt.dataset.email = p.email_ponto || "";
-        opt.dataset.mapa = `https://maps.google.com/maps?q=${encodeURIComponent(
-          p.endereco || p.nome_ponto
-        )}&t=&z=15&ie=UTF8&iwloc=&output=embed`;
+        opt.dataset.endereco = p.endereco;
+        opt.dataset.telefone = p.telefone;
+        opt.dataset.email = p.email_ponto;
         selectPonto.appendChild(opt);
       });
     } else {
@@ -105,8 +105,14 @@ document.addEventListener("DOMContentLoaded", async () => {
       alert("⚠️ Escolha um ponto de coleta primeiro!");
       return;
     }
-    mapFrame.src = opt.dataset.mapa;
-    mapCaption.textContent = opt.dataset.endereco || opt.value;
+
+    const endereco = opt.dataset.endereco || opt.value;
+    const urlMapa = `https://maps.google.com/maps?q=${encodeURIComponent(
+      endereco
+    )}&t=&z=15&ie=UTF8&iwloc=&output=embed`;
+
+    mapFrame.src = urlMapa;
+    mapCaption.textContent = endereco;
     mapModal.style.display = "flex";
   });
 
@@ -152,9 +158,6 @@ document.addEventListener("DOMContentLoaded", async () => {
           sonho: dados.sonho,
         };
 
-        // ========================================================
-        // 💾 Envia dados da adoção para o servidor (Airtable)
-        // ========================================================
         const resp = await fetch("/api/adocoes", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -163,33 +166,13 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         const json = await resp.json();
         if (!json.sucesso) throw new Error(json.mensagem || "Erro na adoção");
-
-        // ========================================================
-        // 💌 Envia e-mail de confirmação via EmailJS (Front-end)
-        // ========================================================
-        await emailjs.send(
-          "service_xxxxxx", // 👉 coloque seu ID de serviço
-          "template_xxxxxx", // 👉 coloque seu ID de template
-          {
-            to_name: usuario.nome_usuario || usuario.nome,
-            to_email: usuario.email_usuario || usuario.email,
-            nome_crianca: dados.nome_crianca,
-            sonho: dados.sonho,
-            ponto_coleta: opt.value,
-            endereco_ponto: opt.dataset.endereco,
-          },
-          "PUBLIC_KEY_AQUI" // 👉 substitua pela sua Public Key EmailJS
-        );
       }
 
-      // ========================================================
-      // Mensagem final e redirecionamento
-      // ========================================================
       mostrarMensagemFinal(
-        "💙 Todas as adoções foram registradas com sucesso!<br>Você receberá um e-mail de confirmação em instantes."
+        "💙 Todas as adoções foram registradas com sucesso!<br>O administrador foi notificado por e-mail."
       );
       localStorage.removeItem("carrinho");
-      setTimeout(() => (window.location.href = "../index.html"), 6000);
+      setTimeout(() => (window.location.href = "../index.html"), 5000);
     } catch (erro) {
       console.error("Erro ao finalizar adoção:", erro);
       alert("❌ Não foi possível concluir a adoção. Tente novamente.");
@@ -219,7 +202,7 @@ function mostrarMensagemFinal(msg) {
       <img src="../imagens/logo.png" alt="Varal dos Sonhos" width="200" />
       <p>${msg}</p>
       <p style="font-size:0.95rem;margin-top:15px;color:#555;">
-        O administrador foi notificado e o status da sua adoção será atualizado em breve. ✨
+        Você receberá um e-mail assim que a adoção for confirmada. ✨
       </p>
       <a href="../index.html">Voltar ao Início</a>
     </div>
