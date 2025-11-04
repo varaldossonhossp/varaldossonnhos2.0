@@ -12,13 +12,12 @@ Dados armazenados na tabela "usuarios" do Airtable.
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Cadastro 💙 Varal dos Sonhos</title>
 
-  <!-- Tipografia e ícone -->
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet" />
-  <link rel="icon" href="../imagens/favicon.png" type="image/png" />
-
-  <!-- CSS -->
+  <!-- Estilos -->
   <link rel="stylesheet" href="../css/style.css" />
   <link rel="stylesheet" href="../css/cadastro.css" />
+  <link rel="stylesheet" href="../css/cloudinho.css" />
+  <link rel="icon" href="../imagens/favicon.png" type="image/png" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
 </head>
 
 <body class="bg-gradiente">
@@ -35,6 +34,18 @@ Dados armazenados na tabela "usuarios" do Airtable.
 
         <label for="email">📧 E-mail</label>
         <input type="email" id="email" name="email_usuario" placeholder="Ex: ana@email.com" required />
+
+        <label for="cep">📍 CEP</label>
+        <input type="text" id="cep" name="cep" placeholder="Ex: 17206-030" maxlength="9" required />
+
+        <label for="endereco">🏠 Endereço</label>
+        <input type="text" id="endereco" name="endereco" placeholder="Rua / Avenida" readonly />
+
+        <label for="numero">🔢 Número</label>
+        <input type="text" id="numero" name="numero" placeholder="Ex: 123" required />
+
+        <label for="cidade">🏙️ Cidade</label>
+        <input type="text" id="cidade" name="cidade" placeholder="Cidade" readonly />
 
         <label for="telefone">📱 Telefone</label>
         <input type="tel" id="telefone" name="telefone" placeholder="Ex: (11) 99999-9999" />
@@ -54,12 +65,26 @@ Dados armazenados na tabela "usuarios" do Airtable.
     </section>
   </main>
 
+ <!-- Rodapé e assistente -->
   <div id="footer"></div>
   <div id="cloudinho"></div>
 
+  <!-- Carregamento dos componentes -->
+  <script>
+    async function carregarComponente(id, arquivo) {
+      const base = "../componentes/";
+      const resp = await fetch(base + arquivo);
+      if (resp.ok) document.getElementById(id).innerHTML = await resp.text();
+    }
+    carregarComponente("header", "header.html");
+    carregarComponente("footer", "footer.html");
+    carregarComponente("cloudinho", "cloudinho.html");
+  </script>
+
   <!-- Scripts -->
-  <script src="../js/cadastro.js"></script>
   <script src="../js/cloudinho.js"></script>
+  <script src="../js/cadastro.js"></script>
   <script src="../js/header.js"></script>
 </body>
 </html>
+  
