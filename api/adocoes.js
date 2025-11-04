@@ -1,19 +1,24 @@
 // ============================================================
-// 💙 VARAL DOS SONHOS — /api/adocoes.js (versão estável revisada)
+// 💙 VARAL DOS SONHOS — /api/adocoes.js (versão estável + correção EmailJS)
 // ------------------------------------------------------------
 // • Cria registro na tabela "adocoes"
 // • Atualiza cartinha -> status "adotada"
-// • Envia e-mail de notificação ao administrador (EmailJS)
+// • Envia e-mail de notificação ao administrador (EmailJS via Private Key)
 // ============================================================
 
 import Airtable from "airtable";
 
+// 🚀 Exporta o handler padrão da rota
 export default async function handler(req, res) {
+  // ✅ Permite apenas método POST
   if (req.method !== "POST") {
     return res.status(405).json({ success: false, message: "Método não suportado." });
   }
 
   try {
+    // ============================================================
+    // 🔗 Conexão com o Airtable
+    // ============================================================
     const base = new Airtable({ apiKey: process.env.AIRTABLE_API_KEY })
       .base(process.env.AIRTABLE_BASE_ID);
 
@@ -55,18 +60,20 @@ export default async function handler(req, res) {
     }
 
     // ============================================================
-    // 3️⃣ Envia e-mail ao administrador (EmailJS)
+    // 3️⃣ Envia e-mail ao administrador (EmailJS via Private Key)
     // ============================================================
     try {
-      const serviceId = process.env.EMAILJS_SERVICE_ID;
-      const templateId = "template_c7kwpbk"; // Admin Confirmation Request
-      const publicKey = process.env.EMAILJS_PUBLIC_KEY;
+      // 🔐 Usa o serviço Gmail autenticado e a chave privada do EmailJS
+      const serviceId = "service_uffgnhx"; // ID do seu serviço Gmail
+      const templateId = "template_c7kwpbk"; // ID do template (Admin Confirmation Request)
+      const publicKey = process.env.EMAILJS_PUBLIC_KEY; // Public Key (identificação)
+      const privateKey = process.env.EMAILJS_PRIVATE_KEY; // 🔒 Private Key (autenticação segura)
 
-      if (serviceId && templateId && publicKey) {
+      if (serviceId && templateId && publicKey && privateKey) {
         const emailBody = {
           service_id: serviceId,
           template_id: templateId,
-          user_id: publicKey,
+          user_id: publicKey, // ainda é necessário para vincular à conta
           template_params: {
             donor_name: "Novo Doador",
             donor_email: "—",
@@ -80,11 +87,16 @@ export default async function handler(req, res) {
           },
         };
 
+        // 🧩 Log detalhado — aparecerá no painel da Vercel
         console.log("📦 Enviando payload EmailJS:", JSON.stringify(emailBody, null, 2));
 
+        // 📨 Envio autenticado via Bearer Token (Private Key)
         const emailResp = await fetch("https://api.emailjs.com/api/v1.0/email/send", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${privateKey}`, // ✅ Linha nova — autenticação do servidor
+          },
           body: JSON.stringify(emailBody),
         });
 
@@ -94,20 +106,24 @@ export default async function handler(req, res) {
         if (!emailResp.ok) {
           console.error("⚠️ Falha ao enviar e-mail:", respText);
         } else {
-          console.log("📨 E-mail enviado com sucesso ao administrador.");
+          console.log("📨 E-mail enviado com sucesso ao administrador!");
         }
       } else {
-        console.error("⚠️ Variáveis EmailJS ausentes no ambiente.");
+        console.error("⚠️ Variáveis EmailJS ausentes no ambiente (serviceId/publicKey/privateKey).");
       }
     } catch (errEmail) {
       console.warn("⚠️ Erro ao enviar e-mail:", errEmail.message);
     }
 
+    // ============================================================
+    // 4️⃣ Resposta final da API
+    // ============================================================
     return res.status(200).json({
       success: true,
       message: "Adoção criada com sucesso!",
       id_adocao: idAdocao,
     });
+
   } catch (error) {
     console.error("❌ ERRO INTERNO /api/adocoes:", error);
     return res.status(500).json({
