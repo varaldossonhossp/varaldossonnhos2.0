@@ -115,8 +115,7 @@ export default async function handler(req, res) {
               cep,
               endereco,
               numero,
-              status: "ativo",
-              data_cadastro: new Date().toISOString().split("T")[0],
+              status: "ativo",              
             },
           },
         ]);
