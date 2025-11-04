@@ -1,8 +1,8 @@
 // ============================================================
-// 💙 VARAL DOS SONHOS — /js/cadastro.js
+// 💙 VARAL DOS SONHOS — /js/cadastro.js (versão corrigida)
 // ------------------------------------------------------------
-// Função: Enviar os dados do formulário de cadastro para a API.
-// Armazena o novo usuário na tabela "usuarios" (Airtable).
+// Envia os dados do formulário de cadastro para /api/usuarios
+// com acao="cadastro" conforme API integrada (cadastro + login).
 // ============================================================
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -17,6 +17,7 @@ document.addEventListener("DOMContentLoaded", () => {
     e.preventDefault();
 
     const dados = {
+      acao: "cadastro", // 👈 obrigatório para a API entender que é cadastro
       nome_usuario: document.getElementById("nome").value.trim(),
       email_usuario: document.getElementById("email").value.trim(),
       telefone: document.getElementById("telefone").value.trim(),
@@ -30,23 +31,30 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     try {
-      const resp = await fetch("/api/cadastro", {
+      const resp = await fetch("/api/usuarios", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(dados),
       });
 
-      const json = await resp.json();
+      // ⚙️ Tratamento de resposta não-JSON (ex: erro 404/500)
+      const text = await resp.text();
+      let json;
+      try {
+        json = JSON.parse(text);
+      } catch {
+        throw new Error("Resposta inesperada do servidor: " + text);
+      }
 
-      if (json.sucesso) {
+      if (resp.ok && json.sucesso) {
         alert("🎉 Cadastro realizado com sucesso! Seja bem-vindo(a) à Fábrica de Sonhos 💙");
         window.location.href = "login.html";
       } else {
-        alert("❌ Erro ao cadastrar: " + json.mensagem);
+        alert("❌ Erro ao cadastrar: " + (json.mensagem || "Erro desconhecido"));
       }
     } catch (erro) {
       console.error("Erro no cadastro:", erro);
-      alert("⚠️ Ocorreu um erro ao enviar os dados. Tente novamente mais tarde.");
+      alert("⚠️ Falha ao enviar os dados. Tente novamente mais tarde.");
     }
   });
 });
