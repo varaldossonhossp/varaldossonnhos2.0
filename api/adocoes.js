@@ -1,5 +1,5 @@
 // ============================================================
-// 💙 VARAL DOS SONHOS — /api/adocoes.js (versão revisada)
+// 💙 VARAL DOS SONHOS — /api/adocoes.js (versão estável revisada)
 // ------------------------------------------------------------
 // • Cria registro na tabela "adocoes"
 // • Atualiza cartinha -> status "adotada"
@@ -47,7 +47,7 @@ export default async function handler(req, res) {
     // ============================================================
     try {
       await base("cartinha").update([
-        { id: nome_crianca_id, fields: { status: "seld9JVzSUP4DShWu" } },
+        { id: nome_crianca_id, fields: { status: "seld9JVzSUP4DShWu" } }, // ID da opção “adotada”
       ]);
       console.log(`✅ Cartinha ${nome_crianca_id} marcada como adotada.`);
     } catch (errCart) {
@@ -58,9 +58,9 @@ export default async function handler(req, res) {
     // 3️⃣ Envia e-mail ao administrador (EmailJS)
     // ============================================================
     try {
-      const serviceId = process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID;
+      const serviceId = process.env.EMAILJS_SERVICE_ID;
       const templateId = "template_c7kwpbk"; // Admin Confirmation Request
-      const publicKey = process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY;
+      const publicKey = process.env.EMAILJS_PUBLIC_KEY;
 
       if (serviceId && templateId && publicKey) {
         const emailBody = {
@@ -80,17 +80,24 @@ export default async function handler(req, res) {
           },
         };
 
+        console.log("📦 Enviando payload EmailJS:", JSON.stringify(emailBody, null, 2));
+
         const emailResp = await fetch("https://api.emailjs.com/api/v1.0/email/send", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(emailBody),
         });
 
+        const respText = await emailResp.text();
+        console.log("📧 Resposta EmailJS:", emailResp.status, respText);
+
         if (!emailResp.ok) {
-          console.error("⚠️ Falha ao enviar e-mail:", await emailResp.text());
+          console.error("⚠️ Falha ao enviar e-mail:", respText);
         } else {
           console.log("📨 E-mail enviado com sucesso ao administrador.");
         }
+      } else {
+        console.error("⚠️ Variáveis EmailJS ausentes no ambiente.");
       }
     } catch (errEmail) {
       console.warn("⚠️ Erro ao enviar e-mail:", errEmail.message);
