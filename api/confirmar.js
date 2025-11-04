@@ -45,6 +45,9 @@ async function enviarEmailDoador(params) {
     },
   };
 
+  // 👇 Log de depuração (ver no painel Vercel → Function Logs)
+  console.log("📦 Enviando payload EmailJS:", JSON.stringify(payload, null, 2));
+
   await fetch("https://api.emailjs.com/api/v1.0/email/send", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -190,4 +193,3 @@ export default async function handler(req, res) {
     return err(res, 500, "Erro ao confirmar adoção.");
   }
 }
-
