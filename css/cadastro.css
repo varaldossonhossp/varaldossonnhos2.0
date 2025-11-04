@@ -19,6 +19,12 @@ body {
   min-height: 80vh;
 }
 
+/* Ajuste de espaçamento para o formulário */
+.form-container {
+  margin-top: 100px; /* ou 120px se o header for fixo */
+}
+
+
 .form-section {
   background: #ffffff;
   border-radius: 16px;

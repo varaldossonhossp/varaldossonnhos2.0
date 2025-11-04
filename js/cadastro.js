@@ -90,9 +90,9 @@ document.addEventListener("DOMContentLoaded", () => {
   // 🎨 Tela de sucesso padronizada (igual à adoção concluída)
   function mostrarTelaSucesso() {
     document.body.innerHTML = `
-      <main class="container form-container" style="text-align:center; padding:40px;">
+    <main class="container form-container" style="text-align:center; padding:40px; max-width:800px; margin:120px auto;">    
         <section class="card" style="max-width:600px;margin:auto;padding:30px;">
-          <img src="../imagens/logo-sem-fundo.png" alt="Fantástica Fábrica de Sonhos" width="220" style="margin-bottom:15px;">
+          <img src="../imagens/logo.png" alt="Fantástica Fábrica de Sonhos" width="220" style="margin-bottom:15px;">
           <h3>💙 Cadastro concluído com sucesso!</h3>
           <p>Seja bem-vindo(a) à <strong>Fantástica Fábrica de Sonhos</strong>.<br>
           Agora você pode acessar sua conta e começar a espalhar sonhos! ✨</p>
