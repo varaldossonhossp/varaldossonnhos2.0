@@ -1,47 +1,37 @@
 // ============================================================
-// 💙 VARAL DOS SONHOS — /api/confirmar.js (versão final TCC)
+// 💙 VARAL DOS SONHOS — /api/confirmar.js (versão final TCC com verificação de status)
 // ------------------------------------------------------------
-// Este endpoint é responsável por:
-// • Confirmar uma adoção (alterando o status para "confirmada")
-// • Enviar o e-mail de confirmação ao doador (via EmailJS)
-// • Atualizar automaticamente a pontuação e o nível de gamificação
-//   do usuário (na tabela "gamificacao" do Airtable)
+// • Confirma a adoção (status → "confirmada")
+// • Envia e-mail de confirmação ao DOADOR (EmailJS)
+// • Atualiza pontuação de gamificação no Airtable
 // ------------------------------------------------------------
-// Tabelas envolvidas:
-//   - adocoes
-//   - usuario
-//   - cartinha
-//   - pontos_coleta
-//   - gamificacao
-//   - regras_gamificacao
+// Tabelas usadas:
+// - adocoes
+// - usuario
+// - cartinha
+// - pontos_coleta
+// - gamificacao
+// - regras_gamificacao
 // ============================================================
 
 import Airtable from "airtable";
 
-// Configuração do ambiente de execução (Node.js)
 export const config = { runtime: "nodejs" };
 
 // ============================================================
-// 💌 Função auxiliar — Envio de e-mail ao DOADOR
-// ------------------------------------------------------------
-// Esta função utiliza o serviço EmailJS para enviar ao doador
-// uma mensagem personalizada de confirmação contendo os dados
-// da adoção, do ponto de coleta e da sua pontuação de gamificação.
+// 💌 Função auxiliar – Envio de e-mail ao DOADOR (EmailJS)
 // ============================================================
 async function enviarEmailDoador(params) {
-  // 🔐 Carrega as variáveis de ambiente (segurança no servidor)
   const serviceId = process.env.EMAILJS_SERVICE_ID;
   const templateId = process.env.EMAILJS_TEMPLATE_ID_DOADOR;
   const publicKey = process.env.EMAILJS_PUBLIC_KEY;
   const privateKey = process.env.EMAILJS_PRIVATE_KEY;
 
-  // Validação das variáveis obrigatórias
   if (!serviceId || !templateId || !publicKey || !privateKey) {
     console.error("⚠️ Variáveis EmailJS ausentes ou incorretas.");
     return;
   }
 
-  // Estrutura do payload enviado à API do EmailJS
   const payload = {
     service_id: serviceId,
     template_id: templateId,
@@ -56,7 +46,7 @@ async function enviarEmailDoador(params) {
       pickup_address: params.ponto_coleta?.endereco || "",
       pickup_phone: params.ponto_coleta?.telefone || "",
       pickup_map_url: params.ponto_coleta?.mapa_url || "",
-      // Dados de gamificação incorporados no corpo do e-mail
+      // Dados de gamificação
       gami_level: params.gami_level || 1,
       gami_points: params.gami_points || 10,
       gami_badge_title: params.gami_badge_title || "💙 Iniciante Solidário",
@@ -71,7 +61,6 @@ async function enviarEmailDoador(params) {
   console.log("📦 Enviando payload EmailJS...");
 
   try {
-    // Disparo do e-mail via requisição HTTP
     const emailResp = await fetch("https://api.emailjs.com/api/v1.0/email/send", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -89,14 +78,9 @@ async function enviarEmailDoador(params) {
 }
 
 // ============================================================
-// 🎮 Função central — Atualização de Gamificação
-// ------------------------------------------------------------
-// Esta função consulta as regras de gamificação no Airtable,
-// incrementa pontos e níveis conforme a quantidade de adoções
-// confirmadas, e atualiza (ou cria) o registro do doador.
+// 🎮 Função Central — Atualização de Gamificação
 // ============================================================
 async function atualizarGamificacao(base, idUsuario) {
-  // Valores padrão para usuários novos
   let gamiData = {
     gami_level: 1,
     gami_points: 10,
@@ -105,7 +89,7 @@ async function atualizarGamificacao(base, idUsuario) {
   };
 
   try {
-    // Busca simultânea das regras e dos dados do doador
+    // 1️⃣ Busca regras e gamificação atual
     const [regrasResp, doadorResp] = await Promise.all([
       base("regras_gamificacao")
         .select({ sort: [{ field: "faixa_adocoes_min", direction: "asc" }] })
@@ -117,17 +101,15 @@ async function atualizarGamificacao(base, idUsuario) {
 
     const regras = regrasResp.map((r) => r.fields);
     const registroExistente = doadorResp[0];
-
-    // Pontos e adoções atuais
     const pontosAtuais = registroExistente?.fields?.pontos_coracao || 0;
     const adocoesAtuais = registroExistente?.fields?.total_cartinhas_adotadas || 0;
     const idRegistro = registroExistente?.id;
 
-    // Incrementa pontos e adoções
+    // 2️⃣ Cálculo de pontos e adoções
     const novosPontos = pontosAtuais + 10;
     const novasAdocoes = adocoesAtuais + 1;
 
-    // Determina o nível atual e o próximo objetivo
+    // 3️⃣ Determina nível e próxima meta
     let nivelAtual = regras[0];
     let metaProxima = regras[1];
     for (let i = 0; i < regras.length; i++) {
@@ -137,7 +119,6 @@ async function atualizarGamificacao(base, idUsuario) {
       }
     }
 
-    // Monta dados atualizados para salvar e para o e-mail
     gamiData = {
       gami_level: nivelAtual.nivel_gamificacao || 1,
       gami_points: novosPontos,
@@ -151,7 +132,7 @@ async function atualizarGamificacao(base, idUsuario) {
         : "Você atingiu o nível máximo! 🌟",
     };
 
-    // Atualiza ou cria o registro do usuário no Airtable
+    // 4️⃣ Atualiza ou cria registro
     const campos = {
       id_usuario: [idUsuario],
       pontos_coracao: novosPontos,
@@ -176,35 +157,28 @@ async function atualizarGamificacao(base, idUsuario) {
 }
 
 // ============================================================
-// 🧩 Handler Principal — Função executada ao acessar a rota
-// ------------------------------------------------------------
-// Este handler é chamado quando o administrador clica no botão
-// de confirmação do e-mail. Ele valida o ID da adoção, atualiza
-// o status no Airtable, recalcula a gamificação e envia o e-mail
-// de confirmação ao doador.
+// 🧩 Handler Principal
 // ============================================================
 export default async function handler(req, res) {
-  // Configurações de CORS para acesso público seguro
+  // Configurações de CORS
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
   if (req.method === "OPTIONS") return res.status(204).end();
 
-  // Captura o ID da adoção via query ou corpo da requisição
+
   const id_adocao = req.query.id_adocao || req.body?.id_adocao;
   if (!id_adocao)
     return res.status(400).json({ sucesso: false, mensagem: "ID da adoção ausente." });
 
   try {
-    // Conexão com o Airtable usando as credenciais do ambiente
     const base = new Airtable({ apiKey: process.env.AIRTABLE_API_KEY })
       .base(process.env.AIRTABLE_BASE_ID);
 
-    // Busca o registro da adoção
     const registro = await base("adocoes").find(id_adocao);
     const f = registro.fields;
-
-    // 🛑 Verifica se já está confirmada
+    
+    // 🛑 1.1) Verifica se a adoção já está confirmada
     if (f.status_adocao === "confirmada") {
       console.log(`⚠️ Adoção ${id_adocao} já estava confirmada. Pulando ações.`);
       if (req.method === "GET") {
@@ -213,21 +187,22 @@ export default async function handler(req, res) {
       return res.status(200).json({ sucesso: true, mensagem: "Adoção já estava confirmada." });
     }
 
-    // 1️⃣ Atualiza status da adoção
+
+    // 1️⃣ Atualiza status da adoção (APENAS se não estava confirmada)
     await base("adocoes").update([
       { id: id_adocao, fields: { status_adocao: "confirmada" } },
     ]);
     console.log(`✅ Adoção ${id_adocao} confirmada.`);
 
-    // 2️⃣ Extrai dados principais (usuário, criança, presente)
+    // 2️⃣ Extrai IDs e dados
     const idUsuario = Array.isArray(f.nome_usuario) ? f.nome_usuario[0] : null;
     const emailDoador = f["email_usuario (from nome_usuario)"]?.[0] || "";
     const nomeDoador = f["nome_usuario (from nome_usuario)"]?.[0] || "";
     const childName = f["nome_crianca (from nome_crianca)"]?.[0] || "";
     const childGift = f["sonho (from nome_crianca)"]?.[0] || "";
-    const deadline = f.data_limite_recebimento || "Verificar na plataforma";
-
-    // 3️⃣ Busca informações do ponto de coleta
+    const deadline = f.data_limite_recebimento || 'Verificar na plataforma'; // Deadline
+    
+    // 3️⃣ Busca ponto de coleta
     let pontoColeta = { nome: "", endereco: "", telefone: "", mapa_url: "" };
     const relPonto = Array.isArray(f.pontos_coleta) ? f.pontos_coleta[0] : null;
 
@@ -247,11 +222,11 @@ export default async function handler(req, res) {
       }
     }
 
-    // 4️⃣ Atualiza a gamificação do doador
+    // 4️⃣ Atualiza gamificação
     let gamificacaoData = {};
     if (idUsuario) gamificacaoData = await atualizarGamificacao(base, idUsuario);
 
-    // 5️⃣ Envia o e-mail de confirmação ao doador
+    // 5️⃣ Envia e-mail de confirmação
     if (emailDoador) {
       await enviarEmailDoador({
         nome_doador: nomeDoador,
@@ -259,33 +234,28 @@ export default async function handler(req, res) {
         nome_crianca: childName,
         sonho: childGift,
         ponto_coleta: pontoColeta,
-        deadline: deadline,
-        order_id: id_adocao,
+        deadline: deadline, // Passando o deadline
+        order_id: id_adocao, // Passando o ID da adoção como Order ID
         ...gamificacaoData,
       });
     } else {
       console.warn("⚠️ Nenhum e-mail de doador encontrado.");
     }
 
-    // 6️⃣ Retorno visual (modo GET → ao clicar no e-mail)
+    // 6️⃣ Página de retorno (modo GET)
     if (req.method === "GET") {
       res.setHeader("Content-Type", "text/html; charset=utf-8");
       return res.end(getSuccessPageHTML("Adoção Confirmada com Sucesso! 💙", "#1f6fe5"));
     }
 
-    // Retorno padrão em JSON
-    return res.status(200).json({
-      sucesso: true,
-      mensagem: "Adoção confirmada e e-mail enviado.",
-    });
+    return res
+      .status(200)
+      .json({ sucesso: true, mensagem: "Adoção confirmada e e-mail enviado." });
   } catch (error) {
     console.error("🔥 Erro /api/confirmar:", error);
-
-    // Tratamento de erro com página de feedback
+    // Página de erro (modo GET)
     if (req.method === "GET") {
-      return res
-        .status(500)
-        .send(getSuccessPageHTML("Erro ao confirmar adoção. Verifique os logs.", "#dc3545"));
+      return res.status(500).send(getSuccessPageHTML("Erro ao confirmar adoção. Verifique os logs.", "#dc3545"));
     }
     return res
       .status(500)
@@ -293,20 +263,13 @@ export default async function handler(req, res) {
   }
 }
 
-// ============================================================
-// 🖼️ Função auxiliar — Página HTML de Sucesso ou Erro
-// ------------------------------------------------------------
-// Esta função gera a página exibida no navegador do administrador
-// após a confirmação da adoção. Usa cores diferentes conforme o
-// resultado (sucesso, alerta, erro) e mantém o padrão visual do site.
-// ============================================================
+// HTML auxiliar para a página de sucesso/erro
 function getSuccessPageHTML(message, color) {
-  const adminUrlFallback = "/pages/admin.html"; // Caminho genérico de fallback
-  const appBaseUrl = process.env.APP_BASE_URL || "";
-  const redirectUrl = appBaseUrl
-    ? `${appBaseUrl}/pages/admin.html`
-    : adminUrlFallback;
-
+    const adminUrlFallback = "/pages/admin.html"; // Caminho genérico de fallback
+    const appBaseUrl = process.env.APP_BASE_URL || "";
+    // Se APP_BASE_URL estiver definido, usamos ele, senão, usamos o fallback genérico.
+    const redirectUrl = appBaseUrl ? `${appBaseUrl}/pages/admin.html` : adminUrlFallback;
+    
   return `
     <html lang="pt-BR">
       <head>
