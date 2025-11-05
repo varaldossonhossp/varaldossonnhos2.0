@@ -1,5 +1,5 @@
 // ============================================================
-// 💙 VARAL DOS SONHOS — /api/confirmar.js
+// 💙 VARAL DOS SONHOS — /api/confirmar.js (Versão Revisada)
 // ------------------------------------------------------------
 // • Confirma a adoção (status → "confirmada")
 // • Envia e-mail de confirmação ao DOADOR (EmailJS)
@@ -10,9 +10,19 @@
 // ============================================================
 
 import Airtable from "airtable";
-import { URLSearchParams } from "url"; // Necessário para fetch em ambientes Vercel/Node
+// import { URLSearchParams } from "url"; // Comentando, pois em Node/Vercel moderno pode não ser necessário se 'fetch' for global
 
 export const config = { runtime: "nodejs" };
+
+// Função auxiliar para extrair valor de um campo Airtable que pode ser um array de lookups
+function getLookupValue(field) {
+  if (Array.isArray(field) && field.length > 0) {
+    // Retorna o primeiro elemento não-nulo
+    return field[0] !== null && field[0] !== undefined ? field[0] : "";
+  }
+  return "";
+}
+
 
 // ============================================================
 // 💌 Função auxiliar – Envio de e-mail ao DOADOR (EmailJS)
@@ -24,7 +34,7 @@ async function enviarEmailDoador(params) {
   const privateKey = process.env.EMAILJS_PRIVATE_KEY;
 
   if (!serviceId || !templateId || !publicKey || !privateKey) {
-    console.error("⚠️ Variáveis EmailJS ausentes ou incorretas.");
+    console.error("⚠️ Variáveis EmailJS ausentes ou incorretas. Verifique EMAILJS_SERVICE_ID, etc.");
     return;
   }
 
@@ -37,7 +47,7 @@ async function enviarEmailDoador(params) {
       to_name: params.nome_doador || "Doador",
       to_email: params.email_doador || "",
       child_name: params.nome_crianca || "",
-      child_age: params.idade_crianca || null, // ADICIONADO para consistência
+      child_age: params.idade_crianca || null,
       child_gift: params.sonho || "",
       pickup_name: params.ponto_coleta?.nome || "",
       pickup_address: params.ponto_coleta?.endereco || "",
@@ -77,7 +87,7 @@ async function enviarEmailDoador(params) {
 // ============================================================
 // 🎮 Função Central — Atualização de Gamificação
 // ============================================================
-async function atualizarGamificacao(base, idUsuario) {
+async function atualizarGamificacao(base, idUsuario, nomeDoador) {
   let gamiData = {
     gami_level: 1,
     gami_points: 10,
@@ -95,27 +105,44 @@ async function atualizarGamificacao(base, idUsuario) {
         .select({ filterByFormula: `{id_usuario}='${idUsuario}'` })
         .all(),
     ]);
+    
+    // ⚠️ Ponto de correção: Garante que regrasResp é um array antes de mapear
+    const regras = Array.isArray(regrasResp) ? regrasResp.map((r) => r.fields) : [];
+    
+    // Filtra regras válidas e com valor mínimo definido
+    const regrasValidas = regras.filter(r => r.faixa_adocoes_min !== undefined && r.faixa_adocoes_min !== null);
 
-    const regras = regrasResp.map((r) => r.fields);
+    if (regrasValidas.length === 0) {
+        console.warn("⚠️ Nenhuma regra de gamificação válida encontrada. Pulando atualização.");
+        return gamiData;
+    }
+
     const registroExistente = doadorResp[0];
     const pontosAtuais = registroExistente?.fields?.pontos_coracao || 0;
     const adocoesAtuais = registroExistente?.fields?.total_cartinhas_adotadas || 0;
     const idRegistro = registroExistente?.id;
 
     // 2️⃣ Cálculo de pontos e adoções
-    // Você pode ajustar a pontuação aqui. Mantendo +10 pontos por adoção.
     const novosPontos = pontosAtuais + 10;
     const novasAdocoes = adocoesAtuais + 1;
 
     // 3️⃣ Determina nível e próxima meta
-    let nivelAtual = regras.find(
-      (r) => novasAdocoes >= r.faixa_adocoes_min
-    ) || regras[0]; // Garante o nível 1 se não houver regra de 0
+    // Encontra a regra máxima atingida (a que tem a maior faixa_adocoes_min <= novasAdocoes)
+    let nivelAtual = regrasValidas.reduce((maxRule, currentRule) => {
+        if (novasAdocoes >= currentRule.faixa_adocoes_min && 
+            currentRule.faixa_adocoes_min > (maxRule?.faixa_adocoes_min || -1)) {
+            return currentRule;
+        }
+        return maxRule;
+    }, regrasValidas[0]); // Começa com a regra base (geralmente nível 1/0 adoções)
+
+    // Garante que nivelAtual não seja nulo (fallback para a regra de menor requisito, geralmente o Nível 1)
+    if (!nivelAtual) {
+        nivelAtual = regrasValidas[0];
+    }
     
-    // Filtra as regras que o usuário ainda não atingiu
-    const regrasFuturas = regras.filter(r => r.faixa_adocoes_min > novasAdocoes);
-    
-    // A próxima meta é a regra futura com o menor requisito de adoções
+    // A próxima meta é a regra com o menor requisito > novasAdocoes
+    const regrasFuturas = regrasValidas.filter(r => r.faixa_adocoes_min > novasAdocoes);
     let metaProxima = regrasFuturas.length > 0
         ? regrasFuturas.reduce((min, current) => 
             (current.faixa_adocoes_min < min.faixa_adocoes_min ? current : min), regrasFuturas[0])
@@ -143,17 +170,21 @@ async function atualizarGamificacao(base, idUsuario) {
       nivel_atual: nivelAtual.nivel_gamificacao,
       titulo_conquista: nivelAtual.titulo_conquista,
       ultima_atualizacao: new Date().toISOString(),
+      // Se for criar um novo registro, inclua o nome do doador
+      ...(idRegistro ? {} : { nome_usuario: nomeDoador })
     };
 
     if (idRegistro) {
       await base("gamificacao").update([{ id: idRegistro, fields: campos }]);
       console.log(`✅ Gamificação atualizada para ${idUsuario}`);
     } else {
-      await base("gamificacao").create([{ fields: { ...campos, nome_usuario: f["nome_usuario (from nome_usuario)"][0] } }]); // Adiciona nome para Airtable
+      await base("gamificacao").create([{ fields: campos }]);
       console.log(`✅ Novo registro de gamificação criado (${idUsuario})`);
     }
   } catch (err) {
-    console.error("⚠️ Erro na gamificação:", err.message);
+    console.error("⚠️ Erro catastrófico na gamificação. Operação ignorada:", err.message, err.stack);
+    // Retorna os dados padrão para que o e-mail não quebre.
+    return gamiData; 
   }
 
   return gamiData;
@@ -210,40 +241,53 @@ export default async function handler(req, res) {
     return res.status(400).json({ sucesso: false, mensagem: "ID da adoção ausente." });
 
   try {
-    // Configuração Airtable
+    // 0️⃣ Configuração Airtable
     const base = new Airtable({ apiKey: process.env.AIRTABLE_API_KEY })
       .base(process.env.AIRTABLE_BASE_ID);
 
-    const registro = await base("adocoes").find(id_adocao);
+    // 1️⃣ Busca Registro da Adoção
+    let registro;
+    try {
+        registro = await base("adocoes").find(id_adocao);
+    } catch (error) {
+        console.error("🔥 Erro ao buscar ID da adoção:", error);
+        return res.status(404).json({ sucesso: false, mensagem: "Adoção não encontrada." });
+    }
     const f = registro.fields;
     
-    // 🛑 1.1) Verifica se a adoção já está confirmada
+    // 1.1) Verifica se a adoção já está confirmada
     if (f.status_adocao === "confirmada") {
       console.log(`⚠️ Adoção ${id_adocao} já estava confirmada. Pulando ações.`);
       if (req.method === "GET") {
-        return res.status(200).send(getSuccessPageHTML("Adoção já estava confirmada.", "#ffc107"));
+        return res.status(200).send(getSuccessPageHTML("Adoção já estava confirmada. (Nada foi alterado)", "#ffc107"));
       }
       return res.status(200).json({ sucesso: true, mensagem: "Adoção já estava confirmada." });
     }
 
 
-    // 1️⃣ Atualiza status da adoção (APENAS se não estava confirmada)
+    // 2️⃣ Atualiza status da adoção
     await base("adocoes").update([
       { id: id_adocao, fields: { status_adocao: "confirmada" } },
     ]);
     console.log(`✅ Adoção ${id_adocao} confirmada.`);
 
-    // 2️⃣ Extrai IDs e dados
-    // Assumindo que os campos entre parênteses são lookups da tabela "usuario" e "cartinha"
-    const idUsuario = Array.isArray(f.nome_usuario) ? f.nome_usuario[0] : null;
-    const emailDoador = f["email_usuario (from nome_usuario)"]?.[0] || "";
-    const nomeDoador = f["nome_usuario (from nome_usuario)"]?.[0] || "";
-    const childName = f["nome_crianca (from nome_crianca)"]?.[0] || "";
-    const childGift = f["sonho (from nome_crianca)"]?.[0] || "";
-    const childAge = f["idade_crianca (from nome_crianca)"]?.[0] || null; // ADICIONADO: Extração da idade para o template
-    const deadline = f.data_limite_recebimento || 'Verificar na plataforma'; // Deadline
+    // 3️⃣ Extrai IDs e dados (Usando a função de tratamento de Lookup)
+    // IDs
+    const idUsuario = getLookupValue(f.nome_usuario);
+    // const idCartinha = getLookupValue(f.nome_crianca); // Não é usado aqui, pode ser removido ou mantido
     
-    // 3️⃣ Busca ponto de coleta
+    // Dados do Doador
+    const emailDoador = getLookupValue(f["email_usuario (from nome_usuario)"]);
+    const nomeDoador = getLookupValue(f["nome_usuario (from nome_usuario)"]);
+
+    // Dados da Cartinha
+    const childName = getLookupValue(f["nome_crianca (from nome_crianca)"]);
+    const childGift = getLookupValue(f["sonho (from nome_crianca)"]);
+    // ⚠️ Ponto de correção: Usa getLookupValue para idade
+    const childAge = getLookupValue(f["idade (from nome_crianca)"]); 
+    const deadline = f.data_limite_recebimento || 'Verificar na plataforma'; 
+    
+    // 4️⃣ Busca ponto de coleta
     let pontoColeta = { nome: "", endereco: "", telefone: "", mapa_url: "" };
     const relPonto = Array.isArray(f.pontos_coleta) ? f.pontos_coleta[0] : null;
 
@@ -263,28 +307,33 @@ export default async function handler(req, res) {
       }
     }
 
-    // 4️⃣ Atualiza gamificação
+    // 5️⃣ Atualiza gamificação
     let gamificacaoData = {};
-    if (idUsuario) gamificacaoData = await atualizarGamificacao(base, idUsuario);
+    if (idUsuario) {
+        // Passando o nome do doador caso seja necessário criar o registro de gamificação
+        gamificacaoData = await atualizarGamificacao(base, idUsuario, nomeDoador);
+    } else {
+        console.warn("⚠️ Nenhum ID de doador encontrado para gamificação.");
+    }
 
-    // 5️⃣ Envia e-mail de confirmação
+    // 6️⃣ Envia e-mail de confirmação
     if (emailDoador) {
       await enviarEmailDoador({
         nome_doador: nomeDoador,
         email_doador: emailDoador,
         nome_crianca: childName,
-        idade_crianca: childAge, // ADICIONADO: Passando a idade
+        idade_crianca: childAge, 
         sonho: childGift,
         ponto_coleta: pontoColeta,
-        deadline: deadline, // Passando o deadline
-        order_id: id_adocao, // Passando o ID da adoção como Order ID
+        deadline: deadline,
+        order_id: id_adocao, 
         ...gamificacaoData,
       });
     } else {
-      console.warn("⚠️ Nenhum e-mail de doador encontrado.");
+      console.warn("⚠️ Nenhum e-mail de doador encontrado. Adoção confirmada, mas e-mail não enviado.");
     }
-
-    // 6️⃣ Página de retorno (modo GET)
+    
+    // 7️⃣ Página de retorno (modo GET)
     if (req.method === "GET") {
       res.setHeader("Content-Type", "text/html; charset=utf-8");
       return res.end(getSuccessPageHTML("Adoção Confirmada com Sucesso! 💙", "#1f6fe5"));
@@ -294,13 +343,13 @@ export default async function handler(req, res) {
       .status(200)
       .json({ sucesso: true, mensagem: "Adoção confirmada e e-mail enviado." });
   } catch (error) {
-    console.error("🔥 Erro /api/confirmar:", error);
+    console.error("🔥 Erro fatal /api/confirmar:", error);
     // Página de erro (modo GET)
     if (req.method === "GET") {
-      return res.status(500).send(getSuccessPageHTML("Erro ao confirmar adoção. Verifique os logs.", "#dc3545"));
+      return res.status(500).send(getSuccessPageHTML("Erro interno ao confirmar adoção. Verifique os logs e variáveis de ambiente.", "#dc3545"));
     }
     return res
       .status(500)
-      .json({ sucesso: false, mensagem: "Erro ao confirmar adoção." });
+      .json({ sucesso: false, mensagem: "Erro interno ao confirmar adoção." });
   }
 }
