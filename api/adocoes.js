@@ -54,57 +54,56 @@ export default async function handler(req, res) {
       console.warn("⚠️ Falha ao atualizar status da cartinha:", errCart);
     }
 
-    // ============================================================
-    // 3️⃣ Envia e-mail ao administrador (EmailJS autenticado)
-    // ============================================================
-    try {
-      const serviceId = process.env.EMAILJS_SERVICE_ID; // ex: service_uffgnhx
-      const templateId = "template_c7kwpbk";
-      const privateKey = process.env.EMAILJS_PRIVATE_KEY;
+// ============================================================
+// 3️⃣ Envia e-mail ao administrador (EmailJS)
+// ============================================================
+  try {
+    const serviceId = process.env.EMAILJS_SERVICE_ID;
+    const templateId = "template_c7kwpbk"; // Admin Confirmation Request
+    const publicKey = process.env.EMAILJS_PUBLIC_KEY;
+    const privateKey = process.env.EMAILJS_PRIVATE_KEY; // opcional, se quiser segurança extra
 
-      if (!serviceId || !templateId || !privateKey) {
-        console.error("⚠️ Variáveis EmailJS ausentes.");
-      } else {
-        const emailBody = {
-          service_id: serviceId,
-          template_id: templateId,
-          // ❗ Importante: não incluir user_id quando usar Private Key
-          template_params: {
-            donor_name: "Novo Doador",
-            donor_email: "—",
-            donor_phone: "—",
-            child_name: "Cartinha ID " + nome_crianca_id,
-            child_gift: "Ver no painel",
-            pickup_name: "Ver no painel",
-            pickup_address: "Ver no painel",
-            pickup_phone: "Ver no painel",
-            order_id: idAdocao,
-          },
-        };
-
-        console.log("📦 Enviando payload EmailJS (autenticado):", JSON.stringify(emailBody, null, 2));
-
-        const emailResp = await fetch("https://api.emailjs.com/api/v1.0/email/send", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${privateKey}`, // 🔐 autenticação servidor
-          },
-          body: JSON.stringify(emailBody),
-        });
-
-        const respText = await emailResp.text();
-        console.log("📧 Resposta EmailJS:", emailResp.status, respText);
-
-        if (emailResp.ok) {
-          console.log("📨 E-mail enviado com sucesso ao administrador!");
-        } else {
-          console.error("⚠️ Falha ao enviar e-mail:", respText);
-        }
-      }
-    } catch (errEmail) {
-      console.error("⚠️ Erro ao enviar e-mail:", errEmail);
+    if (!serviceId || !templateId || !publicKey) {
+      throw new Error("Chaves EmailJS ausentes. Verifique variáveis no Vercel.");
     }
+
+    const emailBody = {
+      service_id: serviceId,
+      template_id: templateId,
+      user_id: publicKey,
+      template_params: {
+        donor_name: "Novo Doador",
+        donor_email: "—",
+        donor_phone: "—",
+        child_name: "Cartinha ID " + nome_crianca_id,
+        child_gift: "Ver no painel",
+        pickup_name: "Ver no painel",
+        pickup_address: "Ver no painel",
+        pickup_phone: "Ver no painel",
+        order_id: idAdocao,
+      },
+    };
+
+    console.log("📦 Enviando payload EmailJS (autenticado):", JSON.stringify(emailBody, null, 2));
+
+    const emailResp = await fetch("https://api.emailjs.com/api/v1.0/email/send", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: privateKey ? `Bearer ${privateKey}` : undefined, // usa private key se existir
+      },
+      body: JSON.stringify(emailBody),
+    });
+
+    const respText = await emailResp.text();
+    console.log("📧 Resposta EmailJS:", emailResp.status, respText);
+
+    if (!emailResp.ok) throw new Error(respText);
+    console.log("📨 E-mail enviado com sucesso ao administrador!");
+  } catch (errEmail) {
+    console.warn("⚠️ Falha ao enviar e-mail:", errEmail.message);
+  }
+
 
     // ============================================================
     // 4️⃣ Retorno final
