@@ -1,20 +1,16 @@
 // ============================================================
-// 💙 VARAL DOS SONHOS — /api/confirmar.js (versão final TCC com verificação de status)
+// 💙 VARAL DOS SONHOS — /api/confirmar.js
 // ------------------------------------------------------------
 // • Confirma a adoção (status → "confirmada")
 // • Envia e-mail de confirmação ao DOADOR (EmailJS)
 // • Atualiza pontuação de gamificação no Airtable
 // ------------------------------------------------------------
 // Tabelas usadas:
-// - adocoes
-// - usuario
-// - cartinha
-// - pontos_coleta
-// - gamificacao
-// - regras_gamificacao
+// - adocoes, usuario, cartinha, pontos_coleta, gamificacao, regras_gamificacao
 // ============================================================
 
 import Airtable from "airtable";
+import { URLSearchParams } from "url"; // Necessário para fetch em ambientes Vercel/Node
 
 export const config = { runtime: "nodejs" };
 
@@ -41,6 +37,7 @@ async function enviarEmailDoador(params) {
       to_name: params.nome_doador || "Doador",
       to_email: params.email_doador || "",
       child_name: params.nome_crianca || "",
+      child_age: params.idade_crianca || null, // ADICIONADO para consistência
       child_gift: params.sonho || "",
       pickup_name: params.ponto_coleta?.nome || "",
       pickup_address: params.ponto_coleta?.endereco || "",
@@ -106,18 +103,24 @@ async function atualizarGamificacao(base, idUsuario) {
     const idRegistro = registroExistente?.id;
 
     // 2️⃣ Cálculo de pontos e adoções
+    // Você pode ajustar a pontuação aqui. Mantendo +10 pontos por adoção.
     const novosPontos = pontosAtuais + 10;
     const novasAdocoes = adocoesAtuais + 1;
 
     // 3️⃣ Determina nível e próxima meta
-    let nivelAtual = regras[0];
-    let metaProxima = regras[1];
-    for (let i = 0; i < regras.length; i++) {
-      if (novasAdocoes >= regras[i].faixa_adocoes_min) {
-        nivelAtual = regras[i];
-        metaProxima = regras[i + 1] || null;
-      }
-    }
+    let nivelAtual = regras.find(
+      (r) => novasAdocoes >= r.faixa_adocoes_min
+    ) || regras[0]; // Garante o nível 1 se não houver regra de 0
+    
+    // Filtra as regras que o usuário ainda não atingiu
+    const regrasFuturas = regras.filter(r => r.faixa_adocoes_min > novasAdocoes);
+    
+    // A próxima meta é a regra futura com o menor requisito de adoções
+    let metaProxima = regrasFuturas.length > 0
+        ? regrasFuturas.reduce((min, current) => 
+            (current.faixa_adocoes_min < min.faixa_adocoes_min ? current : min), regrasFuturas[0])
+        : null;
+
 
     gamiData = {
       gami_level: nivelAtual.nivel_gamificacao || 1,
@@ -146,7 +149,7 @@ async function atualizarGamificacao(base, idUsuario) {
       await base("gamificacao").update([{ id: idRegistro, fields: campos }]);
       console.log(`✅ Gamificação atualizada para ${idUsuario}`);
     } else {
-      await base("gamificacao").create([{ fields: campos }]);
+      await base("gamificacao").create([{ fields: { ...campos, nome_usuario: f["nome_usuario (from nome_usuario)"][0] } }]); // Adiciona nome para Airtable
       console.log(`✅ Novo registro de gamificação criado (${idUsuario})`);
     }
   } catch (err) {
@@ -155,6 +158,41 @@ async function atualizarGamificacao(base, idUsuario) {
 
   return gamiData;
 }
+
+// ============================================================
+// 🧩 HTML auxiliar para a página de sucesso/erro (para requisições GET)
+// ============================================================
+function getSuccessPageHTML(message, color) {
+  const adminUrlFallback = "/pages/admin.html";
+  const appBaseUrl = process.env.APP_BASE_URL || "";
+  const redirectUrl = appBaseUrl ? `${appBaseUrl}/pages/admin.html` : adminUrlFallback;
+  
+  return `
+    <html lang="pt-BR">
+      <head>
+        <meta charset="utf-8" />
+        <title>Confirmação da Adoção</title>
+        <style>
+          @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap');
+          body { font-family:'Poppins',sans-serif; background:#f0f7ff; text-align:center; padding:50px; color:#123456; }
+          .card { background:#fff; border-radius:16px; display:inline-block; padding:40px; box-shadow:0 4px 10px rgba(0,0,0,.08); max-width: 400px; width: 90%; }
+          h1 { color:${color}; margin-bottom:10px; font-size: 24px; font-weight: 800; }
+          p { font-size:16px; margin-bottom: 25px; }
+          a { background:${color}; color:#fff; text-decoration:none; padding:10px 18px; border-radius:24px; font-weight:600; display:inline-block; margin-top:10px; transition: background 0.3s; }
+          a:hover { opacity: 0.9; }
+        </style>
+      </head>
+      <body>
+        <div class="card">
+          <h1>${message}</h1>
+          <p>Você pode fechar esta página ou voltar ao painel de administração.</p>
+          <a href="${redirectUrl}">Voltar ao Painel</a>
+        </div>
+      </body>
+    </html>
+  `;
+}
+
 
 // ============================================================
 // 🧩 Handler Principal
@@ -172,6 +210,7 @@ export default async function handler(req, res) {
     return res.status(400).json({ sucesso: false, mensagem: "ID da adoção ausente." });
 
   try {
+    // Configuração Airtable
     const base = new Airtable({ apiKey: process.env.AIRTABLE_API_KEY })
       .base(process.env.AIRTABLE_BASE_ID);
 
@@ -195,11 +234,13 @@ export default async function handler(req, res) {
     console.log(`✅ Adoção ${id_adocao} confirmada.`);
 
     // 2️⃣ Extrai IDs e dados
+    // Assumindo que os campos entre parênteses são lookups da tabela "usuario" e "cartinha"
     const idUsuario = Array.isArray(f.nome_usuario) ? f.nome_usuario[0] : null;
     const emailDoador = f["email_usuario (from nome_usuario)"]?.[0] || "";
     const nomeDoador = f["nome_usuario (from nome_usuario)"]?.[0] || "";
     const childName = f["nome_crianca (from nome_crianca)"]?.[0] || "";
     const childGift = f["sonho (from nome_crianca)"]?.[0] || "";
+    const childAge = f["idade_crianca (from nome_crianca)"]?.[0] || null; // ADICIONADO: Extração da idade para o template
     const deadline = f.data_limite_recebimento || 'Verificar na plataforma'; // Deadline
     
     // 3️⃣ Busca ponto de coleta
@@ -232,6 +273,7 @@ export default async function handler(req, res) {
         nome_doador: nomeDoador,
         email_doador: emailDoador,
         nome_crianca: childName,
+        idade_crianca: childAge, // ADICIONADO: Passando a idade
         sonho: childGift,
         ponto_coleta: pontoColeta,
         deadline: deadline, // Passando o deadline
@@ -261,37 +303,4 @@ export default async function handler(req, res) {
       .status(500)
       .json({ sucesso: false, mensagem: "Erro ao confirmar adoção." });
   }
-}
-
-// HTML auxiliar para a página de sucesso/erro
-function getSuccessPageHTML(message, color) {
-    const adminUrlFallback = "/pages/admin.html"; // Caminho genérico de fallback
-    const appBaseUrl = process.env.APP_BASE_URL || "";
-    // Se APP_BASE_URL estiver definido, usamos ele, senão, usamos o fallback genérico.
-    const redirectUrl = appBaseUrl ? `${appBaseUrl}/pages/admin.html` : adminUrlFallback;
-    
-  return `
-    <html lang="pt-BR">
-      <head>
-        <meta charset="utf-8" />
-        <title>Confirmação da Adoção</title>
-        <style>
-          @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap');
-          body { font-family:'Poppins',sans-serif; background:#f0f7ff; text-align:center; padding:50px; color:#123456; }
-          .card { background:#fff; border-radius:16px; display:inline-block; padding:40px; box-shadow:0 4px 10px rgba(0,0,0,.08); max-width: 400px; width: 90%; }
-          h1 { color:${color}; margin-bottom:10px; font-size: 24px; font-weight: 800; }
-          p { font-size:16px; margin-bottom: 25px; }
-          a { background:${color}; color:#fff; text-decoration:none; padding:10px 18px; border-radius:24px; font-weight:600; display:inline-block; margin-top:10px; transition: background 0.3s; }
-          a:hover { opacity: 0.9; }
-        </style>
-      </head>
-      <body>
-        <div class="card">
-          <h1>${message}</h1>
-          <p>Você pode fechar esta página ou voltar ao painel de administração.</p>
-          <a href="${redirectUrl}">Voltar ao Painel</a>
-        </div>
-      </body>
-    </html>
-  `;
 }
