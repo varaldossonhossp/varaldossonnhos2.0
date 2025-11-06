@@ -6,7 +6,7 @@
 // • Atualiza pontuação de gamificação no Airtable
 // ------------------------------------------------------------
 // Tabelas usadas:
-// - adocoes, usuario, cartinha, pontos_coleta, gamificacao, regras_gamificacao
+// - adocoes, usuario, cartinha, pontos_coleta, gamificacao, regras_gamificacao.
 // ============================================================
 
 import Airtable from "airtable";
