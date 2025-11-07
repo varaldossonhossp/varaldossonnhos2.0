@@ -22,7 +22,7 @@ function mostrarCloudinho(msg, duracao = 2500) {
 // -------------------- CARREGAR PONTOS --------------------
 async function carregarPontos() {
     try {
-        const res = await fetch("../api/pontosDeColeta");
+        const res = await fetch("../api/pontosdecoleta");
         const data = await res.json();
         if (!data.sucesso) throw new Error(data.mensagem);
 
@@ -120,7 +120,7 @@ formPonto.addEventListener("submit", async e => {
 
         if (editandoId) {
             payload.id_ponto = editandoId;
-            res = await fetch("../api/pontosDeColeta", {
+            res = await fetch("../api/pontosdecoleta", {
                 method: "PATCH",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(payload),
@@ -129,7 +129,7 @@ formPonto.addEventListener("submit", async e => {
             if (!data.sucesso) throw new Error(data.mensagem);
             mostrarCloudinho(`Ponto "${data.ponto.nome_ponto}" atualizado!`);
         } else {
-            res = await fetch("../api/pontosDeColeta", {
+            res = await fetch("../api/pontosdecoleta", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(payload),
@@ -155,7 +155,7 @@ window.excluirPonto = async function(id) {
     if (!confirm("Deseja realmente excluir este ponto?")) return;
 
     try {
-        const res = await fetch("../api/pontosDeColeta", {
+        const res = await fetch("../api/pontosdecoleta", {
             method: "DELETE",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ id_ponto: id }),

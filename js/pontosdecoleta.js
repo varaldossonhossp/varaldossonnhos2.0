@@ -19,7 +19,7 @@ async function carregarPontosDeColeta() {
   msg.style.display = "none";
 
   try {
-    const resp = await fetch("/api/pontosDeColeta");
+    const resp = await fetch("/api/pontosdecoleta");
     if (!resp.ok) throw new Error(`Erro HTTP ${resp.status}`);
     const dados = await resp.json();
 
