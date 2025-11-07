@@ -1,18 +1,18 @@
 // ============================================================
-// 📜 VARAL DOS SONHOS — /api/regras_gamificacao.js (versão TCC)
+// 📜 VARAL DOS SONHOS — /api/regras_gamificacao.js (versão final TCC)
 // ------------------------------------------------------------
-// Este endpoint lista todas as regras de gamificação cadastradas
-// na tabela “regras_gamificacao” do Airtable.
-// Cada regra define um marco de conquistas, pontuação mínima
-// e nível correspondente (iniciante, intermediário, avançado...).
+// Esta API lista as regras de gamificação cadastradas no Airtable.
+// Cada regra define um marco de conquistas (nível, título, faixa mínima etc.)
+// e é usada no painel de gamificação do front-end (conquistas.html).
 // ============================================================
 
 import Airtable from "airtable";
+
 export const config = { runtime: "nodejs" };
 
 export default async function handler(req, res) {
   // ------------------------------------------------------------
-  // 🔧 Cabeçalhos CORS — permitem requisições externas (Front-end)
+  // 🔧 Cabeçalhos CORS — permitem acesso pelo Front-End (Vercel)
   // ------------------------------------------------------------
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET,OPTIONS");
@@ -21,31 +21,46 @@ export default async function handler(req, res) {
 
   try {
     // ------------------------------------------------------------
-    // 🔑 Conexão segura ao Airtable via variáveis de ambiente
+    // 🔑 Conexão com o Airtable
     // ------------------------------------------------------------
     const base = new Airtable({ apiKey: process.env.AIRTABLE_API_KEY })
       .base(process.env.AIRTABLE_BASE_ID);
+
     const tabela = process.env.AIRTABLE_REGRAS_GAMIFICACAO_TABLE || "regras_gamificacao";
 
     // ------------------------------------------------------------
-    // 📥 Busca todas as regras, ordenando por nível
+    // 📥 Busca todas as regras ordenadas por nível e faixa mínima
     // ------------------------------------------------------------
     const registros = await base(tabela)
-      .select({ sort: [{ field: "nivel_gamificacao", direction: "asc" }] })
+      .select({
+        sort: [
+          { field: "nivel_gamificacao", direction: "asc" },
+          { field: "faixa_adocoes_min", direction: "asc" },
+        ],
+      })
       .all();
 
     // ------------------------------------------------------------
-    // 🔄 Formata a resposta para o front-end
+    // 🪄 Formata nomes e campos para uso no front-end
     // ------------------------------------------------------------
     const regras = registros.map((r) => ({
       id: r.id,
-      ...r.fields,
+      nivel: r.fields.nivel_gamificacao || "Iniciante",
+      titulo_conquista: r.fields.titulo_conquista || "",
+      faixa_minima: r.fields.faixa_adocoes_min || 0,
+      descricao: r.fields.descricao_rotulo_gerada || "",
     }));
 
-    // ✅ Retorno bem-sucedido
-    res.status(200).json({ sucesso: true, regras });
+    // ------------------------------------------------------------
+    // ✅ Retorno para o front-end (JSON limpo)
+    // ------------------------------------------------------------
+    res.status(200).json({
+      sucesso: true,
+      total_regras: regras.length,
+      regras,
+    });
   } catch (e) {
-    console.error("Erro /api/regras_gamificacao:", e);
+    console.error("❌ Erro /api/regras_gamificacao:", e);
     res.status(500).json({
       sucesso: false,
       mensagem: "Erro ao listar regras de gamificação.",

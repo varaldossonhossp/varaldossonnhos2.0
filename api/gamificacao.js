@@ -1,18 +1,13 @@
 // ============================================================
-// 🎮 VARAL DOS SONHOS — /api/gamificacao.js (versão TCC)
+// 🎮 VARAL DOS SONHOS — /api/gamificacao.js (corrigida)
 // ------------------------------------------------------------
-// Esta API controla a pontuação, conquistas e progressão de
-// nível dos usuários dentro do sistema de gamificação.
-// Tabela: "gamificacao" (Airtable)
+// Controla pontuação, conquistas e progressão de nível dos usuários
 // ============================================================
 
 import Airtable from "airtable";
 export const config = { runtime: "nodejs" };
 
 export default async function handler(req, res) {
-  // ------------------------------------------------------------
-  // 🔧 Cabeçalhos CORS
-  // ------------------------------------------------------------
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
@@ -24,80 +19,75 @@ export default async function handler(req, res) {
 
   try {
     // ============================================================
-    // 🔹 GET → Consulta o progresso de gamificação de um usuário
+    // 🔹 GET → Consulta o progresso do usuário
     // ============================================================
     if (req.method === "GET") {
       const { id_usuario } = req.query;
       if (!id_usuario)
         return res.status(400).json({ sucesso: false, mensagem: "id_usuario ausente." });
 
+      // Busca pelo link do usuário
       const registros = await base(tabela)
-        .select({ filterByFormula: `{id_usuario}='${id_usuario}'` })
+        .select({ filterByFormula: `SEARCH('${id_usuario}', ARRAYJOIN(usuario))` })
         .all();
 
       if (registros.length === 0)
         return res.status(200).json({ sucesso: true, gamificacao: null });
 
-      const item = registros[0].fields;
-      return res.status(200).json({ sucesso: true, gamificacao: item });
+      const g = registros[0].fields;
+
+      // Mapeamento para o front-end
+      const gamificacao = {
+        nivel_gamificacao_atual: g.nivel_gamificacao_atual || "Iniciante",
+        pontos_coracao: g.pontos_coracao || 0,
+        total_cartinhas_adotadas: g.total_adocoes || 0,
+        titulo_conquista_atual: g.titulo_conquista_atual || "💙 Iniciante Solidário",
+        data_ultima_atualizacao: g.data_ultima_atualizacao || null,
+      };
+
+      return res.status(200).json({ sucesso: true, gamificacao });
     }
 
     // ============================================================
-    // 🔹 POST → Cria ou atualiza o progresso de gamificação
+    // 🔹 POST → Atualiza ou cria registro
     // ============================================================
     if (req.method === "POST") {
-      const {
-        id_usuario,
-        pontos_coracao = 0,
-        total_cartinhas_adotadas = 0,
-        titulo_conquista,
-      } = req.body || {};
+      const { id_usuario, pontos_coracao = 0, total_cartinhas_adotadas = 0, titulo_conquista_atual } =
+        req.body || {};
 
       if (!id_usuario)
         return res.status(400).json({ sucesso: false, mensagem: "id_usuario obrigatório." });
 
-      // 🔍 Verifica se o usuário já possui um registro
       const existentes = await base(tabela)
-        .select({ filterByFormula: `{id_usuario}='${id_usuario}'` })
+        .select({ filterByFormula: `SEARCH('${id_usuario}', ARRAYJOIN(usuario))` })
         .all();
 
-      // ------------------------------------------------------------
-      // 🔁 Atualiza o registro existente (incrementa pontos e conquistas)
-      // ------------------------------------------------------------
-      if (existentes.length > 0) {
-        const rec = existentes[0];
-        const novosCampos = {
-          pontos_coracao,
-          total_cartinhas_adotadas,
-          titulo_conquista: titulo_conquista || rec.fields.titulo_conquista,
-          ultima_atualizacao: new Date().toISOString(),
-        };
+      const novosCampos = {
+        pontos_coracao,
+        total_adocoes: total_cartinhas_adotadas,
+        titulo_conquista_atual: titulo_conquista_atual || "💙 Iniciante Solidário",
+        data_ultima_atualizacao: new Date().toISOString(),
+      };
 
-        await base(tabela).update([{ id: rec.id, fields: novosCampos }]);
+      if (existentes.length > 0) {
+        await base(tabela).update([{ id: existentes[0].id, fields: novosCampos }]);
         return res.status(200).json({ sucesso: true, atualizado: true });
       }
 
-      // ------------------------------------------------------------
-      // 🆕 Cria um novo registro para o usuário iniciante
-      // ------------------------------------------------------------
-      const novo = {
-        id_usuario,
-        pontos_coracao,
-        total_cartinhas_adotadas,
-        titulo_conquista: titulo_conquista || "💙 Iniciante Solidário",
-        nivel_atual: 1,
-        ultima_atualizacao: new Date().toISOString(),
-      };
+      // Cria novo registro
+      const criado = await base(tabela).create([
+        {
+          fields: {
+            usuario: [id_usuario], // vincula ao registro do usuário
+            ...novosCampos,
+            nivel_gamificacao_atual: "Iniciante",
+          },
+        },
+      ]);
 
-      const criado = await base(tabela).create([{ fields: novo }]);
-      return res.status(200).json({
-        sucesso: true,
-        criado: true,
-        id: criado[0].id,
-      });
+      return res.status(200).json({ sucesso: true, criado: true, id: criado[0].id });
     }
 
-    // Método inválido
     return res.status(405).json({ sucesso: false, mensagem: "Método não suportado." });
   } catch (e) {
     console.error("Erro /api/gamificacao:", e);
