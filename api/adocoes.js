@@ -94,11 +94,17 @@ export default async function handler(req, res) {
       const templateId = process.env.EMAILJS_TEMPLATE_ADMIN_ID;
       const publicKey = process.env.EMAILJS_PUBLIC_KEY;
       const privateKey = process.env.EMAILJS_PRIVATE_KEY;
+
+      // 🔧 Correção pontual — domínio fixo da produção
       const appBase = "https://varaldossonhos2-0.vercel.app";
 
       if (!serviceId || !templateId || !publicKey || !privateKey) {
         throw new Error("Variáveis EmailJS ausentes ou incorretas.");
       }
+
+      // 🔗 Montagem e log do link de confirmação
+      const confirmationLink = `${appBase}/api/confirmar?id_adocao=${idAdocao}`;
+      console.log("🔗 Link de confirmação gerado:", confirmationLink);
 
       const emailBody = {
         service_id: serviceId,
@@ -115,7 +121,7 @@ export default async function handler(req, res) {
           pickup_address,
           pickup_phone,
           order_id: idAdocao,
-          confirmation_link: `${appBase}/api/confirmar?id_adocao=${idAdocao}`,
+          confirmation_link: confirmationLink,
           to_email: process.env.EMAILJS_ADMIN_EMAIL,
         },
       };
