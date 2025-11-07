@@ -18,7 +18,7 @@ async function inicializarHeader() {
   const linkCadastro = document.getElementById("linkCadastro");
   const linkSair = document.getElementById("linkSair");
   const linkPainelAdmin = document.getElementById("linkPainelAdmin");
-  const linkRanking = document.getElementById("linkRanking");
+  const linkConquista = document.getElementById("linkConquista");
 
   if (!saudacao) return;
 
@@ -36,7 +36,7 @@ async function inicializarHeader() {
     if (usuario.tipo === "administrador") {
       linkPainelAdmin.style.display = "inline-block";
     } else {
-      linkRanking.style.display = "inline-block";
+      linkConquista.style.display = "inline-block";
     }
 
     // Logout
@@ -51,7 +51,7 @@ async function inicializarHeader() {
     saudacao.style.display = "none";
     linkSair.style.display = "none";
     linkPainelAdmin.style.display = "none";
-    linkRanking.style.display = "none";
+    linkConquista.style.display = "none";
     linkLogin.style.display = "inline-block";
     linkCadastro.style.display = "inline-block";
   }
