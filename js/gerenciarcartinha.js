@@ -14,6 +14,7 @@
   // ============================================================
   // 🔹 Carregar lista de cartinhas
   // ============================================================
+  
   async function carregarCartinhas() {
     tabela.innerHTML = `<tr><td colspan="16" style="text-align:center;">Carregando...</td></tr>`;
     try {
