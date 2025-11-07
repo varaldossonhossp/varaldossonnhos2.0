@@ -96,6 +96,7 @@ export default async function handler(req, res) {
       const privateKey = process.env.EMAILJS_PRIVATE_KEY;
       const appBase = process.env.APP_BASE_URL || req.headers.origin || "https://varaldossonhos2-0.vercel.app";
 
+
       if (!serviceId || !templateId || !publicKey || !privateKey) {
         throw new Error("Variáveis EmailJS ausentes ou incorretas.");
       }
