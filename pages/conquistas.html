@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel de Gamificação</title>
+
+      <!-- Estilos -->
+    <link rel="stylesheet" href="../css/style.css" />
+    <link rel="stylesheet" href="../css/cartinha.css" />
+    <link rel="stylesheet" href="../css/cloudinho.css" />
+    <link rel="icon" href="../imagens/favicon.png" type="image/png" />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+    <!-- Carrega o Tailwind CSS para estilização moderna e responsiva -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Configuração do Google Font Inter -->
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f4f7f9;
+        }
+        .card {
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 5px 15px -5px rgba(0, 0, 0, 0.04);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 35px -8px rgba(0, 0, 0, 0.15), 0 7px 20px -5px rgba(0, 0, 0, 0.08);
+        }
+        /* Estilos específicos para Nível e Pontos */
+        .level-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-weight: 700;
+            font-size: 0.875rem;
+            color: white;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        }
+        .level-Iniciante { background-color: #3b82f6; } /* Azul */
+        .level-Intermediário { background-color: #10b981; } /* Verde */
+        .level-Avançado { background-color: #f59e0b; } /* Amarelo/Laranja */
+        .level-Lendário { background-color: #ef4444; } /* Vermelho/Lendário */
+    </style>
+</head>
+<body class="p-4 sm:p-8 min-h-screen">
+    
+    <!-- Cabeçalho dinâmico -->
+    <div id="header"></div>
+
+    <div id="app-container" class="max-w-4xl mx-auto">
+        <h1 class="text-3xl sm:text-4xl font-extrabold text-gray-800 mb-8 text-center">
+            <span class="text-indigo-600">Painel</span> de Adoção e Gamificação
+        </h1>
+
+        <div id="status-message" class="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 rounded-md mb-6 hidden" role="alert">
+            <p class="font-bold">Aguardando dados...</p>
+            <p>Carregando informações de autenticação e gamificação do Firestore.</p>
+        </div>
+
+        <div id="dashboard-content" class="grid grid-cols-1 md:grid-cols-3 gap-6 hidden">
+            <!-- Cartão de Nível -->
+            <div class="card bg-white p-6 rounded-xl border-t-4 border-indigo-500">
+                <div class="flex items-center justify-between">
+                    <p class="text-lg font-semibold text-gray-500">Nível Atual</p>
+                    <svg class="w-8 h-8 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v14M9 19h12M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2z"></path></svg>
+                </div>
+                <div class="mt-4">
+                    <p id="nivel-display" class="text-4xl font-bold text-gray-900">...</p>
+                    <span id="nivel-badge" class="level-badge mt-2">Carregando</span>
+                </div>
+            </div>
+
+            <!-- Cartão de Adoções -->
+            <div class="card bg-white p-6 rounded-xl border-t-4 border-teal-500">
+                <div class="flex items-center justify-between">
+                    <p class="text-lg font-semibold text-gray-500">Adoções Concluídas</p>
+                    <svg class="w-8 h-8 text-teal-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10m0 0h16a1 1 0 001-1V8a1 1 0 00-1-1H4zm0 10v-3"></path></svg>
+                </div>
+                <div class="mt-4">
+                    <p id="adocoes-display" class="text-4xl font-bold text-gray-900">0</p>
+                    <p class="text-sm text-gray-400 mt-1">Total de cartinhas adotadas</p>
+                </div>
+            </div>
+
+            <!-- Cartão de Pontos de Coração -->
+            <div class="card bg-white p-6 rounded-xl border-t-4 border-pink-500">
+                <div class="flex items-center justify-between">
+                    <p class="text-lg font-semibold text-gray-500">Pontos de Coração</p>
+                    <svg class="w-8 h-8 text-pink-500" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"></path></svg>
+                </div>
+                <div class="mt-4">
+                    <p id="pontos-display" class="text-4xl font-bold text-gray-900">0</p>
+                    <p class="text-sm text-gray-400 mt-1">Recompensa por engajamento</p>
+                </div>
+            </div>
+        </div>
+
+        <div id="user-info" class="mt-8 p-4 bg-gray-100 rounded-lg text-sm text-gray-600">
+            ID do Usuário: <span id="user-id">Não autenticado</span>
+        </div>
+
+    </div>
+
+    <!-- Rodapé e assistente -->
+    <div id="footer"></div>
+    <div id="cloudinho"></div>
+
+     <!-- Carregamento dos componentes -->
+  <script>
+    async function carregarComponente(id, arquivo) {
+      const base = "../componentes/";
+      const resp = await fetch(base + arquivo);
+      if (resp.ok) document.getElementById(id).innerHTML = await resp.text();
+    }
+    carregarComponente("header", "header.html");
+    carregarComponente("footer", "footer.html");
+    carregarComponente("cloudinho", "cloudinho.html");
+  </script>
+
+  <!-- Scripts -->
+  <script src="../js/cloudinho.js"></script>
+  <script src="../js/header.js"></script>
+
+    <!-- Firebase SDKs -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, onSnapshot, query, collection, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Variáveis globais obrigatórias fornecidas pelo ambiente
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+        // Ativa o log de debug do Firestore
+        setLogLevel('Debug');
+
+        // Referências do DOM
+        const statusMessageEl = document.getElementById('status-message');
+        const dashboardContentEl = document.getElementById('dashboard-content');
+        const userIdEl = document.getElementById('user-id');
+        const nivelDisplayEl = document.getElementById('nivel-display');
+        const nivelBadgeEl = document.getElementById('nivel-badge');
+        const adocoesDisplayEl = document.getElementById('adocoes-display');
+        const pontosDisplayEl = document.getElementById('pontos-display');
+
+        // Exibe a mensagem de carregamento inicial
+        statusMessageEl.classList.remove('hidden');
+
+        // Inicializa Firebase
+        let app;
+        let db;
+        let auth;
+        let unsubscribeGamification = null;
+
+        if (Object.keys(firebaseConfig).length === 0) {
+            console.error("Configuração do Firebase não encontrada. Verifique se __firebase_config está definida.");
+            statusMessageEl.innerHTML = '<p class="font-bold">Erro de Configuração</p><p>A configuração do Firebase está faltando ou vazia.</p>';
+            statusMessageEl.classList.add('bg-red-100', 'border-red-500', 'text-red-700');
+            statusMessageEl.classList.remove('bg-yellow-100', 'border-yellow-500', 'text-yellow-700');
+            // Remove a mensagem de carregamento para exibir o erro
+            statusMessageEl.classList.remove('hidden');
+        } else {
+            app = initializeApp(firebaseConfig);
+            db = getFirestore(app);
+            auth = getAuth(app);
+            initAuthAndDataListeners();
+        }
+
+        async function initAuthAndDataListeners() {
+            try {
+                // 1. Autenticação
+                if (initialAuthToken) {
+                    await signInWithCustomToken(auth, initialAuthToken);
+                } else {
+                    await signInAnonymously(auth);
+                }
+
+                // 2. Listener de Mudança de Estado de Autenticação
+                onAuthStateChanged(auth, (user) => {
+                    if (user) {
+                        const userId = user.uid || 'anonimo';
+                        userIdEl.textContent = userId;
+                        console.log("Usuário autenticado:", userId);
+
+                        // 3. Inicia o listener de dados da Gamificação
+                        setupGamificationListener(userId);
+
+                    } else {
+                        console.log("Usuário deslogado. Assinando anonimamente...");
+                        // Se por algum motivo cair aqui, garantimos que o anonimo está logado
+                        if (!auth.currentUser) signInAnonymously(auth);
+                    }
+                });
+
+            } catch (error) {
+                console.error("Erro na inicialização da autenticação:", error);
+                statusMessageEl.innerHTML = `<p class="font-bold">Erro na Autenticação</p><p>${error.message}</p>`;
+                statusMessageEl.classList.add('bg-red-100', 'border-red-500', 'text-red-700');
+                statusMessageEl.classList.remove('bg-yellow-100', 'border-yellow-500', 'text-yellow-700');
+            }
+        }
+
+        function setupGamificationListener(userId) {
+            // Se já houver um listener, desinscreva-o
+            if (unsubscribeGamification) {
+                unsubscribeGamification();
+            }
+
+            // O caminho da coleção é baseado nas regras de segurança para dados privados
+            // Usando 'user_gamification' como a coleção que armazena o status de gamificação do usuário.
+            const collectionPath = `artifacts/${appId}/users/${userId}/user_gamification`;
+            const gamificationRef = collection(db, collectionPath);
+            
+            // O ideal seria usar uma query que retorna apenas o documento de gamificação
+            // Como assumimos que só haverá um documento por usuário, usamos onSnapshot na coleção
+            // e pegamos o primeiro documento retornado.
+            // Para criar o documento, você pode usar: await setDoc(doc(db, collectionPath, 'status'), { ...dados_iniciais });
+            
+            console.log("Tentando assinar dados da coleção:", collectionPath);
+
+            // Listener de tempo real (onSnapshot)
+            unsubscribeGamification = onSnapshot(gamificationRef, (snapshot) => {
+                statusMessageEl.classList.add('hidden');
+                dashboardContentEl.classList.remove('hidden');
+
+                if (snapshot.empty) {
+                    // Dados iniciais (simulando a estrutura do CSV de Gamificação)
+                    const initialData = {
+                        total_adocoes: 0,
+                        nivel_calculado: 'Iniciante',
+                        pontos_coracao: 0
+                    };
+                    updateDashboard(initialData);
+                    console.log("Nenhum documento de gamificação encontrado para o usuário. Exibindo dados iniciais.");
+                    return;
+                }
+
+                // Pega o primeiro documento (assumindo que há apenas um por usuário)
+                const docData = snapshot.docs[0].data();
+                console.log("Dados de Gamificação recebidos:", docData);
+                updateDashboard(docData);
+
+            }, (error) => {
+                console.error("Erro ao receber dados de gamificação em tempo real:", error);
+                statusMessageEl.innerHTML = `<p class="font-bold">Erro de Conexão</p><p>Não foi possível carregar os dados de gamificação: ${error.message}</p>`;
+                statusMessageEl.classList.remove('hidden');
+                dashboardContentEl.classList.add('hidden');
+            });
+        }
+        
+        function updateDashboard(data) {
+            const totalAdocoes = data.total_adocoes || 0;
+            const nivel = data.nivel_calculado || 'Iniciante';
+            const pontos = data.pontos_coracao || 0;
+            
+            // Atualiza o total de Adoções
+            adocoesDisplayEl.textContent = totalAdocoes.toString();
+
+            // Atualiza os Pontos de Coração
+            pontosDisplayEl.textContent = pontos.toString();
+
+            // Atualiza o Nível (e a badge de cor)
+            nivelDisplayEl.textContent = nivel;
+            nivelBadgeEl.textContent = nivel;
+            
+            // Remove todas as classes de nível e adiciona a correta
+            nivelBadgeEl.className = 'level-badge mt-2'; // Reset
+            let levelClass = '';
+            switch (nivel) {
+                case 'Intermediário':
+                    levelClass = 'level-Intermediário';
+                    break;
+                case 'Avançado':
+                    levelClass = 'level-Avançado';
+                    break;
+                case 'Lendário':
+                    levelClass = 'level-Lendário';
+                    break;
+                case 'Iniciante':
+                default:
+                    levelClass = 'level-Iniciante';
+                    break;
+            }
+            nivelBadgeEl.classList.add(levelClass);
+        }
+
+    </script>
+</body>
+</html>
