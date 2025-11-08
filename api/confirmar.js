@@ -3,7 +3,7 @@
 // ------------------------------------------------------------
 // ✅ Confirma a adoção (status → "confirmada")
 // ✅ Atualiza pontuação e conquistas de gamificação
-// ✅ Envia e-mail de confirmação ao DOADOR (EmailJS)
+// ✅ Envia e-mail de confirmação ao DOADOR (EmailJS).
 // ============================================================
 
 import Airtable from "airtable";
