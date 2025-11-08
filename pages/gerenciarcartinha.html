@@ -5,120 +5,90 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Gerenciar Cartinhas 💌 | Adote um Sonho</title>
 
-  <!-- Estilos -->
+<script src="https://cdn.tailwindcss.com"></script>
+
   <link rel="stylesheet" href="../css/style.css" />
   <link rel="stylesheet" href="../css/cartinha.css" />
   <link rel="stylesheet" href="../css/cloudinho.css" />
   <link rel="icon" href="../imagens/favicon.png" type="image/png" />
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
 
-  <style>
-    main {
-      max-width: 1130px;
-      margin: 40px auto;
-      padding: 20px;
-      background: #fff;
-      border-radius: 12px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-    }
-    h1 { text-align: center; margin-bottom: 20px; }
-    .cartinha-form { display: flex; flex-direction: column; gap: 10px; margin-bottom: 30px; }
-    .cartinha-form input, .cartinha-form textarea, .cartinha-form select {
-      padding: 10px; font-size: 1rem; border: 1px solid #ccc; border-radius: 6px;
-    }
-    .cartinha-form button {
-      background: #007bff; color: white; border: none; padding: 10px; border-radius: 6px; cursor: pointer; font-weight: 600;
-    }
-    .cartinha-form button:hover { background: #0056b3; }
-    table { width: 100%; border-collapse: collapse; }
-    table th, table td { padding: 10px; border-bottom: 1px solid #ddd; text-align: left; }
-    table th { background-color: #f7f7f7; }
-    .acoes button { margin: 5px; border: none; padding: 6px 10px; border-radius: 5px; cursor: pointer; }
-    .btn-editar { background-color: #ffc107; color: #000; }
-    .btn-excluir { background-color: #dc3545; color: white; }
+<style>
+  /* Aplica a fonte Poppins */
+  body { font-family: 'Poppins', sans-serif; background-color: #f7f9fc; }
 
-    .tabela-container { width: 100%; overflow-x: auto; overflow-y: auto; max-height: 600px; border: 1px solid #ddd; border-radius: 8px; margin-top: 20px; }
-    .tabela-container table { width: 100%; border-collapse: collapse; min-width: 900px; }
-    .tabela-container th { position: sticky; top: 0; background: #f7f7f7; z-index: 2; }
-    .tabela-container::-webkit-scrollbar { height: 8px; width: 8px; }
-    .tabela-container::-webkit-scrollbar-thumb { background: #bbb; border-radius: 4px; }
-    .tabela-container::-webkit-scrollbar-thumb:hover { background: #888; }
+  /* Mantém o estilo do formulário caso o Tailwind não tenha sido aplicado lá */
+  .cartinha-form { display: flex; flex-direction: column; gap: 10px; margin-bottom: 30px; }
+  .cartinha-form input, .cartinha-form textarea, .cartinha-form select {
+    padding: 10px; font-size: 1rem; border: 1px solid #ccc; border-radius: 6px;
+  }
+  .cartinha-form button {
+    background: #007bff; color: white; border: none; padding: 10px; border-radius: 6px; cursor: pointer; font-weight: 600;
+  }
+  .cartinha-form button:hover { background: #0056b3; }
+  h1 { text-align: center; margin-bottom: 20px; }
+
   </style>
 </head>
 
-<body>
-  <!-- Cabeçalho -->
-  <div id="header"></div>
+<body class="bg-gradiente">
+  <div id="header"></div> 
+  <main class="max-w-4xl mx-auto p-6 pt-20"> 
+    <header class="mb-8 text-center ">
+        <h1 class="text-4xl font-extrabold text-blue-800 tracking-tight">💙 Varal dos Sonhos</h1>
+        <br>
+        <h2 class="text-3xl font-extrabold text-blue-800 tracking-tight mb-8">📋 Gerenciar Cartinhas
+        </h2>
+    </header>
 
-  <main>
-    <h1>📋 Gerenciar Cartinhas</h1>
+    <section class="bg-white p-6 md:p-10 rounded-2xl shadow-xl mb-12 border border-blue-100">
+      <form id="form-cartinha" class="cartinha-form">
+        <h2 class="text-2xl text-center font-extrabold text-blue-800 tracking-tight mb-8">Cadastro / Edição</h2>
+        <h2>🧒 Dados da Criança</h2>
+        <input type="text" id="nome_crianca" placeholder="Nome completo da criança" required>
+        <input type="number" id="idade" placeholder="Idade" min="0" required>
+        <select id="sexo" required>
+          <option value="">Selecione o sexo</option>
+          <option value="menino">Menino</option>
+          <option value="menina">Menina</option>
+        </select>
+        <h2>🎁 Detalhes do Sonho</h2>
+        <input type="text" id="sonho" placeholder="Sonho da criança" required>
+        <input type="url" id="imagem_cartinha" placeholder="URL da imagem da cartinha" required>
+        <h2>🏫 Informações da Escola</h2>
+        <input type="text" id="escola" placeholder="Nome da escola" required>
+        <input type="text" id="cidade" placeholder="Cidade" required>
+        <h2>👩‍🏫 Responsável e Contato</h2>
+        <input type="text" id="psicologa_responsavel" placeholder="Psicóloga responsável" required>
+        <input type="tel" id="telefone_contato" placeholder="Telefone de contato" required>
+        <h2>📦 Status e Logística</h2>
+        <select id="status" required>
+          <option value="">Selecione o status</option>
+          <option value="disponível">disponível</option>
+          <option value="adotada">adotada</option>
+        </select>
+        <div style="display: flex; gap: 10px; margin-top: 10px;">
+          <button type="submit">Salvar Cartinha</button>
+          <button type="button" id="btn-limpar" style="background-color: #6c757d;">Limpar Campos</  button>
+        </div>
+      </form>
+    </section>
 
-    <!-- Formulário para adicionar/editar -->
-    <form id="form-cartinha" class="cartinha-form">
-      <h2>🧒 Dados da Criança</h2>
-      <input type="text" id="nome_crianca" placeholder="Nome completo da criança" required>
-      <input type="number" id="idade" placeholder="Idade" min="0" required>
-      <select id="sexo" required>
-        <option value="">Selecione o sexo</option>
-        <option value="menino">Menino</option>
-        <option value="menina">Menina</option>
-      </select>
-
-      <h2>🎁 Detalhes do Sonho</h2>
-      <input type="text" id="sonho" placeholder="Sonho da criança" required>
-      <input type="url" id="imagem_cartinha" placeholder="URL da imagem da cartinha" required>
-
-      <h2>🏫 Informações da Escola</h2>
-      <input type="text" id="escola" placeholder="Nome da escola" required>
-      <input type="text" id="cidade" placeholder="Cidade" required>
-
-      <h2>👩‍🏫 Responsável e Contato</h2>
-      <input type="text" id="psicologa_responsavel" placeholder="Psicóloga responsável" required>
-      <input type="tel" id="telefone_contato" placeholder="Telefone de contato" required>
-
-      <h2>📦 Status e Logística</h2>
-      <select id="status" required>
-        <option value="">Selecione o status</option>
-        <option value="disponível">disponível</option>
-        <option value="adotada">adotada</option>
-      </select>
-
-      <div style="display: flex; gap: 10px; margin-top: 10px;">
-        <button type="submit">Salvar Cartinha</button>
-        <button type="button" id="btn-limpar" style="background-color: #6c757d;">Limpar Campos</button>
+    <section class="bg-white p-6 md:p-10 rounded-2xl shadow-xl border border-blue-100 mt-8">
+      <div class="flex justify-between items-center mb-6 border-b pb-3">
+        <h2 class="text-2xl font-bold text-gray-700">💌 Cartinhas Cadastradas</h2>
+        <span class="text-lg font-bold text-blue-600">Total: <span id="total-cartinhas">0</span></  span>
       </div>
-    </form>
 
-    <!-- Lista de cartinhas -->
-    <div class="tabela-container">
-      <table id="tabela-cartinhas">
-        <thead>
-          <tr>
-            <th>Nome completo</th>
-            <th>Idade</th>
-            <th>Sexo</th>
-            <th>Sonho</th>
-            <th>Imagem</th>
-            <th>Escola</th>
-            <th>Cidade</th>
-            <th>Responsável</th>
-            <th>Contato</th>
-            <th>Status</th>
-            <th>Ações</th>         
-          </tr>
-        </thead>
-        <tbody>
-          <tr><td colspan="15" style="text-align:center;">Carregando...</td></tr>
-        </tbody>
-      </table>
-    </div>
+      <div id="lista-cartinhas-body" class="flex flex-col space-y-6">
+        <p class="text-center text-gray-500 py-4">Carregando cartinhas...</p>
+      </div>
+    </section>
   </main>
 
-  <!-- Rodapé e assistente -->
   <div id="footer"></div>
   <div id="cloudinho"></div>
 
-  <!-- Componentes -->
   <script>
     async function carregarComponente(id, arquivo) {
       const base = "../componentes/";
@@ -128,22 +98,18 @@
     carregarComponente("header", "header.html");
     carregarComponente("footer", "footer.html");
     carregarComponente("cloudinho", "cloudinho.html");
-  </script>
-  <script>
-    // Botão para limpar todos os campos do formulário
+    // Adaptação do botão limpar para rolar para o topo do formulário
     document.addEventListener("DOMContentLoaded", () => {
       const form = document.getElementById("form-cartinha");
       const btnLimpar = document.getElementById("btn-limpar");
-
       btnLimpar.addEventListener("click", () => {
-        if (confirm("Deseja realmente limpar todos os campos?")) {
-          form.reset();
-        }
+        form.reset();
+        // Adicionado para rolar para o formulário após limpar (se for edição)
+        form.scrollIntoView({ behavior: 'smooth', block: 'start' });
       });
     });
   </script>
 
-  <!-- Script principal -->
   <script src="../js/gerenciarcartinha.js"></script>
   <script src="../js/cloudinho.js"></script>
   <script src="../js/header.js"></script>

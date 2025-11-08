@@ -6,67 +6,92 @@
 
 (() => {
   const API_URL = "../api/cartinha";
-  const tabela = document.querySelector("#tabela-cartinhas tbody");
+  // Mudar os seletores para os IDs da nova estrutura em blocos
+  const listaCartinhasBody = document.querySelector("#lista-cartinhas-body");
+  const totalCartinhasSpan = document.querySelector("#total-cartinhas");
   const form = document.querySelector("#form-cartinha");
-  const SELECT_PONTOS = document.getElementById("ponto_coleta");
-  let editandoId = null;
-
-  // ============================================================
-  // 🔹 Carregar lista de cartinhas
-  // ============================================================
   
+  let editandoId = null;
+  // Função auxiliar para determinar a cor do status no card
+  function getStatusColor(status) {
+    if (!status) return 'bg-gray-400';
+    const normalizedStatus = status.toLowerCase();
+    switch (normalizedStatus) {
+      case 'disponível':
+          return 'bg-green-500';
+      case 'adotada':
+          return 'bg-yellow-500';
+      default:
+        return 'bg-blue-500'; // Default para outros status
+    }
+  }
+  // ============================================================
+  // 🔹 Carregar lista de cartinhas (AGORA EM CARDS)
+  // ============================================================
   async function carregarCartinhas() {
-    tabela.innerHTML = `<tr><td colspan="16" style="text-align:center;">Carregando...</td></tr>`;
+    listaCartinhasBody.innerHTML = `<p class="text-center text-gray-500 py-4">Carregando...<p>`;
+    totalCartinhasSpan.textContent = '0';
     try {
       const resp = await fetch(API_URL);
       const dados = await resp.json();
-
-      if (!dados.sucesso || !dados.cartinha?.length) {
-        tabela.innerHTML = `<tr><td colspan="16" style="text-align:center;">Nenhuma cartinha cadastrada.</td></tr>`;
+      const cartinhas = dados.cartinha || [];
+      
+      totalCartinhasSpan.textContent = cartinhas.length;
+      if (!dados.sucesso || !cartinhas.length) {
+        listaCartinhasBody.innerHTML = `<p class="text-center text-gray-500 py-4">Nenhumacartinha cadastrada.</p>`;
         return;
       }
-
-      tabela.innerHTML = "";
-      dados.cartinha.forEach((c) => {
+      listaCartinhasBody.innerHTML = "";
+      
+      cartinhas.forEach((c) => {
+        // Lógica para obter URL da imagem
         const imgUrl = Array.isArray(c.imagem_cartinha) && c.imagem_cartinha[0]
           ? c.imagem_cartinha[0].url
           : "../imagens/cartinha-padrao.png";
-
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-          <td>${c.nome_crianca || ""}</td>
-          <td>${c.idade || ""}</td>
-          <td>${c.sexo || ""}</td>
-          <td>${c.sonho || ""}</td>
-          <td><img src="${imgUrl}" width="60" alt="Cartinha"></td>
-          <td>${c.escola || ""}</td>
-          <td>${c.cidade || ""}</td>
-          <td>${c.psicologa_responsavel || ""}</td>
-          <td>${c.telefone_contato || ""}</td>
-          <td>${c.status || ""}</td>
-          <td>${c.ponto_coleta || ""}</td>
-          <td class="acoes">
-            <button class="btn-editar">Editar</button>
-            <button class="btn-excluir">Excluir</button>
-          </td>
+        // NOVO: Estrutura de Card (Bloco) com classes Tailwind
+        const card = document.createElement("div");
+        card.className = "p-4 border border-blue-200 rounded-xl shadow-md bg-white flex flex-col lg:flex-row gap-4 justify-between items-start lg:items-center";
+        card.innerHTML = `
+          <div class="flex items-center gap-4 w-full lg:w-3/4">
+            <img src="${imgUrl}" alt="Cartinha" class="w-16 h-16 object-cover rounded-fullborder-2 border-blue-400">
+            <div class="flex-1">
+              <p class="text-lg font-semibold text-gray-800">${c.nome_crianca} (${c.idade} anos, ${c.sexo})</p>
+              <p class="text-sm text-gray-600 truncate">Sonho: ${c.sonho}</p>
+              <p class="text-xs text-gray-500 mt-1">Escola: ${c.escola} | Cidade: ${c.cidade}</p>
+              <p class="text-xs text-gray-500">Resp.: ${c.psicologa_responsavel} (${c.telefone_contato})</p>
+              <p class="text-xs text-gray-500">Ponto de Coleta: ${c.ponto_coleta || 'N/A'}</p>
+            </div>
+          </div>
+          <div class="flex flex-col space-y-2 lg:w-1/4 lg:text-right w-full mt-4 lg:mt-0">
+            <span class="text-xs font-medium px-3 py-1 self-start lg:self-end rounded-full text-white ${getStatusColor(c.status)}">
+              ${(c.status || '').toUpperCase()}
+            </span>
+            <div class="flex gap-2 justify-start lg:justify-end mt-2">
+              <button data-id="${c.id}" class="btn-editar bg-yellow-500 hover:bg-yellow-600 text-white text-xs font-semibold py-1 px-3 rounded transition duration-150">
+                Editar
+              </button>
+              <button data-id="${c.id}" class="btn-excluir bg-red-600 hover:bg-red-700 text-white text-xs font-semibold py-1 px-3 rounded transition duration-150">
+                Excluir
+              </button>
+            </div>
+          </div>
         `;
-        tabela.appendChild(tr);
-
-        tr.querySelector(".btn-editar").addEventListener("click", () => editarCartinha(c.id));
-        tr.querySelector(".btn-excluir").addEventListener("click", () => excluirCartinha(c.id));
+        listaCartinhasBody.appendChild(card);
+        // Adiciona os eventos aos novos botões do card
+        card.querySelector(".btn-editar").addEventListener("click", () => editarCartinha(c.id));
+        card.querySelector(".btn-excluir").addEventListener("click", () => excluirCartinha(c.id));
       });
     } catch (err) {
       console.error("Erro ao carregar cartinhas:", err);
-      tabela.innerHTML = `<tr><td colspan="16" style="color:red;text-align:center;">Erro ao carregar cartinhas</td></tr>`;
+      listaCartinhasBody.innerHTML = `<p class="text-center text-red-500 py-4">Erro aocarregar cartinhas</p>`;
     }
   }
-
   // ============================================================
   // 🔹 Salvar (criar ou atualizar)
   // ============================================================
+  // ... (A lógica do form.addEventListener("submit", ...) permanece a mesma) ...
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
-
     const dados = {
       nome_crianca: form.nome_crianca.value,
       idade: parseInt(form.idade.value) || null,
@@ -79,7 +104,6 @@
       telefone_contato: form.telefone_contato.value,
       status: form.status.value,
     };
-
     try {
       const metodo = editandoId ? "PATCH" : "POST";
       const url = editandoId ? `${API_URL}?id=${editandoId}` : API_URL;
@@ -88,24 +112,24 @@
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(dados),
       });
-
       const resultado = await resp.json();
       if (resultado.sucesso) {
-        alert(editandoId ? "Cartinha atualizada com sucesso!" : "Cartinha criada com sucesso!");
+        alert(editandoId ? "Cartinha atualizada com sucesso!" : "Cartinha criada comsucesso!");
         form.reset();
         editandoId = null;
         carregarCartinhas();
+        // Rola para o topo da lista de cartinhas após o salvamento
+        listaCartinhasBody.scrollIntoView({ behavior: 'smooth', block: 'start' }); 
       } else {
-        alert("Erro ao salvar: " + resultado.mensagem);
+          alert("Erro ao salvar: " + resultado.mensagem);
       }
     } catch (err) {
       console.error("Erro ao salvar cartinha:", err);
       alert("Erro ao salvar cartinha.");
     }
   });
-
   // ============================================================
-  // 🔹 Editar
+  // 🔹 Editar (Com Rolagem para o Formulário)
   // ============================================================
   async function editarCartinha(id) {
     try {
@@ -113,7 +137,6 @@
       const dados = await resp.json();
       const c = dados.cartinha.find((x) => x.id === id);
       if (!c) return alert("Cartinha não encontrada.");
-
       editandoId = id;
       form.nome_crianca.value = c.nome_crianca;
       form.idade.value = c.idade;
@@ -127,32 +150,33 @@
       form.psicologa_responsavel.value = c.psicologa_responsavel;
       form.telefone_contato.value = c.telefone_contato;
       form.status.value = c.status;
+      
+      // NOVO: Rolagem suave para o formulário de edição
+      form.scrollIntoView({ behavior: 'smooth', block: 'start' });
     } catch (err) {
-      console.error("Erro ao editar cartinha:", err);
+        console.error("Erro ao editar cartinha:", err);
     }
   }
-
   // ============================================================
   // 🔹 Excluir
   // ============================================================
+  // ... (A lógica de exclusão permanece a mesma) ...
   async function excluirCartinha(id) {
     if (!confirm("Deseja realmente excluir esta cartinha?")) return;
-
     try {
       const resp = await fetch(`${API_URL}?id=${id}`, { method: "DELETE" });
       const resultado = await resp.json();
       if (resultado.sucesso) {
-        alert("Cartinha excluída!");
-        carregarCartinhas();
+          alert("Cartinha excluída!");
+          carregarCartinhas();
       } else {
-        alert("Erro ao excluir: " + resultado.mensagem);
+          alert("Erro ao excluir: " + resultado.mensagem);
       }
     } catch (err) {
-      console.error("Erro ao excluir cartinha:", err);
-      alert("Erro ao excluir cartinha.");
+        console.error("Erro ao excluir cartinha:", err);
+        alert("Erro ao excluir cartinha.");
     }
   }
-
   // ============================================================
   // 🚀 Inicializa
   // ============================================================

@@ -69,6 +69,7 @@ export default async function handler(req, res) {
         irmaos: r.fields.irmaos || "",
         idade_irmaos: r.fields.idade_irmaos || "",
         status: r.fields.status || "",
+        // PONTO DE COLETA: O Airtable armazena o ID do Ponto de Coleta
         ponto_coleta: Array.isArray(r.fields.ponto_coleta)
           ? r.fields.ponto_coleta[0]
           : r.fields.ponto_coleta || "",
@@ -84,7 +85,7 @@ export default async function handler(req, res) {
     // ============================================================
     if (req.method === "POST") {
       const body = req.body;
-      
+
       const statusValido = ["disponível", "adotada"];
       const status = statusValido.includes(body.status) ? body.status : "disponível";
 
@@ -103,6 +104,9 @@ export default async function handler(req, res) {
             psicologa_responsavel: body.psicologa_responsavel,
             telefone_contato: body.telefone_contato,
             status: body.status || "disponível",
+            // CORREÇÃO: Adiciona ponto_coleta na criação.
+            // Se for um linked record no Airtable, deve ser um array de strings (IDs).
+            ponto_coleta: body.ponto_coleta ? [body.ponto_coleta] : undefined,
           },
         },
       ]);
@@ -136,6 +140,13 @@ export default async function handler(req, res) {
         telefone_contato: body.telefone_contato,
       };
 
+      // CORREÇÃO: Adiciona ponto_coleta na atualização.
+      // Se o campo Airtable for um Linked Record (o que é provável), o valor deve ser um array de IDs.
+      if (body.ponto_coleta !== undefined) {
+        fieldsToUpdate.ponto_coleta = body.ponto_coleta ? [body.ponto_coleta] : undefined;
+      }
+
+
       // Adicionar status apenas se for válido
       if (status) fieldsToUpdate.status = status;
 
@@ -166,8 +177,8 @@ export default async function handler(req, res) {
     // ============================================================
     res.setHeader("Allow", ["GET", "POST", "PATCH", "DELETE", "OPTIONS"]);
     return res
-      .status(405)
-      .json({ sucesso: false, mensagem: `Método ${req.method} não permitido.` });
+    .status(405)
+    .json({ sucesso: false, mensagem: `Método ${req.method} não permitido.` });
   } catch (e) {
     console.error("🔥 Erro /api/cartinha:", e);
     res.status(500).json({ sucesso: false, mensagem: e.message });
