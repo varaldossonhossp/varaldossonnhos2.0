@@ -20,6 +20,67 @@ function mostrarCloudinho(msg, duracao = 2500) {
 }
 
 // -------------------- CARREGAR PONTOS --------------------
+function criarCardPonto(ponto) {
+    // 1. Formata a data de cadastro
+    const dataCadastroFormatada = ponto.data_cadastro
+        ? new Date(ponto.data_cadastro).toLocaleDateString('pt-BR')
+        : "—";
+        
+    // 2. Determina a classe do Status
+    const statusClass = ponto.status === 'ativo' ? 'text-green-600' : 
+                        ponto.status === 'inativo' ? 'text-red-600' :
+                        'text-yellow-600'; // Pendente
+
+    return `
+        <div class="ponto-coleta-card border-b border-gray-200 pb-4 last:border-b-0 last:pb-0">
+            <div class="flex flex-col space-y-1">
+                <p class="text-lg font-semibold text-gray-900">
+                    Nome: <span class="font-normal text-blue-600">${ponto.nome_ponto || 'N/A'}</span>
+                </p>
+                <p class="text-sm text-gray-700">
+                    <span class="font-medium">Endereço:</span> ${ponto.endereco || 'N/A'}
+                </p>
+                <p class="text-sm text-gray-700">
+                    <span class="font-medium">Responsável:</span> ${ponto.responsavel || 'N/A'}
+                </p>
+                <p class="text-sm text-gray-700">
+                    <span class="font-medium">Telefone:</span> ${ponto.telefone || 'N/A'}
+                </p>
+                <p class="text-sm text-gray-700">
+                    <span class="font-medium">E-mail:</span> ${ponto.email_ponto || 'N/A'}
+                </p>
+                <p class="text-sm text-gray-700">
+                    <span class="font-medium">Horário:</span> ${ponto.horario || 'N/A'}
+                </p>
+                <p class="text-sm text-gray-700">
+                    <span class="font-medium">Status:</span> 
+                    <span class="${statusClass} font-semibold">${ponto.status.toUpperCase()}</span>
+                    
+                </p>
+                <p class="text-sm text-gray-700">
+                    <span class="font-medium">Cadastro:</span> ${dataCadastroFormatada}
+                </p>
+            </div>
+            
+            <div class="mt-3 flex space-x-2">
+                <button 
+                    onclick="editarPonto('${ponto.id_ponto}')"
+                    class="px-3 py-1 text-sm bg-yellow-400 text-gray-900 rounded-lg hover:bg-yellow-500 transition duration-150 shadow-sm"
+                >
+                    Editar
+                </button>
+                <button 
+                    onclick="excluirPonto('${ponto.id_ponto}')"
+                    class="px-3 py-1 text-sm bg-red-600 text-white rounded-lg hover:bg-red-700 transition duration-150 shadow-sm"
+                >
+                    Excluir
+                </button>
+            </div>
+        </div>
+    `;
+}
+
+// -------------------- CARREGAR PONTOS (CORRIGIDO) --------------------
 async function carregarPontos() {
     try {
         const res = await fetch("../api/pontosdecoleta");
@@ -29,50 +90,13 @@ async function carregarPontos() {
         pontos = data.pontos;
         totalPontos.textContent = pontos.length;
 
-        tabelaBody.innerHTML = "";
-
-        pontos.forEach(p => {
-            const tr = document.createElement("tr");
-
-            // Formata a data de cadastro
-            const dataCadastro = p.data_cadastro
-                ? new Date(p.data_cadastro).toLocaleDateString('pt-BR')
-                : "—";
-
-            // Cria as células
-            tr.innerHTML = `
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${p.nome_ponto}</td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${p.endereco}</td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${p.responsavel}</td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${p.telefone || "—"}</td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${p.email_ponto || "—"}</td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${p.horario || "—"}</td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 capitalize">${p.status}</td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${dataCadastro}</td>
-                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2"></td>
-            `;
-
-            // Botões de ação
-            const tdAcoes = tr.querySelector("td:last-child");
-
-            const btnEditar = document.createElement("button");
-            btnEditar.textContent = "Editar";
-            btnEditar.className = "text-blue-600 hover:text-blue-900";
-            btnEditar.addEventListener("click", () => editarPonto(p.id_ponto));
-
-            const btnExcluir = document.createElement("button");
-            btnExcluir.textContent = "Excluir";
-            btnExcluir.className = "text-red-600 hover:text-red-900";
-            btnExcluir.addEventListener("click", () => excluirPonto(p.id_ponto));
-
-            tdAcoes.appendChild(btnEditar);
-            tdAcoes.appendChild(btnExcluir);
-
-            tabelaBody.appendChild(tr);
-        });
+        // Limpa e preenche o corpo da lista de uma vez (melhor performance)
+        // Usa map para gerar um array de strings HTML e join('') para concatenar
+        tabelaBody.innerHTML = pontos.map(p => criarCardPonto(p)).join('');
 
     } catch (err) {
         console.error(err);
+        tabelaBody.innerHTML = '<p class="p-4 text-center text-red-500">Erro ao carregar pontos. Verifique o console.</p>';
         mostrarCloudinho("Erro ao carregar pontos.");
     }
 }
@@ -92,6 +116,12 @@ window.editarPonto = function(id) {
     formPonto.email_ponto.value = ponto.email_ponto || "";
     formPonto.horario.value = ponto.horario || "";
     formPonto.status.value = ponto.status || "ativo";
+
+    window.scrollTo({
+        // Pega a posição vertical do formulário e subtrai a altura do seu cabeçalho (ex: 80px)
+        top: formPonto.offsetTop - 80, 
+        behavior: 'smooth'
+    });
 };
 
 // -------------------- LIMPAR --------------------
