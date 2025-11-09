@@ -1,16 +1,15 @@
 // ============================================================
-// 💙 VARAL DOS SONHOS — /api/cartinha.js (versão final revisada)
+// 💙 VARAL DOS SONHOS — /api/cartinha.js (VERSÃO FINAL CORRIGIDA)
 // ------------------------------------------------------------
-// • Busca todas as cartinhas disponíveis no Airtable.
-// • Retorna somente status = 'disponivel'.
-// • Inclui sempre o campo id_cartinha (autonumber) e o recordId.
-// • ADICIONADO: Suporte para upload de arquivos com 'formidable'.
-// • POST/PATCH: Recebe o arquivo e o envia como Anexo para o Airtable.
+// • CORRIGIDO: Upload de anexo Airtable usando Buffer/Base64 para estabilidade no Vercel.
+// • Funcionalidades GET, DELETE, e estrutura principal mantidas.
+// ------------------------------------------------------------
+// Dependências: airtable, formidable, fs (nativo)
 // ============================================================
 
 import Airtable from "airtable";
-import { IncomingForm } from "formidable"; // ⬅️ NOVO: Importa o formidable
-import fs from "fs"; // ⬅️ NOVO: Módulo nativo do Node.js para manipulação de arquivos
+import { IncomingForm } from "formidable"; 
+import fs from "fs"; // Módulo nativo do Node.js para manipulação de arquivos
 
 // ============================================================
 // ⚠️ CONFIG ESSENCIAL PARA UPLOAD DE ARQUIVOS NO VERVEL
@@ -46,8 +45,6 @@ function parseForm(req) {
   return new Promise((resolve, reject) => {
     const form = new IncomingForm({ keepExtensions: true });
     
-    // Altera o nome do campo de arquivo que o front envia para 'imagem_cartinha_file'
-    // Isso é útil para distinguí-lo dos campos de texto (fields)
     form.parse(req, (err, fields, files) => {
       if (err) return reject(err);
       
@@ -84,7 +81,7 @@ export default async function handler(req, res) {
     }
 
     // ============================================================
-    // GET — Listar cartinhas (Sem Alteração)
+    // GET — Listar cartinhas
     // ============================================================
     if (req.method === "GET") {
       const { status } = req.query;
@@ -133,28 +130,32 @@ export default async function handler(req, res) {
       const statusValido = ["disponivel", "adotada"];
       const status = statusValido.includes(body.status) ? body.status : "disponivel";
       
-      // ⬅️ NOVO: Lógica para anexar o arquivo (se existir)
       const anexoAirtable = [];
       const imagemFile = files.imagem_cartinha ? files.imagem_cartinha[0] : null;
 
       if (imagemFile) {
+        // 🚨 CORREÇÃO: Lê o arquivo em Buffer e usa Base64 para evitar erro de Stream no Airtable API
+        const fileBuffer = fs.readFileSync(imagemFile.filepath);
+        const mimeType = imagemFile.mimetype || 'image/jpeg';
+        
         anexoAirtable.push({
           filename: imagemFile.originalFilename || "cartinha.png",
-          type: imagemFile.mimetype || "image/png",
-          // Usa o caminho temporário do arquivo para criar um stream.
-          file: fs.createReadStream(imagemFile.filepath), 
+          // ✅ SINTAXE OBRIGATÓRIA: Data URI (Base64) para upload estável via Node.js/Vercel
+          url: `data:${mimeType};base64,${fileBuffer.toString('base64')}`, 
         });
+        
+        // 🗑️ Limpa o arquivo temporário (boa prática em Serverless)
+        fs.unlinkSync(imagemFile.filepath); 
       }
 
       const novo = await base(tableName).create([
         {
           fields: {
             nome_crianca: body.nome_crianca,
-            idade: parseInt(body.idade) || null, // Converte idade para número
+            idade: parseInt(body.idade) || null,
             sexo: body.sexo,
             sonho: body.sonho,
-            // ⬅️ ALTERADO: Usa o anexo processado
-            imagem_cartinha: anexoAirtable, 
+            imagem_cartinha: anexoAirtable, // Usa o anexo corrigido
             escola: body.escola,
             cidade: body.cidade,
             psicologa_responsavel: body.psicologa_responsavel,
@@ -180,7 +181,7 @@ export default async function handler(req, res) {
       // Montar campos para atualizar
       const fieldsToUpdate = {
         nome_crianca: body.nome_crianca,
-        idade: parseInt(body.idade) || null, // Converte idade para número
+        idade: parseInt(body.idade) || null, 
         sexo: body.sexo,
         sonho: body.sonho,
         escola: body.escola,
@@ -189,22 +190,24 @@ export default async function handler(req, res) {
         telefone_contato: body.telefone_contato,
       };
 
-      // ⬅️ NOVO: Lógica para anexar o arquivo (apenas se um NOVO arquivo for enviado)
       const imagemFile = files.imagem_cartinha ? files.imagem_cartinha[0] : null;
 
       if (imagemFile) {
+        // 🚨 CORREÇÃO APLICADA AQUI TAMBÉM
+        const fileBuffer = fs.readFileSync(imagemFile.filepath);
+        const mimeType = imagemFile.mimetype || 'image/jpeg';
+        
         // Se um novo arquivo foi enviado, ele substitui o anterior.
         fieldsToUpdate.imagem_cartinha = [
           {
             filename: imagemFile.originalFilename || "cartinha.png",
-            type: imagemFile.mimetype || "image/png",
-            file: fs.createReadStream(imagemFile.filepath),
+            url: `data:${mimeType};base64,${fileBuffer.toString('base64')}`, 
           },
         ];
+        
+        // 🗑️ Limpa o arquivo temporário
+        fs.unlinkSync(imagemFile.filepath);
       }
-      
-      // O campo 'imagem_cartinha' SÓ é incluído no PATCH se um novo arquivo for enviado.
-      // Caso contrário, ele é omitido, preservando o anexo existente no Airtable.
       
       if (body.ponto_coleta !== undefined) {
         fieldsToUpdate.ponto_coleta = body.ponto_coleta ? [body.ponto_coleta] : undefined;
@@ -223,7 +226,7 @@ export default async function handler(req, res) {
     }
 
     // ============================================================
-    // DELETE — Excluir cartinha (Sem Alteração)
+    // DELETE — Excluir cartinha 
     // ============================================================
     if (req.method === "DELETE") {
       const { id } = req.query;
@@ -235,7 +238,7 @@ export default async function handler(req, res) {
     }
 
     // ============================================================
-    // Método não suportado (Sem Alteração)
+    // Método não suportado 
     // ============================================================
     res.setHeader("Allow", ["GET", "POST", "PATCH", "DELETE", "OPTIONS"]);
     return res
@@ -245,7 +248,11 @@ export default async function handler(req, res) {
     console.error("🔥 Erro /api/cartinha:", e);
     // Erro ao tentar ler o campo `idade` como número:
     let errorMessage = e.message;
-    if (errorMessage.includes("body.idade")) {
+    
+    // Mostra o erro exato do Airtable para o usuário em produção (muito útil para debug)
+    if (e.name === 'AirtableError' && e.message.includes('INVALID_ATTACHMENT_OBJECT')) {
+        errorMessage = `Erro ao salvar anexo no Airtable. Mensagem original: ${e.message}`;
+    } else if (errorMessage.includes("body.idade")) {
         errorMessage = "Erro de validação: 'Idade' deve ser um número válido.";
     }
 
