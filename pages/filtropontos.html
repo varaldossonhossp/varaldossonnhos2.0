@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>📦 Logística dos Pontos de Coleta | Varal dos Sonhos</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <link rel="icon" href="../imagens/favicon.png" type="image/png" />
+
+  <style>
+    body {
+      font-family: "Poppins", sans-serif;
+      background-color: #f2f6fc;
+    }
+    .btn-primary {
+      background-color: #1e88e5;
+      color: #fff;
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-weight: 600;
+      transition: 0.3s;
+    }
+    .btn-primary:hover {
+      background-color: #1565c0;
+    }
+    .btn-success {
+      background-color: #43a047;
+      color: #fff;
+    }
+    .btn-success:hover {
+      background-color: #2e7d32;
+    }
+    .btn-outline {
+      border: 1px solid #90caf9;
+      color: #1e88e5;
+      background: #fff;
+      padding: 8px 16px;
+      border-radius: 8px;
+    }
+  </style>
+</head>
+
+<body class="min-h-screen">
+  <main class="max-w-6xl mx-auto py-10 px-6">
+    <h1 class="text-3xl font-bold text-blue-800 mb-8 text-center">
+      💙 Logística dos Pontos de Coleta
+    </h1>
+
+    <!-- 🔹 FILTROS -->
+    <section class="bg-white rounded-2xl shadow-md p-6 mb-10">
+      <h2 class="text-xl font-semibold text-blue-700 mb-4">Filtros de Pesquisa</h2>
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div>
+          <label class="block text-sm text-gray-600 mb-1">Evento</label>
+          <input id="filtro-evento" type="text" placeholder="Natal 2025" class="w-full border rounded-lg p-2" />
+        </div>
+        <div>
+          <label class="block text-sm text-gray-600 mb-1">Ponto de Coleta</label>
+          <input id="filtro-ponto" type="text" placeholder="Ex: Escola ABC" class="w-full border rounded-lg p-2" />
+        </div>
+        <div>
+          <label class="block text-sm text-gray-600 mb-1">Status</label>
+          <select id="filtro-status" class="w-full border rounded-lg p-2">
+            <option value="">Todos</option>
+            <option value="aguardando confirmacao">Aguardando Confirmação</option>
+            <option value="confirmada">Confirmada</option>
+            <option value="presente recebido">Presente Recebido</option>
+          </select>
+        </div>
+        <div class="flex items-end justify-end">
+          <button id="btn-filtrar" class="btn-primary">🔍 Filtrar</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 🔹 RESULTADOS -->
+    <section class="bg-white rounded-2xl shadow-md p-6">
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="text-xl font-semibold text-blue-700">Resultados</h2>
+        <button id="btn-imprimir" class="btn-outline">🖨️ Imprimir Relatório</button>
+      </div>
+      <table class="w-full border-collapse">
+        <thead class="bg-blue-50 border-b">
+          <tr class="text-left text-sm text-gray-700">
+            <th class="p-2">Criança</th>
+            <th class="p-2">Doador</th>
+            <th class="p-2">Ponto</th>
+            <th class="p-2">Status</th>
+            <th class="p-2">Ações</th>
+          </tr>
+        </thead>
+        <tbody id="tabela-logistica" class="text-sm"></tbody>
+      </table>
+    </section>
+  </main>
+
+  <script>
+    const tabela = document.getElementById("tabela-logistica");
+    const btnFiltrar = document.getElementById("btn-filtrar");
+    const btnImprimir = document.getElementById("btn-imprimir");
+
+    // ============================================================
+    // 🔹 1️⃣ Função para carregar adoções (simulação da API real)
+    // ============================================================
+    async function carregarAdocoes() {
+      const res = await fetch("../api/adocoes");
+      const data = await res.json();
+      return data.adocoes || [];
+    }
+
+    // ============================================================
+    // 🔹 2️⃣ Aplicar filtros
+    // ============================================================
+    btnFiltrar.addEventListener("click", async () => {
+      const evento = document.getElementById("filtro-evento").value.toLowerCase();
+      const ponto = document.getElementById("filtro-ponto").value.toLowerCase();
+      const status = document.getElementById("filtro-status").value.toLowerCase();
+
+      const adocoes = await carregarAdocoes();
+      const filtradas = adocoes.filter(a => {
+        const ev = (a.evento || "").toLowerCase().includes(evento);
+        const pt = (a.ponto || "").toLowerCase().includes(ponto);
+        const st = status ? a.status_adocao.toLowerCase() === status : true;
+        return ev && pt && st;
+      });
+
+      renderTabela(filtradas);
+    });
+
+    // ============================================================
+    // 🔹 3️⃣ Renderizar tabela
+    // ============================================================
+    function renderTabela(lista) {
+      if (!lista.length) {
+        tabela.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-gray-500">Nenhum registro encontrado.</td></tr>`;
+        return;
+      }
+
+      tabela.innerHTML = lista.map(a => `
+        <tr class="border-b hover:bg-blue-50">
+          <td class="p-2 font-medium text-gray-800">${a.nome_crianca || "—"}</td>
+          <td class="p-2">${a.nome_doador || "—"}</td>
+          <td class="p-2">${a.ponto_coleta || "—"}</td>
+          <td class="p-2">${a.status_adocao}</td>
+          <td class="p-2">
+            ${a.status_adocao === "confirmada" ? `
+              <button class="btn-success px-3 py-1" onclick="confirmarRecebimento('${a.id_adocao}', '${a.email_doador}', '${a.nome_doador}', '${a.nome_crianca}', '${a.sonho}', '${a.ponto_coleta}', '${a.endereco_ponto}', '${a.telefone_ponto}')">
+                ✅ Confirmar Presente Recebido
+              </button>` : "<span class='text-gray-400'>—</span>"}
+          </td>
+        </tr>
+      `).join("");
+    }
+
+    // ============================================================
+    // 🔹 4️⃣ Confirmação de recebimento
+    // ============================================================
+    async function confirmarRecebimento(id, email, nome, crianca, presente, ponto, endereco, telefone) {
+      if (!confirm("Confirmar que o presente foi recebido neste ponto de coleta?")) return;
+
+      const payload = {
+        id_adocao: id,
+        donor_email: email,
+        donor_name: nome,
+        child_name: crianca,
+        child_gift: presente,
+        pickup_name: ponto,
+        pickup_address: endereco,
+        pickup_phone: telefone,
+      };
+
+      try {
+        const res = await fetch("../api/logistica", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await res.json();
+        if (!data.success) throw new Error(data.message);
+
+        alert("✅ Presente confirmado e e-mail enviado ao doador!");
+        btnFiltrar.click(); // Recarrega os dados filtrados
+      } catch (err) {
+        console.error(err);
+        alert("❌ Erro ao confirmar presente. Verifique a API.");
+      }
+    }
+
+    // ============================================================
+    // 🔹 5️⃣ Gerar relatório em PDF
+    // ============================================================
+    btnImprimir.addEventListener("click", () => {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(16);
+      doc.text("💙 Varal dos Sonhos — Relatório de Logística", 14, 20);
+
+      doc.setFontSize(11);
+      doc.setFont("helvetica", "normal");
+      doc.text(`Emitido em: ${new Date().toLocaleDateString("pt-BR")}`, 14, 30);
+
+      doc.setFontSize(10);
+      doc.text("Listagem de Adoções por Ponto de Coleta:", 14, 40);
+
+      let y = 50;
+      tabela.querySelectorAll("tr").forEach(row => {
+        const cols = Array.from(row.children).map(td => td.innerText);
+        doc.text(cols.join(" | "), 14, y);
+        y += 8;
+      });
+
+      doc.save("Relatorio_Logistica.pdf");
+    });
+  </script>
+</body>
+</html>

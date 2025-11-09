@@ -1,57 +1,235 @@
-<!-- ============================================================
-💼 VARAL DOS SONHOS — /pages/admin.html
----------------------------------------------------------------
-Painel Administrativo — Gerencia adoções, eventos e gamificação.
-Somente usuários do tipo "administrador" têm acesso.
-============================================================ -->
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Painel Admin 💼 | Varal dos Sonhos</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>💼 Painel Administrativo | Varal dos Sonhos</title>
 
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="icon" href="../imagens/favicon.png" type="image/png" />
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="../css/style.css" />
-  <link rel="stylesheet" href="../css/admin.css" />
+
+  <style>
+    body {
+      font-family: "Poppins", sans-serif;
+      background-color: #e3f2fd;
+      color: #1e293b;
+      scroll-behavior: smooth;
+    }
+
+    /* 🔹 Lateral */
+    .sidebar {
+      width: 240px;
+      background: #1e88e5;
+      color: white;
+      height: 100vh;
+      position: fixed;
+      top: 0;
+      left: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      box-shadow: 2px 0 6px rgba(0,0,0,0.1);
+    }
+
+    .sidebar h2 {
+      font-size: 1.3rem;
+      font-weight: 700;
+      margin: 24px;
+    }
+
+    .menu {
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      padding: 0 16px;
+    }
+
+    .menu a {
+      padding: 10px 16px;
+      border-radius: 8px;
+      color: white;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      text-decoration: none;
+      transition: 0.3s;
+    }
+
+    .menu a:hover {
+      background-color: #64b5f6;
+    }
+
+    /* 🔹 Conteúdo */
+    .content {
+      margin-left: 260px;
+      padding: 40px;
+    }
+
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 24px;
+      margin-top: 30px;
+    }
+
+    .action-card {
+      background: white;
+      border-radius: 16px;
+      padding: 30px 24px;
+      text-align: center;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+      transition: transform 0.2s, box-shadow 0.2s;
+      cursor: pointer;
+    }
+
+    .action-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 5px 16px rgba(0,0,0,0.12);
+    }
+
+    .action-card h3 {
+      font-size: 1.3rem;
+      color: #1e88e5;
+      margin-top: 12px;
+    }
+
+    .action-card p {
+      color: #475569;
+      font-size: 0.95rem;
+    }
+
+    .btn-voltar {
+      background: #ffffff33;
+      color: white;
+      padding: 10px 16px;
+      border: none;
+      border-radius: 8px;
+      margin: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    .btn-voltar:hover {
+      background: #90caf9;
+      color: #1e293b;
+    }
+
+    .section-title {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: #1e88e5;
+      margin-top: 40px;
+      margin-bottom: 16px;
+      border-bottom: 2px solid #90caf9;
+      display: inline-block;
+    }
+  </style>
 </head>
 
-<body class="bg-gradiente">
-  <div id="header"></div>
+<body>
 
-  <main class="admin-container">
-    <section class="painel card">
-      <h2>💼 Painel do Administrador</h2>
-      <p>Gerencie as adoções e acompanhe o progresso dos doadores.</p>
+  <!-- 🔹 MENU LATERAL -->
+  <aside class="sidebar">
+    <div>
+      <h2>💼 Painel Administrativo</h2>
+      <nav class="menu">
+        <a href="#inicio">🏠 Início</a>
+        <a href="#cartinhas">💌 Cartinhas</a>
+        <a href="#pontos">📦 Pontos de Coleta</a>
+        <a href="#eventos">🎉 Eventos</a>
+        <a href="#carrossel">🖼️ Carrossel</a>
+        <a href="#gamificacao">🏅 Gamificação</a>
+      </nav>
+    </div>
+    <button class="btn-voltar" onclick="window.location.href='../index.html'">⬅️ Voltar ao Site</button>
+  </aside>
 
-      <!-- Tabela de adoções -->
-      <table id="tabelaAdocoes">
-        <thead>
-          <tr>
-            <th>👧 Criança</th>
-            <th>🎁 Sonho</th>
-            <th>💙 Doador</th>
-            <th>📦 Ponto de Coleta</th>
-            <th>📅 Data</th>
-            <th>📊 Status</th>
-            <th>✅ Ação</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr><td colspan="7" style="text-align:center;">Carregando adoções...</td></tr>
-        </tbody>
-      </table>
+  <!-- 🔹 CONTEÚDO PRINCIPAL -->
+  <main class="content">
+
+    <!-- 🌟 SEÇÃO INÍCIO -->
+    <section id="inicio">
+      <h1 class="text-3xl font-bold text-blue-800 mb-6">Bem-vindo(a) ao Painel Administrativo</h1>
+      <p class="text-gray-600 mb-8">
+        Selecione uma das opções abaixo para gerenciar o conteúdo do Varal dos Sonhos 💙
+      </p>
+    </section>
+
+    <!-- 💌 SEÇÃO CARTINHAS -->
+    <section id="cartinhas">
+      <h2 class="section-title">💌 Cartinhas</h2>
+      <div class="card-grid">
+        <div class="action-card" onclick="window.location.href='gerenciarcartinha.html'">
+          <img src="../imagens/logo.png" alt="Adicionar Cartinha" width="80" class="mx-auto" />
+          <h3>Adicionar / Editar Cartinhas</h3>
+          <p>Cadastrar novas cartinhas ou atualizar as existentes.</p>
+        </div>
+
+        <div class="action-card" onclick="window.location.href='gerenciarcartinhas_evento.html'">
+          <img src="../imagens/logo.png" alt="Relatórios Cartinhas" width="80" class="mx-auto" />
+          <h3>Relatórios de Cartinhas</h3>
+          <p>Visualizar e imprimir relatórios com filtros por evento, sexo, status e ponto de coleta.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 📦 SEÇÃO PONTOS DE COLETA -->
+    <section id="pontos">
+      <h2 class="section-title">📦 Pontos de Coleta</h2>
+      <div class="card-grid">
+        <div class="action-card" onclick="window.location.href='gerenciarpontos.html'">
+          <img src="../imagens/logo.png" alt="Cadastrar Ponto" width="80" class="mx-auto" />
+          <h3>Cadastrar / Editar Pontos</h3>
+          <p>Adicionar e atualizar locais de coleta de presentes.</p>
+        </div>
+
+        <div class="action-card" onclick="window.location.href='filtropontos.html'">
+          <img src="../imagens/logo.png" alt="Relatórios Pontos" width="80" class="mx-auto" />
+          <h3>Relatórios e Logística</h3>
+          <p>Filtrar pontos ativos/inativos e confirmar recebimento de presentes.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 🎉 SEÇÃO EVENTOS -->
+    <section id="eventos">
+      <h2 class="section-title">🎉 Eventos</h2>
+      <div class="card-grid">
+        <div class="action-card" onclick="window.location.href='gerenciareventos.html'">
+          <img src="../imagens/logo.png" alt="Gerenciar Eventos" width="80" class="mx-auto" />
+          <h3>Gerenciar Eventos</h3>
+          <p>Adicionar e editar eventos sazonais do projeto.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 🖼️ SEÇÃO CARROSSEL -->
+    <section id="carrossel">
+      <h2 class="section-title">🖼️ Carrossel</h2>
+      <div class="card-grid">
+        <div class="action-card" onclick="window.location.href='gerenciarcarrossel.html'">
+          <img src="../imagens/logo.png" alt="Gerenciar Carrossel" width="80" class="mx-auto" />
+          <h3>Gerenciar Carrossel</h3>
+          <p>Atualizar imagens e destaques exibidos na página inicial.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 🏅 SEÇÃO GAMIFICAÇÃO -->
+    <section id="gamificacao">
+      <h2 class="section-title">🏅 Gamificação</h2>
+      <div class="card-grid">
+        <div class="action-card" onclick="window.location.href='gerenciargamificacao.html'">
+          <img src="../imagens/logo.png" alt="Gerenciar Gamificação" width="80" class="mx-auto" />
+          <h3>Gerenciar Gamificação</h3>
+          <p>Visualizar pontos, conquistas e desempenho dos doadores.</p>
+        </div>
+      </div>
     </section>
   </main>
-
-  <div id="footer"></div>
-  <div id="cloudinho"></div>
-
-  <!-- Scripts -->
-  <script src="../js/admin.js"></script>
-  <script src="../js/cloudinho.js"></script>
-  <script src="../js/header.js"></script>
 </body>
 </html>

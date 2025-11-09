@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🚚 Logística de Coleta | Varal dos Sonhos</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="icon" href="../imagens/favicon.png" type="image/png" />
+
+  <style>
+    body {
+      font-family: "Poppins", sans-serif;
+      background-color: #f2f7fc;
+    }
+    h1, h2 {
+      color: #004080;
+    }
+    .btn-top {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background-color: #1e88e5;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: 0.3s;
+    }
+    .btn-top:hover {
+      background-color: #1565c0;
+    }
+  </style>
+</head>
+
+<body class="bg-gradient-to-b from-blue-50 to-blue-100 min-h-screen">
+  <main class="max-w-6xl mx-auto p-6">
+
+    <!-- 🔹 Cabeçalho -->
+    <header class="flex justify-between items-center mb-8 flex-wrap gap-4">
+      <a href="admin.html" class="btn-top">⬅️ Voltar ao Painel</a>
+      <h2 class="text-3xl font-extrabold text-blue-800 text-center flex-1">🚚 Logística de Pontos de Coleta</h2>
+      <button type="button" onclick="gerarPDF()" class="btn-top">🖨️ Imprimir</button>
+    </header>
+
+    <p class="text-gray-600 text-center mb-8">
+      Confirme os presentes que já chegaram aos pontos de coleta.  
+      Ao confirmar, o status da adoção será atualizado para <strong>“Presente Recebido”</strong>.
+    </p>
+
+    <!-- 🔹 Lista de Adoções -->
+    <section class="bg-white p-6 md:p-10 rounded-2xl shadow-md border border-blue-100">
+      <div class="flex justify-between items-center mb-6 border-b pb-3">
+        <h3 class="text-2xl font-semibold text-blue-800">🎁 Adoções Confirmadas</h3>
+        <span class="text-lg font-bold text-blue-600">Total: <span id="total-adocoes">0</span></span>
+      </div>
+
+      <div id="lista-adocoes" class="overflow-x-auto">
+        <table class="w-full text-left border-collapse">
+          <thead class="bg-blue-100">
+            <tr>
+              <th class="p-3">Criança</th>
+              <th class="p-3">Doador</th>
+              <th class="p-3">Ponto de Coleta</th>
+              <th class="p-3">Status Atual</th>
+              <th class="p-3 text-center">Ação</th>
+            </tr>
+          </thead>
+          <tbody id="tabela-corpo" class="divide-y">
+            <tr><td colspan="5" class="text-center py-4 text-gray-500">Carregando adoções...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    async function carregarAdocoes() {
+      const resp = await fetch("../api/adocoes");
+      const json = await resp.json();
+
+      const tabela = document.getElementById("tabela-corpo");
+      tabela.innerHTML = "";
+
+      const adocoesConfirmadas = json.adocoes?.filter(a => a.status_adocao === "confirmada") || [];
+      document.getElementById("total-adocoes").textContent = adocoesConfirmadas.length;
+
+      if (adocoesConfirmadas.length === 0) {
+        tabela.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-gray-500">Nenhuma adoção pendente de recebimento.</td></tr>`;
+        return;
+      }
+
+      adocoesConfirmadas.forEach(a => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td class="p-3">${a.nome_crianca || "—"}</td>
+          <td class="p-3">${a.nome_doador || "—"}</td>
+          <td class="p-3">${a.ponto_coleta || "—"}</td>
+          <td class="p-3 text-yellow-700 font-medium">Confirmada</td>
+          <td class="p-3 text-center">
+            <button onclick="confirmarRecebimento('${a.id}')" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg shadow">
+              ✅ Confirmar Recebimento
+            </button>
+          </td>`;
+        tabela.appendChild(tr);
+      });
+    }
+
+    async function confirmarRecebimento(id) {
+      const confirmar = confirm("Deseja confirmar o recebimento deste presente?");
+      if (!confirmar) return;
+
+      const resp = await fetch("../api/adocoes", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, status_adocao: "presente recebido" })
+      });
+
+      if (resp.ok) {
+        alert("Status atualizado para 'Presente Recebido'!");
+        carregarAdocoes();
+      } else {
+        alert("Erro ao atualizar status. Verifique a API.");
+      }
+    }
+
+    function gerarPDF() {
+      window.print();
+    }
+
+    carregarAdocoes();
+  </script>
+</body>
+</html>

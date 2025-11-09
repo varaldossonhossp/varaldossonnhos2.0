@@ -1,9 +1,9 @@
 // ============================================================
-// 💙 VARAL DOS SONHOS — /api/adocoes.js (versão final corrigida TCC)
+// 💙 VARAL DOS SONHOS — /api/adocoes.js (versão final TCC revisada)
 // ------------------------------------------------------------
-// • Cria registro em "adocoes"
-// • Atualiza "cartinha" -> status "adotada"
-// • Busca dados de usuário, cartinha e ponto de coleta
+// • POST → Cria nova adoção
+// • PUT  → Atualiza status_adocao (ex: “presente recebido”)
+// • Atualiza cartinha → status “adotada”
 // • Envia e-mail ao ADMIN com link de confirmação
 // ============================================================
 
@@ -12,14 +12,58 @@ import Airtable from "airtable";
 export const config = { runtime: "nodejs" };
 
 export default async function handler(req, res) {
+  const base = new Airtable({ apiKey: process.env.AIRTABLE_API_KEY })
+    .base(process.env.AIRTABLE_BASE_ID);
+
+  // ============================================================
+  // 🟢 PUT → Atualizar status da adoção (usado pela Logística)
+  // ============================================================
+  if (req.method === "PUT") {
+    try {
+      const { id, status_adocao } = req.body || {};
+
+      if (!id || !status_adocao) {
+        return res.status(400).json({
+          success: false,
+          message: "Campos obrigatórios ausentes (id, status_adocao).",
+        });
+      }
+
+      // Atualiza o registro no Airtable
+      await base("adocoes").update([
+        {
+          id,
+          fields: {
+            status_adocao,
+            data_recebimento: new Date().toISOString().split("T")[0],
+          },
+        },
+      ]);
+
+      console.log(`✅ Adoção ${id} atualizada para: ${status_adocao}`);
+
+      return res.status(200).json({
+        success: true,
+        message: `Status da adoção atualizado para '${status_adocao}'.`,
+      });
+    } catch (err) {
+      console.error("❌ Erro ao atualizar status:", err);
+      return res.status(500).json({
+        success: false,
+        message: "Erro interno ao atualizar adoção.",
+        detalhe: err.message,
+      });
+    }
+  }
+
+  // ============================================================
+  // 🟣 POST → Cria nova adoção (fluxo original)
+  // ============================================================
   if (req.method !== "POST") {
     return res.status(405).json({ success: false, message: "Método não suportado." });
   }
 
   try {
-    const base = new Airtable({ apiKey: process.env.AIRTABLE_API_KEY })
-      .base(process.env.AIRTABLE_BASE_ID);
-
     const { nome_crianca_id, nome_usuario_id, pontos_coleta_id, data_evento_id } = req.body || {};
 
     if (!nome_crianca_id || !nome_usuario_id || !pontos_coleta_id) {
@@ -34,7 +78,7 @@ export default async function handler(req, res) {
     // ============================================================
     const fieldsToCreate = {
       data_adocao: new Date().toISOString().split("T")[0],
-      status_adocao: "aguardando confirmacao", // ✅ Single select - valor literal
+      status_adocao: "aguardando confirmacao", // literal
       nome_crianca: [nome_crianca_id],
       nome_usuario: [nome_usuario_id],
     };
@@ -51,7 +95,7 @@ export default async function handler(req, res) {
     // ============================================================
     try {
       await base("cartinha").update([
-        { id: nome_crianca_id, fields: { status: "adotada" } }, // ✅ valor literal
+        { id: nome_crianca_id, fields: { status: "adotada" } },
       ]);
       console.log(`✅ Cartinha ${nome_crianca_id} marcada como adotada.`);
     } catch (errCart) {
@@ -84,7 +128,7 @@ export default async function handler(req, res) {
     const child_gift = c.sonho || "—";
     const pickup_name = p.nome_ponto || "—";
     const pickup_address = p.endereco || "—";
-    const pickup_phone = p.telefone || "—";
+    const pickup_phone = p.telefone_ponto || p.telefone || "—";
 
     // ============================================================
     // 4️⃣ Envia e-mail ao ADMIN com link de confirmação
@@ -94,15 +138,12 @@ export default async function handler(req, res) {
       const templateId = process.env.EMAILJS_TEMPLATE_ADMIN_ID;
       const publicKey = process.env.EMAILJS_PUBLIC_KEY;
       const privateKey = process.env.EMAILJS_PRIVATE_KEY;
-
-      // 🔧 Correção pontual — domínio fixo da produção
       const appBase = "https://varaldossonhos2-0.vercel.app";
 
       if (!serviceId || !templateId || !publicKey || !privateKey) {
         throw new Error("Variáveis EmailJS ausentes ou incorretas.");
       }
 
-      // 🔗 Montagem e log do link de confirmação
       const confirmationLink = `${appBase}/api/confirmar?id_adocao=${idAdocao}`;
       console.log("🔗 Link de confirmação gerado:", confirmationLink);
 
@@ -125,8 +166,6 @@ export default async function handler(req, res) {
           to_email: process.env.EMAILJS_ADMIN_EMAIL,
         },
       };
-
-      console.log("📨 Enviando payload ao EmailJS:", JSON.stringify(emailBody, null, 2));
 
       const emailResp = await fetch("https://api.emailjs.com/api/v1.0/email/send", {
         method: "POST",
