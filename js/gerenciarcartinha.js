@@ -1,8 +1,8 @@
 // ============================================================
 // 💌 VARAL DOS SONHOS — Gerenciar Cartinhas (versão final TCC)
 // ------------------------------------------------------------
-// • CRUD completo via /api/cartinha (sem novas rotas)
-// • Upload de imagem local convertido em Base64 (sem Cloudinary)
+// • CRUD completo via /api/cartinha
+// • Usa link público de imagem (100% compatível com Airtable free)
 // • Exibição moderna com Tailwind (cards responsivos)
 // ============================================================
 
@@ -27,24 +27,20 @@
   }
 
   // ============================================================
-  // 🔹 Pré-visualização da imagem
+  // 🔹 Pré-visualização da imagem (link público)
   // ============================================================
-  document.getElementById("imagem_cartinha").addEventListener("change", (e) => {
-    const file = e.target.files[0];
-    if (!file) {
-      previewImagem.innerHTML = "";
-      return;
-    }
-    const reader = new FileReader();
-    reader.onload = () => {
+  form.imagem_cartinha.addEventListener("input", () => {
+    const url = form.imagem_cartinha.value.trim();
+    if (url) {
       previewImagem.innerHTML = `
-        <img src="${reader.result}" 
+        <img src="${url}" 
              alt="Pré-visualização" 
              class="mt-2 rounded-lg border border-blue-200 shadow-md mx-auto"
              style="max-width: 150px;">
       `;
-    };
-    reader.readAsDataURL(file);
+    } else {
+      previewImagem.innerHTML = "";
+    }
   });
 
   // ============================================================
@@ -117,22 +113,10 @@
   }
 
   // ============================================================
-  // 🔹 Criar ou Atualizar Cartinha (com upload base64)
+  // 🔹 Criar ou Atualizar Cartinha (com link público da imagem)
   // ============================================================
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
-
-    // Captura imagem e converte em base64
-    const arquivo = document.getElementById("imagem_cartinha").files[0];
-    let imagemBase64 = "";
-
-    if (arquivo) {
-      const leitor = new FileReader();
-      imagemBase64 = await new Promise((resolve) => {
-        leitor.onload = () => resolve(leitor.result);
-        leitor.readAsDataURL(arquivo);
-      });
-    }
 
     const dados = {
       nome_crianca: form.nome_crianca.value,
@@ -144,7 +128,9 @@
       psicologa_responsavel: form.psicologa_responsavel.value,
       telefone_contato: form.telefone_contato.value,
       status: form.status.value,
-      imagem_cartinha: imagemBase64 ? [{ url: imagemBase64 }] : [],
+      imagem_cartinha: form.imagem_cartinha.value
+        ? [{ url: form.imagem_cartinha.value }]
+        : [],
     };
 
     try {
@@ -194,14 +180,14 @@
       form.psicologa_responsavel.value = c.psicologa_responsavel;
       form.telefone_contato.value = c.telefone_contato;
       form.status.value = c.status;
-
-      // Exibe a imagem atual (se houver)
-      const imgUrl =
+      form.imagem_cartinha.value =
         Array.isArray(c.imagem_cartinha) && c.imagem_cartinha[0]
           ? c.imagem_cartinha[0].url
           : "";
-      previewImagem.innerHTML = imgUrl
-        ? `<img src="${imgUrl}" class="mt-2 rounded-lg border border-blue-200 shadow-md mx-auto" style="max-width:150px;">`
+
+      // Exibe imagem atual
+      previewImagem.innerHTML = form.imagem_cartinha.value
+        ? `<img src="${form.imagem_cartinha.value}" class="mt-2 rounded-lg border border-blue-200 shadow-md mx-auto" style="max-width:150px;">`
         : "";
 
       form.scrollIntoView({ behavior: "smooth", block: "start" });
