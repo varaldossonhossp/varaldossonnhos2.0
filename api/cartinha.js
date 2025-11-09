@@ -93,7 +93,6 @@ export default async function handler(req, res) {
     // 🔹 POST — Criação de nova cartinha
     // ============================================================
     if (req.method === "POST") {
-      // ✅ Validação dos campos Single Select
       const sexoValido = ["menino", "menina", "outro"];
       const statusValido = ["disponivel", "adotada", "inativa"];
 
@@ -104,10 +103,15 @@ export default async function handler(req, res) {
         ? body.status.toLowerCase()
         : "disponivel";
 
-      // ✅ Recebe a URL Cloudinary enviada pelo front-end
-      const imagem_cartinha = body.imagem_cartinha
-        ? JSON.parse(body.imagem_cartinha)
-        : [];
+      // ✅ URL Cloudinary enviada pelo front-end (JSON string)
+      let imagem_cartinha = [];
+      try {
+        imagem_cartinha = body.imagem_cartinha
+          ? JSON.parse(body.imagem_cartinha)
+          : [];
+      } catch {
+        imagem_cartinha = [];
+      }
 
       const novo = await base(tableName).create([
         {
@@ -116,7 +120,7 @@ export default async function handler(req, res) {
             idade: parseInt(body.idade) || null,
             sexo,
             sonho: body.sonho,
-            imagem_cartinha, // ✅ Já contém [{ url: "https://res.cloudinary.com/..."}]
+            imagem_cartinha, // [{ url: "https://res.cloudinary.com/..."}]
             escola: body.escola,
             cidade: body.cidade,
             telefone_contato: body.telefone_contato,
@@ -134,6 +138,11 @@ export default async function handler(req, res) {
     // ============================================================
     if (req.method === "PATCH") {
       const { id } = req.query;
+      if (!id)
+        return res
+          .status(400)
+          .json({ sucesso: false, mensagem: "ID obrigatório para atualização." });
+
       const sexoValido = ["menino", "menina", "outro"];
       const statusValido = ["disponivel", "adotada", "inativa"];
 
@@ -144,7 +153,6 @@ export default async function handler(req, res) {
         ? body.status.toLowerCase()
         : undefined;
 
-      // ✅ Campos a atualizar (somente se preenchidos)
       const fieldsToUpdate = {
         nome_crianca: body.nome_crianca,
         idade: parseInt(body.idade) || null,
@@ -159,8 +167,12 @@ export default async function handler(req, res) {
       if (status) fieldsToUpdate.status = status;
 
       if (body.imagem_cartinha) {
-        const imagem_cartinha = JSON.parse(body.imagem_cartinha);
-        if (Array.isArray(imagem_cartinha)) fieldsToUpdate.imagem_cartinha = imagem_cartinha;
+        try {
+          const img = JSON.parse(body.imagem_cartinha);
+          if (Array.isArray(img)) fieldsToUpdate.imagem_cartinha = img;
+        } catch {
+          console.warn("⚠️ imagem_cartinha inválida no PATCH");
+        }
       }
 
       const atualizado = await base(tableName).update([

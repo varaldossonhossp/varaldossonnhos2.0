@@ -3,7 +3,7 @@
 // ------------------------------------------------------------
 // 🔹 Upload automático via Cloudinary (unsigned preset)
 // 🔹 Envio ao Airtable por API local (/api/cartinha)
-// 🔹 Ajuste pontual: envia imagem_cartinha como string JSON
+// 🔹 Ajuste pontual: envia imagem_cartinha via FormData()
 // 🔹 Validação reforçada para campos Single Select (sexo, status)
 // ============================================================
 
@@ -69,35 +69,34 @@
   });
 
   // ============================================================
-  // 🔹 Enviar formulário (POST ou PATCH)
+  // 🔹 Enviar formulário (POST ou PATCH) — 🔧 AJUSTE PONTUAL
   // ============================================================
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
 
-    // ✅ Validação pontual — impede erro INVALID_MULTIPLE_CHOICE_OPTIONS
     const sexoValido = ["menino", "menina", "outro"];
     const statusValido = ["disponivel", "adotada", "inativa"];
 
     const sexoInput = form.sexo.value.trim().toLowerCase();
     const statusInput = form.status.value.trim().toLowerCase();
 
-    const dados = {
-      nome_crianca: form.nome_crianca.value.trim(),
-      idade: parseInt(form.idade.value) || null,
-      sexo: sexoValido.includes(sexoInput) ? sexoInput : "menino",
-      sonho: form.sonho.value.trim(),
-      escola: form.escola.value.trim(),
-      cidade: form.cidade.value.trim(),
-      psicologa_responsavel: form.psicologa_responsavel.value.trim(),
-      telefone_contato: form.telefone_contato.value.trim(),
-      status: statusValido.includes(statusInput) ? statusInput : "disponivel",
+    // ✅ Cria FormData para compatibilidade com formidable (Vercel)
+    const formData = new FormData();
+    formData.append("nome_crianca", form.nome_crianca.value.trim());
+    formData.append("idade", parseInt(form.idade.value) || "");
+    formData.append("sexo", sexoValido.includes(sexoInput) ? sexoInput : "menino");
+    formData.append("sonho", form.sonho.value.trim());
+    formData.append("escola", form.escola.value.trim());
+    formData.append("cidade", form.cidade.value.trim());
+    formData.append("psicologa_responsavel", form.psicologa_responsavel.value.trim());
+    formData.append("telefone_contato", form.telefone_contato.value.trim());
+    formData.append("status", statusValido.includes(statusInput) ? statusInput : "disponivel");
 
-      // ⚙️ 🔹 AJUSTE PONTUAL:
-      // Agora a imagem é enviada como string JSON para o back-end Cloudinary (API cartinha)
-      imagem_cartinha: uploadedUrl
-        ? JSON.stringify([{ url: uploadedUrl }])
-        : JSON.stringify([]),
-    };
+    // 🔹 Cloudinary: envia como string JSON [{ url: "..." }]
+    formData.append(
+      "imagem_cartinha",
+      uploadedUrl ? JSON.stringify([{ url: uploadedUrl }]) : JSON.stringify([])
+    );
 
     try {
       const metodo = editandoId ? "PATCH" : "POST";
@@ -105,8 +104,7 @@
 
       const resp = await fetch(url, {
         method: metodo,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(dados),
+        body: formData, // ✅ sem Content-Type
       });
 
       const resultado = await resp.json();
