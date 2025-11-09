@@ -2,7 +2,7 @@
 // 💌 VARAL DOS SONHOS — Gerenciar Cartinhas (versão final TCC)
 // ------------------------------------------------------------
 // • CRUD completo via /api/cartinha
-// • Usa link público de imagem (100% compatível com Airtable free)
+// • Usa upload de arquivo (requer backend configurado para FormData/Multer)
 // • Exibição moderna com Tailwind (cards responsivos)
 // ============================================================
 
@@ -27,17 +27,21 @@
   }
 
   // ============================================================
-  // 🔹 Pré-visualização da imagem (link público)
+  // 🔹 Pré-visualização da imagem (arquivo local)
   // ============================================================
-  form.imagem_cartinha.addEventListener("input", () => {
-    const url = form.imagem_cartinha.value.trim();
-    if (url) {
-      previewImagem.innerHTML = `
-        <img src="${url}" 
-             alt="Pré-visualização" 
-             class="mt-2 rounded-lg border border-blue-200 shadow-md mx-auto"
-             style="max-width: 150px;">
-      `;
+  form.imagem_cartinha.addEventListener("change", () => {
+    const file = form.imagem_cartinha.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        previewImagem.innerHTML = `
+          <img src="${e.target.result}" 
+               alt="Pré-visualização" 
+               class="mt-2 rounded-lg border border-blue-200 shadow-md mx-auto"
+               style="max-width: 150px;">
+        `;
+      };
+      reader.readAsDataURL(file);
     } else {
       previewImagem.innerHTML = "";
     }
@@ -64,6 +68,7 @@
       listaCartinhasBody.innerHTML = "";
 
       cartinhas.forEach((c) => {
+        // Lógica de extração da URL do Airtable permanece a mesma
         const imgUrl =
           Array.isArray(c.imagem_cartinha) && c.imagem_cartinha[0]
             ? c.imagem_cartinha[0].url
@@ -113,25 +118,31 @@
   }
 
   // ============================================================
-  // 🔹 Criar ou Atualizar Cartinha (com link público da imagem)
+  // 🔹 Criar ou Atualizar Cartinha (com upload de arquivo)
   // ============================================================
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
 
-    const dados = {
-      nome_crianca: form.nome_crianca.value,
-      idade: parseInt(form.idade.value) || null,
-      sexo: form.sexo.value,
-      sonho: form.sonho.value,
-      escola: form.escola.value,
-      cidade: form.cidade.value,
-      psicologa_responsavel: form.psicologa_responsavel.value,
-      telefone_contato: form.telefone_contato.value,
-      status: form.status.value,
-      imagem_cartinha: form.imagem_cartinha.value
-        ? [{ url: form.imagem_cartinha.value }]
-        : [],
-    };
+    // 1. Crie FormData para incluir o arquivo e outros campos
+    const formData = new FormData();
+    
+    formData.append("nome_crianca", form.nome_crianca.value);
+    // Nota: FormData converte para string, o backend deve re-converter
+    formData.append("idade", form.idade.value); 
+    formData.append("sexo", form.sexo.value);
+    formData.append("sonho", form.sonho.value);
+    formData.append("escola", form.escola.value);
+    formData.append("cidade", form.cidade.value);
+    formData.append("psicologa_responsavel", form.psicologa_responsavel.value);
+    formData.append("telefone_contato", form.telefone_contato.value);
+    formData.append("status", form.status.value);
+    
+    // 2. Adicione o arquivo de imagem APENAS SE EXISTIR
+    const imagemFile = form.imagem_cartinha.files[0];
+    if (imagemFile) {
+        // O backend buscará este campo: 'imagem_cartinha'
+        formData.append("imagem_cartinha", imagemFile); 
+    }
 
     try {
       const metodo = editandoId ? "PATCH" : "POST";
@@ -139,8 +150,8 @@
 
       const resp = await fetch(url, {
         method: metodo,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(dados),
+        // IMPORTANTE: NÃO defina Content-Type. O navegador faz isso automaticamente para FormData
+        body: formData, // Envia o FormData diretamente
       });
 
       const resultado = await resp.json();
@@ -180,14 +191,15 @@
       form.psicologa_responsavel.value = c.psicologa_responsavel;
       form.telefone_contato.value = c.telefone_contato;
       form.status.value = c.status;
-      form.imagem_cartinha.value =
-        Array.isArray(c.imagem_cartinha) && c.imagem_cartinha[0]
-          ? c.imagem_cartinha[0].url
-          : "";
+      
+      // Limpa o campo de upload (file input)
+      form.imagem_cartinha.value = null; 
 
-      // Exibe imagem atual
-      previewImagem.innerHTML = form.imagem_cartinha.value
-        ? `<img src="${form.imagem_cartinha.value}" class="mt-2 rounded-lg border border-blue-200 shadow-md mx-auto" style="max-width:150px;">`
+      // Exibe imagem atual (se houver link do Airtable)
+      const currentImageUrl = Array.isArray(c.imagem_cartinha) && c.imagem_cartinha[0] ? c.imagem_cartinha[0].url : "";
+      
+      previewImagem.innerHTML = currentImageUrl
+        ? `<img src="${currentImageUrl}" class="mt-2 rounded-lg border border-blue-200 shadow-md mx-auto" style="max-width:150px;">`
         : "";
 
       form.scrollIntoView({ behavior: "smooth", block: "start" });

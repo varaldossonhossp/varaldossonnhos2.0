@@ -142,7 +142,8 @@
 
     <!-- 🔹 Formulário -->
     <section class="bg-white p-6 md:p-10 rounded-2xl shadow-md mb-12 border border-blue-100">
-      <form id="form-cartinha" class="cartinha-form space-y-3">
+      
+      <form id="form-cartinha" class="cartinha-form space-y-3" enctype="multipart/form-data">
         <h3 class="text-xl font-semibold text-blue-800 mb-4 text-center">Cadastro / Edição</h3>
 
         <div class="grid md:grid-cols-2 gap-4">
@@ -191,9 +192,8 @@
           </div>
         
           <div>
-            <label>🖼️ Imagem da Cartinha (link público)</label>
-            <input type="url" id="imagem_cartinha" placeholder="https://i.imgur.com/abc123.jpg" />
-            <small style="font-size:0.8rem;color:#555;">Cole aqui o link da imagem hospedada (ex: Imgur, Vercel, Google Drive público)</small>
+            <label for="imagem_cartinha">🖼️ Imagem da Cartinha (Upload)</label>
+            <input type="file" id="imagem_cartinha" name="imagem_cartinha" accept=".jpg, .jpeg, .png" style="padding-top: 15px;" required /> <small style="font-size:0.8rem;color:#555;">Selecione o arquivo JPG ou PNG para fazer o upload.</small>
             <div id="preview-imagem" class="mt-2 text-center"></div>
           </div>
 
