@@ -86,8 +86,8 @@ export default async function handler(req, res) {
     if (req.method === "POST") {
       const body = req.body;
 
-      const statusValido = ["disponível", "adotada"];
-      const status = statusValido.includes(body.status) ? body.status : "disponível";
+      const statusValido = ["disponivel", "adotada"];
+      const status = statusValido.includes(body.status) ? body.status : "disponivel";
 
       const novo = await base(tableName).create([
         {
@@ -103,7 +103,7 @@ export default async function handler(req, res) {
             cidade: body.cidade,
             psicologa_responsavel: body.psicologa_responsavel,
             telefone_contato: body.telefone_contato,
-            status: body.status || "disponível",
+            status: body.status || "disponivel",
             // CORREÇÃO: Adiciona ponto_coleta na criação.
             // Se for um linked record no Airtable, deve ser um array de strings (IDs).
             ponto_coleta: body.ponto_coleta ? [body.ponto_coleta] : undefined,
@@ -122,7 +122,7 @@ export default async function handler(req, res) {
       const body = req.body;
 
       // Validar status
-      const statusValido = ["disponível", "adotada"];
+      const statusValido = ["disponivel", "adotada"];
       const status = statusValido.includes(body.status) ? body.status : undefined;
 
       // Montar campos para atualizar

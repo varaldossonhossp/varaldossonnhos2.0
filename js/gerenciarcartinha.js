@@ -17,7 +17,7 @@
     if (!status) return 'bg-gray-400';
     const normalizedStatus = status.toLowerCase();
     switch (normalizedStatus) {
-      case 'disponível':
+      case 'disponivel':
           return 'bg-green-500';
       case 'adotada':
           return 'bg-yellow-500';
