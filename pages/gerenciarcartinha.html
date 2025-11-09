@@ -54,11 +54,31 @@
     </header>
 
     <p class="info-text mb-8">
-      As cartinhas podem ser <strong>editadas</strong> ou marcadas como <strong>inativas</strong>.<br>
-      O upload da imagem é feito automaticamente via <strong>Cloudinary</strong> (link público seguro).
+      As cartinhas podem ser <strong>editadas</strong> ou marcadas como <strong>inativas</strong>.
     </p>
 
-    <!-- 🧾 Formulário de Cadastro / Edição -->
+    <!--  SELEÇÃO DE EVENTO -->
+    <section class="bg-white p-6 rounded-2xl shadow-md mb-8 border border-blue-100">
+      <h3 class="text-xl font-semibold text-blue-800 mb-4 text-center">Selecionar Evento Ativo</h3>
+      <div class="grid md:grid-cols-3 gap-4">
+        <div>
+          <label>📌 Evento</label>
+          <select id="evento" required>
+            <option value="">Carregando eventos...</option>
+          </select>
+        </div>
+        <div>
+          <label>📅 Data do Evento</label>
+          <input type="text" id="data_evento" readonly class="bg-gray-100" />
+        </div>
+        <div>
+          <label>🎁 Data Limite de Recebimento</label>
+          <input type="text" id="data_limite_recebimento" readonly class="bg-gray-100" />
+        </div>
+      </div>
+    </section>
+
+    <!-- 🧾 FORMULÁRIO DE CADASTRO / EDIÇÃO -->
     <section class="bg-white p-6 md:p-10 rounded-2xl shadow-md mb-12 border border-blue-100">
       <form id="form-cartinha" class="cartinha-form space-y-3">
         <h3 class="text-xl font-semibold text-blue-800 mb-4 text-center">Cadastro / Edição</h3>
@@ -124,19 +144,19 @@
       </form>
     </section>
 
-    <!-- 💌 Cartinhas cadastradas -->
+    <!-- 💌 CARTINHAS CADASTRADAS -->
     <section class="bg-white p-6 md:p-10 rounded-2xl shadow-md border border-blue-100">
       <div class="flex justify-between items-center mb-6 border-b pb-3">
-        <h3 class="text-2xl font-semibold text-gray-700">💌 Cartinhas Cadastradas</h3>
+        <h3 class="text-2xl font-semibold text-gray-700">💌 Cartinhas do Evento</h3>
         <span class="text-lg font-bold text-blue-600">Total: <span id="total-cartinhas">0</span></span>
       </div>
       <div id="lista-cartinhas-body" class="flex flex-col space-y-6">
-        <p class="text-center text-gray-500 py-4">Carregando cartinhas...</p>
+        <p class="text-center text-gray-500 py-4">Selecione um evento para visualizar as cartinhas...</p>
       </div>
     </section>
   </main>
 
-  <!-- ⚙️ Scripts utilitários -->
+  <!-- ⚙️ SCRIPTS UTILITÁRIOS -->
   <script>
     // Capitalização automática
     document.addEventListener("input", (e) => {

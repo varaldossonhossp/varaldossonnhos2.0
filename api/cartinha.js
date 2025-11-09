@@ -1,10 +1,11 @@
 // ============================================================
-// 💙 VARAL DOS SONHOS — /api/cartinha.js (versão final Cloudinary)
+// 💙 VARAL DOS SONHOS — /api/cartinha.js (versão final TCC Cloudinary)
 // ------------------------------------------------------------
 // 🔹 Upload de imagem via Cloudinary (URL pública enviada pelo front-end)
 // 🔹 Compatível com Vercel (sem uso de Base64 nem Buffer)
-// 🔹 Validação de campos Single Select (sexo, status) conforme tabela Airtable
-// 🔹 Mantém GET, POST, PATCH, DELETE, CORS e estrutura original
+// 🔹 Validação de campos Single Select (sexo, status)
+// 🔹 NOVO: integração com eventos (nome_evento, data_evento, data_limite_recebimento, evento_id)
+// 🔹 Mantém GET, POST, PATCH, DELETE e CORS originais
 // ============================================================
 
 import Airtable from "airtable";
@@ -14,7 +15,7 @@ import { IncomingForm } from "formidable";
 // ⚙️ CONFIGURAÇÃO ESSENCIAL PARA FORM-DATA NO VERCEL
 // ============================================================
 export const config = {
-  api: { bodyParser: false }, // ❗ Obrigatório: impede conflito com Formidable
+  api: { bodyParser: false }, // ❗ Obrigatório para Formidable
   runtime: "nodejs",
 };
 
@@ -65,12 +66,24 @@ export default async function handler(req, res) {
     }
 
     // ============================================================
-    // 🔹 GET — Lista de cartinhas
+    // 🔹 GET — Lista de cartinhas (com filtro opcional por evento)
     // ============================================================
     if (req.method === "GET") {
-      const records = await base(tableName)
-        .select({ sort: [{ field: "data_cadastro", direction: "desc" }] })
-        .all();
+      const { evento } = req.query;
+
+      let selectConfig = {
+        sort: [{ field: "data_cadastro", direction: "desc" }],
+      };
+
+      // ✅ Filtra por evento (se parâmetro presente)
+      if (evento) {
+        selectConfig = {
+          ...selectConfig,
+          filterByFormula: `{evento_id} = "${evento}"`,
+        };
+      }
+
+      const records = await base(tableName).select(selectConfig).all();
 
       const cartinha = records.map((r) => ({
         id: r.id,
@@ -84,6 +97,10 @@ export default async function handler(req, res) {
         psicologa_responsavel: r.fields.psicologa_responsavel || "",
         imagem_cartinha: r.fields.imagem_cartinha || [],
         status: r.fields.status || "",
+        nome_evento: r.fields.nome_evento || "",
+        data_evento: r.fields.data_evento || "",
+        data_limite_recebimento: r.fields.data_limite_recebimento || "",
+        evento_id: r.fields.evento_id || "",
       }));
 
       return res.status(200).json({ sucesso: true, cartinha });
@@ -103,7 +120,7 @@ export default async function handler(req, res) {
         ? body.status.toLowerCase()
         : "disponivel";
 
-      // ✅ URL Cloudinary enviada pelo front-end (JSON string)
+      // ✅ URL Cloudinary enviada pelo front-end
       let imagem_cartinha = [];
       try {
         imagem_cartinha = body.imagem_cartinha
@@ -113,6 +130,12 @@ export default async function handler(req, res) {
         imagem_cartinha = [];
       }
 
+      // ✅ Campos de evento (novos)
+      const nome_evento = body.nome_evento || "";
+      const data_evento = body.data_evento || "";
+      const data_limite_recebimento = body.data_limite_recebimento || "";
+      const evento_id = body.evento_id || "";
+
       const novo = await base(tableName).create([
         {
           fields: {
@@ -120,12 +143,16 @@ export default async function handler(req, res) {
             idade: parseInt(body.idade) || null,
             sexo,
             sonho: body.sonho,
-            imagem_cartinha, // [{ url: "https://res.cloudinary.com/..."}]
+            imagem_cartinha,
             escola: body.escola,
             cidade: body.cidade,
             telefone_contato: body.telefone_contato,
             psicologa_responsavel: body.psicologa_responsavel,
             status,
+            nome_evento,
+            data_evento,
+            data_limite_recebimento,
+            evento_id,
           },
         },
       ]);
@@ -134,7 +161,7 @@ export default async function handler(req, res) {
     }
 
     // ============================================================
-    // 🔹 PATCH — Atualizar cartinha existente
+    // 🔹 PATCH — Atualizar cartinha existente (ou inativar)
     // ============================================================
     if (req.method === "PATCH") {
       const { id } = req.query;
@@ -166,6 +193,7 @@ export default async function handler(req, res) {
       if (sexo) fieldsToUpdate.sexo = sexo;
       if (status) fieldsToUpdate.status = status;
 
+      // ✅ Atualização de imagem
       if (body.imagem_cartinha) {
         try {
           const img = JSON.parse(body.imagem_cartinha);
@@ -175,6 +203,13 @@ export default async function handler(req, res) {
         }
       }
 
+      // ✅ Atualização de vínculo de evento (mantém se vier do front)
+      if (body.nome_evento) fieldsToUpdate.nome_evento = body.nome_evento;
+      if (body.data_evento) fieldsToUpdate.data_evento = body.data_evento;
+      if (body.data_limite_recebimento)
+        fieldsToUpdate.data_limite_recebimento = body.data_limite_recebimento;
+      if (body.evento_id) fieldsToUpdate.evento_id = body.evento_id;
+
       const atualizado = await base(tableName).update([
         { id, fields: fieldsToUpdate },
       ]);
@@ -183,7 +218,7 @@ export default async function handler(req, res) {
     }
 
     // ============================================================
-    // 🔹 DELETE — Excluir cartinha
+    // 🔹 DELETE — Exclusão permanente (mantido para compatibilidade)
     // ============================================================
     if (req.method === "DELETE") {
       const { id } = req.query;
