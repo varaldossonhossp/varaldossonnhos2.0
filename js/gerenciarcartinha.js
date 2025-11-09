@@ -1,15 +1,17 @@
 // ============================================================
-// 💙 VARAL DOS SONHOS — Gerenciar Cartinhas (versão final TCC)
+// 💌 VARAL DOS SONHOS — Gerenciar Cartinhas (versão final TCC)
 // ------------------------------------------------------------
-// • CRUD completo via /api/cartinha
-// • Upload automático via Imgur (gera link público)
-// • Campos "sexo" e "status" compatíveis com Airtable (lowercase)
-// • Formato de imagem_cartinha 100% correto (Attachment Airtable)
+// 🔹 Upload automático via Cloudinary (unsigned preset)
+// 🔹 Envio ao Airtable por API local (/api/cartinha)
+// 🔹 Campos normalizados (sexo, status) compatíveis com Airtable
+// 🔹 100% compatível com Vercel Free Plan
 // ============================================================
 
 (() => {
   const API_URL = "../api/cartinha";
-  const IMGUR_CLIENT_ID = "b6e2dc32d9e4df2"; // ⚙️ Seu Client ID Imgur
+  const CLOUD_NAME = "drnn5zmxi"; // ⚙️ Seu Cloudinary Cloud Name
+  const UPLOAD_PRESET = "unsigned_uploads"; // ⚙️ Nome do preset (modo unsigned)
+
   const listaCartinhasBody = document.querySelector("#lista-cartinhas-body");
   const totalCartinhasSpan = document.querySelector("#total-cartinhas");
   const form = document.querySelector("#form-cartinha");
@@ -19,7 +21,7 @@
   let uploadedUrl = "";
 
   // ============================================================
-  // 🔹 Cor do Status (para os cards)
+  // 🔹 Cor do status para os cards
   // ============================================================
   function getStatusColor(status) {
     if (!status) return "bg-gray-400";
@@ -31,7 +33,7 @@
   }
 
   // ============================================================
-  // 🔹 Upload automático para o Imgur
+  // 🔹 Upload automático para o Cloudinary
   // ============================================================
   form.imagem_cartinha.addEventListener("change", async () => {
     const file = form.imagem_cartinha.files[0];
@@ -41,28 +43,28 @@
 
     try {
       const formData = new FormData();
-      formData.append("image", file);
+      formData.append("file", file);
+      formData.append("upload_preset", UPLOAD_PRESET);
 
-      const uploadResp = await fetch("https://api.imgur.com/3/image", {
+      const resp = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, {
         method: "POST",
-        headers: { Authorization: `Client-ID ${IMGUR_CLIENT_ID}` },
         body: formData,
       });
 
-      const data = await uploadResp.json();
-      if (data.success && data.data.link) {
-        uploadedUrl = data.data.link;
+      const data = await resp.json();
+      if (data.secure_url) {
+        uploadedUrl = data.secure_url;
         previewImagem.innerHTML = `
           <img src="${uploadedUrl}" alt="Pré-visualização"
-              class="mt-2 rounded-lg border border-blue-200 shadow-md mx-auto"
-              style="max-width: 150px;">
+               class="mt-2 rounded-lg border border-blue-200 shadow-md mx-auto"
+               style="max-width: 150px;">
         `;
       } else {
-        console.error("❌ Falha Imgur:", data);
-        previewImagem.innerHTML = `<p class="text-red-500">❌ Falha no upload da imagem.</p>`;
+        console.error("❌ Falha Cloudinary:", data);
+        previewImagem.innerHTML = `<p class="text-red-500">❌ Falha no upload.</p>`;
       }
     } catch (err) {
-      console.error("Erro no upload Imgur:", err);
+      console.error("Erro no upload Cloudinary:", err);
       previewImagem.innerHTML = `<p class="text-red-500">Erro ao enviar imagem.</p>`;
     }
   });
@@ -140,18 +142,14 @@
     const dados = {
       nome_crianca: form.nome_crianca.value.trim(),
       idade: parseInt(form.idade.value) || null,
-      sexo: form.sexo.value.toLowerCase(), // 🔹 compatível com Airtable
+      sexo: form.sexo.value.toLowerCase(),
       sonho: form.sonho.value.trim(),
       escola: form.escola.value.trim(),
       cidade: form.cidade.value.trim(),
       psicologa_responsavel: form.psicologa_responsavel.value.trim(),
       telefone_contato: form.telefone_contato.value.trim(),
-      status: form.status.value.toLowerCase(), // 🔹 compatível com Airtable
-      imagem_cartinha: uploadedUrl
-        ? [{ url: uploadedUrl }]
-        : form.imagem_cartinha?.value
-        ? [{ url: form.imagem_cartinha.value }]
-        : [],
+      status: form.status.value.toLowerCase(),
+      imagem_cartinha: uploadedUrl ? [{ url: uploadedUrl }] : [],
     };
 
     try {
@@ -202,13 +200,13 @@
       form.telefone_contato.value = c.telefone_contato;
       form.status.value = c.status;
 
-      const img =
+      uploadedUrl =
         Array.isArray(c.imagem_cartinha) && c.imagem_cartinha[0]
           ? c.imagem_cartinha[0].url
           : "";
-      uploadedUrl = img;
-      previewImagem.innerHTML = img
-        ? `<img src="${img}" class="mt-2 rounded-lg border border-blue-200 shadow-md mx-auto" style="max-width:150px;">`
+
+      previewImagem.innerHTML = uploadedUrl
+        ? `<img src="${uploadedUrl}" class="mt-2 rounded-lg border border-blue-200 shadow-md mx-auto" style="max-width:150px;">`
         : "";
     } catch (err) {
       console.error("Erro ao editar cartinha:", err);
