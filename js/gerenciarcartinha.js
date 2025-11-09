@@ -3,14 +3,14 @@
 // ------------------------------------------------------------
 // 🔹 Upload automático via Cloudinary (unsigned preset)
 // 🔹 Envio ao Airtable por API local (/api/cartinha)
-// 🔹 Campos normalizados (sexo, status) compatíveis com Airtable
-// 🔹 100% compatível com Vercel Free Plan
+// 🔹 Ajuste pontual: envia imagem_cartinha como string JSON
+// 🔹 Validação reforçada para campos Single Select (sexo, status)
 // ============================================================
 
 (() => {
   const API_URL = "../api/cartinha";
-  const CLOUD_NAME = "drnn5zmxi"; // ⚙️ Seu Cloudinary Cloud Name
-  const UPLOAD_PRESET = "unsigned_uploads"; // ⚙️ Nome do preset (modo unsigned)
+  const CLOUD_NAME = "drnn5zmxi";
+  const UPLOAD_PRESET = "unsigned_uploads";
 
   const listaCartinhasBody = document.querySelector("#lista-cartinhas-body");
   const totalCartinhasSpan = document.querySelector("#total-cartinhas");
@@ -21,7 +21,7 @@
   let uploadedUrl = "";
 
   // ============================================================
-  // 🔹 Cor do status para os cards
+  // 🔹 Cor do status (visuais)
   // ============================================================
   function getStatusColor(status) {
     if (!status) return "bg-gray-400";
@@ -33,7 +33,7 @@
   }
 
   // ============================================================
-  // 🔹 Upload automático para o Cloudinary
+  // 🔹 Upload Cloudinary — unsigned preset
   // ============================================================
   form.imagem_cartinha.addEventListener("change", async () => {
     const file = form.imagem_cartinha.files[0];
@@ -60,7 +60,6 @@
                style="max-width: 150px;">
         `;
       } else {
-        console.error("❌ Falha Cloudinary:", data);
         previewImagem.innerHTML = `<p class="text-red-500">❌ Falha no upload.</p>`;
       }
     } catch (err) {
@@ -70,7 +69,65 @@
   });
 
   // ============================================================
-  // 🔹 Carregar cartinhas e renderizar como cards
+  // 🔹 Enviar formulário (POST ou PATCH)
+  // ============================================================
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    // ✅ Validação pontual — impede erro INVALID_MULTIPLE_CHOICE_OPTIONS
+    const sexoValido = ["menino", "menina", "outro"];
+    const statusValido = ["disponivel", "adotada", "inativa"];
+
+    const sexoInput = form.sexo.value.trim().toLowerCase();
+    const statusInput = form.status.value.trim().toLowerCase();
+
+    const dados = {
+      nome_crianca: form.nome_crianca.value.trim(),
+      idade: parseInt(form.idade.value) || null,
+      sexo: sexoValido.includes(sexoInput) ? sexoInput : "menino",
+      sonho: form.sonho.value.trim(),
+      escola: form.escola.value.trim(),
+      cidade: form.cidade.value.trim(),
+      psicologa_responsavel: form.psicologa_responsavel.value.trim(),
+      telefone_contato: form.telefone_contato.value.trim(),
+      status: statusValido.includes(statusInput) ? statusInput : "disponivel",
+
+      // ⚙️ 🔹 AJUSTE PONTUAL:
+      // Agora a imagem é enviada como string JSON para o back-end Cloudinary (API cartinha)
+      imagem_cartinha: uploadedUrl
+        ? JSON.stringify([{ url: uploadedUrl }])
+        : JSON.stringify([]),
+    };
+
+    try {
+      const metodo = editandoId ? "PATCH" : "POST";
+      const url = editandoId ? `${API_URL}?id=${editandoId}` : API_URL;
+
+      const resp = await fetch(url, {
+        method: metodo,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(dados),
+      });
+
+      const resultado = await resp.json();
+      if (resultado.sucesso) {
+        alert(editandoId ? "Cartinha atualizada com sucesso!" : "Cartinha criada com sucesso!");
+        form.reset();
+        previewImagem.innerHTML = "";
+        uploadedUrl = "";
+        editandoId = null;
+        carregarCartinhas();
+      } else {
+        alert("Erro ao salvar: " + resultado.mensagem);
+      }
+    } catch (err) {
+      console.error("Erro ao salvar cartinha:", err);
+      alert("Erro ao salvar cartinha.");
+    }
+  });
+
+  // ============================================================
+  // 🔹 Carregar, editar e excluir (inalterados)
   // ============================================================
   async function carregarCartinhas() {
     listaCartinhasBody.innerHTML = `<p class="text-center text-gray-500 py-4">Carregando...</p>`;
@@ -110,9 +167,7 @@
             </div>
           </div>
           <div class="flex flex-col space-y-2 lg:w-1/4 lg:text-right w-full mt-4 lg:mt-0">
-            <span class="text-xs font-medium px-3 py-1 rounded-full text-white ${getStatusColor(
-              c.status
-            )}">
+            <span class="text-xs font-medium px-3 py-1 rounded-full text-white ${getStatusColor(c.status)}">
               ${(c.status || "").toUpperCase()}
             </span>
             <div class="flex gap-2 justify-start lg:justify-end mt-2">
@@ -133,55 +188,6 @@
     }
   }
 
-  // ============================================================
-  // 🔹 Criar ou Atualizar Cartinha
-  // ============================================================
-  form.addEventListener("submit", async (e) => {
-    e.preventDefault();
-
-    const dados = {
-      nome_crianca: form.nome_crianca.value.trim(),
-      idade: parseInt(form.idade.value) || null,
-      sexo: form.sexo.value.toLowerCase(),
-      sonho: form.sonho.value.trim(),
-      escola: form.escola.value.trim(),
-      cidade: form.cidade.value.trim(),
-      psicologa_responsavel: form.psicologa_responsavel.value.trim(),
-      telefone_contato: form.telefone_contato.value.trim(),
-      status: form.status.value.toLowerCase(),
-      imagem_cartinha: uploadedUrl ? [{ url: uploadedUrl }] : [],
-    };
-
-    try {
-      const metodo = editandoId ? "PATCH" : "POST";
-      const url = editandoId ? `${API_URL}?id=${editandoId}` : API_URL;
-
-      const resp = await fetch(url, {
-        method: metodo,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(dados),
-      });
-
-      const resultado = await resp.json();
-      if (resultado.sucesso) {
-        alert(editandoId ? "Cartinha atualizada com sucesso!" : "Cartinha criada com sucesso!");
-        form.reset();
-        previewImagem.innerHTML = "";
-        uploadedUrl = "";
-        editandoId = null;
-        carregarCartinhas();
-      } else {
-        alert("Erro ao salvar: " + resultado.mensagem);
-      }
-    } catch (err) {
-      console.error("Erro ao salvar cartinha:", err);
-      alert("Erro ao salvar cartinha.");
-    }
-  });
-
-  // ============================================================
-  // 🔹 Editar Cartinha
-  // ============================================================
   async function editarCartinha(id) {
     try {
       const resp = await fetch(API_URL);
@@ -209,17 +215,12 @@
         ? `<img src="${uploadedUrl}" class="mt-2 rounded-lg border border-blue-200 shadow-md mx-auto" style="max-width:150px;">`
         : "";
     } catch (err) {
-      console.error("Erro ao editar cartinha:", err);
       alert("Erro ao carregar cartinha para edição.");
     }
   }
 
-  // ============================================================
-  // 🔹 Excluir Cartinha
-  // ============================================================
   async function excluirCartinha(id) {
     if (!confirm("Deseja realmente excluir esta cartinha?")) return;
-
     try {
       const resp = await fetch(`${API_URL}?id=${id}`, { method: "DELETE" });
       const resultado = await resp.json();
@@ -230,13 +231,9 @@
         alert("Erro ao excluir: " + resultado.mensagem);
       }
     } catch (err) {
-      console.error("Erro ao excluir cartinha:", err);
       alert("Erro ao excluir cartinha.");
     }
   }
 
-  // ============================================================
-  // 🚀 Inicialização
-  // ============================================================
   carregarCartinhas();
 })();
