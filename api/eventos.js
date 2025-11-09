@@ -1,16 +1,10 @@
 // ============================================================
-// 💙 VARAL DOS SONHOS — /api/eventos.js (versão TCC final)
+// 💙 VARAL DOS SONHOS — /api/eventos.js (versão corrigida TCC)
 // ------------------------------------------------------------
-// 🔹 Mantém compatibilidade com o carrossel da home pública
-// 🔹 Acrescenta suporte ao painel admin (Gerenciar Cartinhas)
-// 🔹 Permite listar todos os eventos ou apenas "em andamento"
-// 🔹 Retorna todos os campos principais da tabela "eventos"
-// ------------------------------------------------------------
-// Campos utilizados:
-//  id_evento (autonumber), nome_evento, descricao, local_evento,
-//  data_evento, data_limite_recebimento, imagem,
-//  status_evento ("em andamento", "encerrado", "proximo"),
-//  destacar_na_homepage (checkbox)
+// 🔹 Compatível com Airtable e Vercel
+// 🔹 Corrige erro "filterByFormula should be a string"
+// 🔹 Suporta ?tipo=home | ?tipo=admin | ?tipo=all
+// 🔹 Retorna todos os campos da tabela "eventos"
 // ============================================================
 
 import Airtable from "airtable";
@@ -28,10 +22,8 @@ export default async function handler(req, res) {
     const table = process.env.AIRTABLE_EVENTOS_TABLE || "eventos";
 
     const { tipo } = req.query;
-    // 📌 tipo=home → apenas eventos destacados
-    // 📌 tipo=admin → eventos "em andamento"
-    // 📌 tipo=all   → todos os eventos
 
+    // 📌 Definição do filtro
     let filtro = "";
     if (tipo === "home") {
       filtro = "AND({destacar_na_homepage}=1, {status_evento}='em andamento')";
@@ -39,12 +31,15 @@ export default async function handler(req, res) {
       filtro = "{status_evento}='em andamento'";
     }
 
-    const records = await base(table)
-      .select({
-        filterByFormula: filtro || undefined,
-        sort: [{ field: "data_evento", direction: "asc" }],
-      })
-      .all();
+    // 📌 Configuração de seleção segura
+    const selectConfig = {
+      sort: [{ field: "data_evento", direction: "asc" }],
+    };
+    if (filtro && filtro.trim() !== "") {
+      selectConfig.filterByFormula = filtro;
+    }
+
+    const records = await base(table).select(selectConfig).all();
 
     const eventos = records.map((r) => ({
       id: r.id,

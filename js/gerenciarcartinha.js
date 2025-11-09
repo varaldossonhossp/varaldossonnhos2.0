@@ -29,7 +29,7 @@
   // ============================================================
   async function carregarEventos() {
     try {
-      const resp = await fetch(API_EVENTOS);
+      const resp = await fetch(`${API_EVENTOS}?tipo=admin`);
       const data = await resp.json();
       const eventos = data.eventos?.filter(e => e.status_evento === "em andamento") || [];
 
