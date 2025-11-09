@@ -41,7 +41,7 @@
     try {
       const formData = new FormData();
       formData.append("file", file);
-      formData.append("upload_preset", "uploads não assinados"); // ou "uploads_nao_assinados" se renomeou no painel
+      formData.append("upload_preset", "unsigned_uploads");
       formData.append("cloud_name", "drnn5zmxi");
 
       const uploadResp = await fetch("https://api.cloudinary.com/v1_1/drnn5zmxi/image/upload", {
@@ -49,18 +49,20 @@
         body: formData,
       });
 
+
       const data = await uploadResp.json();
-      if (data.secure_url) {
-        uploadedUrl = data.secure_url;
-        previewImagem.innerHTML = `
-          <img src="${uploadedUrl}" alt="Pré-visualização"
-              class="mt-2 rounded-lg border border-blue-200 shadow-md mx-auto"
-              style="max-width: 150px;">
-        `;
-      } else {
-        previewImagem.innerHTML = `<p class="text-red-500">❌ Falha no upload.</p>`;
-        console.error("Resposta Cloudinary:", data);
+        if (data.secure_url) {
+          uploadedUrl = data.secure_url;
+          previewImagem.innerHTML = `
+            <img src="${uploadedUrl}" alt="Pré-visualização"
+                class="mt-2 rounded-lg border border-blue-200 shadow-md mx-auto"
+                style="max-width: 150px;">
+          `;
+        } else {
+          console.error("❌ Falha Cloudinary:", data);
+          previewImagem.innerHTML = `<p class="text-red-500">❌ Falha no upload.</p>`;
       }
+
     } catch (err) {
       console.error("Erro no upload Cloudinary:", err);
       previewImagem.innerHTML = `<p class="text-red-500">Erro ao enviar imagem.</p>`;
