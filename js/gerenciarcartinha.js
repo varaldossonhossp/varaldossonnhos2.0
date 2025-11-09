@@ -1,14 +1,15 @@
 // ============================================================
-// 💌 VARAL DOS SONHOS — Gerenciar Cartinhas (versão final TCC)
+// 💙 VARAL DOS SONHOS — Gerenciar Cartinhas (versão final TCC)
 // ------------------------------------------------------------
-// 🔹 Upload automático via Imgur (gera link público)
-// 🔹 Envio ao Airtable por API local (/api/cartinha)
-// 🔹 Sem dependências externas — compatível com Vercel Free
+// • CRUD completo via /api/cartinha
+// • Upload automático via Imgur (gera link público)
+// • Campos "sexo" e "status" compatíveis com Airtable (lowercase)
+// • Formato de imagem_cartinha 100% correto (Attachment Airtable)
 // ============================================================
 
 (() => {
   const API_URL = "../api/cartinha";
-  const IMGUR_CLIENT_ID = "b6e2dc32d9e4df2"; // ID público do app Imgur
+  const IMGUR_CLIENT_ID = "b6e2dc32d9e4df2"; // ⚙️ Seu Client ID Imgur
   const listaCartinhasBody = document.querySelector("#lista-cartinhas-body");
   const totalCartinhasSpan = document.querySelector("#total-cartinhas");
   const form = document.querySelector("#form-cartinha");
@@ -18,20 +19,20 @@
   let uploadedUrl = "";
 
   // ============================================================
-  // 🔹 Cor do status para cards
+  // 🔹 Cor do Status (para os cards)
   // ============================================================
   function getStatusColor(status) {
     if (!status) return "bg-gray-400";
     const s = status.toLowerCase();
     if (s === "disponivel") return "bg-green-500";
     if (s === "adotada") return "bg-yellow-500";
+    if (s === "inativa") return "bg-gray-400";
     return "bg-blue-500";
   }
 
   // ============================================================
-  // 🔹 Upload automático para o Cloudinary (unsigned preset)
+  // 🔹 Upload automático para o Imgur
   // ============================================================
-
   form.imagem_cartinha.addEventListener("change", async () => {
     const file = form.imagem_cartinha.files[0];
     if (!file) return (previewImagem.innerHTML = "");
@@ -40,38 +41,34 @@
 
     try {
       const formData = new FormData();
-      formData.append("file", file);
-      formData.append("upload_preset", "unsigned_uploads");
-      formData.append("cloud_name", "drnn5zmxi");
+      formData.append("image", file);
 
-      const uploadResp = await fetch("https://api.cloudinary.com/v1_1/drnn5zmxi/image/upload", {
+      const uploadResp = await fetch("https://api.imgur.com/3/image", {
         method: "POST",
+        headers: { Authorization: `Client-ID ${IMGUR_CLIENT_ID}` },
         body: formData,
       });
 
-
       const data = await uploadResp.json();
-        if (data.secure_url) {
-          uploadedUrl = data.secure_url;
-          previewImagem.innerHTML = `
-            <img src="${uploadedUrl}" alt="Pré-visualização"
-                class="mt-2 rounded-lg border border-blue-200 shadow-md mx-auto"
-                style="max-width: 150px;">
-          `;
-        } else {
-          console.error("❌ Falha Cloudinary:", data);
-          previewImagem.innerHTML = `<p class="text-red-500">❌ Falha no upload.</p>`;
+      if (data.success && data.data.link) {
+        uploadedUrl = data.data.link;
+        previewImagem.innerHTML = `
+          <img src="${uploadedUrl}" alt="Pré-visualização"
+              class="mt-2 rounded-lg border border-blue-200 shadow-md mx-auto"
+              style="max-width: 150px;">
+        `;
+      } else {
+        console.error("❌ Falha Imgur:", data);
+        previewImagem.innerHTML = `<p class="text-red-500">❌ Falha no upload da imagem.</p>`;
       }
-
     } catch (err) {
-      console.error("Erro no upload Cloudinary:", err);
+      console.error("Erro no upload Imgur:", err);
       previewImagem.innerHTML = `<p class="text-red-500">Erro ao enviar imagem.</p>`;
     }
   });
 
-
   // ============================================================
-  // 🔹 Carregar cartinhas
+  // 🔹 Carregar cartinhas e renderizar como cards
   // ============================================================
   async function carregarCartinhas() {
     listaCartinhasBody.innerHTML = `<p class="text-center text-gray-500 py-4">Carregando...</p>`;
@@ -91,9 +88,10 @@
       listaCartinhasBody.innerHTML = "";
 
       cartinhas.forEach((c) => {
-        const imgUrl = Array.isArray(c.imagem_cartinha) && c.imagem_cartinha[0]
-          ? c.imagem_cartinha[0].url
-          : "../imagens/cartinha-padrao.png";
+        const imgUrl =
+          Array.isArray(c.imagem_cartinha) && c.imagem_cartinha[0]
+            ? c.imagem_cartinha[0].url
+            : "../imagens/cartinha-padrao.png";
 
         const card = document.createElement("div");
         card.className =
@@ -110,7 +108,9 @@
             </div>
           </div>
           <div class="flex flex-col space-y-2 lg:w-1/4 lg:text-right w-full mt-4 lg:mt-0">
-            <span class="text-xs font-medium px-3 py-1 rounded-full text-white ${getStatusColor(c.status)}">
+            <span class="text-xs font-medium px-3 py-1 rounded-full text-white ${getStatusColor(
+              c.status
+            )}">
               ${(c.status || "").toUpperCase()}
             </span>
             <div class="flex gap-2 justify-start lg:justify-end mt-2">
@@ -122,6 +122,7 @@
 
         card.querySelector(".btn-editar").addEventListener("click", () => editarCartinha(c.id));
         card.querySelector(".btn-excluir").addEventListener("click", () => excluirCartinha(c.id));
+
         listaCartinhasBody.appendChild(card);
       });
     } catch (err) {
@@ -131,22 +132,26 @@
   }
 
   // ============================================================
-  // 🔹 Criar ou atualizar cartinha
+  // 🔹 Criar ou Atualizar Cartinha
   // ============================================================
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
 
     const dados = {
-      nome_crianca: form.nome_crianca.value,
+      nome_crianca: form.nome_crianca.value.trim(),
       idade: parseInt(form.idade.value) || null,
-      sexo: form.sexo.value,
-      sonho: form.sonho.value,
-      escola: form.escola.value,
-      cidade: form.cidade.value,
-      psicologa_responsavel: form.psicologa_responsavel.value,
-      telefone_contato: form.telefone_contato.value,
-      status: form.status.value,
-      imagem_cartinha: uploadedUrl ? [{ url: uploadedUrl }] : [],
+      sexo: form.sexo.value.toLowerCase(), // 🔹 compatível com Airtable
+      sonho: form.sonho.value.trim(),
+      escola: form.escola.value.trim(),
+      cidade: form.cidade.value.trim(),
+      psicologa_responsavel: form.psicologa_responsavel.value.trim(),
+      telefone_contato: form.telefone_contato.value.trim(),
+      status: form.status.value.toLowerCase(), // 🔹 compatível com Airtable
+      imagem_cartinha: uploadedUrl
+        ? [{ url: uploadedUrl }]
+        : form.imagem_cartinha?.value
+        ? [{ url: form.imagem_cartinha.value }]
+        : [],
     };
 
     try {
@@ -197,13 +202,13 @@
       form.telefone_contato.value = c.telefone_contato;
       form.status.value = c.status;
 
-      uploadedUrl =
+      const img =
         Array.isArray(c.imagem_cartinha) && c.imagem_cartinha[0]
           ? c.imagem_cartinha[0].url
           : "";
-
-      previewImagem.innerHTML = uploadedUrl
-        ? `<img src="${uploadedUrl}" class="mt-2 rounded-lg border border-blue-200 shadow-md mx-auto" style="max-width:150px;">`
+      uploadedUrl = img;
+      previewImagem.innerHTML = img
+        ? `<img src="${img}" class="mt-2 rounded-lg border border-blue-200 shadow-md mx-auto" style="max-width:150px;">`
         : "";
     } catch (err) {
       console.error("Erro ao editar cartinha:", err);
