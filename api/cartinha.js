@@ -152,6 +152,7 @@ export default async function handler(req, res) {
             nome_evento: [eventoSelecionado],
             data_evento,
             data_limite_recebimento,
+            evento_id,
           },
         },
       ]);
