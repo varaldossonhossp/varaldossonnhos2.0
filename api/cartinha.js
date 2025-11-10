@@ -149,10 +149,9 @@ export default async function handler(req, res) {
             telefone_contato: body.telefone_contato,
             psicologa_responsavel: body.psicologa_responsavel,
             status,
-            nome_evento,
+            nome_evento: [eventoSelecionado],
             data_evento,
             data_limite_recebimento,
-            evento_id,
           },
         },
       ]);
