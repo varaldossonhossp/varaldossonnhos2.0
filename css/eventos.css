@@ -1,6 +1,6 @@
 /* ===== Layout base da página ===== */
 .container { max-width: 1120px; margin: 0 auto; padding: 24px 16px; }
-.hero-eventos h1 { font-size: 2rem; margin: 0 0 6px; color: #0f172a; }
+.hero-eventos h1 { font-size: 2rem; margin: 0 0 6px; color: #7ca2fd; }
 .hero-eventos p { color: #475569; margin: 0 0 14px; }
 .filtros { display:flex; align-items:center; gap:8px; margin: 8px 0 20px; }
 .filtros select { padding: 8px 10px; border-radius: 10px; border: 1px solid #cbd5e1; }
