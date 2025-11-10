@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>📊 Relatório de Cartinhas por Evento | Varal dos Sonhos</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="icon" href="../imagens/favicon.png" type="image/png" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+  <style>
+    body { font-family: 'Poppins', sans-serif; background-color: #f3f7fb; }
+
+    .btn-top {
+      display: inline-flex; align-items: center; gap: 8px;
+      background-color: #1e88e5; color: white;
+      padding: 10px 20px; border-radius: 8px;
+      font-weight: 600; text-decoration: none;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      transition: background-color 0.3s, transform 0.2s;
+    }
+    .btn-top:hover { background-color: #1565c0; transform: translateY(-2px); }
+
+    table { width: 100%; border-collapse: collapse; }
+    th, td {
+      padding: 10px 14px; border-bottom: 1px solid #dbeafe;
+      text-align: left;
+    }
+    th {
+      background-color: #e3f2fd; color: #004080; font-weight: 600;
+    }
+    tr:nth-child(even) { background-color: #f8fafc; }
+    tr:hover { background-color: #e8f0fe; }
+
+    /* Estilo do cabeçalho do PDF */
+    @media print {
+      .no-print { display: none !important; }
+      body { background: white; color: black; }
+
+      header.print-header {
+        display: flex !important;
+        align-items: center;
+        justify-content: space-between;
+        border-bottom: 2px solid #000;
+        padding-bottom: 10px;
+        margin-bottom: 20px;
+      }
+      header.print-header img {
+        height: 60px;
+      }
+      header.print-header h1 {
+        font-size: 1.6rem;
+        text-align: center;
+        flex: 1;
+      }
+      header.print-header .info {
+        text-align: right;
+        font-size: 0.9rem;
+      }
+      table { border: 1px solid #ccc; }
+      th { background: #ddd !important; color: black; }
+    }
+  </style>
+</head>
+
+<body class="min-h-screen flex flex-col">
+  <main class="max-w-7xl mx-auto p-6 flex-1">
+
+    <!-- 🔹 Cabeçalho -->
+    <header class="flex flex-wrap justify-between items-center mb-8 no-print">
+      <a href="admin.html" class="btn-top">⬅️ Voltar ao Painel</a>
+      <h2 class="text-3xl font-extrabold text-blue-800 text-center flex-1">📊 Relatório de Cartinhas por Evento</h2>
+      <button id="btn-imprimir" class="btn-top">🖨️ Gerar PDF</button>
+    </header>
+
+    <!-- 🔹 Cabeçalho para impressão -->
+    <header class="print-header hidden">
+      <img src="../imagens/logo.png" alt="Logo Varal dos Sonhos" />
+      <h1>Relatório de Cartinhas por Evento</h1>
+      <div class="info">
+        <p><strong>Data:</strong> <span id="data-relatorio"></span></p>
+        <p><strong>Total:</strong> <span id="total-print">0</span></p>
+      </div>
+    </header>
+
+    <!-- 🔹 Filtros -->
+    <section class="bg-white p-6 rounded-2xl shadow-md mb-8 border border-blue-100 no-print">
+      <h3 class="text-xl font-semibold text-blue-800 mb-4">🔍 Filtros de Busca</h3>
+
+      <div class="grid md:grid-cols-4 sm:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Evento</label>
+          <select id="filtro-evento" class="w-full border border-gray-300 rounded-lg p-2">
+            <option value="">Todos</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Ponto de Coleta</label>
+          <select id="filtro-ponto" class="w-full border border-gray-300 rounded-lg p-2">
+            <option value="">Todos</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Sexo</label>
+          <select id="filtro-sexo" class="w-full border border-gray-300 rounded-lg p-2">
+            <option value="">Todos</option>
+            <option value="menino">Menino</option>
+            <option value="menina">Menina</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+          <select id="filtro-status" class="w-full border border-gray-300 rounded-lg p-2">
+            <option value="">Todos</option>
+            <option value="disponivel">Disponível</option>
+            <option value="adotada">Adotada</option>
+            <option value="inativa">Inativa</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="flex justify-center mt-6">
+        <button id="btn-filtrar" class="btn-top">🔎 Aplicar Filtros</button>
+      </div>
+    </section>
+
+    <!-- 🔹 Tabela de Resultados -->
+    <section class="bg-white p-6 rounded-2xl shadow-md border border-blue-100">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-2xl font-semibold text-blue-800">📋 Resultado da Busca</h3>
+        <span class="text-lg font-semibold text-blue-600">Total: <span id="total-cartinhas">0</span></span>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table id="tabela-cartinhas">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Criança</th>
+              <th>Idade</th>
+              <th>Sexo</th>
+              <th>Sonho</th>
+              <th>Escola</th>
+              <th>Cidade</th>
+              <th>Ponto de Coleta</th>
+              <th>Evento</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td colspan="10" class="text-center py-4 text-gray-500">Carregando cartinhas...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <footer class="text-center text-gray-500 py-4 text-sm no-print">
+    © Varal dos Sonhos — Painel Administrativo
+  </footer>
+
+  <script>
+    const API_URL = "../api/cartinha";
+    const tabela = document.querySelector("#tabela-cartinhas tbody");
+    const totalSpan = document.querySelector("#total-cartinhas");
+    const totalPrint = document.querySelector("#total-print");
+    const dataRelatorio = document.querySelector("#data-relatorio");
+
+    // Atualiza a data no cabeçalho do relatório
+    dataRelatorio.textContent = new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' });
+
+    async function carregarCartinhas(filtros = {}) {
+      tabela.innerHTML = "<tr><td colspan='10' class='text-center py-4 text-gray-500'>Carregando...</td></tr>";
+
+      try {
+        const resp = await fetch(API_URL);
+        const data = await resp.json();
+        const cartinhas = data.cartinha || [];
+
+        // Aplicar filtros
+        const filtradas = cartinhas.filter(c => {
+          const matchEvento = !filtros.evento || c.evento === filtros.evento;
+          const matchPonto = !filtros.ponto || c.ponto_coleta === filtros.ponto;
+          const matchSexo = !filtros.sexo || c.sexo === filtros.sexo;
+          const matchStatus = !filtros.status || c.status === filtros.status;
+          return matchEvento && matchPonto && matchSexo && matchStatus;
+        });
+
+        totalSpan.textContent = filtradas.length;
+        totalPrint.textContent = filtradas.length;
+
+        if (filtradas.length === 0) {
+          tabela.innerHTML = "<tr><td colspan='10' class='text-center py-4 text-gray-500'>Nenhuma cartinha encontrada.</td></tr>";
+          return;
+        }
+
+        tabela.innerHTML = filtradas.map((c, i) => `
+          <tr>
+            <td>${i + 1}</td>
+            <td>${c.nome_crianca || ""}</td>
+            <td>${c.idade || ""}</td>
+            <td>${c.sexo || ""}</td>
+            <td>${c.sonho || ""}</td>
+            <td>${c.escola || ""}</td>
+            <td>${c.cidade || ""}</td>
+            <td>${c.ponto_coleta || "—"}</td>
+            <td>${c.evento || "—"}</td>
+            <td>${c.status || ""}</td>
+          </tr>
+        `).join("");
+      } catch (err) {
+        tabela.innerHTML = "<tr><td colspan='10' class='text-center py-4 text-red-500'>Erro ao carregar dados</td></tr>";
+        console.error(err);
+      }
+    }
+
+    document.querySelector("#btn-filtrar").addEventListener("click", () => {
+      const filtros = {
+        evento: document.querySelector("#filtro-evento").value,
+        ponto: document.querySelector("#filtro-ponto").value,
+        sexo: document.querySelector("#filtro-sexo").value,
+        status: document.querySelector("#filtro-status").value,
+      };
+      carregarCartinhas(filtros);
+    });
+
+    document.querySelector("#btn-imprimir").addEventListener("click", () => {
+      window.print();
+    });
+
+    carregarCartinhas();
+  </script>
+</body>
+</html>

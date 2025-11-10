@@ -6,4 +6,6 @@ node_modules/
 .DS_Store
 .vscode/
 .vercel
-vercel.json
+package.json
+package-lock.json
+.env*.local

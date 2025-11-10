@@ -51,16 +51,16 @@
        SCRIPTS DE COMPONENTES E FUNCIONALIDADES
   ============================================================ -->
   <script>
-    // Carrega dinamicamente os componentes HTML fixos
-    async function carregarComponente(id, arquivo) {
-      const base = "../componentes/";
-      const resp = await fetch(base + arquivo);
-      if (resp.ok) document.getElementById(id).innerHTML = await resp.text();
-    }
+      // Carrega dinamicamente os componentes HTML fixos
+      async function carregarComponente(id, arquivo) {
+        const base = "../componentes/";
+        const resp = await fetch(base + arquivo);
+        if (resp.ok) document.getElementById(id).innerHTML = await resp.text();
+      }
 
-    carregarComponente("header", "header.html");
-    carregarComponente("footer", "footer.html");
-    carregarComponente("cloudinho", "cloudinho.html");
+      carregarComponente("header", "header.html");
+      carregarComponente("footer", "footer.html");
+      carregarComponente("cloudinho", "cloudinho.html");
   </script>
 
   <!-- Scripts principais -->

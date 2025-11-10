@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>💌 Gerenciar Cartinhas | Varal dos Sonhos</title>
+
+  <!-- TailwindCSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="../css/style.css" />
+  <link rel="stylesheet" href="../css/cloudinho.css" />
+  <link rel="icon" href="../imagens/favicon.png" type="image/png" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+  <style>
+    body {
+      font-family: "Poppins", sans-serif;
+      background-color: #f2f7fc;
+    }
+    h1, h2 { color: #004080; }
+    .cartinha-form input,
+    .cartinha-form textarea,
+    .cartinha-form select {
+      padding: 10px;
+      font-size: 1rem;
+      border: 1px solid #c9d7e3;
+      border-radius: 8px;
+      width: 100%;
+      text-transform: capitalize;
+    }
+    input[type="tel"] { text-transform: none; }
+    .cartinha-form button {
+      background: #007bff;
+      color: white;
+      border: none;
+      padding: 10px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: 0.3s;
+    }
+    .cartinha-form button:hover { background: #0056b3; }
+    .btn-secundario { background-color: #6c757d !important; }
+    .btn-secundario:hover { background-color: #5a6268 !important; }
+  </style>
+</head>
+
+<body class="bg-gradient-to-b from-blue-50 to-blue-100 min-h-screen">
+  <main class="max-w-6xl mx-auto p-6">
+
+    <header class="flex justify-between items-center mb-6 flex-wrap gap-3">
+      <a href="admin.html" class="btn-top">⬅️ Voltar ao Painel</a>
+      <h2 class="text-3xl font-extrabold text-blue-800 text-center flex-1">💌 Gerenciar Cartinhas</h2>
+    </header>
+
+    <p class="info-text mb-8">
+      As cartinhas podem ser <strong>editadas</strong> ou marcadas como <strong>inativas</strong>.
+    </p>
+
+    <!--  SELEÇÃO DE EVENTO -->
+    <section class="bg-white p-6 rounded-2xl shadow-md mb-8 border border-blue-100">
+      <h3 class="text-xl font-semibold text-blue-800 mb-4 text-center">Selecionar Evento Ativo</h3>
+      <div class="grid md:grid-cols-3 gap-4">
+        <div>
+          <label>📌 Evento</label>
+          <select id="evento" required>
+            <option value="">Carregando eventos...</option>
+          </select>
+        </div>
+        <div>
+          <label>📅 Data do Evento</label>
+          <input type="text" id="data_evento" readonly class="bg-gray-100" />
+        </div>
+        <div>
+          <label>🎁 Data Limite de Recebimento</label>
+          <input type="text" id="data_limite_recebimento" readonly class="bg-gray-100" />
+        </div>
+      </div>
+    </section>
+
+    <!-- 🧾 FORMULÁRIO DE CADASTRO / EDIÇÃO -->
+    <section class="bg-white p-6 md:p-10 rounded-2xl shadow-md mb-12 border border-blue-100">
+      <form id="form-cartinha" class="cartinha-form space-y-3">
+        <h3 class="text-xl font-semibold text-blue-800 mb-4 text-center">Cadastro / Edição</h3>
+
+        <div class="grid md:grid-cols-2 gap-4">
+          <!-- 👶 Dados da criança -->
+          <div><label>🧒 Nome da Criança</label><input type="text" id="nome_crianca" placeholder="Nome completo" required /></div>
+          <div><label>🎂 Idade</label><input type="number" id="idade" placeholder="Idade" min="0" required /></div>
+          <div><label>👧 Quantidade de Irmãos</label><input type="number" id="irmaos" placeholder="0, 1, 2..." min="0" /></div>
+          <div><label>👶 Idade dos Irmãos</label><input type="text" id="idade_irmaos" placeholder="Ex: 4, 8, 12" /></div>
+
+          <!-- ⚧ Gênero -->
+          <div><label>⚧ Sexo</label>
+            <select id="sexo" required>
+              <option value="">Selecione</option>
+              <option value="menino">Menino</option>
+              <option value="menina">Menina</option>
+              <option value="outro">Outro</option>
+            </select>
+          </div>
+
+          <!-- 📍 Localização e contato -->
+          <div><label>🏫 Escola</label><input type="text" id="escola" placeholder="Nome da escola" required /></div>
+          <div><label>🌆 Cidade</label><input type="text" id="cidade" placeholder="Cidade" required /></div>
+          <div><label>👩‍🏫 Psicóloga Responsável</label><input type="text" id="psicologa_responsavel" placeholder="Nome da psicóloga" required /></div>
+          <div><label>📞 Telefone de Contato</label><input type="tel" id="telefone_contato" placeholder="(XX) XXXXX-XXXX" maxlength="15" required /></div>
+
+          <!-- 🎯 Sonho -->
+          <div class="md:col-span-2">
+            <label>🎁 Sonho</label>
+            <textarea id="sonho" placeholder="Descreva o sonho da criança" rows="3" required></textarea>
+          </div>
+
+          <!-- 📷 Imagem -->
+          <div>
+            <label>🖼️ Imagem da Cartinha (upload automático via Cloudinary)</label>
+            <input type="file" id="imagem_cartinha" accept=".jpg, .jpeg, .png" style="padding-top: 15px;" />
+            <small style="font-size:0.8rem;color:#555;">O upload é feito automaticamente e o link é salvo no Airtable.</small>
+            <div id="preview-imagem" class="mt-2 text-center"></div>
+          </div>
+
+          <!-- ⚙️ Status e observações -->
+          <div>
+            <label>📦 Status</label>
+            <select id="status" required>
+              <option value="">Selecione</option>
+              <option value="disponivel">Disponível</option>
+              <option value="adotada">Adotada</option>
+              <option value="inativa">Inativa</option>
+            </select>
+          </div>
+
+          <div class="md:col-span-2">
+            <label>📝 Observações Internas</label>
+            <input type="text" id="observacoes_admin" placeholder="Anotações administrativas ou comentários" />
+          </div>
+        </div>
+
+        <div class="flex justify-center gap-4 mt-6">
+          <button type="submit">💾 Salvar</button>
+          <button type="button" id="btn-limpar" class="btn-secundario">🧹 Limpar</button>
+        </div>
+      </form>
+    </section>
+
+    <!-- 💌 CARTINHAS CADASTRADAS -->
+    <section class="bg-white p-6 md:p-10 rounded-2xl shadow-md border border-blue-100">
+      <div class="flex justify-between items-center mb-6 border-b pb-3">
+        <h3 class="text-2xl font-semibold text-gray-700">💌 Cartinhas do Evento</h3>
+        <span class="text-lg font-bold text-blue-600">Total: <span id="total-cartinhas">0</span></span>
+      </div>
+      <div id="lista-cartinhas-body" class="flex flex-col space-y-6">
+        <p class="text-center text-gray-500 py-4">Selecione um evento para visualizar as cartinhas...</p>
+      </div>
+    </section>
+  </main>
+
+  <!-- ⚙️ SCRIPTS UTILITÁRIOS -->
+  <script>
+    // Capitalização automática
+    document.addEventListener("input", (e) => {
+      if (e.target.tagName === "INPUT" && e.target.type === "text") {
+        const valor = e.target.value;
+        e.target.value = valor.charAt(0).toUpperCase() + valor.slice(1);
+      }
+    });
+
+    // Máscara de telefone
+    document.getElementById("telefone_contato").addEventListener("input", (e) => {
+      let valor = e.target.value.replace(/\D/g, "");
+      if (valor.length > 10)
+        valor = valor.replace(/^(\d{2})(\d{5})(\d{4}).*/, "($1) $2-$3");
+      else if (valor.length > 5)
+        valor = valor.replace(/^(\d{2})(\d{4})(\d{0,4}).*/, "($1) $2-$3");
+      else if (valor.length > 2)
+        valor = valor.replace(/^(\d{2})(\d{0,5})/, "($1) $2");
+      e.target.value = valor;
+    });
+
+    // Limpar formulário
+    const form = document.getElementById("form-cartinha");
+    const btnLimpar = document.getElementById("btn-limpar");
+    btnLimpar.addEventListener("click", () => {
+      form.reset();
+      document.getElementById("preview-imagem").innerHTML = "";
+      form.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  </script>
+
+  <script src="../js/gerenciarcartinha.js"></script>
+</body>
+</html>
