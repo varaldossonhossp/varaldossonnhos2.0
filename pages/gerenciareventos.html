@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gerenciar Eventos | Painel Administrativo</title>
+
+  <link rel="icon" href="../imagens/favicon.png" type="image/png" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ============================================================
+    💙 VARAL DOS SONHOS — Gerenciar Eventos (CSS integrado)
+    ============================================================ */
+
+    :root {
+      --azul-claro: #eef4ff;
+      --azul-medio: #2563eb;
+      --azul-escuro: #1e3a8a;
+    }
+
+    body {
+      font-family: "Poppins", sans-serif;
+      background-color: var(--azul-claro);
+      margin: 0;
+      padding: 0;
+      color: #333;
+    }
+
+    .container-admin {
+      padding: 30px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    /* 🔙 Botão Voltar */
+    .btn-voltar {
+      display: inline-block;
+      background-color: var(--azul-medio);
+      color: #fff;
+      padding: 10px 18px;
+      border-radius: 10px;
+      font-weight: 500;
+      text-decoration: none;
+      transition: 0.2s;
+      margin-bottom: 25px;
+    }
+
+    .btn-voltar:hover {
+      background-color: var(--azul-escuro);
+    }
+
+    .titulo-pagina {
+      text-align: center;
+      margin-bottom: 25px;
+    }
+
+    .titulo-pagina h2 {
+      font-weight: 600;
+      color: var(--azul-escuro);
+      font-size: 1.8rem;
+    }
+
+    .titulo-pagina p {
+      color: #555;
+      font-size: 0.95rem;
+    }
+
+    /* 🔹 Card */
+    .card {
+      background: #fff;
+      border-radius: 16px;
+      padding: 25px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+      margin-bottom: 30px;
+    }
+
+    .card h3 {
+      color: var(--azul-medio);
+      font-weight: 600;
+      margin-bottom: 10px;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    label {
+      display: block;
+      font-weight: 500;
+      color: #444;
+      margin-bottom: 5px;
+    }
+
+    input[type="text"],
+    input[type="date"],
+    textarea,
+    select {
+      width: 100%;
+      padding: 10px 12px;
+      height: 44px; /* 🔧 padroniza altura */
+      border: 1px solid #d3d3d3;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      transition: all 0.2s ease-in-out;
+      box-sizing: border-box;
+    }
+
+    textarea {
+      height: auto;
+      min-height: 80px;
+      resize: vertical;
+    }
+
+    input:focus,
+    textarea:focus,
+    select:focus {
+      border-color: var(--azul-medio);
+      outline: none;
+      box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+    }
+
+    /* 🔹 Upload */
+    .upload-area {
+      margin-top: 20px;
+    }
+
+    .upload-area p.texto-info {
+      font-size: 0.85rem;
+      color: #666;
+      margin-bottom: 8px;
+    }
+
+    #imagem {
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      padding: 6px;
+      background: #fafafa;
+      cursor: pointer;
+    }
+
+    .preview-img {
+      margin-top: 12px;
+    }
+
+    .preview-img img {
+      max-width: 200px;
+      border-radius: 10px;
+      border: 2px solid #e0e0e0;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    /* 🔹 Checkbox */
+    .checkbox-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 15px 0;
+      font-size: 0.95rem;
+      color: #333;
+    }
+
+    .checkbox-group input {
+      width: 18px;
+      height: 18px;
+      accent-color: var(--azul-medio);
+    }
+
+    /* 🔹 Botões */
+    .botoes {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    .btn-salvar,
+    .btn-limpar {
+      border: none;
+      border-radius: 8px;
+      padding: 10px 16px;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: 0.2s ease;
+    }
+
+    .btn-salvar {
+      background-color: var(--azul-medio);
+      color: #fff;
+    }
+
+    .btn-salvar:hover {
+      background-color: var(--azul-escuro);
+    }
+
+    .btn-limpar {
+      background-color: #ddd;
+      color: #333;
+    }
+
+    .btn-limpar:hover {
+      background-color: #ccc;
+    }
+
+    /* 🔹 Lista */
+    .lista-card {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      margin-top: 15px;
+    }
+
+    .evento-card {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 15px;
+      background: #f9fafb;
+      border-radius: 12px;
+      padding: 15px 20px;
+      border-left: 5px solid var(--azul-medio);
+      transition: all 0.2s ease;
+    }
+
+    .evento-card:hover {
+      background: #f1f5ff;
+      transform: translateY(-2px);
+    }
+
+    .evento-card .thumb-evento {
+      width: 90px;
+      height: 90px;
+      object-fit: cover;
+      border-radius: 10px;
+      border: 1px solid #ddd;
+    }
+
+    .evento-card .info {
+      flex: 1;
+    }
+
+    .evento-card .info h3 {
+      color: var(--azul-medio);
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .evento-card .info p {
+      color: #444;
+      margin-bottom: 4px;
+      font-size: 0.9rem;
+    }
+
+    .evento-card small {
+      display: block;
+      color: #666;
+      font-size: 0.85rem;
+    }
+
+    .evento-card .acoes {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .evento-card button {
+      border: none;
+      border-radius: 6px;
+      padding: 6px 10px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    .evento-card button:nth-child(1) {
+      background-color: #facc15;
+      color: #333;
+    }
+
+    .evento-card button:nth-child(2) {
+      background-color: #ef4444;
+      color: #fff;
+    }
+
+    @media (max-width: 768px) {
+      .grid-2 {
+        grid-template-columns: 1fr;
+      }
+
+      .evento-card {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .evento-card .acoes {
+        flex-direction: row;
+        justify-content: flex-end;
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <main class="container-admin">
+    <a href="admin.html" class="btn-voltar">⬅ Voltar ao Painel</a>
+    
+    <section class="titulo-pagina">
+      <h2>Gerenciar Eventos</h2>
+      <p>Adicione, edite ou remova eventos sazonais do Varal dos Sonhos 💙</p>
+    </section>
+
+    <!-- Formulário -->
+    <section class="card">
+      <h3>📝 Cadastrar / Editar Evento</h3>
+
+      <form id="formEvento">
+        <div class="grid-2">
+          <div>
+            <label for="nome_evento">Nome do Evento</label>
+            <input type="text" id="nome_evento" name="nome_evento" required />
+          </div>
+
+          <div>
+            <label for="status_evento">Status do Evento</label>
+            <select id="status_evento" name="status_evento" required>
+              <option value="proximo">Próximo</option>
+              <option value="em andamento">Em andamento</option>
+              <option value="encerrado">Encerrado</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div>
+            <label for="data_evento">Data do Evento</label>
+            <input type="date" id="data_evento" name="data_evento" required />
+          </div>
+
+          <div>
+            <label for="data_limite_recebimento">Data Limite para Recebimento</label>
+            <input type="date" id="data_limite_recebimento" name="data_limite_recebimento" required />
+          </div>
+        </div>
+
+        <div>
+          <label for="local_evento">Local do Evento</label>
+          <input type="text" id="local_evento" name="local_evento" placeholder="Ex: Escola Estadual José" required />
+        </div>
+
+        <div>
+          <label for="descricao">Descrição Curta</label>
+          <textarea id="descricao" name="descricao" rows="3" placeholder="Ex: Campanha de Natal solidária"></textarea>
+        </div>
+
+        <div class="upload-area">
+          <label for="imagem">📸 Imagem do Evento</label>
+          <p class="texto-info">O upload é feito automaticamente via Cloudinary e o link é salvo no Airtable.</p>
+          <input type="file" id="imagem" accept="image/*" />
+          <div id="previewImagem" class="preview-img"></div>
+        </div>
+
+        <div class="checkbox-group">
+          <input type="checkbox" id="destacar_na_homepage" />
+          <label for="destacar_na_homepage">📍 Destacar este evento na homepage</label>
+        </div>
+
+        <div class="botoes">
+          <button type="submit" class="btn-salvar">💾 Salvar</button>
+          <button type="reset" class="btn-limpar">🧹 Limpar</button>
+        </div>
+      </form>
+    </section>
+
+    <!-- Lista -->
+    <section class="card">
+      <h3>📅 Eventos Cadastrados</h3>
+      <p>Veja abaixo todos os eventos ativos e anteriores:</p>
+      <div id="listaEventos" class="lista-card"></div>
+    </section>
+  </main>
+
+  <script src="../js/gerenciareventos.js"></script>
+</body>
+</html>
