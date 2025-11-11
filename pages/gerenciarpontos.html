@@ -6,7 +6,7 @@
   <meta name="description" content="Gerenciamento dos pontos de coleta do Varal dos Sonhos." />
   <title>📦 Gerenciar Pontos de Coleta | Varal dos Sonhos</title>
 
-  <!-- Tailwind -->
+  <!-- 🎨 Tailwind e Fonte -->
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="icon" href="../imagens/favicon.png" type="image/png" />
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
@@ -46,16 +46,13 @@
     <header class="flex justify-between items-center mb-8 flex-wrap gap-4">
       <a href="admin.html" class="btn-top">⬅️ Voltar ao Painel</a>
       <h2 class="text-3xl font-extrabold text-blue-800 text-center flex-1">📦 Gerenciar Pontos de Coleta</h2>
-      <button type="button" onclick="window.scrollTo({top: 0, behavior: 'smooth'})" class="btn-top">
-        ➕ Novo Ponto
-      </button>
     </header>
 
     <p class="text-gray-600 text-center mb-8">
       Cadastre, edite e visualize os <strong>pontos oficiais</strong> de coleta de presentes do Varal dos Sonhos 💙
     </p>
 
-    <!-- 🔹 Formulário -->
+    <!-- 🔹 Formulário de Cadastro / Edição -->
     <section class="bg-white p-6 md:p-10 rounded-2xl shadow-md mb-12 border border-blue-100">
       <form id="form-ponto" class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <h3 class="text-xl font-semibold text-blue-800 mb-4 md:col-span-2 text-center">Cadastro / Edição</h3>
@@ -64,22 +61,27 @@
 
         <div>
           <label for="nome_ponto">🏠 Nome do Ponto</label>
-          <input type="text" id="nome_ponto" required class="w-full p-3 border rounded-lg" placeholder="Ex: ONG Alegria SP" />
+          <input type="text" id="nome_ponto" required class="w-full p-3 border rounded-lg capitalize" placeholder="Ex: ETEC São Paulo" />
         </div>
 
         <div>
           <label for="responsavel">👩‍💼 Responsável</label>
-          <input type="text" id="responsavel" required class="w-full p-3 border rounded-lg" placeholder="Nome do responsável" />
+          <input type="text" id="responsavel" required class="w-full p-3 border rounded-lg capitalize" placeholder="Nome do responsável" />
         </div>
 
-        <div class="md:col-span-2">
+        <div>
+          <label for="cep">📫 CEP</label>
+          <input type="text" id="cep" maxlength="9" class="w-full p-3 border rounded-lg" placeholder="Digite o CEP" />
+        </div>
+
+        <div class="md:col-span-1">
           <label for="endereco">📍 Endereço Completo</label>
           <input type="text" id="endereco" required class="w-full p-3 border rounded-lg" placeholder="Rua, número, bairro, cidade" />
         </div>
 
         <div>
-          <label for="telefone_ponto">📞 Telefone</label>
-          <input type="tel" id="telefone_ponto" class="w-full p-3 border rounded-lg" placeholder="(XX) XXXXX-XXXX" />
+          <label for="telefone">📞 Telefone</label>
+          <input type="tel" id="telefone" maxlength="15" class="w-full p-3 border rounded-lg" placeholder="(11) 99999-9999" />
         </div>
 
         <div>
@@ -88,15 +90,14 @@
         </div>
 
         <div>
-          <label for="horario_funcionamento">🕒 Horário de Funcionamento</label>
-          <input type="text" id="horario_funcionamento" class="w-full p-3 border rounded-lg" placeholder="Ex: Seg-Sáb, 10h às 19h" />
+          <label for="horario">🕒 Horário de Funcionamento</label>
+          <input type="text" id="horario" class="w-full p-3 border rounded-lg" placeholder="Seg a Sex, 8h às 18h" />
         </div>
 
         <div>
           <label for="status">📊 Status</label>
           <select id="status" required class="w-full p-3 border rounded-lg bg-white">
             <option value="ativo">Ativo</option>
-            <option value="pendente">Pendente</option>
             <option value="inativo">Inativo</option>
           </select>
         </div>
@@ -125,19 +126,7 @@
     </section>
   </main>
 
-  <script>
-    // Botão limpar com rolagem suave
-    document.addEventListener("DOMContentLoaded", () => {
-      const form = document.getElementById("form-ponto");
-      const btnLimpar = document.getElementById("btn-limpar");
-      btnLimpar.addEventListener("click", () => {
-        form.reset();
-        form.scrollIntoView({ behavior: "smooth", block: "start" });
-      });
-    });
-  </script>
-
-  <!-- Scripts -->
+  <!-- 🔹 Scripts -->
   <script src="../js/gerenciarpontos.js"></script>
 </body>
 </html>
