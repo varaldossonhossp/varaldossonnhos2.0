@@ -70,28 +70,10 @@ btnFiltrar.addEventListener("click", () => {
 });
 
 // ===============================
-// 🔹 Gerar PDF fiel (com cabeçalho)
+// 🔹 Gerar PDF 
 // ===============================
-btnPDF.addEventListener("click", async () => {
-  const { jsPDF } = window.jspdf;
-  const relatorio = document.getElementById("relatorio");
-
-  // Tira uma captura visual da área do relatório
-  const canvas = await html2canvas(relatorio, { scale: 2 });
-  const imgData = canvas.toDataURL("image/png");
-
-  const pdf = new jsPDF("p", "mm", "a4");
-  const larguraPagina = pdf.internal.pageSize.getWidth();
-  const alturaPagina = pdf.internal.pageSize.getHeight();
-
-  // Ajusta proporção da imagem
-  const proporcao = canvas.width / canvas.height;
-  const largura = larguraPagina - 20;
-  const altura = largura / proporcao;
-
-  pdf.addImage(imgData, "PNG", 10, 10, largura, altura);
-
-  pdf.save(`Relatorio_Pontos_de_Coleta_${new Date().toLocaleDateString("pt-BR")}.pdf`);
+btnPDF.addEventListener("click", () => {
+   window.print();
 });
 
 // ===============================
