@@ -1,9 +1,9 @@
 /* ============================================================
    💙 VARAL DOS SONHOS — Relatório de Cartinhas
    ------------------------------------------------------------
-   - Filtros: evento, ponto, sexo, status
-   - Impressão nativa (sem download direto)
-  
+   - Campos ajustados conforme estrutura Airtable real
+   - Filtros: nome_evento, nome_ponto, sexo, status
+   - Impressão via janela nativa (window.print)
    ============================================================ */
 
 const tabelaBody = document.getElementById("tabelaBody");
@@ -20,12 +20,14 @@ let cartinhas = [];
 let eventos = [];
 let pontos = [];
 
-// 📅 Exibe data formatada
+// 📅 Exibir data atual
 dataAtual.textContent = new Date().toLocaleDateString("pt-BR", {
-  day: "2-digit", month: "long", year: "numeric"
+  day: "2-digit",
+  month: "long",
+  year: "numeric"
 });
 
-// 🔹 Carregar dados das APIs
+// 🔹 Carregar dados
 async function carregarDados() {
   try {
     const [respCartas, respEventos, respPontos] = await Promise.all([
@@ -50,13 +52,13 @@ async function carregarDados() {
 
     preencherFiltros();
     renderizarTabela(cartinhas);
-  } catch (err) {
-    console.error(err);
+  } catch (erro) {
+    console.error("Erro ao carregar dados:", erro);
     tabelaBody.innerHTML = `<tr><td colspan="10" class="text-center text-red-500 py-4">Erro ao carregar dados.</td></tr>`;
   }
 }
 
-// 🔹 Preenche os filtros com dados reais
+// 🔹 Preencher filtros dinâmicos
 function preencherFiltros() {
   eventos.forEach(ev => {
     const opt = document.createElement("option");
@@ -73,7 +75,7 @@ function preencherFiltros() {
   });
 }
 
-// 🔹 Renderiza tabela
+// 🔹 Renderizar tabela
 function renderizarTabela(lista) {
   totalCartinhas.textContent = lista.length;
 
@@ -92,13 +94,11 @@ function renderizarTabela(lista) {
       <td>${c.escola || "—"}</td>
       <td>${c.cidade || "—"}</td>
       <td>${c.ponto_coleta || "—"}</td>
-      <td>${c.evento || "—"}</td>
+      <td>${c.nome_evento || c.nome_evento_lookup || "—"}</td>
       <td class="font-semibold ${
-        c.status === "adotada" || c.status === "confirmada"
+        c.status === "adotada"
           ? "text-green-600"
-          : c.status === "aguardando confirmacao"
-          ? "text-yellow-600"
-          : c.status === "presente entregue"
+          : c.status === "disponivel"
           ? "text-blue-600"
           : "text-gray-500"
       }">${c.status || "—"}</td>
@@ -106,7 +106,7 @@ function renderizarTabela(lista) {
   `).join("");
 }
 
-// 🔹 Aplicar filtros
+// 🔹 Filtrar registros
 btnFiltrar.addEventListener("click", () => {
   const eventoSel = filtroEvento.value;
   const pontoSel = filtroPonto.value;
@@ -115,18 +115,18 @@ btnFiltrar.addEventListener("click", () => {
 
   let filtradas = [...cartinhas];
 
-  if (eventoSel !== "todos") filtradas = filtradas.filter(c => c.evento === eventoSel);
+  if (eventoSel !== "todos") filtradas = filtradas.filter(c => c.nome_evento === eventoSel || c.nome_evento_lookup === eventoSel);
   if (pontoSel !== "todos") filtradas = filtradas.filter(c => c.ponto_coleta === pontoSel);
-  if (sexoSel !== "todos") filtradas = filtradas.filter(c => c.sexo === sexoSel);
-  if (statusSel !== "todos") filtradas = filtradas.filter(c => c.status === statusSel);
+  if (sexoSel !== "todos") filtradas = filtradas.filter(c => (c.sexo || "").toLowerCase() === sexoSel);
+  if (statusSel !== "todos") filtradas = filtradas.filter(c => (c.status || "").toLowerCase() === statusSel);
 
   renderizarTabela(filtradas);
 });
 
-// 🔹 Impressão nativa (como relatório de cartinhas por evento)
+// 🔹 Impressão (abre janela padrão do navegador)
 btnPDF.addEventListener("click", () => {
   window.print();
 });
 
-// 🚀 Inicialização
+// 🚀 Inicializar
 carregarDados();
