@@ -1,21 +1,30 @@
 /* ============================================================
-   💙 VARAL DOS SONHOS — Relatório de Pontos de Coleta
+   💙 VARAL DOS SONHOS — Relatório de Pontos de Coleta (PDF)
    ------------------------------------------------------------
-   - Consulta simples via API pontosdecoleta
+   - Consulta pontos via API
    - Filtro por status ativo/inativo/todos
-   - Geração de PDF via jsPDF
+   - Geração de PDF visual fiel (html2canvas + jsPDF)
    ============================================================ */
 
 const tabelaBody = document.getElementById("tabelaBody");
 const filtroStatus = document.getElementById("filtroStatus");
 const btnFiltrar = document.getElementById("btnFiltrar");
 const btnPDF = document.getElementById("btnPDF");
+const totalPontos = document.getElementById("totalPontos");
+const dataAtual = document.getElementById("dataAtual");
 
 let pontos = [];
 
-// ============================================================
-// 🔹 Buscar dados da API
-// ============================================================
+// ===============================
+// 📅 Exibe a data atual formatada
+// ===============================
+dataAtual.textContent = new Date().toLocaleDateString("pt-BR", {
+  day: "2-digit", month: "long", year: "numeric"
+});
+
+// ===============================
+// 🔹 Carrega pontos da API
+// ===============================
 async function carregarPontos() {
   try {
     const resp = await fetch("../api/pontosdecoleta");
@@ -23,16 +32,18 @@ async function carregarPontos() {
     if (!data.sucesso) throw new Error("Erro ao carregar pontos");
     pontos = data.pontos;
     renderizarTabela(pontos);
-  } catch (erro) {
-    console.error(erro);
+  } catch (err) {
+    console.error(err);
     tabelaBody.innerHTML = `<tr><td colspan="5" class="text-center text-red-500 py-4">Erro ao carregar pontos.</td></tr>`;
   }
 }
 
-// ============================================================
-// 🔹 Renderizar tabela com filtro
-// ============================================================
+// ===============================
+// 🔹 Renderiza a tabela
+// ===============================
 function renderizarTabela(lista) {
+  totalPontos.textContent = lista.length;
+
   if (!lista.length) {
     tabelaBody.innerHTML = `<tr><td colspan="5" class="text-center text-gray-400 py-4">Nenhum ponto encontrado.</td></tr>`;
     return;
@@ -49,61 +60,41 @@ function renderizarTabela(lista) {
   `).join("");
 }
 
-// ============================================================
-// 🔹 Aplicar filtro por status
-// ============================================================
+// ===============================
+// 🔹 Filtrar tabela
+// ===============================
 btnFiltrar.addEventListener("click", () => {
   const status = filtroStatus.value;
   const filtrados = status === "todos" ? pontos : pontos.filter(p => p.status === status);
   renderizarTabela(filtrados);
 });
 
-// ============================================================
-// 🔹 Gerar PDF com jsPDF
-// ============================================================
-btnPDF.addEventListener("click", () => {
+// ===============================
+// 🔹 Gerar PDF fiel (com cabeçalho)
+// ===============================
+btnPDF.addEventListener("click", async () => {
   const { jsPDF } = window.jspdf;
-  const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+  const relatorio = document.getElementById("relatorio");
 
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(16);
-  doc.text("📋 Relatório de Pontos de Coleta — Varal dos Sonhos", 15, 20);
-  doc.setFontSize(11);
-  doc.text(`Gerado em: ${new Date().toLocaleString("pt-BR")}`, 15, 28);
+  // Tira uma captura visual da área do relatório
+  const canvas = await html2canvas(relatorio, { scale: 2 });
+  const imgData = canvas.toDataURL("image/png");
 
-  const status = filtroStatus.value === "todos" ? "Todos" : filtroStatus.value.toUpperCase();
-  doc.text(`Filtro aplicado: ${status}`, 15, 36);
+  const pdf = new jsPDF("p", "mm", "a4");
+  const larguraPagina = pdf.internal.pageSize.getWidth();
+  const alturaPagina = pdf.internal.pageSize.getHeight();
 
-  doc.setFontSize(10);
-  let y = 48;
-  const espacamento = 8;
+  // Ajusta proporção da imagem
+  const proporcao = canvas.width / canvas.height;
+  const largura = larguraPagina - 20;
+  const altura = largura / proporcao;
 
-  const lista = filtroStatus.value === "todos" ? pontos : pontos.filter(p => p.status === filtroStatus.value);
+  pdf.addImage(imgData, "PNG", 10, 10, largura, altura);
 
-  if (!lista.length) {
-    doc.text("Nenhum ponto de coleta encontrado para este filtro.", 15, y);
-  } else {
-    lista.forEach((p, i) => {
-      doc.text(`${i + 1}. ${p.nome_ponto || "—"} (${p.status})`, 15, y);
-      y += 5;
-      doc.text(`   Responsável: ${p.responsavel || "—"}`, 15, y);
-      y += 5;
-      doc.text(`   Endereço: ${p.endereco || "—"}`, 15, y);
-      y += 5;
-      doc.text(`   Telefone: ${p.telefone || "—"}`, 15, y);
-      y += espacamento;
-
-      if (y > 270) {  // quebra automática de página
-        doc.addPage();
-        y = 20;
-      }
-    });
-  }
-
-  doc.save("Relatorio_Pontos_de_Coleta.pdf");
+  pdf.save(`Relatorio_Pontos_de_Coleta_${new Date().toLocaleDateString("pt-BR")}.pdf`);
 });
 
-// ============================================================
-// 🚀 Inicializar
-// ============================================================
+// ===============================
+// 🚀 Inicialização
+// ===============================
 carregarPontos();
