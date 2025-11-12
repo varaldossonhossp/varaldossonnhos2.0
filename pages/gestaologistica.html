@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Gestão logística das adoções do Varal dos Sonhos." />
+  <title>🚚 Gestão Logística | Varal dos Sonhos</title>
+
+  <!-- Tailwind + fonte -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="icon" href="../imagens/favicon.png" type="image/png" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+  <style>
+    body { font-family: "Poppins", sans-serif; background-color: #f2f7fc; }
+    h1, h2, h3 { color: #004080; }
+    .btn-top{
+      display:inline-flex;align-items:center;gap:8px;background:#1e88e5;color:#fff;
+      padding:10px 20px;border-radius:8px;font-weight:600;text-decoration:none;
+      box-shadow:0 2px 5px rgba(0,0,0,.1);transition:background-color .3s, transform .2s
+    }
+    .btn-top:hover{ background:#1565c0; transform:translateY(-2px) }
+    .status-badge { font-weight:600; padding:6px 10px; border-radius:8px; }
+    .aguardando { background:#fff3cd; color:#856404; }
+    .confirmada { background:#cce5ff; color:#004085; }
+    .recebida { background:#d4edda; color:#155724; }
+    .entregue { background:#f8d7da; color:#721c24; }
+  </style>
+</head>
+
+<body class="bg-gradient-to-b from-blue-50 to-blue-100 min-h-screen">
+  <main class="max-w-7xl mx-auto p-6">
+    <!-- Cabeçalho -->
+    <header class="flex justify-between items-center mb-8 flex-wrap gap-4">
+      <a href="admin.html" class="btn-top">⬅️ Voltar ao Painel</a>
+      <h2 class="text-3xl font-extrabold text-blue-800 text-center flex-1">🚚 Gestão Logística de Adoções</h2>
+    </header>
+
+    <p class="text-gray-600 text-center mb-8">
+      Acompanhe o status de cada adoção, confirme entregas e atualize o progresso logístico do Varal dos Sonhos 💙
+    </p>
+
+    <!-- Filtros -->
+    <section class="bg-white p-6 md:p-10 rounded-2xl shadow-md border border-blue-100 mb-10">
+      <h3 class="text-xl font-semibold text-blue-800 mb-4">🔍 Filtros de Busca</h3>
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div>
+          <label for="filtro-status" class="font-medium">Status</label>
+          <select id="filtro-status" class="w-full p-3 border rounded-lg bg-white">
+            <option value="">Todos</option>
+            <option value="aguardando confirmacao">Aguardando Confirmação</option>
+            <option value="confirmada">Confirmada</option>
+            <option value="presente recebido">Presente Recebido</option>
+            <option value="presente entregue">Presente Entregue</option>
+          </select>
+        </div>
+        <div>
+          <label for="filtro-evento" class="font-medium">Evento</label>
+          <input type="text" id="filtro-evento" class="w-full p-3 border rounded-lg" placeholder="Ex: Natal 2025">
+        </div>
+        <div>
+          <label for="filtro-ponto" class="font-medium">Ponto de Coleta</label>
+          <input type="text" id="filtro-ponto" class="w-full p-3 border rounded-lg" placeholder="Ex: ETEC Jaú">
+        </div>
+        <div class="flex items-end">
+          <button id="btn-filtrar" class="bg-blue-600 text-white px-6 py-3 rounded-lg shadow-md hover:bg-blue-700 transition w-full">Aplicar</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Lista de adoções -->
+    <section class="bg-white p-6 md:p-10 rounded-2xl shadow-md border border-blue-100">
+      <div class="flex justify-between items-center mb-6 border-b pb-3">
+        <h3 class="text-2xl font-semibold text-blue-800">📋 Adoções Registradas</h3>
+        <span class="text-lg font-bold text-blue-600">Total: <span id="total-adocoes">0</span></span>
+      </div>
+
+      <div id="adocoes-list-body" class="flex flex-col space-y-6">
+        <p class="text-center text-gray-500 py-4">Carregando adoções...</p>
+      </div>
+    </section>
+  </main>
+
+  <!-- Script -->
+  <script>
+    async function carregarAdocoes() {
+      const list = document.getElementById("adocoes-list-body");
+      list.innerHTML = "<p class='text-center text-gray-500 py-4'>Carregando...</p>";
+
+      try {
+        const res = await fetch("/api/listAdocoes.js");
+        const data = await res.json();
+
+        list.innerHTML = "";
+        document.getElementById("total-adocoes").textContent = data.length;
+
+        data.forEach(adocao => {
+          const div = document.createElement("div");
+          div.className = "p-5 border rounded-xl shadow-sm hover:shadow-md transition bg-blue-50";
+
+          div.innerHTML = `
+            <p><strong>🎁 Cartinha:</strong> ${adocao.cartinha}</p>
+            <p><strong>👤 Doador:</strong> ${adocao.nome_usuario} (${adocao.email_usuario})</p>
+            <p><strong>📍 Ponto de Coleta:</strong> ${adocao.ponto_coleta}</p>
+            <p><strong>📅 Data Limite:</strong> ${adocao.data_limite_recebimento}</p>
+            <p><strong>Status:</strong> <span class="status-badge ${adocao.status.replace(' ', '-')}">${adocao.status}</span></p>
+            <div class="mt-4 flex flex-wrap gap-2">
+              <button class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700" onclick="atualizarStatus('${adocao.id}','confirmada')">Confirmar Adoção</button>
+              <button class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700" onclick="atualizarStatus('${adocao.id}','presente recebido')">Marcar como Recebido</button>
+              <button class="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700" onclick="atualizarStatus('${adocao.id}','presente entregue')">Marcar como Entregue</button>
+            </div>
+          `;
+
+          list.appendChild(div);
+        });
+
+      } catch (err) {
+        list.innerHTML = "<p class='text-center text-red-600 py-4'>Erro ao carregar adoções.</p>";
+      }
+    }
+
+    async function atualizarStatus(id, novoStatus) {
+      const confirmacao = confirm(`Deseja realmente mudar o status para "${novoStatus}"?`);
+      if (!confirmacao) return;
+
+      const res = await fetch("/api/updateStatus.js", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, status: novoStatus })
+      });
+
+      const result = await res.json();
+      if (result.success) {
+        alert("Status atualizado com sucesso!");
+        carregarAdocoes();
+      } else {
+        alert("Erro ao atualizar status.");
+      }
+    }
+
+    carregarAdocoes();
+  </script>
+</body>
+</html>
