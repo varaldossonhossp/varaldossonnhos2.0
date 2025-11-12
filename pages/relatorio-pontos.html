@@ -37,7 +37,9 @@
     /* 🔹 Modo de impressão: remove botões e filtros, centraliza relatório */
     @media print {
       body {
-        background: white !important; -webkit-print-color-adjust: exact;
+        background: white !important; 
+        print-color-adjust: exact;
+        -webkit-print-color-adjust: exact;
       }
       #acoes, #filtros, a.voltar { display: none !important; }
       main {
