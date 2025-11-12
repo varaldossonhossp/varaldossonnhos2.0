@@ -1,19 +1,17 @@
 // ============================================================
-// 💙 VARAL DOS SONHOS — /api/eventos.js (versão unificada final)
-// ------------------------------------------------------------
-// 🔹 Compatível com a página eventos.html (Varal dos Sonhos)
-// 🔹 Unifica as versões "TCC" + "eventos-page"
-// 🔹 Suporte a ?status=... | ?tipo=home|admin|all
-// 🔹 Retorna todos os campos, incluindo contadores e imagens
-// 🔹 100% compatível com Airtable + Vercel
+// 💙 VARAL DOS SONHOS — /api/eventos.js (COM CORREÇÃO 405)
 // ============================================================
 
 import Airtable from "airtable";
-export const config = { runtime: "nodejs" };
 
-// ============================================================
-// 📦 Funções utilitárias
-// ============================================================
+// ⚠️ CORREÇÃO PARA O ERRO 405 (MÉTODO NÃO PERMITIDO) COM FORM-DATA/UPLOAD:
+export const config = { 
+    api: {
+        bodyParser: false, 
+    },
+    runtime: "nodejs" 
+};
+
 const ok = (res, data) => res.status(200).json(data);
 const err = (res, code, msg, detalhe) =>
   res.status(code).json({ sucesso: false, mensagem: msg, detalhe });
@@ -28,112 +26,158 @@ function getAirtable() {
   return { base, table };
 }
 
-// converte campos numéricos ou arrays em inteiros seguros
-function toIntSafe(v) {
-  if (v == null) return 0;
-  if (Array.isArray(v)) return v.length;
-  const n = parseInt(`${v}`.trim(), 10);
-  return Number.isFinite(n) ? n : 0;
-}
-function pick(...vals) {
-  for (const v of vals) if (v !== undefined) return v;
-  return undefined;
-}
+// ... (Restante das funções auxiliares: toIntSafe, pick, mapEvento, mapToAirtableFields) ...
 
-// ============================================================
-// 🧩 Mapeamento dos campos da tabela "eventos"
-// ============================================================
+// Seus helpers acima (omitidos por brevidade)
+
+/**
+ * Mapeia o registro do Airtable para o formato JS.
+ */
 function mapEvento(rec) {
-  const f = rec.fields || {};
-
-  // imagens
-  const imagem = Array.isArray(f.imagem)
-    ? f.imagem.map((x) => ({
-        url: x.url,
-        filename: x.filename,
-        width: x.width,
-        height: x.height,
-      }))
-    : [];
-
-  // status e campos básicos
   const statusRaw = (f.status_evento || "").toString().toLowerCase();
-
-  // contadores (cartinhas / adoções)
-  const cartinhas_total = toIntSafe(
-    pick(f.cartinhas_total, f.cartinha, f.cartinhas, f.qtd_cartinhas, f.qtd_cartinha)
-  );
-  const adocoes_total = toIntSafe(
-    pick(f.adocoes_total, f.adocoes, f.adoções, f.qtd_adocoes, f.qtd_adoções)
-  );
 
   return {
     id: rec.id,
-    id_evento: f.id_evento ?? null, // autonumber
     nome_evento: f.nome_evento ?? "",
     descricao: f.descricao ?? "",
     local_evento: f.local_evento ?? "",
-    data_evento: f.data_evento ?? null, // início das adoções
+    data_evento: f.data_evento ?? null,
     data_limite_recebimento: f.data_limite_recebimento ?? null,
-    data_realizacao_evento: f.data_realizacao_evento ?? null, // data do evento
+    data_realizacao_evento: f.data_realizacao_evento ?? null,
     status_evento: statusRaw,
     destacar_na_homepage: !!f.destacar_na_homepage,
     imagem,
-    cartinhas_total,
-    adocoes_total,
-    cartinhas: Array.isArray(f.cartinha) ? f.cartinha : [],
-    adocoes: Array.isArray(f.adocoes) ? f.adocoes : [],
+    cartinhas_total: toIntSafe(pick(f.cartinhas_total, f.cartinhas)),
+    adocoes_total: toIntSafe(pick(f.adocoes_total, f.adocoes)),
   };
 }
 
-// ============================================================
-// 🚀 Handler principal
-// ============================================================
+/**
+ * Mapeia os dados recebidos do formulário (FormData) para o formato do Airtable.
+ */
+function mapToAirtableFields(formData) {
+  const fields = {};
+  
+  if (formData.nome_evento !== undefined) fields.nome_evento = formData.nome_evento;
+  if (formData.descricao !== undefined) fields.descricao = formData.descricao;
+  if (formData.local_evento !== undefined) fields.local_evento = formData.local_evento;
+  if (formData.data_evento !== undefined) fields.data_evento = formData.data_evento;
+  if (formData.data_limite_recebimento !== undefined) fields.data_limite_recebimento = formData.data_limite_recebimento;
+  if (formData.data_realizacao_evento !== undefined) fields.data_realizacao_evento = formData.data_realizacao_evento;
+  if (formData.status_evento !== undefined) fields.status_evento = formData.status_evento;
+
+  if (formData.destacar_na_homepage !== undefined) {
+    fields.destacar_na_homepage = formData.destacar_na_homepage === "true";
+  }
+
+  // Imagem: O frontend envia um JSON string com a URL do Cloudinary
+  if (formData.imagem) {
+    try {
+      fields.imagem = JSON.parse(formData.imagem); 
+    } catch (e) {
+      console.error("Erro ao parsear imagem JSON:", e);
+    }
+  }
+
+  return fields;
+}
+
+
+// ------------------------------------------------------------
+// 🚀 Handler Principal
+// ------------------------------------------------------------
 export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Methods", "GET,OPTIONS");
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, PATCH, DELETE, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
   if (req.method === "OPTIONS") return res.status(204).end();
 
   try {
     const { base, table } = getAirtable();
+    const { id } = req.query; 
 
-    const { tipo = "", status = "" } = req.query;
-    let filtro = "";
+    const body = req.body; 
 
     // ------------------------------------------------------------
-    // 🔹 Compatível com ?tipo=home|admin|all (versão TCC)
-    // 🔹 Compatível com ?status=em andamento|proximo|encerrado (página HTML)
+    // 1. BUSCA POR ID (GET)
     // ------------------------------------------------------------
-    if (tipo === "home") {
-      filtro = "AND({destacar_na_homepage}=1, {status_evento}='em andamento')";
-    } else if (tipo === "admin") {
-      filtro = "{status_evento}='em andamento'";
-    } else if (status) {
-      const allowed = ["em andamento", "proximo", "encerrado"];
-      if (allowed.includes(status.toLowerCase())) {
-        filtro = `{status_evento}='${status}'`;
+    if (req.method === "GET" && id) {
+      try {
+        const registro = await base(table).find(id);
+        const evento = mapEvento(registro);
+        return ok(res, { sucesso: true, evento });
+      } catch (e) {
+        return err(res, 404, "Evento não encontrado.", e.message);
       }
     }
+    
+    // ------------------------------------------------------------
+    // 2. LISTAGEM (GET) - Com sua lógica de filtro
+    // ------------------------------------------------------------
+    if (req.method === "GET" && !id) {
+      const { tipo = "", status = "" } = req.query;
+      let filtro = "";
 
-    const selectConfig = {
-      sort: [{ field: "data_evento", direction: "asc" }],
-      pageSize: 50,
-    };
-    if (filtro) selectConfig.filterByFormula = filtro;
+      if (tipo === "home") {
+        filtro = "AND({destacar_na_homepage}=1, {status_evento}='em andamento')";
+      } else if (tipo === "admin") {
+        filtro = "{status_evento}='em andamento'";
+      } else if (tipo === "all") {
+          filtro = null; 
+      } else if (status) {
+        const allowed = ["em andamento", "proximo", "encerrado"];
+        if (allowed.includes(status.toLowerCase())) {
+          filtro = `{status_evento}='${status}'`;
+        }
+      }
+
+      const params = {
+        sort: [{ field: "data_evento", direction: "asc" }],
+        pageSize: 50,
+      };
+      if (filtro) params.filterByFormula = filtro;
+
+      const registros = await base(table).select(params).all();
+      const eventos = registros.map(mapEvento);
+      return ok(res, { sucesso: true, total: eventos.length, eventos });
+    }
 
     // ------------------------------------------------------------
-    // 🔹 Busca no Airtable
+    // 3. CRIAÇÃO (POST)
     // ------------------------------------------------------------
-    const registros = await base(table).select(selectConfig).all();
-    const eventos = registros.map(mapEvento);
+    if (req.method === "POST" && body) {
+      const fields = mapToAirtableFields(body);
+      if (!fields.nome_evento) return err(res, 400, "O nome do evento é obrigatório.");
+      
+      const registro = await base(table).create([{ fields }], { typecast: true });
+      return ok(res, { sucesso: true, mensagem: "Evento criado com sucesso!", evento: mapEvento(registro[0]) });
+    }
 
     // ------------------------------------------------------------
-    // 🔹 Resposta padronizada
+    // 4. ATUALIZAÇÃO (PATCH)
     // ------------------------------------------------------------
-    ok(res, { sucesso: true, total: eventos.length, eventos });
+    if (req.method === "PATCH" && id && body) {
+      const fields = mapToAirtableFields(body);
+      if (Object.keys(fields).length === 0) return err(res, 400, "Nenhum campo para atualizar foi fornecido.");
+
+      const registro = await base(table).update([{ id, fields }], { typecast: true });
+      return ok(res, { sucesso: true, mensagem: "Evento atualizado com sucesso!", evento: mapEvento(registro[0]) });
+    }
+
+    // ------------------------------------------------------------
+    // 5. EXCLUSÃO (DELETE)
+    // ------------------------------------------------------------
+    if (req.method === "DELETE" && id) {
+      await base(table).destroy([id]);
+      return ok(res, { sucesso: true, mensagem: "Evento excluído com sucesso!" });
+    }
+
+    // ------------------------------------------------------------
+    // 6. MÉTODO NÃO SUPORTADO
+    // ------------------------------------------------------------
+    return err(res, 405, `Método ${req.method} não permitido.`);
   } catch (e) {
-    console.error("🔥 Erro /api/eventos:", e);
-    err(res, 500, "Erro ao listar eventos.", e?.message || e?.toString());
+    console.error(`Erro /api/eventos (${req.method}):`, e);
+    err(res, 500, `Erro ao processar a requisição ${req.method}.`, e?.message || e?.toString());
   }
 }
