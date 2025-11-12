@@ -1,10 +1,10 @@
 // ============================================================
-// 💙 VARAL DOS SONHOS — /api/cartinha.js (versão corrigida TCC Cloudinary)
+// 💙 VARAL DOS SONHOS — /api/cartinha.js (VERSÃO FINAL CORRIGIDA)
 // ------------------------------------------------------------
-// 🔹 Correção: Filtro por evento usando campo "data_evento" (Linked Record)
-// ✅ CORREÇÃO: Leitura de campos LOOKUP com nome exato
-// ❌ CORREÇÃO: Remoção da escrita em campos LOOKUP (POST/PATCH)
-// ✅ CORREÇÃO: Lógica condicional para evitar 'INVALID_RECORD_ID' em Linked Record vazio
+// ✅ CORREÇÕES APLICADAS:
+// - Leitura de campos LOOKUP com nome exato no GET.
+// - Lógica condicional no POST/PATCH para evitar 'INVALID_RECORD_ID' ("").
+// - Ajuste no PATCH para apenas atualizar campos que foram enviados.
 // ============================================================
 
 import Airtable from "airtable";
@@ -44,6 +44,7 @@ function parseForm(req) {
     form.parse(req, (err, fields, files) => {
       if (err) return reject(err);
       const parsedFields = {};
+      // Garante que fields seja um objeto simples (Formidable retorna array no Vercel)
       for (const key in fields) parsedFields[key] = fields[key][0];
       resolve({ fields: parsedFields, files });
     });
@@ -59,6 +60,7 @@ export default async function handler(req, res) {
 
   try {
     let body = req.body;
+    // Usa o parser para métodos que podem incluir arquivos (POST/PATCH)
     if (req.method === "POST" || req.method === "PATCH") {
       const parsed = await parseForm(req);
       body = parsed.fields;
@@ -74,7 +76,7 @@ export default async function handler(req, res) {
         sort: [{ field: "data_cadastro", direction: "desc" }],
       };
 
-      // ✅ Filtro corrigido para buscar por campo "data_evento" (Linked Record)
+      // Filtro por Linked Record ID do evento
       if (evento) {
         selectConfig = {
           ...selectConfig,
@@ -98,9 +100,8 @@ export default async function handler(req, res) {
         status: r.fields.status || "",
         nome_evento: r.fields.nome_evento || "",
         data_evento: r.fields.data_evento || "",
-        // ✅ Leitura do campo LOOKUP `data_limite_recebimento`
+        // ✅ Leitura de campos LOOKUP corrigida (usando o nome exato do Airtable):
         data_limite_recebimento: r.fields["data_limite_recebimento (from data_evento)"] || "",
-        // ✅ Leitura do campo LOOKUP `id_evento`
         evento_id: r.fields["id_evento (from eventos)"] || "",
       }));
 
@@ -121,7 +122,7 @@ export default async function handler(req, res) {
         ? body.status.toLowerCase()
         : "disponivel";
 
-      // ✅ URL Cloudinary enviada pelo front-end
+      // Prepara URL da imagem
       let imagem_cartinha = [];
       try {
         imagem_cartinha = body.imagem_cartinha
@@ -131,31 +132,31 @@ export default async function handler(req, res) {
         imagem_cartinha = [];
       }
 
-      // ✅ Campos de evento
+      // Campos de evento
       const nome_evento = body.nome_evento || "";
       const evento_id = body.evento_id || ""; // ID do evento ativo (usado para Linked Record)
       
       // Prepara os campos base
       const fieldsToCreate = {
-        nome_crianca: body.nome_crianca,
+        nome_crianca: body.nome_crianca || "", // Adicionando fallback para evitar undefined
         idade: parseInt(body.idade) || null,
         sexo,
-        sonho: body.sonho,
+        sonho: body.sonho || "",
         imagem_cartinha,
-        escola: body.escola,
-        cidade: body.cidade,
-        telefone_contato: body.telefone_contato,
-        psicologa_responsavel: body.psicologa_responsavel,
+        escola: body.escola || "",
+        cidade: body.cidade || "",
+        telefone_contato: body.telefone_contato || "",
+        psicologa_responsavel: body.psicologa_responsavel || "",
         status,
         nome_evento,
       };
 
-      // 💡 CORREÇÃO: Adiciona Linked Record SOMENTE se o ID não for vazio.
+      // 💡 Adiciona Linked Record SOMENTE se evento_id for válido
       if (evento_id) {
         fieldsToCreate.data_evento = [evento_id]; // Associa ao evento ativo
       }
 
-      // ✅ Cria novo registro
+      // Cria novo registro
       const novo = await base(tableName).create([
         {
           fields: fieldsToCreate,
@@ -178,6 +179,7 @@ export default async function handler(req, res) {
       const sexoValido = ["menino", "menina", "outro"];
       const statusValido = ["disponivel", "adotada", "inativa"];
 
+      // Prepara status e sexo, se vierem no body
       const sexo = sexoValido.includes((body.sexo || "").toLowerCase())
         ? body.sexo.toLowerCase()
         : undefined;
@@ -185,15 +187,17 @@ export default async function handler(req, res) {
         ? body.status.toLowerCase()
         : undefined;
       
-      // Prepara campos para atualização
+      // Prepara campos para atualização - SÓ ADICIONA SE O VALOR EXISTIR NO BODY
       const fieldsToUpdate = {};
-      if (body.nome_crianca !== undefined) fieldsToUpdate.nome_crianca = body.nome_crianca;
-      if (body.idade !== undefined) fieldsToUpdate.idade = parseInt(body.idade) || null;
-      if (body.sonho !== undefined) fieldsToUpdate.sonho = body.sonho;
-      if (body.escola !== undefined) fieldsToUpdate.escola = body.escola;
-      if (body.cidade !== undefined) fieldsToUpdate.cidade = body.cidade;
-      if (body.telefone_contato !== undefined) fieldsToUpdate.telefone_contato = body.telefone_contato;
-      if (body.psicologa_responsavel !== undefined) fieldsToUpdate.psicologa_responsavel = body.psicologa_responsavel;
+      
+      // 💡 CORREÇÃO CRÍTICA: Só adiciona ao fieldsToUpdate se a propriedade existe E não for vazia
+      if (body.nome_crianca) fieldsToUpdate.nome_crianca = body.nome_crianca;
+      if (body.idade) fieldsToUpdate.idade = parseInt(body.idade) || null;
+      if (body.sonho) fieldsToUpdate.sonho = body.sonho;
+      if (body.escola) fieldsToUpdate.escola = body.escola;
+      if (body.cidade) fieldsToUpdate.cidade = body.cidade;
+      if (body.telefone_contato) fieldsToUpdate.telefone_contato = body.telefone_contato;
+      if (body.psicologa_responsavel) fieldsToUpdate.psicologa_responsavel = body.psicologa_responsavel;
 
       if (sexo) fieldsToUpdate.sexo = sexo;
       if (status) fieldsToUpdate.status = status;
@@ -211,12 +215,16 @@ export default async function handler(req, res) {
       // ✅ Atualização de vínculo de evento
       if (body.nome_evento) fieldsToUpdate.nome_evento = body.nome_evento;
       
-      // 💡 CORREÇÃO: data_evento só é adicionado se body.data_evento (ID) tiver valor
+      // 💡 data_evento (Linked Record) só é adicionado se body.data_evento (ID) tiver valor
       if (body.data_evento) {
         fieldsToUpdate.data_evento = [body.data_evento];
       }
-      // ❌ Removida a linha que causava erro: if (body.evento_id) fieldsToUpdate.evento_id = body.evento_id; 
 
+      // Verifica se há algo para atualizar
+      if (Object.keys(fieldsToUpdate).length === 0) {
+        return res.status(400).json({ sucesso: false, mensagem: "Nenhum campo válido para atualização foi fornecido." });
+      }
+      
       const atualizado = await base(tableName).update([
         { id, fields: fieldsToUpdate },
       ]);
@@ -244,6 +252,8 @@ export default async function handler(req, res) {
       .json({ sucesso: false, mensagem: `Método ${req.method} não permitido.` });
   } catch (e) {
     console.error("🔥 Erro /api/cartinha:", e);
-    res.status(500).json({ sucesso: false, mensagem: e.message });
+    // Se for um erro do Airtable, retorna o status code do erro (ex: 422)
+    const statusCode = e.statusCode || 500; 
+    res.status(statusCode).json({ sucesso: false, mensagem: e.message, erroAirtable: e });
   }
 }

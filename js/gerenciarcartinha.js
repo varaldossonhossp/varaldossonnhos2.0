@@ -1,15 +1,16 @@
 // ============================================================
-// 💌 VARAL DOS SONHOS — Gerenciar Cartinhas (versão TCC final)
+// 💌 VARAL DOS SONHOS — gerenciarcartinha.js (VERSÃO FINAL CORRIGIDA)
 // ------------------------------------------------------------
-// 🔹 Correção: Vinculação com tabela "eventos"
-// ✅ CORREÇÃO: Reintrodução de evento_id no FormData para POST/PATCH
+// ✅ CORREÇÕES APLICADAS:
+// - Validação de evento selecionado antes do envio.
+// - Envio correto dos IDs de evento (evento_id e data_evento) para o backend.
 // ============================================================
 
 (() => {
   const API_URL = "../api/cartinha";
   const API_EVENTOS = "../api/eventos";
-  const CLOUD_NAME = "drnn5zmxi";
-  const UPLOAD_PRESET = "unsigned_uploads";
+  const CLOUD_NAME = "drnn5zmxi"; // 🚨 SUBSTITUA PELO SEU CLOUD NAME REAL
+  const UPLOAD_PRESET = "unsigned_uploads"; // 🚨 SUBSTITUA PELO SEU PRESET REAL
 
   const listaCartinhasBody = document.querySelector("#lista-cartinhas-body");
   const totalCartinhasSpan = document.querySelector("#total-cartinhas");
@@ -21,7 +22,7 @@
 
   let editandoId = null;
   let uploadedUrl = "";
-  let eventoAtual = "";
+  let eventoAtual = ""; // Variável para armazenar o ID do evento Airtable
 
   // ============================================================
   // 🔹 Carregar eventos "em andamento"
@@ -30,6 +31,7 @@
     try {
       const resp = await fetch(`${API_EVENTOS}?tipo=admin`);
       const data = await resp.json();
+      // Filtra eventos em andamento (assumindo que o campo é status_evento)
       const eventos = data.eventos?.filter(e => e.status_evento === "em andamento") || [];
 
       if (eventos.length === 0) {
@@ -53,15 +55,21 @@
 
   selectEvento.addEventListener("change", (e) => {
     const opt = e.target.selectedOptions[0];
-    if (!opt) return;
+    if (!opt || opt.value === "") {
+      eventoAtual = "";
+      inputDataEvento.value = "";
+      inputDataLimite.value = "";
+      listaCartinhasBody.innerHTML = `<p class="text-center text-gray-500 py-4">Selecione um evento.</p>`;
+      return;
+    }
     inputDataEvento.value = opt.dataset.dataEvento || "";
     inputDataLimite.value = opt.dataset.dataLimite || "";
-    eventoAtual = opt.value;
+    eventoAtual = opt.value; // ID do evento selecionado (ID do Airtable)
     carregarCartinhas(); // 🔁 Filtra cartinhas do evento selecionado
   });
 
   // ============================================================
-  // 🔹 Upload Cloudinary — sem alterações
+  // 🔹 Upload Cloudinary
   // ============================================================
   form.imagem_cartinha.addEventListener("change", async () => {
     const file = form.imagem_cartinha.files[0];
@@ -90,19 +98,21 @@
   });
 
   // ============================================================
-  // 🔹 Enviar formulário — adiciona nome_evento e datas
+  // 🔹 Enviar formulário — POST ou PATCH
   // ============================================================
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
-    if (!eventoAtual) return alert("Selecione um evento antes de cadastrar!");
+    if (!eventoAtual) return alert("Selecione um evento antes de cadastrar/atualizar!");
 
     const formData = new FormData(form);
+    // Adiciona a URL da imagem ao formData
     formData.append("imagem_cartinha", uploadedUrl ? JSON.stringify([{ url: uploadedUrl }]) : JSON.stringify([]));
+    // Adiciona o nome do evento (para campo de texto)
     formData.append("nome_evento", selectEvento.selectedOptions[0].text);
     
-    // ✅ O ID do evento (que é o Linked Record)
+    // ✅ ID do evento (Linked Record) - Nome 'data_evento' deve ser o nome exato do campo no Airtable
     formData.append("data_evento", eventoAtual); 
-    // ✅ O ID do evento (usado para checagem no POST/PATCH)
+    // ✅ ID do evento (Usado para validação no backend)
     formData.append("evento_id", eventoAtual); 
     
     try {
@@ -113,14 +123,19 @@
 
       if (resultado.sucesso) {
         alert(editandoId ? "Cartinha atualizada!" : "Cartinha cadastrada!");
+        // Reseta estado
         form.reset();
         previewImagem.innerHTML = "";
         uploadedUrl = "";
         editandoId = null;
         carregarCartinhas();
-      } else alert("Erro: " + resultado.mensagem);
+      } else {
+        console.error("Erro do servidor:", resultado.erroAirtable || resultado.mensagem);
+        alert("Erro ao salvar: " + (resultado.mensagem || "Verifique o console para mais detalhes."));
+      }
     } catch (err) {
-      alert("Erro ao salvar cartinha.");
+      console.error("Erro na requisição:", err);
+      alert("Erro ao salvar cartinha. Verifique a conexão.");
     }
   });
 
@@ -130,6 +145,7 @@
   async function carregarCartinhas() {
     if (!eventoAtual) {
       listaCartinhasBody.innerHTML = `<p class="text-center text-gray-500 py-4">Selecione um evento.</p>`;
+      totalCartinhasSpan.textContent = "0";
       return;
     }
 
@@ -151,10 +167,11 @@
 
       cartinhas.forEach((c) => {
         const imgUrl = Array.isArray(c.imagem_cartinha) && c.imagem_cartinha[0] ? c.imagem_cartinha[0].url : "../imagens/cartinha-padrao.png";
-        const card = document.createElement("div");
-        card.className = "p-4 border border-blue-200 rounded-xl shadow-md bg-white flex flex-col lg:flex-row gap-4 justify-between items-start lg:items-center";
+        // Criação do card da cartinha (mantido da versão anterior)
+        const card = document.createElement("div");
+        card.className = "p-4 border border-blue-200 rounded-xl shadow-md bg-white flex flex-col lg:flex-row gap-4 justify-between items-start lg:items-center";
 
-        card.innerHTML = `
+        card.innerHTML = `
           <div class="flex items-center gap-4 w-full lg:w-3/4">
             <img src="${imgUrl}" class="w-16 h-16 object-cover rounded-full border-2 border-blue-400">
             <div class="flex-1">
@@ -185,12 +202,17 @@
     }
   }
 
+  // ============================================================
+  // 🔹 Função Editar
+  // ============================================================
   async function editarCartinha(id) {
+    // Busca a lista completa (ou filtrada) e encontra a cartinha
     const resp = await fetch(`${API_URL}?evento=${eventoAtual}`);
     const dados = await resp.json();
     const c = dados.cartinha.find(x => x.id === id);
-    if (!c) return alert("Cartinha não encontrada.");
+    if (!c) return alert("Cartinha não encontrada para edição.");
 
+    // Preenche o formulário
     editandoId = id;
     form.nome_crianca.value = c.nome_crianca;
     form.idade.value = c.idade;
@@ -201,17 +223,37 @@
     form.psicologa_responsavel.value = c.psicologa_responsavel;
     form.telefone_contato.value = c.telefone_contato;
     form.status.value = c.status;
-    previewImagem.innerHTML = c.imagem_cartinha?.[0]
-      ? `<img src="${c.imagem_cartinha[0].url}" class="mt-2 rounded-lg border border-blue-200 shadow-md mx-auto" style="max-width:150px;">`
+    
+    // Preenche o campo de evento (apenas o <select> se for o mesmo evento atual)
+    if(c.data_evento && c.data_evento[0]) {
+        selectEvento.value = c.data_evento[0];
+        // Força a atualização dos campos de data
+        const opt = selectEvento.selectedOptions[0];
+        if (opt) {
+            inputDataEvento.value = opt.dataset.dataEvento || "";
+            inputDataLimite.value = opt.dataset.dataLimite || "";
+            eventoAtual = opt.value;
+        }
+    }
+
+
+    // Preenche a pré-visualização da imagem
+    uploadedUrl = c.imagem_cartinha?.[0]?.url || "";
+    previewImagem.innerHTML = uploadedUrl
+      ? `<img src="${uploadedUrl}" class="mt-2 rounded-lg border border-blue-200 shadow-md mx-auto" style="max-width:150px;">`
       : "";
+      
+    // Rola para o topo para mostrar o formulário
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   // ============================================================
   // 🔹 Inativar cartinha (sem excluir)
   // ============================================================
   async function inativarCartinha(id) {
-    if (!confirm("Marcar esta cartinha como inativa?")) return;
+    if (!confirm("Tem certeza que deseja marcar esta cartinha como INATIVA?")) return;
     try {
+      // O PATCH deve ser enviado como JSON, não como FormData, neste caso
       const resp = await fetch(`${API_URL}?id=${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -221,9 +263,11 @@
       if (resultado.sucesso) {
         alert("Cartinha marcada como inativa!");
         carregarCartinhas();
-      }
+      } else {
+         alert("Erro ao inativar: " + (resultado.mensagem || "Erro desconhecido."));
+      }
     } catch {
-      alert("Erro ao atualizar cartinha.");
+      alert("Erro de comunicação ao inativar cartinha.");
     }
   }
 
