@@ -1,7 +1,8 @@
 // ============================================================
 // 💌 VARAL DOS SONHOS — Gerenciar Cartinhas (versão TCC final)
 // ------------------------------------------------------------
-// 🔹 Vinculação com tabela "eventos" (nome_evento, datas)
+// 🔹 Correção: Vinculação com tabela "eventos"
+// ❌ CORREÇÃO: Remoção da adição de campos LOOKUP ao FormData (POST/PATCH)
 // ============================================================
 
 (() => {
@@ -98,10 +99,10 @@
     const formData = new FormData(form);
     formData.append("imagem_cartinha", uploadedUrl ? JSON.stringify([{ url: uploadedUrl }]) : JSON.stringify([]));
     formData.append("nome_evento", selectEvento.selectedOptions[0].text);
-    formData.append("data_evento", inputDataEvento.value);
-    // 💡 CORREÇÃO: Removido campo LOOKUP, pois não deve ser enviado para Airtable
+    formData.append("data_evento", inputDataEvento.value); // Linked Record ID
+    // 💡 CORREÇÕES: Removidos campos LOOKUP (data_limite_recebimento e evento_id)
     // formData.append("data_limite_recebimento", inputDataLimite.value);
-    formData.append("evento_id", eventoAtual);
+    // formData.append("evento_id", eventoAtual);
 
     try {
       const metodo = editandoId ? "PATCH" : "POST";

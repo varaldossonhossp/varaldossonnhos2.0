@@ -1,9 +1,6 @@
 // ============================================================
 // 💙 VARAL DOS SONHOS — /api/cartinha.js (versão corrigida TCC Cloudinary)
 // ------------------------------------------------------------
-// 🔹 Upload de imagem via Cloudinary (URL pública enviada pelo front-end)
-// 🔹 Compatível com Vercel (sem uso de Base64 nem Buffer)
-// 🔹 Validação de campos Single Select (sexo, status)
 // ============================================================
 
 import Airtable from "airtable";
@@ -97,9 +94,10 @@ export default async function handler(req, res) {
         status: r.fields.status || "",
         nome_evento: r.fields.nome_evento || "",
         data_evento: r.fields.data_evento || "",
-        // 💡 CORREÇÃO: Uso da notação de colchetes para campo LOOKUP
+        // 💡 CORREÇÃO: Leitura do campo LOOKUP `data_limite_recebimento`
         data_limite_recebimento: r.fields["data_limite_recebimento (from data_evento)"] || "",
-        evento_id: r.fields.evento_id || "",
+        // 💡 CORREÇÃO: Leitura do campo LOOKUP `id_evento`
+        evento_id: r.fields["id_evento (from eventos)"] || "",
       }));
 
       return res.status(200).json({ sucesso: true, cartinha });
@@ -131,9 +129,7 @@ export default async function handler(req, res) {
 
       // ✅ Campos de evento
       const nome_evento = body.nome_evento || "";
-      const evento_id = body.evento_id || "";
-      // 💡 CORREÇÃO: data_evento e data_limite_recebimento NÃO DEVEM ser escritos no POST,
-      // pois o Airtable já pega o valor automaticamente do Linked Record.
+      const evento_id = body.evento_id || ""; // ID do evento ativo (usado para Linked Record)
 
       // ✅ Cria novo registro vinculado ao evento ativo
       const novo = await base(tableName).create([
@@ -150,8 +146,9 @@ export default async function handler(req, res) {
             psicologa_responsavel: body.psicologa_responsavel,
             status,
             nome_evento,
-            data_evento: [evento_id], // associa ao evento ativo (Linked Record)
-            evento_id,
+            data_evento: [evento_id], // ESTE É O CAMPO LINKED RECORD CORRETO
+            // ❌ REMOVIDO: evento_id (lookup field) não deve ser escrito
+            // ❌ REMOVIDO: data_limite_recebimento (lookup field) não deve ser escrito
           },
         },
       ]);
@@ -202,12 +199,11 @@ export default async function handler(req, res) {
         }
       }
 
-      // ✅ Atualização de vínculo de evento (mantém se vier do front)
+      // ✅ Atualização de vínculo de evento
       if (body.nome_evento) fieldsToUpdate.nome_evento = body.nome_evento;
       if (body.data_evento) fieldsToUpdate.data_evento = [body.data_evento];
-      // 💡 CORREÇÃO: Remoção da escrita em `data_limite_recebimento` (Lookup Field)
-      if (body.evento_id) fieldsToUpdate.evento_id = body.evento_id;
-
+      // ❌ REMOVIDO: evento_id e data_limite_recebimento (lookup fields) não devem ser escritos
+      
       const atualizado = await base(tableName).update([
         { id, fields: fieldsToUpdate },
       ]);
