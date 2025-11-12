@@ -1,10 +1,11 @@
 // ============================================================
-// 💙 VARAL DOS SONHOS — /api/cartinha.js (versão final TCC Cloudinary)
+// 💙 VARAL DOS SONHOS — /api/cartinha.js (versão corrigida TCC Cloudinary)
 // ------------------------------------------------------------
 // 🔹 Upload de imagem via Cloudinary (URL pública enviada pelo front-end)
 // 🔹 Compatível com Vercel (sem uso de Base64 nem Buffer)
 // 🔹 Validação de campos Single Select (sexo, status)
-// 🔹 NOVO: integração com eventos (nome_evento, data_evento, data_limite_recebimento, evento_id)
+// 🔹 Correção: filtro por evento usando campo "data_evento" (Linked Record)
+// 🔹 Correção: remoção da variável indefinida "eventoSelecionado"
 // 🔹 Mantém GET, POST, PATCH, DELETE e CORS originais
 // ============================================================
 
@@ -75,11 +76,11 @@ export default async function handler(req, res) {
         sort: [{ field: "data_cadastro", direction: "desc" }],
       };
 
-      // ✅ Filtra por evento (se parâmetro presente)
+      // ✅ Filtro corrigido para buscar por campo "data_evento" (Linked Record)
       if (evento) {
         selectConfig = {
           ...selectConfig,
-          filterByFormula: `{evento_id} = "${evento}"`,
+          filterByFormula: `SEARCH("${evento}", ARRAYJOIN({data_evento}))`,
         };
       }
 
@@ -130,12 +131,13 @@ export default async function handler(req, res) {
         imagem_cartinha = [];
       }
 
-      // ✅ Campos de evento (novos)
+      // ✅ Campos de evento
       const nome_evento = body.nome_evento || "";
       const data_evento = body.data_evento || "";
       const data_limite_recebimento = body.data_limite_recebimento || "";
       const evento_id = body.evento_id || "";
 
+      // ✅ Cria novo registro vinculado ao evento ativo
       const novo = await base(tableName).create([
         {
           fields: {
@@ -149,11 +151,10 @@ export default async function handler(req, res) {
             telefone_contato: body.telefone_contato,
             psicologa_responsavel: body.psicologa_responsavel,
             status,
-            nome_evento: [eventoSelecionado],
-            data_evento,
+            nome_evento,
+            data_evento: [evento_id], // associa ao evento ativo (Linked Record)
             data_limite_recebimento,
             evento_id,
-            nome_evento,
           },
         },
       ]);
@@ -206,7 +207,7 @@ export default async function handler(req, res) {
 
       // ✅ Atualização de vínculo de evento (mantém se vier do front)
       if (body.nome_evento) fieldsToUpdate.nome_evento = body.nome_evento;
-      if (body.data_evento) fieldsToUpdate.data_evento = body.data_evento;
+      if (body.data_evento) fieldsToUpdate.data_evento = [body.data_evento];
       if (body.data_limite_recebimento)
         fieldsToUpdate.data_limite_recebimento = body.data_limite_recebimento;
       if (body.evento_id) fieldsToUpdate.evento_id = body.evento_id;
