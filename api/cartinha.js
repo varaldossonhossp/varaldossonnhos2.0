@@ -1,6 +1,10 @@
 // ============================================================
 // 💙 VARAL DOS SONHOS — /api/cartinha.js (versão corrigida TCC Cloudinary)
 // ------------------------------------------------------------
+// 🔹 Correção: Filtro por evento usando campo "data_evento" (Linked Record)
+// ✅ CORREÇÃO: Leitura de campos LOOKUP com nome exato
+// ❌ CORREÇÃO: Remoção da escrita em campos LOOKUP (POST/PATCH)
+// ✅ CORREÇÃO: Lógica condicional para evitar 'INVALID_RECORD_ID' em Linked Record vazio
 // ============================================================
 
 import Airtable from "airtable";
@@ -94,9 +98,9 @@ export default async function handler(req, res) {
         status: r.fields.status || "",
         nome_evento: r.fields.nome_evento || "",
         data_evento: r.fields.data_evento || "",
-        // 💡 CORREÇÃO: Leitura do campo LOOKUP `data_limite_recebimento`
+        // ✅ Leitura do campo LOOKUP `data_limite_recebimento`
         data_limite_recebimento: r.fields["data_limite_recebimento (from data_evento)"] || "",
-        // 💡 CORREÇÃO: Leitura do campo LOOKUP `id_evento`
+        // ✅ Leitura do campo LOOKUP `id_evento`
         evento_id: r.fields["id_evento (from eventos)"] || "",
       }));
 
@@ -130,26 +134,31 @@ export default async function handler(req, res) {
       // ✅ Campos de evento
       const nome_evento = body.nome_evento || "";
       const evento_id = body.evento_id || ""; // ID do evento ativo (usado para Linked Record)
+      
+      // Prepara os campos base
+      const fieldsToCreate = {
+        nome_crianca: body.nome_crianca,
+        idade: parseInt(body.idade) || null,
+        sexo,
+        sonho: body.sonho,
+        imagem_cartinha,
+        escola: body.escola,
+        cidade: body.cidade,
+        telefone_contato: body.telefone_contato,
+        psicologa_responsavel: body.psicologa_responsavel,
+        status,
+        nome_evento,
+      };
 
-      // ✅ Cria novo registro vinculado ao evento ativo
+      // 💡 CORREÇÃO: Adiciona Linked Record SOMENTE se o ID não for vazio.
+      if (evento_id) {
+        fieldsToCreate.data_evento = [evento_id]; // Associa ao evento ativo
+      }
+
+      // ✅ Cria novo registro
       const novo = await base(tableName).create([
         {
-          fields: {
-            nome_crianca: body.nome_crianca,
-            idade: parseInt(body.idade) || null,
-            sexo,
-            sonho: body.sonho,
-            imagem_cartinha,
-            escola: body.escola,
-            cidade: body.cidade,
-            telefone_contato: body.telefone_contato,
-            psicologa_responsavel: body.psicologa_responsavel,
-            status,
-            nome_evento,
-            data_evento: [evento_id], // ESTE É O CAMPO LINKED RECORD CORRETO
-            // ❌ REMOVIDO: evento_id (lookup field) não deve ser escrito
-            // ❌ REMOVIDO: data_limite_recebimento (lookup field) não deve ser escrito
-          },
+          fields: fieldsToCreate,
         },
       ]);
 
@@ -175,16 +184,16 @@ export default async function handler(req, res) {
       const status = statusValido.includes((body.status || "").toLowerCase())
         ? body.status.toLowerCase()
         : undefined;
-
-      const fieldsToUpdate = {
-        nome_crianca: body.nome_crianca,
-        idade: parseInt(body.idade) || null,
-        sonho: body.sonho,
-        escola: body.escola,
-        cidade: body.cidade,
-        telefone_contato: body.telefone_contato,
-        psicologa_responsavel: body.psicologa_responsavel,
-      };
+      
+      // Prepara campos para atualização
+      const fieldsToUpdate = {};
+      if (body.nome_crianca !== undefined) fieldsToUpdate.nome_crianca = body.nome_crianca;
+      if (body.idade !== undefined) fieldsToUpdate.idade = parseInt(body.idade) || null;
+      if (body.sonho !== undefined) fieldsToUpdate.sonho = body.sonho;
+      if (body.escola !== undefined) fieldsToUpdate.escola = body.escola;
+      if (body.cidade !== undefined) fieldsToUpdate.cidade = body.cidade;
+      if (body.telefone_contato !== undefined) fieldsToUpdate.telefone_contato = body.telefone_contato;
+      if (body.psicologa_responsavel !== undefined) fieldsToUpdate.psicologa_responsavel = body.psicologa_responsavel;
 
       if (sexo) fieldsToUpdate.sexo = sexo;
       if (status) fieldsToUpdate.status = status;
@@ -201,9 +210,13 @@ export default async function handler(req, res) {
 
       // ✅ Atualização de vínculo de evento
       if (body.nome_evento) fieldsToUpdate.nome_evento = body.nome_evento;
-      if (body.data_evento) fieldsToUpdate.data_evento = [body.data_evento];
-      // ❌ REMOVIDO: evento_id e data_limite_recebimento (lookup fields) não devem ser escritos
       
+      // 💡 CORREÇÃO: data_evento só é adicionado se body.data_evento (ID) tiver valor
+      if (body.data_evento) {
+        fieldsToUpdate.data_evento = [body.data_evento];
+      }
+      // ❌ Removida a linha que causava erro: if (body.evento_id) fieldsToUpdate.evento_id = body.evento_id; 
+
       const atualizado = await base(tableName).update([
         { id, fields: fieldsToUpdate },
       ]);
