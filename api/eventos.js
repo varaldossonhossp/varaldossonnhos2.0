@@ -3,6 +3,7 @@
 // ============================================================
 
 import Airtable from "airtable";
+import formidable from "formidable";
 
 // ⚠️ CORREÇÃO PARA O ERRO 405 (MÉTODO NÃO PERMITIDO) COM FORM-DATA/UPLOAD:
 export const config = { 
@@ -26,16 +27,42 @@ function getAirtable() {
   return { base, table };
 }
 
-// ... (Restante das funções auxiliares: toIntSafe, pick, mapEvento, mapToAirtableFields) ...
+function parseForm(req) {
+  return new Promise((resolve, reject) => {
+    const form = formidable({ multiples: true });
+    form.parse(req, (err, fields, files) => {
+      if (err) return reject(err);
+      
+      // fields e files são retornados como arrays de string, convertemos para o formato simples:
+      const simplifiedFields = {};
+      for (const key in fields) {
+        simplifiedFields[key] = Array.isArray(fields[key]) ? fields[key][0] : fields[key];
+      }
+      
+      resolve({ fields: simplifiedFields, files });
+    });
+  });
+}
 
-// Seus helpers acima (omitidos por brevidade)
+function pick(val1, val2) {
+    return val1 ?? val2;
+}
+
+function toIntSafe(value) {
+    const num = parseInt(value);
+    return isNaN(num) ? 0 : num;
+}
 
 /**
  * Mapeia o registro do Airtable para o formato JS.
  */
+// ============================================================
+// 💡 mapEvento CORRIGIDO
+// ============================================================
 function mapEvento(rec) {
-  const statusRaw = (f.status_evento || "").toString().toLowerCase();
-
+  const f = rec.fields;
+  const imagem = f.imagem ?? [];
+  const statusRaw = (f.status_evento || "").toString().toLowerCase(); 
   return {
     id: rec.id,
     nome_evento: f.nome_evento ?? "",
@@ -46,7 +73,7 @@ function mapEvento(rec) {
     data_realizacao_evento: f.data_realizacao_evento ?? null,
     status_evento: statusRaw,
     destacar_na_homepage: !!f.destacar_na_homepage,
-    imagem,
+    imagem: imagem,
     cartinhas_total: toIntSafe(pick(f.cartinhas_total, f.cartinhas)),
     adocoes_total: toIntSafe(pick(f.adocoes_total, f.adocoes)),
   };
@@ -87,97 +114,109 @@ function mapToAirtableFields(formData) {
 // 🚀 Handler Principal
 // ------------------------------------------------------------
 export default async function handler(req, res) {
-  res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Methods", "GET, POST, PATCH, DELETE, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
-  if (req.method === "OPTIONS") return res.status(204).end();
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    res.setHeader("Access-Control-Allow-Methods", "GET, POST, PATCH, DELETE, OPTIONS");
+    res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+    if (req.method === "OPTIONS") return res.status(204).end();
 
-  try {
-    const { base, table } = getAirtable();
-    const { id } = req.query; 
+    try {
+        const { base, table } = getAirtable();
+        const { id } = req.query;
 
-    const body = req.body; 
-
-    // ------------------------------------------------------------
-    // 1. BUSCA POR ID (GET)
-    // ------------------------------------------------------------
-    if (req.method === "GET" && id) {
-      try {
-        const registro = await base(table).find(id);
-        const evento = mapEvento(registro);
-        return ok(res, { sucesso: true, evento });
-      } catch (e) {
-        return err(res, 404, "Evento não encontrado.", e.message);
-      }
-    }
-    
-    // ------------------------------------------------------------
-    // 2. LISTAGEM (GET) - Com sua lógica de filtro
-    // ------------------------------------------------------------
-    if (req.method === "GET" && !id) {
-      const { tipo = "", status = "" } = req.query;
-      let filtro = "";
-
-      if (tipo === "home") {
-        filtro = "AND({destacar_na_homepage}=1, {status_evento}='em andamento')";
-      } else if (tipo === "admin") {
-        filtro = "{status_evento}='em andamento'";
-      } else if (tipo === "all") {
-          filtro = null; 
-      } else if (status) {
-        const allowed = ["em andamento", "proximo", "encerrado"];
-        if (allowed.includes(status.toLowerCase())) {
-          filtro = `{status_evento}='${status}'`;
+        // ------------------------------------------------------------
+        // ⚠️ MUDANÇA CRÍTICA: Processar o corpo da requisição POST/PATCH
+        // ------------------------------------------------------------
+        let bodyFields = {};
+        if (req.method === "POST" || req.method === "PATCH") {
+            // ✅ AQUI CHAMAMOS parseForm(req) para obter os campos do FormData
+            const { fields } = await parseForm(req);
+            bodyFields = fields;
         }
-      }
 
-      const params = {
-        sort: [{ field: "data_evento", direction: "asc" }],
-        pageSize: 50,
-      };
-      if (filtro) params.filterByFormula = filtro;
+        // ------------------------------------------------------------
+        // 1. BUSCA POR ID (GET)
+        // ------------------------------------------------------------
+        if (req.method === "GET" && id) {
+            try {
+                const registro = await base(table).find(id);
+                const evento = mapEvento(registro); 
+                return ok(res, { sucesso: true, evento });
+            } catch (e) {
+                return err(res, 404, "Evento não encontrado.", e.message);
+            }
+        }
+        
+        // ------------------------------------------------------------
+        // 2. LISTAGEM (GET) - Onde o frontend busca os dados
+        // ------------------------------------------------------------
+        if (req.method === "GET" && !id) {
+            const { tipo = "", status = "" } = req.query;
+            let filtro = "";
 
-      const registros = await base(table).select(params).all();
-      const eventos = registros.map(mapEvento);
-      return ok(res, { sucesso: true, total: eventos.length, eventos });
+            if (tipo === "home") {
+                filtro = "AND({destacar_na_homepage}=1, {status_evento}='em andamento')";
+            } else if (tipo === "admin") {
+                filtro = "{status_evento}='em andamento'";
+            } else if (tipo === "all") {
+                filtro = null; 
+            } else if (status) {
+                const allowed = ["em andamento", "proximo", "encerrado"];
+                if (allowed.includes(status.toLowerCase())) {
+                    filtro = `{status_evento}='${status}'`;
+                }
+            }
+
+            const params = {
+                sort: [{ field: "data_evento", direction: "asc" }],
+                pageSize: 50,
+            };
+            if (filtro) params.filterByFormula = filtro;
+
+            const registros = await base(table).select(params).all();
+            
+            // ⚠️ O erro de carregamento inicial *pode* vir daqui
+            // se 'mapEvento' falhar (pelos helpers ausentes ou dados vazios)
+            const eventos = registros.map(mapEvento); 
+            return ok(res, { sucesso: true, total: eventos.length, eventos });
+        }
+
+        // ------------------------------------------------------------
+        // 3. CRIAÇÃO (POST)
+        // ------------------------------------------------------------
+        if (req.method === "POST" && Object.keys(bodyFields).length > 0) {
+            const fields = mapToAirtableFields(bodyFields);
+            if (!fields.nome_evento) return err(res, 400, "O nome do evento é obrigatório.");
+            
+            const registro = await base(table).create([{ fields }], { typecast: true });
+            return ok(res, { sucesso: true, mensagem: "Evento criado com sucesso!", evento: mapEvento(registro[0]) });
+        }
+
+        // ------------------------------------------------------------
+        // 4. ATUALIZAÇÃO (PATCH)
+        // ------------------------------------------------------------
+        if (req.method === "PATCH" && id && Object.keys(bodyFields).length > 0) {
+            const fields = mapToAirtableFields(bodyFields);
+            if (Object.keys(fields).length === 0) return err(res, 400, "Nenhum campo para atualizar foi fornecido.");
+
+            const registro = await base(table).update([{ id, fields }], { typecast: true });
+            return ok(res, { sucesso: true, mensagem: "Evento atualizado com sucesso!", evento: mapEvento(registro[0]) });
+        }
+
+        // ------------------------------------------------------------
+        // 5. EXCLUSÃO (DELETE)
+        // ------------------------------------------------------------
+        if (req.method === "DELETE" && id) {
+            await base(table).destroy([id]);
+            return ok(res, { sucesso: true, mensagem: "Evento excluído com sucesso!" });
+        }
+
+        // ------------------------------------------------------------
+        // 6. MÉTODO NÃO SUPORTADO
+        // ------------------------------------------------------------
+        return err(res, 405, `Método ${req.method} não permitido.`);
+    } catch (e) {
+        console.error(`Erro /api/eventos (${req.method}):`, e);
+        // Garante que o frontend recebe um erro JSON em caso de falha no try/catch
+        return err(res, 500, `Erro ao processar a requisição ${req.method}.`, e?.message || e?.toString());
     }
-
-    // ------------------------------------------------------------
-    // 3. CRIAÇÃO (POST)
-    // ------------------------------------------------------------
-    if (req.method === "POST" && body) {
-      const fields = mapToAirtableFields(body);
-      if (!fields.nome_evento) return err(res, 400, "O nome do evento é obrigatório.");
-      
-      const registro = await base(table).create([{ fields }], { typecast: true });
-      return ok(res, { sucesso: true, mensagem: "Evento criado com sucesso!", evento: mapEvento(registro[0]) });
-    }
-
-    // ------------------------------------------------------------
-    // 4. ATUALIZAÇÃO (PATCH)
-    // ------------------------------------------------------------
-    if (req.method === "PATCH" && id && body) {
-      const fields = mapToAirtableFields(body);
-      if (Object.keys(fields).length === 0) return err(res, 400, "Nenhum campo para atualizar foi fornecido.");
-
-      const registro = await base(table).update([{ id, fields }], { typecast: true });
-      return ok(res, { sucesso: true, mensagem: "Evento atualizado com sucesso!", evento: mapEvento(registro[0]) });
-    }
-
-    // ------------------------------------------------------------
-    // 5. EXCLUSÃO (DELETE)
-    // ------------------------------------------------------------
-    if (req.method === "DELETE" && id) {
-      await base(table).destroy([id]);
-      return ok(res, { sucesso: true, mensagem: "Evento excluído com sucesso!" });
-    }
-
-    // ------------------------------------------------------------
-    // 6. MÉTODO NÃO SUPORTADO
-    // ------------------------------------------------------------
-    return err(res, 405, `Método ${req.method} não permitido.`);
-  } catch (e) {
-    console.error(`Erro /api/eventos (${req.method}):`, e);
-    err(res, 500, `Erro ao processar a requisição ${req.method}.`, e?.message || e?.toString());
-  }
 }
