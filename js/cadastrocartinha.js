@@ -59,20 +59,25 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   // ------------------------------------------------------------
-  // 🎉 Carregar EVENTOS no select
+  // 🎉 Carregar EVENTOS no select (CORRIGIDO)
   // ------------------------------------------------------------
   async function carregarEventos() {
     try {
       const resp = await fetch("/api/eventos");
       const json = await resp.json();
 
-      if (!json.sucesso) return;
+      if (!json.sucesso || !Array.isArray(json.eventos)) {
+        console.error("Erro API eventos", json);
+        return;
+      }
 
       const select = document.getElementById("id_evento");
+      select.innerHTML = `<option value="">Selecione um evento</option>`;
+
       json.eventos.forEach(ev => {
         const opt = document.createElement("option");
         opt.value = ev.id;
-        opt.textContent = ev.fields.nome_evento;
+        opt.textContent = ev.nome_evento;  // CORREÇÃO AQUI!
         select.appendChild(opt);
       });
 
@@ -146,7 +151,7 @@ document.addEventListener("DOMContentLoaded", () => {
       status: form.status.value,
       cadastro_sessao_id: cadastroSessaoId,
 
-      // 👉 NOVO — Evento
+      // Evento da cartinha
       id_evento: form.id_evento.value,
     };
 
@@ -266,7 +271,7 @@ function atualizarLista() {
 }
 
 // ============================================================
-// EDITAR
+// EDITAR (CORRIGIDO para puxar id_evento)
 // ============================================================
 function editarCartinha(idx) {
   const c = cartinhasSessao[idx];
@@ -284,7 +289,9 @@ function editarCartinha(idx) {
   form.sonho.value = c.sonho;
   form.observacoes_admin.value = c.observacoes_admin;
   form.status.value = c.status;
-  form.id_evento.value = c.id_evento;
+
+  // CORREÇÃO
+  form.id_evento.value = c.id_evento || "";
 
   uploadedUrl = c.imagem_cartinha;
   document.getElementById("preview-imagem").innerHTML =
