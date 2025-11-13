@@ -8,6 +8,7 @@
 // 🔹 Mantém GET, POST, PATCH, DELETE originais
 // 🔹 ADIÇÃO: suporte a cadastro_sessao_id (painel admin)
 // 🔹 ADIÇÃO: GET com filtro por sessão (?session=123)
+// 🔹 AJUSTE: inclusão dos campos irmaos e idade_irmaos
 // ============================================================
 
 import Airtable from "airtable";
@@ -67,10 +68,9 @@ export default async function handler(req, res) {
       body = parsed.fields;
     }
 
-    // ============================================================
-    // 🔹 GET — Lista de cartinhas
-    //     (Agora com filtro por evento OU sessão admin)
-    // ============================================================
+    // ==========================================================
+    // 🔹 GET — Lista de cartinhas (com filtro por evento ou sessão)
+    // ==========================================================
     if (req.method === "GET") {
       const { evento, session } = req.query;
 
@@ -101,6 +101,8 @@ export default async function handler(req, res) {
         nome_crianca: r.fields.nome_crianca || "",
         idade: r.fields.idade || "",
         sexo: r.fields.sexo || "",
+        irmaos: r.fields.irmaos || "",
+        idade_irmaos: r.fields.idade_irmaos || "",
         sonho: r.fields.sonho || "",
         escola: r.fields.escola || "",
         cidade: r.fields.cidade || "",
@@ -123,10 +125,9 @@ export default async function handler(req, res) {
       return res.status(200).json({ sucesso: true, cartinha });
     }
 
-    // ============================================================
+    // ==========================================================
     // 🔹 POST — Criar nova cartinha
-    //     (Agora com campo opcional cadastro_sessao_id)
-    // ============================================================
+    // ==========================================================
     if (req.method === "POST") {
       const sexoValido = ["menino", "menina", "outro"];
       const statusValido = ["disponivel", "adotada", "inativa"];
@@ -139,7 +140,7 @@ export default async function handler(req, res) {
         ? body.status.toLowerCase()
         : "disponivel";
 
-      // 🔹 Imagem Cloudinary
+      // 🔹 Imagem Cloudinary (array de anexos)
       let imagem_cartinha = [];
       try {
         imagem_cartinha = body.imagem_cartinha
@@ -149,21 +150,23 @@ export default async function handler(req, res) {
         imagem_cartinha = [];
       }
 
-      // 🔹 Campos de evento
+      // 🔹 Campos de evento (opcionais)
       const nome_evento = body.nome_evento || "";
       const data_evento = body.data_evento || "";
       const data_limite_recebimento = body.data_limite_recebimento || "";
       const evento_id = body.evento_id || "";
 
-      // 🔹 Sessão admin
+      // 🔹 Sessão admin (opcional)
       const cadastro_sessao_id = body.cadastro_sessao_id || "";
 
       const novo = await base(tableName).create([
         {
           fields: {
             nome_crianca: body.nome_crianca,
-            idade: parseInt(body.idade) || null,
+            idade: body.idade ? parseInt(body.idade, 10) : null,
             sexo,
+            irmaos: body.irmaos ? parseInt(body.irmaos, 10) : null,
+            idade_irmaos: body.idade_irmaos || "",
             sonho: body.sonho,
             imagem_cartinha,
             escola: body.escola,
@@ -188,10 +191,9 @@ export default async function handler(req, res) {
       return res.status(200).json({ sucesso: true, novo });
     }
 
-    // ============================================================
+    // ==========================================================
     // 🔹 PATCH — Atualizar cartinha existente
-    //     (Aceita cadastro_sessao_id se vier)
-    // ============================================================
+    // ==========================================================
     if (req.method === "PATCH") {
       const { id } = req.query;
       if (!id)
@@ -205,7 +207,7 @@ export default async function handler(req, res) {
 
       const fieldsToUpdate = {
         nome_crianca: body.nome_crianca,
-        idade: parseInt(body.idade) || null,
+        idade: body.idade ? parseInt(body.idade, 10) : null,
         sonho: body.sonho,
         escola: body.escola,
         cidade: body.cidade,
@@ -213,6 +215,15 @@ export default async function handler(req, res) {
         psicologa_responsavel: body.psicologa_responsavel,
         observacoes_admin: body.observacoes_admin || "",
       };
+
+      if (body.irmaos !== undefined) {
+        fieldsToUpdate.irmaos = body.irmaos
+          ? parseInt(body.irmaos, 10)
+          : null;
+      }
+      if (body.idade_irmaos !== undefined) {
+        fieldsToUpdate.idade_irmaos = body.idade_irmaos || "";
+      }
 
       if (sexoValido.includes((body.sexo || "").toLowerCase()))
         fieldsToUpdate.sexo = body.sexo.toLowerCase();
@@ -224,14 +235,17 @@ export default async function handler(req, res) {
         try {
           const img = JSON.parse(body.imagem_cartinha);
           if (Array.isArray(img)) fieldsToUpdate.imagem_cartinha = img;
-        } catch {}
+        } catch {
+          // silencioso
+        }
       }
 
       // 🔹 Atualiza evento (se vier)
       if (body.nome_evento) fieldsToUpdate.nome_evento = body.nome_evento;
       if (body.data_evento) fieldsToUpdate.data_evento = body.data_evento;
       if (body.data_limite_recebimento)
-        fieldsToUpdate.data_limite_recebimento = body.data_limite_recebimento;
+        fieldsToUpdate.data_limite_recebimento =
+          body.data_limite_recebimento;
       if (body.evento_id) fieldsToUpdate.evento_id = body.evento_id;
 
       // 🔹 Atualiza sessão (se vier)
@@ -245,9 +259,9 @@ export default async function handler(req, res) {
       return res.status(200).json({ sucesso: true, atualizado });
     }
 
-    // ============================================================
+    // ==========================================================
     // 🔹 DELETE — Mantido exatamente como estava
-    // ============================================================
+    // ==========================================================
     if (req.method === "DELETE") {
       const { id } = req.query;
       if (!id)
@@ -262,9 +276,9 @@ export default async function handler(req, res) {
         .json({ sucesso: true, mensagem: "Cartinha excluída!" });
     }
 
-    // ============================================================
+    // ==========================================================
     // ❌ Método não suportado
-    // ============================================================
+    // ==========================================================
     res.status(405).json({
       sucesso: false,
       mensagem: `Método ${req.method} não permitido.`,
