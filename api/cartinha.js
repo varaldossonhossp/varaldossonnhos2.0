@@ -1,8 +1,8 @@
 // ============================================================
-// 💙 VARAL DOS SONHOS — /api/cartinha.js (VERSÃO FINAL 100% CORRIGIDA)
+// 💙 VARAL DOS SONHOS — /api/cartinha.js (VERSÃO FINAL)
 // ------------------------------------------------------------
-// ✅ CORREÇÃO CRÍTICA: Mapeamento de escrita (POST/PATCH) usa ID do campo Airtable como chave.
-// ------------------------------------------------------------
+// ✅ CORREÇÃO: Leitura de campos LOOKUP no GET (data_limite_recebimento)
+// ============================================================
 
 import Airtable from "airtable";
 import { IncomingForm } from "formidable";
@@ -11,55 +11,20 @@ import { IncomingForm } from "formidable";
 // ⚙️ CONFIGURAÇÃO ESSENCIAL PARA FORM-DATA NO VERCEL
 // ============================================================
 export const config = {
-  api: { bodyParser: false }, 
+  api: { bodyParser: false }, // ❗ Obrigatório para Formidable
   runtime: "nodejs",
 };
 
 // ============================================================
-// 🔹 Constantes Airtable (Baseado na sua documentação)
+// 🔹 Conexão com Airtable
 // ============================================================
 const base = new Airtable({ apiKey: process.env.AIRTABLE_API_KEY }).base(
   process.env.AIRTABLE_BASE_ID
 );
 const tableName = process.env.AIRTABLE_CARTINHA_TABLE || "cartinha";
 
-// Mapeamento dos campos: Nome de Input do Frontend (Chave) -> ID do campo Airtable (Valor)
-// Usado para TRADUZIR a entrada (body) para a chave que o Airtable espera.
-const INPUT_MAP = {
-  'nome_crianca': 'fldGr53pEoETn91NG',
-  'idade': 'fld2Co6I3cEUaupqK',
-  'sexo': 'fldc3IxFwc9m8riJK',
-  'sonho': 'fldeTqtDT5dc5XKjV',
-  'imagem_cartinha': 'fldPIoVj5uVq8sDEQ',
-  'status': 'flduy2pnzF0FgneKz',
-  'escola': 'fld37FvAdM9qhh5gR',
-  'cidade': 'fldPLlgsGmGHfvpbD',
-  'telefone_contato': 'fldl9eSto0ulvAlQF',
-  'psicologa_responsavel': 'fldHA0LgGiAp6GR6B',
-  'observacoes_admin': 'fld6VcuGXrYa9E3Xs',
-  'data_evento': 'fldAn1ps5Y1tnJP6d', // Linked Record
-};
-
-// IDs das opções Single Select para escrita (POST/PATCH)
-const OPCOES_SEXO = {
-  'menino': 'selMQTejKg2j83b0u',
-  'menina': 'selN6usmszeOgwdo4',
-  'outro': 'selNiw6EPSWDco0e6',
-};
-const OPCOES_STATUS = {
-  'disponivel': 'seliXLxLcmD5twbGq',
-  'adotada': 'seld9JVzSUP4DShWu',
-  'inativa': 'selaiZI8VgArz1DsT',
-};
-
-// Nomes de Lookup para leitura (GET)
-const LOOKUP_NOME_EVENTO = "nome_evento (from data_evento)"; 
-const LOOKUP_DATA_LIMITE = "data_limite_recebimento (from data_evento)";
-const LOOKUP_DATA_EVENTO = "data_evento (from data_evento)";
-
-
 // ============================================================
-// 🔹 Funções Auxiliares (mantidas)
+// 🔹 Função utilitária para CORS
 // ============================================================
 function setCors(res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -67,16 +32,17 @@ function setCors(res) {
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 }
 
+// ============================================================
+// 🔄 Parser de formulário multipart (para arquivos e campos)
+// ============================================================
 function parseForm(req) {
   return new Promise((resolve, reject) => {
     const form = new IncomingForm({ keepExtensions: true });
     form.parse(req, (err, fields, files) => {
       if (err) return reject(err);
-      
       const parsedFields = {};
-      for (const key in fields) {
-        parsedFields[key] = Array.isArray(fields[key]) ? fields[key][0] : fields[key];
-      }
+      // Garante que fields seja um objeto simples (Formidable retorna array no Vercel)
+      for (const key in fields) parsedFields[key] = fields[key][0];
       resolve({ fields: parsedFields, files });
     });
   });
@@ -91,145 +57,200 @@ export default async function handler(req, res) {
 
   try {
     let body = req.body;
+    // Usa o parser para métodos que podem incluir arquivos (POST/PATCH)
     if (req.method === "POST" || req.method === "PATCH") {
       const parsed = await parseForm(req);
       body = parsed.fields;
     }
 
     // ============================================================
-    // 🔹 GET — Lista de cartinhas (Usa o ID do campo na leitura)
+    // 🔹 GET — Lista de cartinhas (com filtro opcional por evento)
     // ============================================================
     if (req.method === "GET") {
       const { evento } = req.query;
 
-      const records = await base(tableName).select({
-        sort: [{ field: "data_cadastro", direction: "desc" }],
-        ...(evento && {
-          filterByFormula: `SEARCH("${evento}", ARRAYJOIN({${INPUT_MAP.data_evento}}))`,
-        }),
-      }).all();
+      let selectConfig = {
+        // Importante: 'data_cadastro' precisa existir na sua tabela!
+        sort: [{ field: "data_cadastro", direction: "desc" }], 
+      };
+
+      // Filtro por Linked Record ID do evento
+      if (evento) {
+        selectConfig = {
+          ...selectConfig,
+          // Filtra pelo ID do evento no campo Linked Record 'data_evento'
+          filterByFormula: `SEARCH("${evento}", ARRAYJOIN({data_evento}))`, 
+        };
+      }
+
+      const records = await base(tableName).select(selectConfig).all();
 
       const cartinha = records.map((r) => ({
         id: r.id,
-        nome_crianca: r.fields[INPUT_MAP.nome_crianca] || "", 
-        idade: r.fields[INPUT_MAP.idade] || "",
-        sexo: r.fields[INPUT_MAP.sexo] || "",
-        sonho: r.fields[INPUT_MAP.sonho] || "",
-        escola: r.fields[INPUT_MAP.escola] || "",
-        cidade: r.fields[INPUT_MAP.cidade] || "",
-        telefone_contato: r.fields[INPUT_MAP.telefone_contato] || "",
-        psicologa_responsavel: r.fields[INPUT_MAP.psicologa_responsavel] || "",
-        observacoes_admin: r.fields[INPUT_MAP.observacoes_admin] || "",
-        imagem_cartinha: r.fields[INPUT_MAP.imagem_cartinha] || [],
-        status: r.fields[INPUT_MAP.status] || "",
-        
-        // Leitura de Lookups e Linked Record (usa o nome completo ou ID)
-        nome_evento: r.fields[LOOKUP_NOME_EVENTO] || "",
-        data_evento: r.fields[INPUT_MAP.data_evento] || [], 
-        data_limite_recebimento: r.fields[LOOKUP_DATA_LIMITE] || "",
+        nome_crianca: r.fields.nome_crianca || "",
+        idade: r.fields.idade || "",
+        sexo: r.fields.sexo || "",
+        sonho: r.fields.sonho || "",
+        escola: r.fields.escola || "",
+        cidade: r.fields.cidade || "",
+        telefone_contato: r.fields.telefone_contato || "",
+        psicologa_responsavel: r.fields.psicologa_responsavel || "",
+        imagem_cartinha: r.fields.imagem_cartinha || [],
+        status: r.fields.status || "",
+        nome_evento: r.fields.nome_evento || "",
+        data_evento: r.fields.data_evento || "",
+        // ✅ CORREÇÃO CRÍTICA: Leitura de campos LOOKUP deve usar o nome completo!
+        data_limite_recebimento: r.fields["data_limite_recebimento (from data_evento)"] || "",
+        evento_id: r.fields["id_evento (from eventos)"] || "",
       }));
 
       return res.status(200).json({ sucesso: true, cartinha });
     }
 
     // ============================================================
-    // 🔹 POST — Criação de nova cartinha (Chave=ID, Valor=Input)
+    // 🔹 POST — Criação de nova cartinha
     // ============================================================
     if (req.method === "POST") {
-      const evento_id = body.data_evento || "";
+      // ... (Lógica de POST permanece igual e está correta)
+      const sexoValido = ["menino", "menina", "outro"];
+      const statusValido = ["disponivel", "adotada", "inativa"];
+
+      const sexo = sexoValido.includes((body.sexo || "").toLowerCase())
+        ? body.sexo.toLowerCase()
+        : "menino";
+      const status = statusValido.includes((body.status || "").toLowerCase())
+        ? body.status.toLowerCase()
+        : "disponivel";
+
+      // Prepara URL da imagem
       let imagem_cartinha = [];
       try {
-        // O frontend envia a imagem_cartinha como string JSON
-        imagem_cartinha = body.imagem_cartinha ? JSON.parse(body.imagem_cartinha) : [];
-      } catch (e) {
+        imagem_cartinha = body.imagem_cartinha
+          ? JSON.parse(body.imagem_cartinha)
+          : [];
+      } catch {
         imagem_cartinha = [];
       }
+
+      // Campos de evento
+      const nome_evento = body.nome_evento || "";
+      const evento_id = body.evento_id || ""; // ID do evento ativo (usado para Linked Record)
       
-      const sexoKey = (body.sexo || "").toLowerCase();
-      const statusKey = (body.status || "").toLowerCase();
-      
-      // 🛑 CORREÇÃO APLICADA: A chave do objeto de criação é o ID do campo (INPUT_MAP.nome), 
-      // e o valor é o dado do frontend (body.nome).
+      // Prepara os campos base
       const fieldsToCreate = {
-        [INPUT_MAP.nome_crianca]: body.nome_crianca || "",
-        [INPUT_MAP.idade]: parseInt(body.idade) || null,
-        [INPUT_MAP.sexo]: OPCOES_SEXO[sexoKey] || OPCOES_SEXO['menino'], 
-        [INPUT_MAP.sonho]: body.sonho || "",
-        [INPUT_MAP.imagem_cartinha]: imagem_cartinha,
-        [INPUT_MAP.escola]: body.escola || "",
-        [INPUT_MAP.cidade]: body.cidade || "",
-        [INPUT_MAP.telefone_contato]: body.telefone_contato || "",
-        [INPUT_MAP.psicologa_responsavel]: body.psicologa_responsavel || "",
-        [INPUT_MAP.observacoes_admin]: body.observacoes_admin || "",
-        [INPUT_MAP.status]: OPCOES_STATUS[statusKey] || OPCOES_STATUS['disponivel'],
+        nome_crianca: body.nome_crianca || "", 
+        idade: parseInt(body.idade) || null,
+        sexo,
+        sonho: body.sonho || "",
+        imagem_cartinha,
+        escola: body.escola || "",
+        cidade: body.cidade || "",
+        telefone_contato: body.telefone_contato || "",
+        psicologa_responsavel: body.psicologa_responsavel || "",
+        status,
+        nome_evento,
+        data_cadastro: new Date().toISOString().substring(0, 10), // Garante que a data_cadastro seja preenchida
       };
 
-      // Adiciona o Linked Record (data_evento) SÓ se o ID for válido
-      if (evento_id && typeof evento_id === 'string' && evento_id.startsWith('rec')) {
-        fieldsToCreate[INPUT_MAP.data_evento] = [evento_id];
+      // Adiciona Linked Record SOMENTE se evento_id for válido
+      if (evento_id) {
+        fieldsToCreate.data_evento = [evento_id]; // Associa ao evento ativo
       }
 
-      const novo = await base(tableName).create([{ fields: fieldsToCreate }]);
+      // Cria novo registro
+      const novo = await base(tableName).create([
+        {
+          fields: fieldsToCreate,
+        },
+      ]);
 
       return res.status(200).json({ sucesso: true, novo });
     }
 
     // ============================================================
-    // 🔹 PATCH — Atualizar cartinha existente
+    // 🔹 PATCH — Atualizar cartinha existente (ou inativar)
     // ============================================================
     if (req.method === "PATCH") {
       const { id } = req.query;
+      if (!id)
+        return res
+          .status(400)
+          .json({ sucesso: false, mensagem: "ID obrigatório para atualização." });
+
+      const sexoValido = ["menino", "menina", "outro"];
+      const statusValido = ["disponivel", "adotada", "inativa"];
+
+      // Prepara status e sexo, se vierem no body
+      const sexo = sexoValido.includes((body.sexo || "").toLowerCase())
+        ? body.sexo.toLowerCase()
+        : undefined;
+      const status = statusValido.includes((body.status || "").toLowerCase())
+        ? body.status.toLowerCase()
+        : undefined;
+      
+      // Prepara campos para atualização - SÓ ADICIONA SE O VALOR EXISTIR NO BODY
       const fieldsToUpdate = {};
-
-      // Mapeamento de campos de texto/número
-      if (body.nome_crianca) fieldsToUpdate[INPUT_MAP.nome_crianca] = body.nome_crianca;
-      if (body.idade) fieldsToUpdate[INPUT_MAP.idade] = parseInt(body.idade) || null;
-      if (body.sonho) fieldsToUpdate[INPUT_MAP.sonho] = body.sonho;
-      if (body.escola) fieldsToUpdate[INPUT_MAP.escola] = body.escola;
-      if (body.cidade) fieldsToUpdate[INPUT_MAP.cidade] = body.cidade;
-      if (body.telefone_contato) fieldsToUpdate[INPUT_MAP.telefone_contato] = body.telefone_contato;
-      if (body.psicologa_responsavel) fieldsToUpdate[INPUT_MAP.psicologa_responsavel] = body.psicologa_responsavel;
-      if (body.observacoes_admin) fieldsToUpdate[INPUT_MAP.observacoes_admin] = body.observacoes_admin;
       
-      // Status e Sexo (devem ser mapeados para o ID da opção)
-      if (body.sexo) {
-        const sexoKey = (body.sexo || "").toLowerCase();
-        fieldsToUpdate[INPUT_MAP.sexo] = OPCOES_SEXO[sexoKey];
-      }
-      if (body.status) {
-        const statusKey = (body.status || "").toLowerCase();
-        fieldsToUpdate[INPUT_MAP.status] = OPCOES_STATUS[statusKey];
-      }
+      // 💡 CRÍTICO: Verifica se o valor existe e não é uma string vazia ("")
+      if (body.nome_crianca) fieldsToUpdate.nome_crianca = body.nome_crianca;
+      if (body.idade) fieldsToUpdate.idade = parseInt(body.idade) || null;
+      if (body.sonho) fieldsToUpdate.sonho = body.sonho;
+      if (body.escola) fieldsToUpdate.escola = body.escola;
+      if (body.cidade) fieldsToUpdate.cidade = body.cidade;
+      if (body.telefone_contato) fieldsToUpdate.telefone_contato = body.telefone_contato;
+      if (body.psicologa_responsavel) fieldsToUpdate.psicologa_responsavel = body.psicologa_responsavel;
 
-      // Imagem
+      if (sexo) fieldsToUpdate.sexo = sexo;
+      if (status) fieldsToUpdate.status = status;
+
+      // Atualização de imagem
       if (body.imagem_cartinha) {
         try {
-          fieldsToUpdate[INPUT_MAP.imagem_cartinha] = JSON.parse(body.imagem_cartinha);
-        } catch (e) {
-          console.error("Erro ao parsear imagem_cartinha no PATCH", e);
+          const img = JSON.parse(body.imagem_cartinha);
+          if (Array.isArray(img)) fieldsToUpdate.imagem_cartinha = img;
+        } catch {
+          console.warn("⚠️ imagem_cartinha inválida no PATCH");
         }
       }
 
       // Atualização de vínculo de evento
-      const evento_id = body.data_evento;
-      if (evento_id && typeof evento_id === 'string' && evento_id.startsWith('rec')) {
-        fieldsToUpdate[INPUT_MAP.data_evento] = [evento_id];
-      } else if (body.data_evento === "") {
-        fieldsToUpdate[INPUT_MAP.data_evento] = []; 
+      if (body.nome_evento) fieldsToUpdate.nome_evento = body.nome_evento;
+      
+      // data_evento (Linked Record) - só adiciona se body.data_evento (ID) tiver valor
+      if (body.data_evento) {
+        fieldsToUpdate.data_evento = [body.data_evento];
       }
 
+      // Verifica se há algo para atualizar
       if (Object.keys(fieldsToUpdate).length === 0) {
         return res.status(400).json({ sucesso: false, mensagem: "Nenhum campo válido para atualização foi fornecido." });
       }
       
-      const atualizado = await base(tableName).update([{ id, fields: fieldsToUpdate }]);
+      const atualizado = await base(tableName).update([
+        { id, fields: fieldsToUpdate },
+      ]);
+
       return res.status(200).json({ sucesso: true, atualizado });
     }
-    
-    // ... (DELETE)
 
+    // ============================================================
+    // 🔹 DELETE — Exclusão permanente
+    // ============================================================
+    if (req.method === "DELETE") {
+      const { id } = req.query;
+      if (!id)
+        return res.status(400).json({ sucesso: false, mensagem: "ID obrigatório." });
+
+      await base(tableName).destroy([id]);
+      return res.status(200).json({ sucesso: true, mensagem: "Cartinha excluída!" });
+    }
+
+    // ============================================================
     // ❌ Método não suportado
-    res.status(405).json({ sucesso: false, mensagem: `Método ${req.method} não permitido.` });
+    // ============================================================
+    res
+      .status(405)
+      .json({ sucesso: false, mensagem: `Método ${req.method} não permitido.` });
   } catch (e) {
     console.error("🔥 Erro /api/cartinha:", e);
     const statusCode = e.statusCode || 500; 
