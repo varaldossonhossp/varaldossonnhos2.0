@@ -1,7 +1,7 @@
 // ============================================================
-// 💙 VARAL DOS SONHOS — /api/cartinha.js (VERSÃO FINAL ROBUSTA)
+// 💙 VARAL DOS SONHOS — /api/cartinha.js (VERSÃO FINAL COM IDS CONFIRMADOS)
 // ------------------------------------------------------------
-// ✅ CORREÇÃO CRÍTICA V3: Checagem de segurança contra 'UNKNOWN_FIELD_NAME: "undefined"'
+// ✅ Status: IDs, Mapeamento, e Tratamento de Formulário corrigidos.
 // ------------------------------------------------------------
 
 import Airtable from "airtable";
@@ -18,7 +18,7 @@ const base = new Airtable({ apiKey: process.env.AIRTABLE_API_KEY }).base(
 const tableName = process.env.AIRTABLE_CARTINHA_TABLE || "cartinha";
 
 // 🛑 MAPA DE CAMPOS: Chave=Nome do Input do Frontend, Valor=ID do Campo Airtable
-// ESTES SÃO OS IDs EXATOS DO SEU AIRTABLE.
+// (IDs RECONFIRMADOS COM SUA LISTA)
 const INPUT_MAP = {
   'id_cartinha': 'fldBfJYnZLdrn7KlM',
   'nome_crianca': 'fldGr53pEoETn91NG',
@@ -36,6 +36,8 @@ const INPUT_MAP = {
   'data_evento': 'fldAn1ps5Y1tnJP6d', // Linked Record
   'data_cadastro': 'fldp6UNiNXs1yiCQh', // Campo de sistema para ordenação
   'idade_irmaos': 'fldlG1tqUAXtzKIf8',
+  // Campos que podem ser enviados mas não são usados para escrita (por segurança)
+  'primeiro_nome': 'fldyuJyd2tWz1z8Sq', // Fórmula, ignorar
 };
 
 // IDs das opções Single Select (CORRIGIDOS)
@@ -50,12 +52,11 @@ const OPCOES_STATUS = {
   'inativa': 'selaiZI8VgArz1DsT' 
 }; 
 
-// Define a chave para ordenação/filtro
 const FIELD_DATA_CADASTRO = INPUT_MAP.data_cadastro;
 
 
 // ============================================================
-// 🔹 Funções Auxiliares (mantidas)
+// 🔹 Funções Auxiliares (Otimizado para tratar o Form Data)
 // ============================================================
 function setCors(res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -69,7 +70,11 @@ function parseForm(req) {
     form.parse(req, (err, fields, files) => {
       if (err) return reject(err);
       const parsedFields = {};
-      for (const key in fields) parsedFields[key] = fields[key][0];
+      
+      // Itera sobre os campos para garantir que apenas um valor seja extraído (corrigindo o problema do 'undefined')
+      for (const key in fields) {
+        parsedFields[key] = Array.isArray(fields[key]) ? fields[key][0] : fields[key];
+      }
       resolve({ fields: parsedFields, files });
     });
   });
@@ -88,18 +93,24 @@ export default async function handler(req, res) {
       const parsed = await parseForm(req);
       body = parsed.fields;
     }
+    
+    // Checagem de segurança
+    if (!body || Object.keys(body).length === 0 && (req.method === "POST" || req.method === "PATCH")) {
+      return res.status(400).json({ sucesso: false, mensagem: "Corpo da requisição vazio ou mal formatado." });
+    }
 
     // ============================================================
-    // 🔹 GET — Lista de cartinhas (Lógica de leitura e filtro mantida)
+    // 🔹 GET — Lista de cartinhas (Leitura com IDS)
     // ============================================================
     if (req.method === "GET") {
+      // ... (Lógica de GET mantida)
       const { evento } = req.query;
 
       let selectConfig = {
         sort: [{ field: FIELD_DATA_CADASTRO, direction: "desc" }], 
       };
 
-      if (evento) {
+      if (evento && INPUT_MAP.data_evento) {
         selectConfig = {
           ...selectConfig,
           filterByFormula: `SEARCH("${evento}", ARRAYJOIN({${INPUT_MAP.data_evento}}))`,
@@ -108,34 +119,41 @@ export default async function handler(req, res) {
 
       const records = await base(tableName).select(selectConfig).all();
 
-      const cartinha = records.map((r) => ({
-        id: r.id,
-        // Mapeamento de Leitura (usando field names, mas os IDs são válidos no INPUT_MAP)
-        nome_crianca: r.fields[INPUT_MAP.nome_crianca] || r.fields.nome_crianca || "", 
-        idade: r.fields[INPUT_MAP.idade] || r.fields.idade || "",
-        sexo: r.fields[INPUT_MAP.sexo] || r.fields.sexo || "",
-        sonho: r.fields[INPUT_MAP.sonho] || r.fields.sonho || "",
-        escola: r.fields[INPUT_MAP.escola] || r.fields.escola || "",
-        cidade: r.fields[INPUT_MAP.cidade] || r.fields.cidade || "",
-        telefone_contato: r.fields[INPUT_MAP.telefone_contato] || r.fields.telefone_contato || "",
-        psicologa_responsavel: r.fields[INPUT_MAP.psicologa_responsavel] || r.fields.psicologa_responsavel || "",
-        observacoes_admin: r.fields[INPUT_MAP.observacoes_admin] || r.fields.observacoes_admin || "",
-        imagem_cartinha: r.fields[INPUT_MAP.imagem_cartinha] || r.fields.imagem_cartinha || [],
-        status: r.fields[INPUT_MAP.status] || r.fields.status || "",
-        data_cadastro: r.fields[FIELD_DATA_CADASTRO] || r.fields.data_cadastro || "", 
-        
-        // Lookups
-        nome_evento: r.fields["nome_evento (from data_evento)"] || "",
-        data_evento: r.fields["data_evento (from data_evento)"] || "",
-        data_limite_recebimento: r.fields["data_limite_recebimento (from data_evento)"] || "",
-        evento_id: r.fields[INPUT_MAP.data_evento]?.[0] || "",
-      }));
+      const cartinha = records.map((r) => {
+        // Função auxiliar para ler o campo pelo ID ou nome
+        const getField = (key) => r.fields[INPUT_MAP[key]] || r.fields[key] || "";
+
+        return {
+          id: r.id,
+          // Campos principais (usando a função auxiliar)
+          nome_crianca: getField('nome_crianca'), 
+          idade: getField('idade'),
+          sexo: getField('sexo'),
+          sonho: getField('sonho'),
+          imagem_cartinha: r.fields[INPUT_MAP.imagem_cartinha] || [], 
+          status: getField('status'),
+          escola: getField('escola'),
+          cidade: getField('cidade'),
+          telefone_contato: getField('telefone_contato'),
+          irmaos: getField('irmaos'),
+          idade_irmaos: getField('idade_irmaos'),
+          psicologa_responsavel: getField('psicologa_responsavel'),
+          observacoes_admin: getField('observacoes_admin'),
+          data_cadastro: getField('data_cadastro'), 
+
+          // Lookups (Nomes literais como vêm do Airtable)
+          nome_evento: r.fields["nome_evento (from data_evento)"] || "",
+          data_evento: r.fields["data_evento (from data_evento)"] || "",
+          data_limite_recebimento: r.fields["data_limite_recebimento (from data_evento)"] || "",
+          evento_id: r.fields[INPUT_MAP.data_evento]?.[0] || "",
+        };
+      });
 
       return res.status(200).json({ sucesso: true, cartinha });
     }
 
     // ============================================================
-    // 🔹 POST — Criação de nova cartinha (Com checagem de ID)
+    // 🔹 POST — Criação de nova cartinha (Escrita com IDS)
     // ============================================================
     if (req.method === "POST") {
       const sexoKey = (body.sexo || "").toLowerCase();
@@ -149,36 +167,37 @@ export default async function handler(req, res) {
         imagem_cartinha = [];
       }
       
-      // 🛑 Adiciona checagem de ID para evitar 'undefined' no nome do campo
       const fieldsToCreate = {};
 
-      const fieldsMap = [
-        { key: 'nome_crianca', value: body.nome_crianca || "" },
-        { key: 'idade', value: parseInt(body.idade) || null },
-        { key: 'sexo', value: OPCOES_SEXO[sexoKey] || OPCOES_SEXO.menino },
-        { key: 'sonho', value: body.sonho || "" },
-        { key: 'imagem_cartinha', value: imagem_cartinha },
-        { key: 'escola', value: body.escola || "" },
-        { key: 'cidade', value: body.cidade || "" },
-        { key: 'telefone_contato', value: body.telefone_contato || "" },
-        { key: 'psicologa_responsavel', value: body.psicologa_responsavel || "" },
-        { key: 'observacoes_admin', value: body.observacoes_admin || "" },
-        { key: 'status', value: OPCOES_STATUS[statusKey] || OPCOES_STATUS.disponivel },
-        { key: 'irmaos', value: parseInt(body.irmaos) || null },
-        { key: 'idade_irmaos', value: body.idade_irmaos || "" },
-      ];
+      // Mapeamento principal de campos
+      const dataMap = {
+        'nome_crianca': body.nome_crianca || "",
+        'idade': parseInt(body.idade) || null,
+        'sonho': body.sonho || "",
+        'escola': body.escola || "",
+        'cidade': body.cidade || "",
+        'telefone_contato': body.telefone_contato || "",
+        'psicologa_responsavel': body.psicologa_responsavel || "",
+        'observacoes_admin': body.observacoes_admin || "",
+        'irmaos': parseInt(body.irmaos) || null,
+        'idade_irmaos': body.idade_irmaos || "",
+        'imagem_cartinha': imagem_cartinha,
+        'sexo': OPCOES_SEXO[sexoKey] || OPCOES_SEXO.menino,
+        'status': OPCOES_STATUS[statusKey] || OPCOES_STATUS.disponivel,
+      };
 
-      fieldsMap.forEach(({ key, value }) => {
-          const fieldId = INPUT_MAP[key];
-          if (fieldId) { // Só adiciona se o ID do campo for encontrado no INPUT_MAP
-              fieldsToCreate[fieldId] = value;
-          }
-      });
+      // Transfere dados para o formato Airtable usando IDs
+      for (const key in dataMap) {
+        const fieldId = INPUT_MAP[key];
+        if (fieldId) { // Só inclui se o ID do campo for válido
+          fieldsToCreate[fieldId] = dataMap[key];
+        }
+      }
       
-      // Adiciona o Linked Record SÓ se o ID for válido (inicia com 'rec')
-      if (evento_id && typeof evento_id === 'string' && evento_id.startsWith('rec')) {
-        const eventFieldId = INPUT_MAP.data_evento;
-        if (eventFieldId) fieldsToCreate[eventFieldId] = [evento_id];
+      // Adiciona o Linked Record (data_evento) com checagem de ID
+      const eventFieldId = INPUT_MAP.data_evento;
+      if (eventFieldId && evento_id && typeof evento_id === 'string' && evento_id.startsWith('rec')) {
+        fieldsToCreate[eventFieldId] = [evento_id];
       }
 
       const novo = await base(tableName).create([{ fields: fieldsToCreate }]);
@@ -186,7 +205,7 @@ export default async function handler(req, res) {
     }
 
     // ============================================================
-    // 🔹 PATCH — Atualizar cartinha existente (Com checagem de ID)
+    // 🔹 PATCH — Atualizar cartinha existente (Escrita com IDS)
     // ============================================================
     if (req.method === "PATCH") {
       const { id } = req.query;
@@ -198,7 +217,7 @@ export default async function handler(req, res) {
 
       const fieldsToUpdate = {};
       
-      // Mapeamento com checagem de ID e valor presente
+      // Mapeamento com checagem de valor e ID presente
       const updateFieldsMap = [
         { key: 'nome_crianca', value: body.nome_crianca },
         { key: 'idade', value: parseInt(body.idade) || null },
@@ -229,7 +248,6 @@ export default async function handler(req, res) {
           if(fieldId) fieldsToUpdate[fieldId] = OPCOES_STATUS[statusKey];
       }
 
-
       // Atualização de imagem
       if (body.imagem_cartinha) {
         try {
@@ -240,12 +258,13 @@ export default async function handler(req, res) {
       }
 
       // Atualização de vínculo de evento (data_evento)
-      if (evento_id && typeof evento_id === 'string' && evento_id.startsWith('rec')) {
-        const fieldId = INPUT_MAP.data_evento;
-        if(fieldId) fieldsToUpdate[fieldId] = [evento_id];
-      } else if (evento_id === "") {
-        const fieldId = INPUT_MAP.data_evento;
-        if(fieldId) fieldsToUpdate[fieldId] = []; 
+      const eventFieldId = INPUT_MAP.data_evento;
+      if (eventFieldId) {
+        if (evento_id && typeof evento_id === 'string' && evento_id.startsWith('rec')) {
+          fieldsToUpdate[eventFieldId] = [evento_id];
+        } else if (evento_id === "") {
+          fieldsToUpdate[eventFieldId] = []; // Remove o link
+        }
       }
 
       if (Object.keys(fieldsToUpdate).length === 0) {
@@ -256,7 +275,7 @@ export default async function handler(req, res) {
       return res.status(200).json({ sucesso: true, atualizado });
     }
     
-    // ... (Restante do DELETE e error handlers)
+    // DELETE e error handlers
     if (req.method === "DELETE") {
       const { id } = req.query;
       if (!id) return res.status(400).json({ sucesso: false, mensagem: "ID obrigatório." });
@@ -268,6 +287,7 @@ export default async function handler(req, res) {
     res.status(405).json({ sucesso: false, mensagem: `Método ${req.method} não permitido.` });
   } catch (e) {
     console.error("🔥 Erro /api/cartinha:", e);
-    res.status(500).json({ sucesso: false, mensagem: e.message });
+    const errorMessage = e.message || "Erro desconhecido ao processar a requisição Airtable.";
+    res.status(500).json({ sucesso: false, mensagem: `Erro na API: ${errorMessage}` });
   }
 }
