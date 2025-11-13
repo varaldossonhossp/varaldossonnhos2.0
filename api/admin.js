@@ -1,16 +1,33 @@
 // ============================================================
-// 💼 VARAL DOS SONHOS — /api/admin.js (versão TCC)
+// 💼 VARAL DOS SONHOS — /api/admin.js (versão TCC + eventos admin)
 // ------------------------------------------------------------
-// API segura para gerenciamento de eventos.
+// API segura para gerenciamento de EVENTOS (CRUD).
 // Exige token administrativo (ADMIN_SECRET) configurado no Vercel.
-// Tabela: "eventos"
+//
+// 🔹 Tabela: "eventos"
+// 🔹 Campos usados atualmente:
+//
+//  - nome_evento            (Single line text)
+//  - local_evento           (Single line text)
+//  - descricao              (Long text)
+//  - data_evento            (Date — início das adoções)
+//  - data_limite_recebimento(Date — limite para receber presentes)
+//  - data_realizacao_evento (Date — data do evento)
+//  - status_evento          (Single select: "em andamento" | "proximo" | "encerrado")
+//  - destacar_na_homepage   (Checkbox — destacar carrossel na home)
+//  - imagem                 (Attachment[] — fotos do evento)
+//  - ativo                  (Checkbox / Boolean — controle interno opcional)
+//
+// Esta API é usada pelo painel administrativo (ex: cadastroevento.html)
+// e NÃO pela página pública de listagem (que usa /api/eventos.js).
 // ============================================================
 
 import Airtable from "airtable";
 export const config = { runtime: "nodejs" };
 
 const ok = (res, data) => res.status(200).json(data);
-const err = (res, code, msg) => res.status(code).json({ sucesso: false, mensagem: msg });
+const err = (res, code, msg) =>
+  res.status(code).json({ sucesso: false, mensagem: msg });
 
 // ============================================================
 // 🔐 Autenticação administrativa
@@ -61,7 +78,7 @@ export default async function handler(req, res) {
 
   try {
     // ============================================================
-    // 📋 GET — Lista todos os eventos
+    // 📋 GET — Lista todos os eventos (retorna registros Airtable)
     // ============================================================
     if (req.method === "GET") {
       const registros = await base(table).select().all();
@@ -74,30 +91,57 @@ export default async function handler(req, res) {
     if (req.method === "POST") {
       const { acao, id_evento, fields } = req.body || {};
 
+      // ----------------------------------------------------------
+      // 🆕 Criar novo evento
+      // ----------------------------------------------------------
       if (acao === "criar") {
-        const { nome_evento, local_evento, descricao, data_evento, data_limite_recebimento, destacar_na_homepage, imagem } = req.body;
-        const novo = await base(table).create([{
-          fields: {
-            nome_evento,
-            local_evento,
-            descricao,
-            data_evento: data_evento || null,
-            data_limite_recebimento: data_limite_recebimento || null,
-            destacar_na_homepage: !!destacar_na_homepage,
-            imagem: Array.isArray(imagem) ? imagem : [],
-            status_evento: "em andamento",
-            ativo: true,
-          }
-        }]);
+        const {
+          nome_evento,
+          local_evento,
+          descricao,
+          data_evento,
+          data_limite_recebimento,
+          data_realizacao_evento,
+          status_evento,
+          destacar_na_homepage,
+          imagem,
+        } = req.body;
+
+        const novo = await base(table).create([
+          {
+            fields: {
+              nome_evento,
+              local_evento,
+              descricao,
+              data_evento: data_evento || null,
+              data_limite_recebimento: data_limite_recebimento || null,
+              data_realizacao_evento: data_realizacao_evento || null,
+              destacar_na_homepage: !!destacar_na_homepage,
+              imagem: Array.isArray(imagem) ? imagem : [],
+              status_evento: status_evento || "em andamento",
+              ativo: true,
+            },
+          },
+        ]);
+
         return ok(res, { sucesso: true, id: novo[0].id });
       }
 
+      // ----------------------------------------------------------
+      // ✏️ Atualizar evento existente
+      //   - "fields" vem direto do front (campos parciais)
+// ----------------------------------------------------------
       if (acao === "atualizar") {
-        if (!id_evento || !fields) return err(res, 400, "Dados insuficientes.");
+        if (!id_evento || !fields)
+          return err(res, 400, "Dados insuficientes.");
+
         await base(table).update([{ id: id_evento, fields }]);
         return ok(res, { sucesso: true });
       }
 
+      // ----------------------------------------------------------
+      // 🗑️ Excluir evento
+      // ----------------------------------------------------------
       if (acao === "excluir") {
         if (!id_evento) return err(res, 400, "id_evento ausente.");
         await base(table).destroy([id_evento]);

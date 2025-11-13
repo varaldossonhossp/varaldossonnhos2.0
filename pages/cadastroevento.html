@@ -3,85 +3,191 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>🎉 Cadastro de Evento | Varal dos Sonhos</title>
+  <title>📅 Cadastro de Eventos | Varal dos Sonhos</title>
+
   <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="icon" href="../imagens/favicon.png" type="image/png" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
 
   <style>
-    body{font-family:'Poppins',sans-serif;background:#f2f7fc}
-    h1,h2{color:#004080}
-    .btn-top{display:inline-flex;align-items:center;gap:8px;background:#1e88e5;color:white;padding:10px 20px;border-radius:8px;font-weight:600;transition:.3s;text-decoration:none;box-shadow:0 2px 5px rgba(0,0,0,.1)}
-    .btn-top:hover{background:#1565c0;transform:translateY(-2px)}
-    .box{background:white;border:1px solid #cfe3ff;padding:2rem;border-radius:20px;box-shadow:0 3px 8px rgba(0,0,0,.1)}
-    label{font-weight:600;color:#003f7d}
-    input,select,textarea{border:1px solid #d0d7e2;margin-top:4px}
-    input:focus,select:focus,textarea:focus{outline:none;border-color:#1e88e5;box-shadow:0 0 0 2px rgba(30,136,229,.2)}
+    body {
+      font-family: "Poppins", sans-serif;
+      background-color: #f2f7fc;
+    }
+    .btn-top {
+      display: inline-flex;
+      gap: 8px;
+      background: #1e88e5;
+      color: white;
+      margin-bottom: 20px;
+      padding: 10px 18px;
+      border-radius: 8px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: .3s;
+      box-shadow: 0 2px 5px rgba(0,0,0,.1);
+      align-items: center;
+    }
+    .btn-top:hover {
+      background: #1565c0;
+      transform: translateY(-2px);
+    }
+    .card-box {
+      background: white;
+      border-radius: 20px;
+      padding: 2rem;
+      border: 1px solid #cfe3ff;
+      box-shadow: 0 3px 8px rgba(0,0,0,.08);
+    }
+    label {
+      font-weight: 600;
+      color: #003f7d;
+      font-size: 0.95rem;
+    }
+    input, select, textarea {
+      border: 1px solid #d0d7e2;
+      margin-top: 4px;
+      font-size: 0.9rem;
+    }
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: #1e88e5;
+      box-shadow: 0 0 0 2px rgba(30,136,229,.25);
+    }
+    small {
+      font-size: 0.8rem;
+    }
   </style>
 </head>
 
 <body class="bg-gradient-to-b from-blue-50 to-blue-100 min-h-screen">
 
-  <main class="max-w-6xl mx-auto p-6">
+  <main class="max-w-6xl mx-auto p-6 space-y-8">
 
-    <header class="flex justify-between items-center mb-8">
-      <a href="admin.html" class="btn-top">⬅️ Voltar</a>
-      <h2 class="text-3xl font-extrabold text-blue-800 flex-1 text-center">🎉 Cadastro de Eventos</h2>
-    </header>
+    <a href="admin.html" class="btn-top">
+      ⬅️ <span>Voltar</span>
+    </a>
 
-    <section class="box mb-12">
+    <h2 class="text-3xl font-extrabold text-blue-800 text-center">
+      📅 Cadastro de Eventos
+    </h2>
+
+    <!-- === FORMULÁRIO ==================================================== -->
+    <section class="card-box mb-4">
       <form id="form-evento" class="grid grid-cols-1 md:grid-cols-2 gap-4">
 
-        <h3 class="text-xl font-semibold text-blue-800 md:col-span-2 text-center mb-4">Cadastro / Edição</h3>
+        <h3 class="text-xl font-semibold text-blue-800 md:col-span-2 text-center mb-4">
+          Cadastro / Edição de Eventos
+        </h3>
 
+        <!-- Nome / Local -->
         <div>
-          <label>Nome do Evento</label>
-          <input id="nome_evento" required class="w-full p-3 rounded-lg" />
+          <label for="nome_evento">📌 Nome do Evento</label>
+          <input id="nome_evento" name="nome_evento" required
+                 placeholder="Ex: Natal 2025 🎄"
+                 class="w-full p-3 rounded-lg" />
         </div>
 
         <div>
-          <label>Data do Evento</label>
-          <input type="date" id="data_evento" required class="w-full p-3 rounded-lg"/>
+          <label for="local_evento">📍 Local do Evento</label>
+          <input id="local_evento" name="local_evento" required
+                 placeholder="Escola, ONG, Associação..."
+                 class="w-full p-3 rounded-lg" />
+        </div>
+
+        <!-- Datas -->
+        <div>
+          <label for="data_evento">🗓️ Início das Adoções</label>
+          <input type="date" id="data_evento" name="data_evento"
+                 class="w-full p-3 rounded-lg" />
         </div>
 
         <div>
-          <label>Data Limite de Recebimento</label>
-          <input type="date" id="data_limite_recebimento" required class="w-full p-3 rounded-lg"/>
+          <label for="data_limite_recebimento">📦 Data Limite de Recebimento</label>
+          <input type="date" id="data_limite_recebimento" name="data_limite_recebimento"
+                 class="w-full p-3 rounded-lg" />
         </div>
 
         <div>
-          <label>Local</label>
-          <input id="local_evento" required class="w-full p-3 rounded-lg"/>
+          <label for="data_realizacao_evento">🎉 Data de Realização do Evento</label>
+          <input type="date" id="data_realizacao_evento" name="data_realizacao_evento"
+                 class="w-full p-3 rounded-lg" />
         </div>
 
-        <div class="md:col-span-2">
-          <label>Descrição</label>
-          <textarea id="descricao" rows="3" class="w-full p-3 rounded-lg"></textarea>
-        </div>
-
+        <!-- Status / Destaque -->
         <div>
-          <label>Status</label>
-          <select id="status_evento" class="w-full p-3 rounded-lg">
-            <option value="proximo">Próximo</option>
+          <label for="status_evento">📊 Status do Evento</label>
+          <select id="status_evento" name="status_evento"
+                  class="w-full p-3 rounded-lg">
             <option value="em andamento">Em andamento</option>
+            <option value="proximo">Próximo</option>
             <option value="encerrado">Encerrado</option>
           </select>
         </div>
 
-        <div class="md:col-span-2 flex justify-center gap-4 mt-6">
-          <button class="bg-blue-600 text-white px-6 py-3 rounded-lg">💾 Salvar</button>
-          <button type="button" id="btn-limpar" class="bg-gray-500 text-white px-6 py-3 rounded-lg">🧹 Limpar</button>
+        <!-- Destaque na home -->
+        <div class="md:col-span-2 flex items-center gap-3 mt-2">
+          <input type="checkbox" id="destacar_na_homepage" name="destacar_na_homepage"
+                 class="h-4 w-4 text-blue-600 rounded border-gray-300" />
+          <label for="destacar_na_homepage" class="m-0">
+            🌟 Destacar na página inicial (carrossel da home)
+          </label>
         </div>
+
+        <!-- Descrição -->
+        <div class="md:col-span-2">
+          <label for="descricao">📝 Descrição do Evento</label>
+          <textarea id="descricao" name="descricao" rows="3" required
+                    placeholder="Conte um pouco sobre o evento, objetivo, público atendido..."
+                    class="w-full p-3 rounded-lg"></textarea>
+        </div>
+
+        <!-- Imagens -->
+        <div class="md:col-span-2">
+          <label for="imagens_evento">🖼️ Imagens do Evento (upload automático via Cloudinary)</label>
+          <input type="file" id="imagens_evento" name="imagens_evento"
+                 accept=".jpg,.jpeg,.png"
+                 multiple
+                 class="mt-2" style="padding-top: 10px;" />
+          <small class="text-gray-600 block mt-1">
+            Você pode enviar várias fotos do evento.  
+            Se ainda não tiver fotos, deixe em branco: serão usadas as imagens padrão
+            <strong>eventocomecou.png</strong>, <strong>eventoembreve.png</strong> ou
+            <strong>eventoencerrado.png</strong> de acordo com o status do evento.
+          </small>
+          <div id="preview-imagens" class="mt-3 flex flex-wrap gap-3 justify-center"></div>
+        </div>
+
+        <!-- Botões -->
+        <div class="md:col-span-2 flex justify-center gap-4 mt-4">
+          <button type="submit"
+                  class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg shadow-md flex items-center gap-2">
+            💾 <span>Salvar</span>
+          </button>
+
+          <button type="button" id="btn-limpar"
+                  class="bg-gray-500 hover:bg-gray-600 text-white px-8 py-3 rounded-lg shadow-md flex items-center gap-2">
+            🧹 <span>Limpar</span>
+          </button>
+        </div>
+
       </form>
     </section>
 
-    <section class="box">
-      <div class="flex justify-between items-center border-b pb-3 mb-6">
+    <!-- === LISTA DE EVENTOS ============================================== -->
+    <section class="card-box">
+      <div class="flex justify-between items-center border-b pb-3 mb-4">
         <h3 class="text-2xl font-semibold text-blue-800">📋 Eventos Cadastrados</h3>
-        <span class="font-bold text-blue-600">Total: <span id="total-eventos">0</span></span>
+        <span class="text-lg font-bold text-blue-600">
+          Total: <span id="total-eventos">0</span>
+        </span>
       </div>
 
-      <div id="eventos-lista" class="space-y-6 text-center text-gray-500">Carregando...</div>
+      <div id="eventos-lista" class="space-y-4">
+        <p class="text-center text-gray-500">
+          Nenhum evento cadastrado ainda.
+        </p>
+      </div>
     </section>
 
   </main>
