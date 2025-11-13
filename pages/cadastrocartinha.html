@@ -169,14 +169,24 @@
                     class="w-full p-3 rounded-lg"></textarea>
         </div>
 
+        <!-- Evento da Cartinha -->
+        <div class="md:col-span-2">
+          <label for="id_evento">🎉 Evento da Cartinha</label>
+          <select id="id_evento" name="id_evento" required class="w-full p-3 rounded-lg">
+            <option value="">Selecione um evento</option>
+          </select>
+          <small class="text-gray-500">A cartinha ficará vinculada a este evento.</small>
+        </div>
+
+
         <!-- Imagem -->
         <div class="md:col-span-2">
-          <label for="imagem_cartinha">🖼️ Imagem da Cartinha (upload automático via Cloudinary)</label>
+          <label for="imagem_cartinha">🖼️ Imagem da Cartinha</label>
           <input type="file" id="imagem_cartinha" name="imagem_cartinha"
                  accept=".jpg,.jpeg,.png"
                  class="mt-2" style="padding-top: 10px;" />
           <small class="text-gray-600 block">
-            O upload é feito automaticamente e o link é salvo no Airtable.
+            
           </small>
           <div id="preview-imagem" class="mt-3 text-center"></div>
         </div>
