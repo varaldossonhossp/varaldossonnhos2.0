@@ -12,7 +12,7 @@ const CLOUD_NAME = "drnn5zmxi";
 const UPLOAD_PRESET = "unsigned_uploads";
 
 // ⚠️ Token administrativo — deve bater com ADMIN_SECRET do Vercel
-const ADMIN_TOKEN = "VARAL_ADMIN"; // ajuste se usar outro valor
+const ADMIN_TOKEN = "varaladmin"; // ajuste se usar outro valor
 
 let eventos = [];          // eventos carregados do Airtable
 let editId = null;         // id (Airtable) do evento em edição
