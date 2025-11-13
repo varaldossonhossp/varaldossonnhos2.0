@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Cadastro de cartinhas do Varal dos Sonhos." />
+  <title>💌 Cadastro de Cartinhas | Varal dos Sonhos</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="icon" href="../imagens/favicon.png" type="image/png" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+  <!-- CSS EMBUTIDO -->
+  <style>
+    body {
+      font-family: "Poppins", sans-serif;
+      background-color: #f2f7fc;
+    }
+
+    h1, h2 { 
+      color: #004080; 
+    }
+
+    .btn-top{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      background:#1e88e5;
+      color:#fff;
+      padding:10px 20px;
+      border-radius:8px;
+      font-weight:600;
+      text-decoration:none;
+      box-shadow:0 2px 5px rgba(0,0,0,.1);
+      transition:background-color .3s, transform .2s;
+    }
+
+    .btn-top:hover{
+      background:#1565c0;
+      transform:translateY(-2px);
+    }
+
+    /* Caixa dos formulários */
+    .box{
+      background:white;
+      padding:2rem;
+      border-radius:20px;
+      box-shadow:0 3px 8px rgba(0,0,0,.1);
+      border:1px solid #cfe3ff;
+    }
+
+    label{
+      font-weight:600;
+      color:#003f7d;
+    }
+
+    input, select, textarea{
+      margin-top:4px;
+      border:1px solid #d0d7e2;
+    }
+
+    input:focus, select:focus, textarea:focus{
+      outline:none;
+      border-color:#1e88e5;
+      box-shadow:0 0 0 2px rgba(30,136,229,0.2);
+    }
+
+  </style>
+</head>
+
+<body class="bg-gradient-to-b from-blue-50 to-blue-100 min-h-screen">
+
+  <main class="max-w-6xl mx-auto p-6">
+
+    <!-- Cabeçalho -->
+    <header class="flex justify-between items-center mb-8 flex-wrap gap-4">
+      <a href="admin.html" class="btn-top">⬅️ Voltar ao Painel</a>
+      <h2 class="text-3xl font-extrabold text-blue-800 text-center flex-1">💌 Cadastro de Cartinhas</h2>
+    </header>
+
+    <p class="text-gray-600 text-center mb-8">
+      Cadastre, edite e visualize as <strong>cartinhas das crianças</strong> 💙
+    </p>
+
+    <!-- Formulário -->
+    <section class="box mb-12">
+      <form id="form-cartinha" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+        <h3 class="text-xl font-semibold text-blue-800 mb-4 md:col-span-2 text-center">
+          Cadastro / Edição
+        </h3>
+
+        <input type="hidden" id="id_cartinha" />
+
+        <div>
+          <label>👶 Nome da Criança</label>
+          <input type="text" id="nome_crianca" 
+            required class="w-full p-3 rounded-lg" placeholder="Nome completo" />
+        </div>
+
+        <div>
+          <label>🎂 Idade</label>
+          <input type="number" id="idade"
+            required class="w-full p-3 rounded-lg" />
+        </div>
+
+        <div>
+          <label>⚧ Sexo</label>
+          <select id="sexo" class="w-full p-3 rounded-lg">
+            <option value="menino">Menino</option>
+            <option value="menina">Menina</option>
+            <option value="outro">Outro</option>
+          </select>
+        </div>
+
+        <div>
+          <label>👨‍👩‍👧 Irmãos (quantidade)</label>
+          <input type="number" id="irmaos"
+            class="w-full p-3 rounded-lg" />
+        </div>
+
+        <div class="md:col-span-2">
+          <label>👧 Idades dos Irmãos</label>
+          <input type="text" id="idade_irmaos"
+            class="w-full p-3 rounded-lg" />
+        </div>
+
+        <div class="md:col-span-2">
+          <label>💭 Sonho / Pedido</label>
+          <textarea id="sonho" rows="3"
+            class="w-full p-3 rounded-lg"></textarea>
+        </div>
+
+        <div>
+          <label>🏫 Escola</label>
+          <input type="text" id="escola"
+            class="w-full p-3 rounded-lg" />
+        </div>
+
+        <div>
+          <label>🌆 Cidade</label>
+          <input type="text" id="cidade"
+            class="w-full p-3 rounded-lg" />
+        </div>
+
+        <div>
+          <label>📞 Telefone do Contato</label>
+          <input type="tel" id="telefone_contato"
+            class="w-full p-3 rounded-lg" />
+        </div>
+
+        <div>
+          <label>🧑‍⚕️ Psicóloga Responsável</label>
+          <input type="text" id="psicologa_responsavel"
+            class="w-full p-3 rounded-lg" />
+        </div>
+
+        <div class="md:col-span-2">
+          <label>📝 Observações Internas</label>
+          <textarea id="observacoes_admin" rows="2"
+            class="w-full p-3 rounded-lg"></textarea>
+        </div>
+
+        <div>
+          <label>Status</label>
+          <select id="status" class="w-full p-3 rounded-lg">
+            <option value="disponível">Disponível</option>
+            <option value="adotada">Adotada</option>
+            <option value="inativa">Inativa</option>
+          </select>
+        </div>
+
+        <div class="md:col-span-2 flex justify-center gap-4 mt-6">
+          <button type="submit"
+            class="bg-blue-600 text-white px-6 py-3 rounded-lg shadow-md hover:bg-blue-700 transition">
+            💾 Salvar
+          </button>
+
+          <button type="button" id="btn-limpar"
+            class="bg-gray-400 text-white px-6 py-3 rounded-lg hover:bg-gray-500">
+            🧹 Limpar
+          </button>
+        </div>
+
+      </form>
+    </section>
+
+    <!-- Lista -->
+    <section class="box">
+      <div class="flex justify-between items-center mb-6 border-b pb-3">
+        <h3 class="text-2xl font-semibold text-blue-800">📋 Cartinhas Cadastradas</h3>
+        <span class="text-lg font-bold text-blue-600">
+          Total: <span id="total-cartinhas">0</span>
+        </span>
+      </div>
+
+      <div id="cartinhas-lista" class="space-y-6">
+        <p class="text-center text-gray-500">Nenhuma cartinha cadastrada ainda.</p>
+      </div>
+    </section>
+
+  </main>
+
+  <script src="../js/cadastrocartinha.js"></script>
+</body>
+</html>

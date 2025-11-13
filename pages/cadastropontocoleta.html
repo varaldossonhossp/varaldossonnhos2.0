@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Cadastro de pontos de coleta do Varal dos Sonhos." />
+  <title>📦 Cadastro de Pontos de Coleta | Varal dos Sonhos</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="icon" href="../imagens/favicon.png" type="image/png" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+  <style>
+    body { font-family: "Poppins", sans-serif; background-color: #f2f7fc; }
+    h1, h2 { color: #004080; }
+    .btn-top{
+      display:inline-flex;align-items:center;gap:8px;background:#1e88e5;color:#fff;
+      padding:10px 20px;border-radius:8px;font-weight:600;text-decoration:none;
+      box-shadow:0 2px 5px rgba(0,0,0,.1);transition:background-color .3s, transform .2s
+    }
+    .btn-top:hover{ background:#1565c0; transform:translateY(-2px) }
+  </style>
+</head>
+
+<body class="bg-gradient-to-b from-blue-50 to-blue-100 min-h-screen">
+  <main class="max-w-6xl mx-auto p-6">
+
+    <!-- Cabeçalho -->
+    <header class="flex justify-between items-center mb-8 flex-wrap gap-4">
+      <a href="admin.html" class="btn-top">⬅️ Voltar ao Painel</a>
+      <h2 class="text-3xl font-extrabold text-blue-800 text-center flex-1">📦 Cadastro de Pontos de Coleta</h2>
+    </header>
+
+    <p class="text-gray-600 text-center mb-8">
+      Cadastre, edite e visualize os <strong>pontos oficiais de coleta</strong> do Varal dos Sonhos 💙
+    </p>
+
+    <!-- Formulário -->
+    <section class="bg-white p-6 md:p-10 rounded-2xl shadow-md mb-12 border border-blue-100">
+      <form id="form-ponto" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <h3 class="text-xl font-semibold text-blue-800 mb-4 md:col-span-2 text-center">Cadastro / Edição</h3>
+
+        <input type="hidden" id="id_ponto" />
+
+        <div>
+          <label>🏠 Nome do Ponto</label>
+          <input type="text" id="nome_ponto" required class="w-full p-3 border rounded-lg capitalize" placeholder="Ex: ETEC São Paulo" />
+        </div>
+
+        <div>
+          <label>👩‍💼 Responsável</label>
+          <input type="text" id="responsavel" required class="w-full p-3 border rounded-lg" placeholder="Nome do responsável" />
+        </div>
+
+        <div>
+          <label>📍 Endereço</label>
+          <input type="text" id="endereco" required class="w-full p-3 border rounded-lg" placeholder="Rua, bairro, cidade" />
+        </div>
+
+        <div>
+          <label>🏷️ Número</label>
+          <input type="text" id="numero" class="w-full p-3 border rounded-lg" placeholder="Ex: 250" />
+        </div>
+
+        <div>
+          <label>📞 Telefone</label>
+          <input type="tel" id="telefone" maxlength="15" class="w-full p-3 border rounded-lg" placeholder="(11) 99999-9999" />
+        </div>
+
+        <div>
+          <label>📧 Email</label>
+          <input type="email" id="email_ponto" class="w-full p-3 border rounded-lg" placeholder="contato@exemplo.com" />
+        </div>
+
+        <div>
+          <label>🕒 Horário</label>
+          <input type="text" id="horario" class="w-full p-3 border rounded-lg" placeholder="Seg a Sex, 8h às 18h" />
+        </div>
+
+        <div>
+          <label>📊 Status</label>
+          <select id="status" class="w-full p-3 border rounded-lg">
+            <option value="ativo">Ativo</option>
+            <option value="inativo">Inativo</option>
+          </select>
+        </div>
+
+        <div class="md:col-span-2 flex justify-center gap-4 mt-6">
+          <button type="submit" class="bg-blue-600 text-white px-6 py-3 rounded-lg shadow-md hover:bg-blue-700 transition">💾 Salvar</button>
+          <button type="button" id="btn-limpar" class="bg-gray-400 text-white px-6 py-3 rounded-lg hover:bg-gray-500">🧹 Limpar</button>
+        </div>
+      </form>
+    </section>
+
+    <!-- Lista -->
+    <section class="bg-white p-6 md:p-10 rounded-2xl shadow-md border border-blue-100">
+      <div class="flex justify-between items-center mb-6 border-b pb-3">
+        <h3 class="text-2xl font-semibold text-blue-800">📋 Pontos Cadastrados</h3>
+        <span class="text-lg font-bold text-blue-600">Total: <span id="total-pontos">0</span></span>
+      </div>
+
+      <div id="pontos-lista" class="space-y-6">
+        <p class="text-center text-gray-500">Nenhum ponto cadastrado ainda.</p>
+      </div>
+    </section>
+
+  </main>
+
+  <script src="../js/cadastropontocoleta.js"></script>
+</body>
+</html>
