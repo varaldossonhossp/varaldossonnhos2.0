@@ -1,14 +1,14 @@
 // ============================================================
-// 💙 VARAL DOS SONHOS — js/cadastrocartinha.js
+// 💙 VARAL DOS SONHOS — js/cadastrocartinha.js (versão completa)
 // ------------------------------------------------------------
-// - Cadastro de cartinhas pelo painel admin
-// - Upload Cloudinary (unsigned)
-// - Envio de id_evento para Airtable
-// - Edição / exclusão
-// - Lista de conferência
+// - Cadastro de cartinhas
+// - Seleção de evento com nome + datas
+// - Upload Cloudinary
+// - Salvar no Airtable incluindo id_evento
+// - Lista de conferência completa
 // ============================================================
 
-//  Cloudinary
+// Cloudinary
 const CLOUD_NAME = "drnn5zmxi";
 const UPLOAD_PRESET = "unsigned_uploads";
 
@@ -17,8 +17,11 @@ let cartinhasSessao = [];
 let cadastroSessaoId = null;
 let editIndex = null;
 
+// Mapa: id_evento → dados do evento
+let mapaEventos = {}; 
+
 // ============================================================
-// INICIALIZAÇÃO
+// Inicialização
 // ============================================================
 document.addEventListener("DOMContentLoaded", () => {
 
@@ -34,7 +37,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // ------------------------------------------------------------
-  // 🔤 Title Case
+  // Title Case
   // ------------------------------------------------------------
   const titleCase = (str) =>
     str.toLowerCase().replace(/(?:^|\s)\S/g, (c) => c.toUpperCase());
@@ -48,7 +51,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
   // ------------------------------------------------------------
-  // 📞 Máscara de telefone
+  // Máscara telefone
   // ------------------------------------------------------------
   document.getElementById("telefone_contato").addEventListener("input", (e) => {
     let v = e.target.value.replace(/\D/g, "");
@@ -59,25 +62,31 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   // ------------------------------------------------------------
-  // 🎉 Carregar EVENTOS no select (CORRIGIDO)
+  // 🎉 Carregar EVENTOS
   // ------------------------------------------------------------
   async function carregarEventos() {
     try {
       const resp = await fetch("/api/eventos");
       const json = await resp.json();
 
-      if (!json.sucesso || !Array.isArray(json.eventos)) {
-        console.error("Erro API eventos", json);
-        return;
-      }
+      if (!json.sucesso) return;
 
       const select = document.getElementById("id_evento");
       select.innerHTML = `<option value="">Selecione um evento</option>`;
 
       json.eventos.forEach(ev => {
+        const el = ev.fields;
+
+        // Salva tudo no mapa
+        mapaEventos[ev.id] = {
+          nome: el.nome_evento,
+          data_evento: el.data_evento || "",
+          data_limite_recebimento: el.data_limite_recebimento || ""
+        };
+
         const opt = document.createElement("option");
         opt.value = ev.id;
-        opt.textContent = ev.nome_evento;  // CORREÇÃO AQUI!
+        opt.textContent = `${el.nome_evento} (${el.data_evento})`;
         select.appendChild(opt);
       });
 
@@ -87,19 +96,40 @@ document.addEventListener("DOMContentLoaded", () => {
   }
   carregarEventos();
 
+  // Mostrar as datas quando selecionar um evento
+  document.getElementById("id_evento").addEventListener("change", () => {
+    const id = document.getElementById("id_evento").value;
+    const box = document.getElementById("evento-info");
+
+    if (!id || !mapaEventos[id]) {
+      box.innerHTML = "";
+      return;
+    }
+
+    const ev = mapaEventos[id];
+
+    box.innerHTML = `
+      <div class="mt-2 text-sm text-blue-800 bg-blue-50 p-2 rounded border border-blue-200">
+        <strong>Evento selecionado:</strong> ${ev.nome}<br>
+        <strong>Data do Evento:</strong> ${ev.data_evento}<br>
+        <strong>Data Limite:</strong> ${ev.data_limite_recebimento}
+      </div>
+    `;
+  });
+
   // ------------------------------------------------------------
-  // 🖼️ Upload de imagem
+  // Upload Cloudinary
   // ------------------------------------------------------------
   form.imagem_cartinha.addEventListener("change", async () => {
 
     const file = form.imagem_cartinha.files[0];
     if (!file) {
       uploadedUrl = editIndex !== null ? cartinhasSessao[editIndex]?.imagem_cartinha : "";
-      previewImagem.innerHTML = uploadedUrl ? `<img src="${uploadedUrl}" class="w-32 rounded-lg shadow">` : "";
+      previewImagem.innerHTML = uploadedUrl ? `<img src="${uploadedUrl}" class="w-32 rounded">` : "";
       return;
     }
 
-    previewImagem.innerHTML = "<p class='text-blue-600'>Enviando imagem...</p>";
+    previewImagem.innerHTML = "<p class='text-blue-600'>Enviando...</p>";
 
     try {
       const fd = new FormData();
@@ -113,20 +143,18 @@ document.addEventListener("DOMContentLoaded", () => {
 
       if (data.secure_url) {
         uploadedUrl = data.secure_url;
-        previewImagem.innerHTML = `<img src="${uploadedUrl}" class="w-32 rounded-lg shadow">`;
+        previewImagem.innerHTML = `<img src="${uploadedUrl}" class="w-32 rounded shadow">`;
       } else {
-        uploadedUrl = "";
-        previewImagem.innerHTML = "<p class='text-red-500'>Falha no upload</p>";
+        previewImagem.innerHTML = "<p class='text-red-500'>Falha</p>";
       }
 
     } catch {
-      uploadedUrl = "";
-      previewImagem.innerHTML = "<p class='text-red-500'>Erro no upload</p>";
+      previewImagem.innerHTML = "<p class='text-red-500'>Erro</p>";
     }
   });
 
   // ------------------------------------------------------------
-  // 📨 SALVAR (POST / PATCH)
+  // SALVAR
   // ------------------------------------------------------------
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -150,10 +178,10 @@ document.addEventListener("DOMContentLoaded", () => {
       observacoes_admin: form.observacoes_admin.value,
       status: form.status.value,
       cadastro_sessao_id: cadastroSessaoId,
-
-      // Evento da cartinha
-      id_evento: form.id_evento.value,
+      id_evento: form.id_evento.value
     };
+
+    const ev = mapaEventos[payload.id_evento] || { nome: "", data_evento: "", data_limite_recebimento: "" };
 
     payload.imagem_cartinha = urlImg
       ? JSON.stringify([{ url: urlImg }])
@@ -163,7 +191,6 @@ document.addEventListener("DOMContentLoaded", () => {
     Object.entries(payload).forEach(([k, v]) => formData.append(k, v));
 
     try {
-
       let resp, json;
 
       // NOVO
@@ -171,17 +198,20 @@ document.addEventListener("DOMContentLoaded", () => {
         resp = await fetch("/api/cartinha", { method: "POST", body: formData });
         json = await resp.json();
 
-        if (!json.sucesso) return alert("Erro ao salvar cartinha!");
+        if (!json.sucesso) return alert("Erro ao salvar!");
 
         const idAirtable = json.novo[0].id;
 
         cartinhasSessao.push({
           id: idAirtable,
           ...payload,
+          evento_nome: ev.nome,
+          evento_data: ev.data_evento,
+          evento_limite: ev.data_limite_recebimento,
           imagem_cartinha: urlImg
         });
 
-        alert("Cartinha cadastrada com sucesso! 💙");
+        alert("Cartinha salva! 💙");
       }
 
       // EDITAR
@@ -192,31 +222,32 @@ document.addEventListener("DOMContentLoaded", () => {
         });
 
         json = await resp.json();
-
         if (!json.sucesso) return alert("Erro ao atualizar!");
 
         cartinhasSessao[editIndex] = {
           ...cartinhasSessao[editIndex],
           ...payload,
+          evento_nome: ev.nome,
+          evento_data: ev.data_evento,
+          evento_limite: ev.data_limite_recebimento,
           imagem_cartinha: urlImg,
         };
 
-        alert("Cartinha atualizada! ✔");
+        alert("Cartinha atualizada!");
       }
 
-      editIndex = null;
       form.reset();
       uploadedUrl = "";
       previewImagem.innerHTML = "";
+      editIndex = null;
       atualizarLista();
 
     } catch (err) {
-      console.error("Erro ao salvar cartinha:", err);
+      console.error("Erro salvar cartinha:", err);
       alert("Erro inesperado!");
     }
   });
 
-  // LIMPAR
   btnLimpar.addEventListener("click", () => {
     editIndex = null;
     form.reset();
@@ -235,9 +266,7 @@ function atualizarLista() {
   const total = document.getElementById("total-cartinhas");
 
   if (!cartinhasSessao.length) {
-    lista.innerHTML = `<p class="text-gray-500 text-center">
-      Nenhuma cartinha cadastrada nesta sessão.
-    </p>`;
+    lista.innerHTML = `<p class="text-gray-500 text-center">Nenhuma cartinha cadastrada.</p>`;
     total.textContent = "0";
     return;
   }
@@ -245,33 +274,33 @@ function atualizarLista() {
   total.textContent = cartinhasSessao.length;
 
   lista.innerHTML = cartinhasSessao.map((c, idx) => `
-    <div class="p-4 bg-blue-50 border rounded-lg shadow relative">
+    <div class="p-4 bg-blue-50 border rounded-lg shadow">
 
-      ${c.imagem_cartinha ? `<img src="${c.imagem_cartinha}" class="w-24 h-24 rounded-lg shadow float-right ml-4">` : ""}
+      ${c.imagem_cartinha ? `<img src="${c.imagem_cartinha}" class="w-24 h-24 rounded float-right ml-4">` : ""}
 
       <p><strong>Nome:</strong> ${c.nome_crianca}</p>
       <p><strong>Idade:</strong> ${c.idade}</p>
       <p><strong>Sexo:</strong> ${c.sexo}</p>
-      <p><strong>Evento:</strong> ${c.id_evento || "-"}</p>
+
+      <p><strong>Evento:</strong> ${c.evento_nome || "-"}</p>
+      <p><strong>Data do Evento:</strong> ${c.evento_data || "-"}</p>
+      <p><strong>Data Limite:</strong> ${c.evento_limite || "-"}</p>
+
       <p><strong>Sonho:</strong> ${c.sonho}</p>
 
       <div class="flex gap-4 mt-3">
         <button onclick="editarCartinha(${idx})"
-          class="px-4 py-2 bg-yellow-500 text-white rounded-lg shadow">
-          ✏️ Editar
-        </button>
+          class="px-4 py-2 bg-yellow-500 text-white rounded-lg">✏️ Editar</button>
 
         <button onclick="excluirCartinha(${idx})"
-          class="px-4 py-2 bg-red-600 text-white rounded-lg shadow">
-          🗑️ Excluir
-        </button>
+          class="px-4 py-2 bg-red-600 text-white rounded-lg">🗑️ Excluir</button>
       </div>
     </div>
   `).join("");
 }
 
 // ============================================================
-// EDITAR (CORRIGIDO para puxar id_evento)
+// EDITAR
 // ============================================================
 function editarCartinha(idx) {
   const c = cartinhasSessao[idx];
@@ -289,11 +318,10 @@ function editarCartinha(idx) {
   form.sonho.value = c.sonho;
   form.observacoes_admin.value = c.observacoes_admin;
   form.status.value = c.status;
-
-  // CORREÇÃO
-  form.id_evento.value = c.id_evento || "";
+  form.id_evento.value = c.id_evento;
 
   uploadedUrl = c.imagem_cartinha;
+
   document.getElementById("preview-imagem").innerHTML =
     uploadedUrl ? `<img src="${uploadedUrl}" class="w-32 rounded shadow">` : "";
 
@@ -309,9 +337,7 @@ async function excluirCartinha(idx) {
   if (!confirm("Excluir essa cartinha?")) return;
 
   if (c.id) {
-    const resp = await fetch(`/api/cartinha?id=${c.id}`, {
-      method: "DELETE"
-    });
+    const resp = await fetch(`/api/cartinha?id=${c.id}`, { method: "DELETE" });
     const json = await resp.json();
     if (!json.sucesso) return alert("Erro ao excluir!");
   }
