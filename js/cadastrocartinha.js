@@ -4,37 +4,39 @@
 // - Cadastro de cartinhas pelo painel admin
 // - Upload de imagem via Cloudinary (unsigned)
 // - Máscara de telefone
-// - Primeira letra maiúscula (Title Case) em campos de texto
-// - Envio para /api/cartinha (form-data)
+// - Primeira letra maiúscula (Title Case)
+// - Lista de conferência com foto + editar + excluir
+// - Envio correto para /api/cartinha (form-data)
 // ============================================================
 
-// 🔧 Configuração Cloudinary (pública, pode ficar no front)
+// 🌥 Configuração Cloudinary
 const CLOUD_NAME = "drnn5zmxi";
 const UPLOAD_PRESET = "unsigned_uploads";
 
-let uploadedUrl = "";           // URL retornada pelo Cloudinary
-let cartinhasSessao = [];       // Lista apenas para conferência visual
-let cadastroSessaoId = null;    // ID da sessão admin (pode ser usado depois)
+let uploadedUrl = "";
+let cartinhasSessao = [];
+let cadastroSessaoId = null;
 
+// ============================================================
+// Inicialização
+// ============================================================
 document.addEventListener("DOMContentLoaded", () => {
   const form = document.getElementById("form-cartinha");
   const previewImagem = document.getElementById("preview-imagem");
   const btnLimpar = document.getElementById("btn-limpar");
 
-  // Gera um ID simples de sessão de cadastro, se ainda não existir
+  // ID da sessão (só para controle interno)
   cadastroSessaoId = sessionStorage.getItem("cadastro_sessao_id");
   if (!cadastroSessaoId) {
     cadastroSessaoId = "sessao-" + Date.now();
     sessionStorage.setItem("cadastro_sessao_id", cadastroSessaoId);
   }
 
-  // ==========================================================
-  // 🔤 Função para colocar Primeira Letra Maiúscula (Title Case)
-  // ==========================================================
+  // ============================================================
+  // 🔤 PRIMEIRA LETRA MAIÚSCULA (TITLE CASE)
+  // ============================================================
   const titleCase = (str) =>
-    str
-      .toLowerCase()
-      .replace(/(?:^|\s)\S/g, (c) => c.toUpperCase());
+    str.toLowerCase().replace(/(?:^|\s)\S/g, (c) => c.toUpperCase());
 
   function aplicaTitleCase(id) {
     const el = document.getElementById(id);
@@ -44,15 +46,13 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  aplicaTitleCase("nome_crianca");
-  aplicaTitleCase("escola");
-  aplicaTitleCase("cidade");
-  aplicaTitleCase("psicologa_responsavel");
-  aplicaTitleCase("sonho");
+  ["nome_crianca", "escola", "cidade", "psicologa_responsavel", "sonho"].forEach(
+    aplicaTitleCase
+  );
 
-  // ==========================================================
-  // 📞 Máscara de telefone
-  // ==========================================================
+  // ============================================================
+  // 📞 MÁSCARA DE TELEFONE
+  // ============================================================
   document.getElementById("telefone_contato").addEventListener("input", (e) => {
     let valor = e.target.value.replace(/\D/g, "");
     if (valor.length > 10) {
@@ -65,9 +65,9 @@ document.addEventListener("DOMContentLoaded", () => {
     e.target.value = valor;
   });
 
-  // ==========================================================
-  // 🖼️ Upload Cloudinary
-  // ==========================================================
+  // ============================================================
+  // 🖼️ UPLOAD CLOUDINARY
+  // ============================================================
   form.imagem_cartinha.addEventListener("change", async () => {
     const file = form.imagem_cartinha.files[0];
     if (!file) {
@@ -86,10 +86,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const resp = await fetch(
         `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`,
-        {
-          method: "POST",
-          body: formData,
-        }
+        { method: "POST", body: formData }
       );
 
       const data = await resp.json();
@@ -104,25 +101,22 @@ document.addEventListener("DOMContentLoaded", () => {
                style="max-width: 150px;">
         `;
       } else {
-        uploadedUrl = "";
         previewImagem.innerHTML =
-          '<p class="text-red-500">❌ Falha no upload da imagem.</p>';
+          '<p class="text-red-500">❌ Falha no upload.</p>';
       }
     } catch (err) {
-      console.error("Erro ao enviar imagem para Cloudinary:", err);
-      uploadedUrl = "";
+      console.error("Erro Cloudinary:", err);
       previewImagem.innerHTML =
         '<p class="text-red-500">Erro ao enviar imagem.</p>';
     }
   });
 
-  // ==========================================================
-  // 📨 Enviar cartinha para a API (/api/cartinha)
-  // ==========================================================
+  // ============================================================
+  // 📨 ENVIO PARA API (/api/cartinha)
+  // ============================================================
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
 
-    // Campos principais
     const payload = {
       nome_crianca: form.nome_crianca.value.trim(),
       idade: form.idade.value.trim(),
@@ -139,19 +133,13 @@ document.addEventListener("DOMContentLoaded", () => {
       cadastro_sessao_id: cadastroSessaoId,
     };
 
-    // Imagem da cartinha → formato de attachment do Airtable
-    if (uploadedUrl) {
-      payload.imagem_cartinha = JSON.stringify([{ url: uploadedUrl }]);
-    } else {
-      payload.imagem_cartinha = JSON.stringify([]);
-    }
+    // Foto → attachment
+    payload.imagem_cartinha = uploadedUrl
+      ? JSON.stringify([{ url: uploadedUrl }])
+      : JSON.stringify([]);
 
     const formData = new FormData();
-    Object.entries(payload).forEach(([key, value]) => {
-      if (value !== null && value !== undefined) {
-        formData.append(key, value);
-      }
-    });
+    Object.entries(payload).forEach(([k, v]) => formData.append(k, v));
 
     try {
       const resp = await fetch("/api/cartinha", {
@@ -169,65 +157,117 @@ document.addEventListener("DOMContentLoaded", () => {
 
       alert("💙 Cartinha cadastrada com sucesso!");
 
-      // Guarda na lista local (apenas conferência da sessão)
+      // Adiciona à lista da sessão
       cartinhasSessao.push({
-        nome_crianca: payload.nome_crianca,
-        idade: payload.idade,
-        sexo: payload.sexo,
-        sonho: payload.sonho,
-        status: payload.status,
+        ...payload,
+        imagem_cartinha: uploadedUrl,
       });
+
       atualizarLista();
 
       form.reset();
       uploadedUrl = "";
       previewImagem.innerHTML = "";
     } catch (err) {
-      console.error("Erro ao chamar /api/cartinha:", err);
+      console.error("Erro ao chamar API:", err);
       alert("❌ Erro inesperado ao salvar a cartinha.");
     }
   });
 
-  // ==========================================================
-  // 🧹 Botão limpar
-  // ==========================================================
+  // Botão limpar
   btnLimpar.addEventListener("click", () => {
     form.reset();
     uploadedUrl = "";
     previewImagem.innerHTML = "";
   });
 
-  // Primeira atualização da lista
   atualizarLista();
 });
 
 // ============================================================
-// 📋 Lista visual de cartinhas da sessão
+// 📋 LISTA DE CONFERÊNCIA
 // ============================================================
 function atualizarLista() {
   const lista = document.getElementById("cartinhas-lista");
   const total = document.getElementById("total-cartinhas");
 
-  if (!cartinhasSessao || cartinhasSessao.length === 0) {
+  if (!cartinhasSessao.length) {
     lista.innerHTML =
       '<p class="text-center text-gray-500">Nenhuma cartinha cadastrada nesta sessão.</p>';
     total.textContent = "0";
     return;
   }
 
-  total.textContent = cartinhasSessao.length.toString();
+  total.textContent = cartinhasSessao.length;
 
   lista.innerHTML = cartinhasSessao
     .map(
-      (c) => `
-      <div class="p-4 border rounded-lg bg-blue-50 shadow-sm">
+      (c, idx) => `
+      <div class="p-4 border rounded-lg bg-blue-50 shadow-sm relative">
+
+        ${
+          c.imagem_cartinha
+            ? `<img src="${c.imagem_cartinha}" class="w-28 h-28 object-cover rounded-lg float-right ml-3 border shadow">`
+            : ""
+        }
+
         <p><strong>Nome:</strong> ${c.nome_crianca}</p>
         <p><strong>Idade:</strong> ${c.idade}</p>
         <p><strong>Sexo:</strong> ${c.sexo}</p>
+        <p><strong>Irmãos:</strong> ${c.irmaos || "-"}</p>
+        <p><strong>Idade dos Irmãos:</strong> ${c.idade_irmaos || "-"}</p>
+        <p><strong>Escola:</strong> ${c.escola || "-"}</p>
+        <p><strong>Cidade:</strong> ${c.cidade}</p>
+        <p><strong>Telefone:</strong> ${c.telefone_contato}</p>
+        <p><strong>Psicóloga:</strong> ${c.psicologa_responsavel || "-"}</p>
         <p><strong>Sonho:</strong> ${c.sonho}</p>
         <p><strong>Status:</strong> ${c.status}</p>
+
+        <div class="flex gap-3 mt-3">
+          <button onclick="editarCartinha(${idx})"
+            class="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white rounded-lg shadow">
+            ✏️ Editar
+          </button>
+
+          <button onclick="excluirCartinha(${idx})"
+            class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg shadow">
+            🗑️ Excluir
+          </button>
+        </div>
       </div>
     `
     )
     .join("");
+}
+
+// ============================================================
+// ✏️ EDITAR CARTINHA
+// ============================================================
+function editarCartinha(idx) {
+  const c = cartinhasSessao[idx];
+
+  document.getElementById("nome_crianca").value = c.nome_crianca;
+  document.getElementById("idade").value = c.idade;
+  document.getElementById("sexo").value = c.sexo;
+  document.getElementById("irmaos").value = c.irmaos;
+  document.getElementById("idade_irmaos").value = c.idade_irmaos;
+  document.getElementById("escola").value = c.escola;
+  document.getElementById("cidade").value = c.cidade;
+  document.getElementById("telefone_contato").value = c.telefone_contato;
+  document.getElementById("psicologa_responsavel").value = c.psicologa_responsavel;
+  document.getElementById("sonho").value = c.sonho;
+  document.getElementById("observacoes_admin").value = c.observacoes_admin;
+  document.getElementById("status").value = c.status;
+
+  alert("✏️ Cartinha carregada no formulário para edição!");
+}
+
+// ============================================================
+// 🗑️ EXCLUIR CARTINHA DA SESSÃO
+// ============================================================
+function excluirCartinha(idx) {
+  if (confirm("Tem certeza que deseja remover esta cartinha da conferência?")) {
+    cartinhasSessao.splice(idx, 1);
+    atualizarLista();
+  }
 }
