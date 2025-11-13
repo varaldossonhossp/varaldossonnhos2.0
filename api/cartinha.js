@@ -1,14 +1,11 @@
 // ============================================================
-// 💙 VARAL DOS SONHOS — /api/cartinha.js (versão final TCC Cloudinary + Sessão Admin)
+// 💙 VARAL DOS SONHOS — /api/cartinha.js
 // ------------------------------------------------------------
-// 🔹 Upload de imagem via Cloudinary (URL pública enviada pelo front-end)
-// 🔹 Compatível com Vercel (sem uso de Base64 nem Buffer)
+// 🔹 Upload de imagem via Cloudinary (URL pública vinda do front)
+// 🔹 Compatível com Vercel (sem Base64/Buffer)
 // 🔹 Validação de campos Single Select (sexo, status)
-// 🔹 Integração com eventos
-// 🔹 Mantém GET, POST, PATCH, DELETE originais
-// 🔹 ADIÇÃO: suporte a cadastro_sessao_id (painel admin)
-// 🔹 ADIÇÃO: GET com filtro por sessão (?session=123)
-// 🔹 AJUSTE: inclusão dos campos irmaos e idade_irmaos
+// 🔹 Integração opcional com evento via id_evento
+// 🔹 GET com filtro por sessão (?session=123) ou por evento (?evento=ID)
 // ============================================================
 
 import Airtable from "airtable";
@@ -35,7 +32,10 @@ const tableName = process.env.AIRTABLE_CARTINHA_TABLE || "cartinha";
 // ============================================================
 function setCors(res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Methods", "GET,POST,PATCH,DELETE,OPTIONS");
+  res.setHeader(
+    "Access-Control-Allow-Methods",
+    "GET,POST,PATCH,DELETE,OPTIONS"
+  );
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 }
 
@@ -69,7 +69,7 @@ export default async function handler(req, res) {
     }
 
     // ==========================================================
-    // 🔹 GET — Lista de cartinhas (com filtro por evento ou sessão)
+    // 🔹 GET — Lista de cartinhas (com filtros opcionais)
     // ==========================================================
     if (req.method === "GET") {
       const { evento, session } = req.query;
@@ -78,15 +78,15 @@ export default async function handler(req, res) {
         sort: [{ field: "data_cadastro", direction: "desc" }],
       };
 
-      // 🔵 FILTRO ORIGINAL: EVENTO
+      // Filtro por id_evento (se a tabela tiver esse campo)
       if (evento) {
         selectConfig = {
           ...selectConfig,
-          filterByFormula: `{evento_id} = "${evento}"`,
+          filterByFormula: `{id_evento} = "${evento}"`,
         };
       }
 
-      // 🟢 FILTRO NOVO: SESSÃO ADMIN
+      // Filtro por sessão admin
       if (session) {
         selectConfig = {
           ...selectConfig,
@@ -101,8 +101,6 @@ export default async function handler(req, res) {
         nome_crianca: r.fields.nome_crianca || "",
         idade: r.fields.idade || "",
         sexo: r.fields.sexo || "",
-        irmaos: r.fields.irmaos || "",
-        idade_irmaos: r.fields.idade_irmaos || "",
         sonho: r.fields.sonho || "",
         escola: r.fields.escola || "",
         cidade: r.fields.cidade || "",
@@ -111,14 +109,16 @@ export default async function handler(req, res) {
         imagem_cartinha: r.fields.imagem_cartinha || [],
         status: r.fields.status || "",
         observacoes_admin: r.fields.observacoes_admin || "",
+        irmaos: r.fields.irmaos || "",
+        idade_irmaos: r.fields.idade_irmaos || "",
+        data_cadastro: r.fields.data_cadastro || "",
+        id_evento: r.fields.id_evento || "",
 
-        // Campos de evento
+        // Se existirem lookups, eles serão trazidos só para leitura
         nome_evento: r.fields.nome_evento || "",
         data_evento: r.fields.data_evento || "",
         data_limite_recebimento: r.fields.data_limite_recebimento || "",
-        evento_id: r.fields.evento_id || "",
 
-        // Sessão
         cadastro_sessao_id: r.fields.cadastro_sessao_id || "",
       }));
 
@@ -140,7 +140,7 @@ export default async function handler(req, res) {
         ? body.status.toLowerCase()
         : "disponivel";
 
-      // 🔹 Imagem Cloudinary (array de anexos)
+      // Imagem (já vem como JSON string do front)
       let imagem_cartinha = [];
       try {
         imagem_cartinha = body.imagem_cartinha
@@ -150,43 +150,31 @@ export default async function handler(req, res) {
         imagem_cartinha = [];
       }
 
-      // 🔹 Campos de evento (opcionais)
-      const nome_evento = body.nome_evento || "";
-      const data_evento = body.data_evento || "";
-      const data_limite_recebimento = body.data_limite_recebimento || "";
-      const evento_id = body.evento_id || "";
-
-      // 🔹 Sessão admin (opcional)
       const cadastro_sessao_id = body.cadastro_sessao_id || "";
 
-      const novo = await base(tableName).create([
-        {
-          fields: {
-            nome_crianca: body.nome_crianca,
-            idade: body.idade ? parseInt(body.idade, 10) : null,
-            sexo,
-            irmaos: body.irmaos ? parseInt(body.irmaos, 10) : null,
-            idade_irmaos: body.idade_irmaos || "",
-            sonho: body.sonho,
-            imagem_cartinha,
-            escola: body.escola,
-            cidade: body.cidade,
-            telefone_contato: body.telefone_contato,
-            psicologa_responsavel: body.psicologa_responsavel,
-            observacoes_admin: body.observacoes_admin || "",
-            status,
+      const fields = {
+        nome_crianca: body.nome_crianca,
+        idade: body.idade ? parseInt(body.idade) : null,
+        sexo,
+        sonho: body.sonho,
+        imagem_cartinha,
+        escola: body.escola,
+        cidade: body.cidade,
+        telefone_contato: body.telefone_contato,
+        psicologa_responsavel: body.psicologa_responsavel,
+        observacoes_admin: body.observacoes_admin || "",
+        status,
+        irmaos: body.irmaos,
+        idade_irmaos: body.idade_irmaos,
+        cadastro_sessao_id,
+      };
 
-            // Campos de evento
-            nome_evento,
-            data_evento,
-            data_limite_recebimento,
-            evento_id,
+      // Campo opcional id_evento (se você quiser associar manualmente)
+      if (body.id_evento) {
+        fields.id_evento = body.id_evento;
+      }
 
-            // Sessão admin
-            cadastro_sessao_id,
-          },
-        },
-      ]);
+      const novo = await base(tableName).create([{ fields }]);
 
       return res.status(200).json({ sucesso: true, novo });
     }
@@ -196,61 +184,53 @@ export default async function handler(req, res) {
     // ==========================================================
     if (req.method === "PATCH") {
       const { id } = req.query;
-      if (!id)
+      if (!id) {
         return res.status(400).json({
           sucesso: false,
           mensagem: "ID obrigatório para atualização.",
         });
+      }
 
       const sexoValido = ["menino", "menina", "outro"];
       const statusValido = ["disponivel", "adotada", "inativa"];
 
       const fieldsToUpdate = {
         nome_crianca: body.nome_crianca,
-        idade: body.idade ? parseInt(body.idade, 10) : null,
+        idade: body.idade ? parseInt(body.idade) : null,
         sonho: body.sonho,
         escola: body.escola,
         cidade: body.cidade,
         telefone_contato: body.telefone_contato,
         psicologa_responsavel: body.psicologa_responsavel,
         observacoes_admin: body.observacoes_admin || "",
+        irmaos: body.irmaos,
+        idade_irmaos: body.idade_irmaos,
       };
 
-      if (body.irmaos !== undefined) {
-        fieldsToUpdate.irmaos = body.irmaos
-          ? parseInt(body.irmaos, 10)
-          : null;
-      }
-      if (body.idade_irmaos !== undefined) {
-        fieldsToUpdate.idade_irmaos = body.idade_irmaos || "";
-      }
-
-      if (sexoValido.includes((body.sexo || "").toLowerCase()))
+      if (sexoValido.includes((body.sexo || "").toLowerCase())) {
         fieldsToUpdate.sexo = body.sexo.toLowerCase();
+      }
 
-      if (statusValido.includes((body.status || "").toLowerCase()))
+      if (statusValido.includes((body.status || "").toLowerCase())) {
         fieldsToUpdate.status = body.status.toLowerCase();
+      }
 
       if (body.imagem_cartinha) {
         try {
           const img = JSON.parse(body.imagem_cartinha);
           if (Array.isArray(img)) fieldsToUpdate.imagem_cartinha = img;
         } catch {
-          // silencioso
+          // ignora erro de parse
         }
       }
 
-      // 🔹 Atualiza evento (se vier)
-      if (body.nome_evento) fieldsToUpdate.nome_evento = body.nome_evento;
-      if (body.data_evento) fieldsToUpdate.data_evento = body.data_evento;
-      if (body.data_limite_recebimento)
-        fieldsToUpdate.data_limite_recebimento =
-          body.data_limite_recebimento;
-      if (body.evento_id) fieldsToUpdate.evento_id = body.evento_id;
-
-      // 🔹 Atualiza sessão (se vier)
-      if (body.cadastro_sessao_id)
+      if (body.cadastro_sessao_id) {
         fieldsToUpdate.cadastro_sessao_id = body.cadastro_sessao_id;
+      }
+
+      if (body.id_evento) {
+        fieldsToUpdate.id_evento = body.id_evento;
+      }
 
       const atualizado = await base(tableName).update([
         { id, fields: fieldsToUpdate },
@@ -260,15 +240,16 @@ export default async function handler(req, res) {
     }
 
     // ==========================================================
-    // 🔹 DELETE — Mantido exatamente como estava
+    // 🔹 DELETE — Excluir cartinha
     // ==========================================================
     if (req.method === "DELETE") {
       const { id } = req.query;
-      if (!id)
+      if (!id) {
         return res.status(400).json({
           sucesso: false,
           mensagem: "ID obrigatório.",
         });
+      }
 
       await base(tableName).destroy([id]);
       return res
@@ -279,12 +260,12 @@ export default async function handler(req, res) {
     // ==========================================================
     // ❌ Método não suportado
     // ==========================================================
-    res.status(405).json({
+    return res.status(405).json({
       sucesso: false,
       mensagem: `Método ${req.method} não permitido.`,
     });
   } catch (e) {
     console.error("🔥 Erro /api/cartinha:", e);
-    res.status(500).json({ sucesso: false, mensagem: e.message });
+    return res.status(500).json({ sucesso: false, mensagem: e.message });
   }
 }
