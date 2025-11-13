@@ -1,5 +1,5 @@
 // ============================================================
-// 💙 VARAL DOS SONHOS — Relatório de Cartinhas (Com evento_nome)
+// 💙 VARAL DOS SONHOS — Relatório de Cartinhas (Versão Final)
 // ============================================================
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -31,15 +31,15 @@ async function carregarFiltros() {
     const selEvento = document.getElementById("filtroEvento");
     const selPonto = document.getElementById("filtroPonto");
 
-    // 🔸 Filtros de eventos (usa ID e mostra nome do evento)
+    // EVENTOS
     eventosJson.eventos?.forEach((ev) => {
       const opt = document.createElement("option");
-      opt.value = ev.id;  // valor = ID do evento
-      opt.textContent = ev.fields.nome_evento; // texto = nome
+      opt.value = ev.id;
+      opt.textContent = ev.fields.nome_evento;
       selEvento.appendChild(opt);
     });
 
-    // 🔸 Filtros de ponto de coleta
+    // PONTOS DE COLETA
     pontosJson.pontos?.forEach((p) => {
       const opt = document.createElement("option");
       opt.value = p.fields.nome_ponto;
@@ -48,12 +48,12 @@ async function carregarFiltros() {
     });
 
   } catch (err) {
-    console.error("Erro ao carregar filtros:", err);
+    console.error("Erro filtros:", err);
   }
 }
 
 // ============================================================
-// 🔹 Carregar cartinhas da API
+// 🔹 Carregar Cartinhas
 // ============================================================
 let cartinhasOriginais = [];
 
@@ -79,7 +79,7 @@ async function carregarCartinhas() {
 }
 
 // ============================================================
-// 🔹 Preencher tabela com cartinhas (incluindo EVENTO_NOME)
+// 🔹 Preencher Tabela (EVENTO + PONTO OK)
 // ============================================================
 function preencherTabela(lista) {
   const tbody = document.getElementById("tabelaBody");
@@ -90,9 +90,7 @@ function preencherTabela(lista) {
     return;
   }
 
-  lista.forEach((c, index) => {
-    const f = c;
-
+  lista.forEach((f, index) => {
     tbody.innerHTML += `
       <tr>
         <td>${index + 1}</td>
@@ -102,10 +100,12 @@ function preencherTabela(lista) {
         <td>${f.sonho || "-"}</td>
         <td>${f.escola || "-"}</td>
         <td>${f.cidade || "-"}</td>
-        <td>${f.ponto_coleta || "-"}</td>
 
-        <!-- ✔ Campo expandido evento_nome -->
-        <td>${f.evento_nome || "-"}</td>
+        <!-- Nome correto do ponto de coleta -->
+        <td>${f.nome_ponto || "-"}</td>
+
+        <!-- Nome do evento -->
+        <td>${f.nome_evento || "-"}</td>
 
         <td>${f.status || "-"}</td>
       </tr>
@@ -116,7 +116,7 @@ function preencherTabela(lista) {
 }
 
 // ============================================================
-// 🔹 Filtrar cartinhas
+// 🔹 Filtrar
 // ============================================================
 function filtrar() {
   const ev = document.getElementById("filtroEvento").value;
@@ -124,14 +124,19 @@ function filtrar() {
   const sexo = document.getElementById("filtroSexo").value;
   const status = document.getElementById("filtroStatus").value;
 
-  const filtradas = cartinhasOriginais.filter((c) => {
-    const f = c;
+  const filtradas = cartinhasOriginais.filter((f) => {
+
+    // Filtro por evento
+    const eventoOK =
+      ev === "todos" || f.id_evento?.includes(ev);
+
+    // Filtro por ponto (usando nome_ponto)
+    const pontoOK =
+      ponto === "todos" || f.nome_ponto === ponto;
 
     return (
-      (ev === "todos" ||
-        (Array.isArray(f.id_evento) && f.id_evento.includes(ev))) &&
-
-      (ponto === "todos" || f.ponto_coleta === ponto) &&
+      eventoOK &&
+      pontoOK &&
       (sexo === "todos" || f.sexo === sexo) &&
       (status === "todos" || f.status === status)
     );
