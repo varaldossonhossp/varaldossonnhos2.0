@@ -6,16 +6,17 @@
 // - Máscara de telefone
 // - Primeira letra maiúscula (Title Case)
 // - Lista de conferência com foto + editar + excluir
-// - Envio correto para /api/cartinha (form-data)
+// - POST (novo), PATCH (edição) e DELETE (exclusão) no /api/cartinha
 // ============================================================
 
 // 🌥 Configuração Cloudinary
 const CLOUD_NAME = "drnn5zmxi";
 const UPLOAD_PRESET = "unsigned_uploads";
 
-let uploadedUrl = "";
-let cartinhasSessao = [];
-let cadastroSessaoId = null;
+let uploadedUrl = "";        // URL atual da imagem
+let cartinhasSessao = [];    // Lista para conferência da sessão
+let cadastroSessaoId = null; // ID da sessão (apenas controle interno)
+let editIndex = null;        // Índice da cartinha sendo editada (null = novo)
 
 // ============================================================
 // Inicialização
@@ -25,7 +26,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const previewImagem = document.getElementById("preview-imagem");
   const btnLimpar = document.getElementById("btn-limpar");
 
-  // ID da sessão (só para controle interno)
+  // ID da sessão (para rastrear cadastros feitos nessa tela)
   cadastroSessaoId = sessionStorage.getItem("cadastro_sessao_id");
   if (!cadastroSessaoId) {
     cadastroSessaoId = "sessao-" + Date.now();
@@ -71,8 +72,13 @@ document.addEventListener("DOMContentLoaded", () => {
   form.imagem_cartinha.addEventListener("change", async () => {
     const file = form.imagem_cartinha.files[0];
     if (!file) {
-      uploadedUrl = "";
-      previewImagem.innerHTML = "";
+      // Se limpar o input de arquivo
+      uploadedUrl = editIndex !== null
+        ? (cartinhasSessao[editIndex]?.imagem_cartinha || "")
+        : "";
+      previewImagem.innerHTML = uploadedUrl
+        ? `<img src="${uploadedUrl}" class="mt-2 rounded-lg border border-blue-200 shadow-md mx-auto" style="max-width:150px;">`
+        : "";
       return;
     }
 
@@ -101,21 +107,31 @@ document.addEventListener("DOMContentLoaded", () => {
                style="max-width: 150px;">
         `;
       } else {
+        uploadedUrl = "";
         previewImagem.innerHTML =
           '<p class="text-red-500">❌ Falha no upload.</p>';
       }
     } catch (err) {
       console.error("Erro Cloudinary:", err);
+      uploadedUrl = "";
       previewImagem.innerHTML =
         '<p class="text-red-500">Erro ao enviar imagem.</p>';
     }
   });
 
   // ============================================================
-  // 📨 ENVIO PARA API (/api/cartinha)
+  // 📨 ENVIO PARA API (/api/cartinha) — NOVO ou EDIÇÃO
   // ============================================================
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
+
+    const isEdit = editIndex !== null;
+    const registroAtual = isEdit ? cartinhasSessao[editIndex] : null;
+
+    // Se estiver editando e não tiver feito novo upload,
+    // mantemos a imagem anterior:
+    const urlImagemParaSalvar =
+      uploadedUrl || (registroAtual ? registroAtual.imagem_cartinha : "");
 
     const payload = {
       nome_crianca: form.nome_crianca.value.trim(),
@@ -133,49 +149,84 @@ document.addEventListener("DOMContentLoaded", () => {
       cadastro_sessao_id: cadastroSessaoId,
     };
 
-    // Foto → attachment
-    payload.imagem_cartinha = uploadedUrl
-      ? JSON.stringify([{ url: uploadedUrl }])
+    // Foto → attachment (Airtable)
+    payload.imagem_cartinha = urlImagemParaSalvar
+      ? JSON.stringify([{ url: urlImagemParaSalvar }])
       : JSON.stringify([]);
 
     const formData = new FormData();
     Object.entries(payload).forEach(([k, v]) => formData.append(k, v));
 
     try {
-      const resp = await fetch("/api/cartinha", {
-        method: "POST",
-        body: formData,
-      });
+      let resp, json;
 
-      const json = await resp.json();
-      console.log("Resposta /api/cartinha:", json);
+      if (!isEdit) {
+        // -------- NOVO REGISTRO (POST) --------
+        resp = await fetch("/api/cartinha", {
+          method: "POST",
+          body: formData,
+        });
+        json = await resp.json();
+        console.log("POST /api/cartinha:", json);
 
-      if (!json.sucesso) {
-        alert("❌ Erro ao salvar a cartinha no Airtable.");
-        return;
+        if (!json.sucesso) {
+          alert("❌ Erro ao salvar a cartinha no Airtable.");
+          return;
+        }
+
+        const record = Array.isArray(json.novo) ? json.novo[0] : null;
+        const airtableId = record ? record.id : null;
+
+        cartinhasSessao.push({
+          id: airtableId,
+          ...payload,
+          imagem_cartinha: urlImagemParaSalvar,
+        });
+        alert("💙 Cartinha cadastrada com sucesso!");
+      } else {
+        // -------- EDIÇÃO (PATCH) --------
+        if (!registroAtual || !registroAtual.id) {
+          alert(
+            "Não foi possível identificar o registro no Airtable para edição."
+          );
+          return;
+        }
+
+        resp = await fetch(`/api/cartinha?id=${encodeURIComponent(registroAtual.id)}`, {
+          method: "PATCH",
+          body: formData,
+        });
+        json = await resp.json();
+        console.log("PATCH /api/cartinha:", json);
+
+        if (!json.sucesso) {
+          alert("❌ Erro ao atualizar a cartinha no Airtable.");
+          return;
+        }
+
+        cartinhasSessao[editIndex] = {
+          ...cartinhasSessao[editIndex],
+          ...payload,
+          imagem_cartinha: urlImagemParaSalvar,
+        };
+        alert("✅ Cartinha atualizada com sucesso!");
       }
 
-      alert("💙 Cartinha cadastrada com sucesso!");
-
-      // Adiciona à lista da sessão
-      cartinhasSessao.push({
-        ...payload,
-        imagem_cartinha: uploadedUrl,
-      });
-
-      atualizarLista();
-
+      // Limpa estado de edição
+      editIndex = null;
       form.reset();
       uploadedUrl = "";
       previewImagem.innerHTML = "";
+      atualizarLista();
     } catch (err) {
-      console.error("Erro ao chamar API:", err);
+      console.error("Erro ao chamar /api/cartinha:", err);
       alert("❌ Erro inesperado ao salvar a cartinha.");
     }
   });
 
   // Botão limpar
   btnLimpar.addEventListener("click", () => {
+    editIndex = null;
     form.reset();
     uploadedUrl = "";
     previewImagem.innerHTML = "";
@@ -214,7 +265,7 @@ function atualizarLista() {
         <p><strong>Nome:</strong> ${c.nome_crianca}</p>
         <p><strong>Idade:</strong> ${c.idade}</p>
         <p><strong>Sexo:</strong> ${c.sexo}</p>
-        <p><strong>Irmãos:</strong> ${c.irmaos || "-"}</p>
+        <p><strong>Irmãos:</strong> ${c.irmaos || "0"}</p>
         <p><strong>Idade dos Irmãos:</strong> ${c.idade_irmaos || "-"}</p>
         <p><strong>Escola:</strong> ${c.escola || "-"}</p>
         <p><strong>Cidade:</strong> ${c.cidade}</p>
@@ -241,33 +292,67 @@ function atualizarLista() {
 }
 
 // ============================================================
-// ✏️ EDITAR CARTINHA
+// ✏️ EDITAR CARTINHA (carrega para o formulário)
 // ============================================================
 function editarCartinha(idx) {
   const c = cartinhasSessao[idx];
+  if (!c) return;
 
-  document.getElementById("nome_crianca").value = c.nome_crianca;
-  document.getElementById("idade").value = c.idade;
-  document.getElementById("sexo").value = c.sexo;
-  document.getElementById("irmaos").value = c.irmaos;
-  document.getElementById("idade_irmaos").value = c.idade_irmaos;
-  document.getElementById("escola").value = c.escola;
-  document.getElementById("cidade").value = c.cidade;
-  document.getElementById("telefone_contato").value = c.telefone_contato;
-  document.getElementById("psicologa_responsavel").value = c.psicologa_responsavel;
-  document.getElementById("sonho").value = c.sonho;
-  document.getElementById("observacoes_admin").value = c.observacoes_admin;
-  document.getElementById("status").value = c.status;
+  const form = document.getElementById("form-cartinha");
+  const previewImagem = document.getElementById("preview-imagem");
 
-  alert("✏️ Cartinha carregada no formulário para edição!");
+  form.nome_crianca.value = c.nome_crianca;
+  form.idade.value = c.idade;
+  form.sexo.value = c.sexo;
+  form.irmaos.value = c.irmaos;
+  form.idade_irmaos.value = c.idade_irmaos;
+  form.escola.value = c.escola;
+  form.cidade.value = c.cidade;
+  form.telefone_contato.value = c.telefone_contato;
+  form.psicologa_responsavel.value = c.psicologa_responsavel;
+  form.sonho.value = c.sonho;
+  form.observacoes_admin.value = c.observacoes_admin;
+  form.status.value = c.status;
+
+  uploadedUrl = c.imagem_cartinha || "";
+  previewImagem.innerHTML = uploadedUrl
+    ? `<img src="${uploadedUrl}" class="mt-2 rounded-lg border border-blue-200 shadow-md mx-auto" style="max-width:150px;">`
+    : "";
+
+  editIndex = idx;
+  window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
 // ============================================================
-// 🗑️ EXCLUIR CARTINHA DA SESSÃO
+// 🗑️ EXCLUIR CARTINHA (sessão + Airtable)
 // ============================================================
-function excluirCartinha(idx) {
-  if (confirm("Tem certeza que deseja remover esta cartinha da conferência?")) {
+async function excluirCartinha(idx) {
+  const c = cartinhasSessao[idx];
+  if (!c) return;
+
+  if (!confirm("Tem certeza que deseja excluir esta cartinha?")) return;
+
+  try {
+    if (c.id) {
+      const resp = await fetch(`/api/cartinha?id=${encodeURIComponent(c.id)}`, {
+        method: "DELETE",
+      });
+      const json = await resp.json();
+      console.log("DELETE /api/cartinha:", json);
+
+      if (!json.sucesso) {
+        alert("❌ Erro ao excluir a cartinha no Airtable.");
+        return;
+      }
+    }
+
+    // Remove da lista local
     cartinhasSessao.splice(idx, 1);
+    if (editIndex === idx) editIndex = null;
     atualizarLista();
+    alert("🗑️ Cartinha excluída com sucesso!");
+  } catch (err) {
+    console.error("Erro ao excluir cartinha:", err);
+    alert("❌ Erro inesperado ao excluir a cartinha.");
   }
 }
