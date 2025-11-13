@@ -1,33 +1,48 @@
 // ============================================================
-// 💙 VARAL DOS SONHOS — /api/cartinha.js (versão corrigida TCC Cloudinary)
+// 💙 VARAL DOS SONHOS — /api/cartinha.js (VERSÃO FINAL ESTÁVEL)
 // ------------------------------------------------------------
-// 🔹 Correção: Filtro por evento usando campo "data_evento" (Linked Record)
-// ✅ CORREÇÃO: Leitura de campos LOOKUP com nome exato
-// ❌ CORREÇÃO: Remoção da escrita em campos LOOKUP (POST/PATCH)
-// ✅ CORREÇÃO: Lógica condicional para evitar 'INVALID_RECORD_ID' em Linked Record vazio
-// ============================================================
+// ✅ CORREÇÃO CRÍTICA: Mapeamento INPUT_MAP para escrita (POST/PATCH)
+// ✅ CORREÇÃO: Adição de `data_cadastro` na ordenação e leitura.
+// ------------------------------------------------------------
 
 import Airtable from "airtable";
 import { IncomingForm } from "formidable";
 
-// ============================================================
-// ⚙️ CONFIGURAÇÃO ESSENCIAL PARA FORM-DATA NO VERCEL
-// ============================================================
 export const config = {
-  api: { bodyParser: false }, // ❗ Obrigatório para Formidable
+  api: { bodyParser: false }, 
   runtime: "nodejs",
 };
 
-// ============================================================
-// 🔹 Conexão com Airtable
-// ============================================================
 const base = new Airtable({ apiKey: process.env.AIRTABLE_API_KEY }).base(
   process.env.AIRTABLE_BASE_ID
 );
 const tableName = process.env.AIRTABLE_CARTINHA_TABLE || "cartinha";
 
+// 🛑 MAPA DE CAMPOS: Chave=Nome do Input do Frontend, Valor=ID do Campo Airtable
+const INPUT_MAP = {
+  'nome_crianca': 'fldGr53pEoETn91NG',
+  'idade': 'fld2Co6I3cEUaupqK',
+  'sexo': 'fldc3IxFwc9m8riJK',
+  'sonho': 'fldeTqtDT5dc5XKjV',
+  'imagem_cartinha': 'fldPIoVj5uVq8sDEQ',
+  'status': 'flduy2pnzF0FgneKz',
+  'escola': 'fld37FvAdM9qhh5gR',
+  'cidade': 'fldPLlgsGmGHfvpbD',
+  'telefone_contato': 'fldl9eSto0ulvAlQF',
+  'psicologa_responsavel': 'fldHA0LgGiAp6GR6B',
+  'observacoes_admin': 'fld6VcuGXrYa9E3Xs',
+  'data_evento': 'fldAn1ps5Y1tnJP6d', // Linked Record
+};
+
+// O campo "data_cadastro" é um campo automático do Airtable, geralmente não tem ID na API ou se for um campo "Created Time", seu nome é usado. 
+const FIELD_DATA_CADASTRO = "data_cadastro"; 
+
+// IDs das opções Single Select (Use o nome exato da opção no Airtable)
+const OPCOES_SEXO = { 'menino': 'menino', 'menina': 'menina', 'outro': 'outro' }; 
+const OPCOES_STATUS = { 'disponivel': 'disponivel', 'adotada': 'adotada', 'inativa': 'inativa' }; 
+
 // ============================================================
-// 🔹 Função utilitária para CORS
+// 🔹 Funções Auxiliares
 // ============================================================
 function setCors(res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -35,9 +50,6 @@ function setCors(res) {
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 }
 
-// ============================================================
-// 🔄 Parser de formulário multipart (para arquivos e campos)
-// ============================================================
 function parseForm(req) {
   return new Promise((resolve, reject) => {
     const form = new IncomingForm({ keepExtensions: true });
@@ -65,20 +77,20 @@ export default async function handler(req, res) {
     }
 
     // ============================================================
-    // 🔹 GET — Lista de cartinhas (com filtro opcional por evento)
+    // 🔹 GET — Lista de cartinhas 
     // ============================================================
     if (req.method === "GET") {
       const { evento } = req.query;
 
       let selectConfig = {
-        sort: [{ field: "data_cadastro", direction: "desc" }],
+        sort: [{ field: FIELD_DATA_CADASTRO, direction: "desc" }], 
       };
 
-      // ✅ Filtro corrigido para buscar por campo "data_evento" (Linked Record)
       if (evento) {
+        const linkedRecordField = INPUT_MAP.data_evento || "data_evento";
         selectConfig = {
           ...selectConfig,
-          filterByFormula: `SEARCH("${evento}", ARRAYJOIN({data_evento}))`,
+          filterByFormula: `SEARCH("${evento}", ARRAYJOIN({${linkedRecordField}}))`,
         };
       }
 
@@ -86,21 +98,24 @@ export default async function handler(req, res) {
 
       const cartinha = records.map((r) => ({
         id: r.id,
-        nome_crianca: r.fields.nome_crianca || "",
-        idade: r.fields.idade || "",
-        sexo: r.fields.sexo || "",
-        sonho: r.fields.sonho || "",
-        escola: r.fields.escola || "",
-        cidade: r.fields.cidade || "",
-        telefone_contato: r.fields.telefone_contato || "",
-        psicologa_responsavel: r.fields.psicologa_responsavel || "",
-        imagem_cartinha: r.fields.imagem_cartinha || [],
-        status: r.fields.status || "",
-        nome_evento: r.fields.nome_evento || "",
-        data_evento: r.fields.data_evento || "",
-        // ✅ Leitura do campo LOOKUP `data_limite_recebimento`
+        // Leitura usando o ID do campo (se definido) ou o nome
+        nome_crianca: r.fields[INPUT_MAP.nome_crianca] || r.fields.nome_crianca || "", 
+        idade: r.fields[INPUT_MAP.idade] || r.fields.idade || "",
+        sexo: r.fields[INPUT_MAP.sexo] || r.fields.sexo || "",
+        sonho: r.fields[INPUT_MAP.sonho] || r.fields.sonho || "",
+        escola: r.fields[INPUT_MAP.escola] || r.fields.escola || "",
+        cidade: r.fields[INPUT_MAP.cidade] || r.fields.cidade || "",
+        telefone_contato: r.fields[INPUT_MAP.telefone_contato] || r.fields.telefone_contato || "",
+        psicologa_responsavel: r.fields[INPUT_MAP.psicologa_responsavel] || r.fields.psicologa_responsavel || "",
+        observacoes_admin: r.fields[INPUT_MAP.observacoes_admin] || r.fields.observacoes_admin || "",
+        imagem_cartinha: r.fields[INPUT_MAP.imagem_cartinha] || r.fields.imagem_cartinha || [],
+        status: r.fields[INPUT_MAP.status] || r.fields.status || "",
+        data_cadastro: r.fields[FIELD_DATA_CADASTRO] || "", // ✅ Campo de data de cadastro
+        
+        // Lookups e Linked Records
+        nome_evento: r.fields["nome_evento (from data_evento)"] || r.fields.nome_evento || "",
+        data_evento: r.fields[INPUT_MAP.data_evento] || r.fields.data_evento || "",
         data_limite_recebimento: r.fields["data_limite_recebimento (from data_evento)"] || "",
-        // ✅ Leitura do campo LOOKUP `id_evento`
         evento_id: r.fields["id_evento (from eventos)"] || "",
       }));
 
@@ -111,137 +126,99 @@ export default async function handler(req, res) {
     // 🔹 POST — Criação de nova cartinha
     // ============================================================
     if (req.method === "POST") {
-      const sexoValido = ["menino", "menina", "outro"];
-      const statusValido = ["disponivel", "adotada", "inativa"];
-
-      const sexo = sexoValido.includes((body.sexo || "").toLowerCase())
-        ? body.sexo.toLowerCase()
-        : "menino";
-      const status = statusValido.includes((body.status || "").toLowerCase())
-        ? body.status.toLowerCase()
-        : "disponivel";
-
-      // ✅ URL Cloudinary enviada pelo front-end
+      const sexoKey = (body.sexo || "").toLowerCase();
+      const statusKey = (body.status || "").toLowerCase();
+      const evento_id = body.evento_id || body.data_evento || ""; 
+      
       let imagem_cartinha = [];
       try {
-        imagem_cartinha = body.imagem_cartinha
-          ? JSON.parse(body.imagem_cartinha)
-          : [];
+        imagem_cartinha = body.imagem_cartinha ? JSON.parse(body.imagem_cartinha) : [];
       } catch {
         imagem_cartinha = [];
       }
-
-      // ✅ Campos de evento
-      const nome_evento = body.nome_evento || "";
-      const evento_id = body.evento_id || ""; // ID do evento ativo (usado para Linked Record)
       
-      // Prepara os campos base
+      // 🛑 CORREÇÃO CRÍTICA: Mapeia o nome do input (body.nome_crianca) para o ID do campo (INPUT_MAP.nome_crianca)
       const fieldsToCreate = {
-        nome_crianca: body.nome_crianca,
-        idade: parseInt(body.idade) || null,
-        sexo,
-        sonho: body.sonho,
-        imagem_cartinha,
-        escola: body.escola,
-        cidade: body.cidade,
-        telefone_contato: body.telefone_contato,
-        psicologa_responsavel: body.psicologa_responsavel,
-        status,
-        nome_evento,
+        [INPUT_MAP.nome_crianca]: body.nome_crianca || "",
+        [INPUT_MAP.idade]: parseInt(body.idade) || null,
+        [INPUT_MAP.sexo]: OPCOES_SEXO[sexoKey] || OPCOES_SEXO.menino,
+        [INPUT_MAP.sonho]: body.sonho || "",
+        [INPUT_MAP.imagem_cartinha]: imagem_cartinha,
+        [INPUT_MAP.escola]: body.escola || "",
+        [INPUT_MAP.cidade]: body.cidade || "",
+        [INPUT_MAP.telefone_contato]: body.telefone_contato || "",
+        [INPUT_MAP.psicologa_responsavel]: body.psicologa_responsavel || "",
+        [INPUT_MAP.observacoes_admin]: body.observacoes_admin || "",
+        [INPUT_MAP.status]: OPCOES_STATUS[statusKey] || OPCOES_STATUS.disponivel,
       };
 
-      // 💡 CORREÇÃO: Adiciona Linked Record SOMENTE se o ID não for vazio.
-      if (evento_id) {
-        fieldsToCreate.data_evento = [evento_id]; // Associa ao evento ativo
+      // Adiciona o Linked Record SÓ se o ID for válido (inicia com 'rec')
+      if (evento_id && typeof evento_id === 'string' && evento_id.startsWith('rec')) {
+        fieldsToCreate[INPUT_MAP.data_evento] = [evento_id]; 
       }
 
-      // ✅ Cria novo registro
-      const novo = await base(tableName).create([
-        {
-          fields: fieldsToCreate,
-        },
-      ]);
-
+      const novo = await base(tableName).create([{ fields: fieldsToCreate }]);
       return res.status(200).json({ sucesso: true, novo });
     }
 
     // ============================================================
-    // 🔹 PATCH — Atualizar cartinha existente (ou inativar)
+    // 🔹 PATCH — Atualizar cartinha existente
     // ============================================================
     if (req.method === "PATCH") {
       const { id } = req.query;
-      if (!id)
-        return res
-          .status(400)
-          .json({ sucesso: false, mensagem: "ID obrigatório para atualização." });
+      if (!id) return res.status(400).json({ sucesso: false, mensagem: "ID obrigatório." });
 
-      const sexoValido = ["menino", "menina", "outro"];
-      const statusValido = ["disponivel", "adotada", "inativa"];
+      const sexoKey = (body.sexo || "").toLowerCase();
+      const statusKey = (body.status || "").toLowerCase();
+      const evento_id = body.evento_id || body.data_evento || ""; 
 
-      const sexo = sexoValido.includes((body.sexo || "").toLowerCase())
-        ? body.sexo.toLowerCase()
-        : undefined;
-      const status = statusValido.includes((body.status || "").toLowerCase())
-        ? body.status.toLowerCase()
-        : undefined;
-      
-      // Prepara campos para atualização
       const fieldsToUpdate = {};
-      if (body.nome_crianca !== undefined) fieldsToUpdate.nome_crianca = body.nome_crianca;
-      if (body.idade !== undefined) fieldsToUpdate.idade = parseInt(body.idade) || null;
-      if (body.sonho !== undefined) fieldsToUpdate.sonho = body.sonho;
-      if (body.escola !== undefined) fieldsToUpdate.escola = body.escola;
-      if (body.cidade !== undefined) fieldsToUpdate.cidade = body.cidade;
-      if (body.telefone_contato !== undefined) fieldsToUpdate.telefone_contato = body.telefone_contato;
-      if (body.psicologa_responsavel !== undefined) fieldsToUpdate.psicologa_responsavel = body.psicologa_responsavel;
+      
+      // Usa o mapa para garantir que o campo correto seja atualizado
+      if (body.nome_crianca !== undefined) fieldsToUpdate[INPUT_MAP.nome_crianca] = body.nome_crianca;
+      if (body.idade !== undefined) fieldsToUpdate[INPUT_MAP.idade] = parseInt(body.idade) || null;
+      if (body.sonho !== undefined) fieldsToUpdate[INPUT_MAP.sonho] = body.sonho;
+      if (body.escola !== undefined) fieldsToUpdate[INPUT_MAP.escola] = body.escola;
+      if (body.cidade !== undefined) fieldsToUpdate[INPUT_MAP.cidade] = body.cidade;
+      if (body.telefone_contato !== undefined) fieldsToUpdate[INPUT_MAP.telefone_contato] = body.telefone_contato;
+      if (body.psicologa_responsavel !== undefined) fieldsToUpdate[INPUT_MAP.psicologa_responsavel] = body.psicologa_responsavel;
+      if (body.observacoes_admin !== undefined) fieldsToUpdate[INPUT_MAP.observacoes_admin] = body.observacoes_admin;
 
-      if (sexo) fieldsToUpdate.sexo = sexo;
-      if (status) fieldsToUpdate.status = status;
+      if (sexoKey in OPCOES_SEXO) fieldsToUpdate[INPUT_MAP.sexo] = OPCOES_SEXO[sexoKey];
+      if (statusKey in OPCOES_STATUS) fieldsToUpdate[INPUT_MAP.status] = OPCOES_STATUS[statusKey];
 
-      // ✅ Atualização de imagem
+      // Atualização de imagem
       if (body.imagem_cartinha) {
         try {
           const img = JSON.parse(body.imagem_cartinha);
-          if (Array.isArray(img)) fieldsToUpdate.imagem_cartinha = img;
-        } catch {
-          console.warn("⚠️ imagem_cartinha inválida no PATCH");
-        }
+          if (Array.isArray(img)) fieldsToUpdate[INPUT_MAP.imagem_cartinha] = img;
+        } catch { }
       }
 
-      // ✅ Atualização de vínculo de evento
-      if (body.nome_evento) fieldsToUpdate.nome_evento = body.nome_evento;
-      
-      // 💡 CORREÇÃO: data_evento só é adicionado se body.data_evento (ID) tiver valor
-      if (body.data_evento) {
-        fieldsToUpdate.data_evento = [body.data_evento];
+      // Atualização de vínculo de evento (data_evento)
+      if (evento_id && typeof evento_id === 'string' && evento_id.startsWith('rec')) {
+        fieldsToUpdate[INPUT_MAP.data_evento] = [evento_id];
+      } else if (evento_id === "") {
+        fieldsToUpdate[INPUT_MAP.data_evento] = []; 
       }
-      // ❌ Removida a linha que causava erro: if (body.evento_id) fieldsToUpdate.evento_id = body.evento_id; 
 
-      const atualizado = await base(tableName).update([
-        { id, fields: fieldsToUpdate },
-      ]);
+      if (Object.keys(fieldsToUpdate).length === 0) {
+        return res.status(400).json({ sucesso: false, mensagem: "Nenhum campo válido para atualização foi fornecido." });
+      }
 
+      const atualizado = await base(tableName).update([{ id, fields: fieldsToUpdate }]);
       return res.status(200).json({ sucesso: true, atualizado });
     }
-
-    // ============================================================
-    // 🔹 DELETE — Exclusão permanente (mantido para compatibilidade)
-    // ============================================================
+    
     if (req.method === "DELETE") {
       const { id } = req.query;
-      if (!id)
-        return res.status(400).json({ sucesso: false, mensagem: "ID obrigatório." });
+      if (!id) return res.status(400).json({ sucesso: false, mensagem: "ID obrigatório." });
 
       await base(tableName).destroy([id]);
       return res.status(200).json({ sucesso: true, mensagem: "Cartinha excluída!" });
     }
-
-    // ============================================================
-    // ❌ Método não suportado
-    // ============================================================
-    res
-      .status(405)
-      .json({ sucesso: false, mensagem: `Método ${req.method} não permitido.` });
+    
+    res.status(405).json({ sucesso: false, mensagem: `Método ${req.method} não permitido.` });
   } catch (e) {
     console.error("🔥 Erro /api/cartinha:", e);
     res.status(500).json({ sucesso: false, mensagem: e.message });
