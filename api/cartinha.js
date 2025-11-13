@@ -85,35 +85,45 @@ export default async function handler(req, res) {
       body = parsed.fields;
     }
 
-    // ========================================================
-    // 🔹 GET — Lista de cartinhas
-    //     (opcional: filtro por sessão ?session=xxx ou por evento ?evento=ID)
-    // ========================================================
-    if (req.method === "GET") {
-      const { evento, session } = req.query;
+  // ========================================================
+  // 🔹 GET — Lista de cartinhas 
+  // ========================================================
+  if (req.method === "GET") {
+    const { evento, session } = req.query;
 
-      let selectConfig = {
-        sort: [{ field: "data_cadastro", direction: "desc" }],
-      };
+    let selectConfig = {
+      sort: [{ field: "data_cadastro", direction: "desc" }],
+    };
 
-      if (evento) {
-        // filtra por id_evento (campo de link no Airtable)
-        selectConfig = {
-          ...selectConfig,
-          filterByFormula: `{id_evento} = "${evento}"`,
-        };
+    if (evento) {
+      selectConfig.filterByFormula = `{id_evento} = "${evento}"`;
+    }
+
+    if (session) {
+      selectConfig.filterByFormula = `{cadastro_sessao_id} = "${session}"`;
+    }
+
+    // 1) Buscar todas as CARTINHAS
+    const records = await base(tableName).select(selectConfig).all();
+
+    // 2) Buscar todos os EVENTOS uma única vez
+    const eventosAirtable = await base("eventos").select().all();
+    const eventosById = {};
+    eventosAirtable.forEach((ev) => {
+      eventosById[ev.id] = ev.fields.nome_evento || "";
+    });
+
+    // 3) Expandir evento_nome em cada cartinha
+    const cartinha = records.map((r) => {
+      let evento_nome = "";
+
+      if (Array.isArray(r.fields.id_evento)) {
+        evento_nome = r.fields.id_evento
+          .map((id) => eventosById[id] || "")
+          .join(", ");
       }
 
-      if (session) {
-        selectConfig = {
-          ...selectConfig,
-          filterByFormula: `{cadastro_sessao_id} = "${session}"`,
-        };
-      }
-
-      const records = await base(tableName).select(selectConfig).all();
-
-      const cartinha = records.map((r) => ({
+      return {
         id: r.id,
         nome_crianca: r.fields.nome_crianca || "",
         idade: r.fields.idade || "",
@@ -128,19 +138,22 @@ export default async function handler(req, res) {
         idade_irmaos: r.fields.idade_irmaos || "",
         status: r.fields.status || "",
         observacoes_admin: r.fields.observacoes_admin || "",
-
-        // Sessão admin
         cadastro_sessao_id: r.fields.cadastro_sessao_id || "",
 
-        // Campos de evento (se existirem como lookups no Airtable)
+        // Retornos de campos auxiliares (se existirem)
         nome_evento: r.fields.nome_evento || "",
         data_evento: r.fields.data_evento || "",
         data_limite_recebimento: r.fields.data_limite_recebimento || "",
         id_evento: r.fields.id_evento || "",
-      }));
 
-      return res.status(200).json({ sucesso: true, cartinha });
-    }
+        // 👉 EXPANSÃO REAL DO NOME DO EVENTO
+        evento_nome,
+      };
+    });
+
+    return res.status(200).json({ sucesso: true, cartinha });
+  }
+
 
     // ========================================================
     // 🔹 POST — Criar nova cartinha
