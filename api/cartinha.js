@@ -1,8 +1,7 @@
 // ============================================================
-// 💙 VARAL DOS SONHOS — /api/cartinha.js (VERSÃO FINAL ESTÁVEL)
+// 💙 VARAL DOS SONHOS — /api/cartinha.js (VERSÃO DEFINITIVA)
 // ------------------------------------------------------------
-// ✅ CORREÇÃO CRÍTICA: Mapeamento INPUT_MAP para escrita (POST/PATCH)
-// ✅ CORREÇÃO: Adição de `data_cadastro` na ordenação e leitura.
+// ✅ CORREÇÃO CRÍTICA: Mapeamento com IDs de campo e de opções CORRETOS.
 // ------------------------------------------------------------
 
 import Airtable from "airtable";
@@ -19,10 +18,13 @@ const base = new Airtable({ apiKey: process.env.AIRTABLE_API_KEY }).base(
 const tableName = process.env.AIRTABLE_CARTINHA_TABLE || "cartinha";
 
 // 🛑 MAPA DE CAMPOS: Chave=Nome do Input do Frontend, Valor=ID do Campo Airtable
+// ESTES SÃO OS IDs EXATOS DO SEU AIRTABLE.
 const INPUT_MAP = {
+  'id_cartinha': 'fldBfJYnZLdrn7KlM',
   'nome_crianca': 'fldGr53pEoETn91NG',
   'idade': 'fld2Co6I3cEUaupqK',
   'sexo': 'fldc3IxFwc9m8riJK',
+  'irmaos': 'fld3HFOvP98Qnr8bX',
   'sonho': 'fldeTqtDT5dc5XKjV',
   'imagem_cartinha': 'fldPIoVj5uVq8sDEQ',
   'status': 'flduy2pnzF0FgneKz',
@@ -32,17 +34,27 @@ const INPUT_MAP = {
   'psicologa_responsavel': 'fldHA0LgGiAp6GR6B',
   'observacoes_admin': 'fld6VcuGXrYa9E3Xs',
   'data_evento': 'fldAn1ps5Y1tnJP6d', // Linked Record
+  'data_cadastro': 'fldp6UNiNXs1yiCQh', // Campo de sistema para ordenação
 };
 
-// O campo "data_cadastro" é um campo automático do Airtable, geralmente não tem ID na API ou se for um campo "Created Time", seu nome é usado. 
-const FIELD_DATA_CADASTRO = "data_cadastro"; 
+// IDs das opções Single Select (CORRIGIDOS)
+const OPCOES_SEXO = { 
+  'menino': 'selMQTejKg2j83b0u', 
+  'menina': 'selN6usmszeOgwdo4', 
+  'outro': 'selNiw6EPSWDco0e6' 
+}; 
+const OPCOES_STATUS = { 
+  'disponivel': 'seliXLxLcmD5twbGq', 
+  'adotada': 'seld9JVzSUP4DShWu', 
+  'inativa': 'selaiZI8VgArz1DsT' 
+}; 
 
-// IDs das opções Single Select (Use o nome exato da opção no Airtable)
-const OPCOES_SEXO = { 'menino': 'menino', 'menina': 'menina', 'outro': 'outro' }; 
-const OPCOES_STATUS = { 'disponivel': 'disponivel', 'adotada': 'adotada', 'inativa': 'inativa' }; 
+// Define a chave para ordenação/filtro
+const FIELD_DATA_CADASTRO = INPUT_MAP.data_cadastro;
+
 
 // ============================================================
-// 🔹 Funções Auxiliares
+// 🔹 Funções Auxiliares (mantidas)
 // ============================================================
 function setCors(res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -83,14 +95,15 @@ export default async function handler(req, res) {
       const { evento } = req.query;
 
       let selectConfig = {
+        // ✅ CORREÇÃO: Usando o ID do campo de sistema 'data_cadastro' para ordenação
         sort: [{ field: FIELD_DATA_CADASTRO, direction: "desc" }], 
       };
 
       if (evento) {
-        const linkedRecordField = INPUT_MAP.data_evento || "data_evento";
+        // Usa o ID do Linked Record 'data_evento' para filtro
         selectConfig = {
           ...selectConfig,
-          filterByFormula: `SEARCH("${evento}", ARRAYJOIN({${linkedRecordField}}))`,
+          filterByFormula: `SEARCH("${evento}", ARRAYJOIN({${INPUT_MAP.data_evento}}))`,
         };
       }
 
@@ -98,7 +111,7 @@ export default async function handler(req, res) {
 
       const cartinha = records.map((r) => ({
         id: r.id,
-        // Leitura usando o ID do campo (se definido) ou o nome
+        // Leitura de todos os campos: prioritiza o ID do campo para máxima compatibilidade
         nome_crianca: r.fields[INPUT_MAP.nome_crianca] || r.fields.nome_crianca || "", 
         idade: r.fields[INPUT_MAP.idade] || r.fields.idade || "",
         sexo: r.fields[INPUT_MAP.sexo] || r.fields.sexo || "",
@@ -110,13 +123,13 @@ export default async function handler(req, res) {
         observacoes_admin: r.fields[INPUT_MAP.observacoes_admin] || r.fields.observacoes_admin || "",
         imagem_cartinha: r.fields[INPUT_MAP.imagem_cartinha] || r.fields.imagem_cartinha || [],
         status: r.fields[INPUT_MAP.status] || r.fields.status || "",
-        data_cadastro: r.fields[FIELD_DATA_CADASTRO] || "", // ✅ Campo de data de cadastro
+        data_cadastro: r.fields[FIELD_DATA_CADASTRO] || r.fields.data_cadastro || "", 
         
-        // Lookups e Linked Records
-        nome_evento: r.fields["nome_evento (from data_evento)"] || r.fields.nome_evento || "",
-        data_evento: r.fields[INPUT_MAP.data_evento] || r.fields.data_evento || "",
+        // Lookups
+        nome_evento: r.fields["nome_evento (from data_evento)"] || "",
+        data_evento: r.fields["data_evento (from data_evento)"] || "",
         data_limite_recebimento: r.fields["data_limite_recebimento (from data_evento)"] || "",
-        evento_id: r.fields["id_evento (from eventos)"] || "",
+        evento_id: r.fields[INPUT_MAP.data_evento]?.[0] || "", // O ID do Linked Record (se existir)
       }));
 
       return res.status(200).json({ sucesso: true, cartinha });
@@ -137,7 +150,7 @@ export default async function handler(req, res) {
         imagem_cartinha = [];
       }
       
-      // 🛑 CORREÇÃO CRÍTICA: Mapeia o nome do input (body.nome_crianca) para o ID do campo (INPUT_MAP.nome_crianca)
+      // 🛑 CORREÇÃO CRÍTICA: Mapeia o nome do input para o ID do campo (e IDs de opção)
       const fieldsToCreate = {
         [INPUT_MAP.nome_crianca]: body.nome_crianca || "",
         [INPUT_MAP.idade]: parseInt(body.idade) || null,
@@ -150,6 +163,8 @@ export default async function handler(req, res) {
         [INPUT_MAP.psicologa_responsavel]: body.psicologa_responsavel || "",
         [INPUT_MAP.observacoes_admin]: body.observacoes_admin || "",
         [INPUT_MAP.status]: OPCOES_STATUS[statusKey] || OPCOES_STATUS.disponivel,
+        [INPUT_MAP.irmaos]: parseInt(body.irmaos) || null,
+        [INPUT_MAP.idade_irmaos]: body.idade_irmaos || "",
       };
 
       // Adiciona o Linked Record SÓ se o ID for válido (inicia com 'rec')
@@ -183,6 +198,8 @@ export default async function handler(req, res) {
       if (body.telefone_contato !== undefined) fieldsToUpdate[INPUT_MAP.telefone_contato] = body.telefone_contato;
       if (body.psicologa_responsavel !== undefined) fieldsToUpdate[INPUT_MAP.psicologa_responsavel] = body.psicologa_responsavel;
       if (body.observacoes_admin !== undefined) fieldsToUpdate[INPUT_MAP.observacoes_admin] = body.observacoes_admin;
+      if (body.irmaos !== undefined) fieldsToUpdate[INPUT_MAP.irmaos] = parseInt(body.irmaos) || null;
+      if (body.idade_irmaos !== undefined) fieldsToUpdate[INPUT_MAP.idade_irmaos] = body.idade_irmaos;
 
       if (sexoKey in OPCOES_SEXO) fieldsToUpdate[INPUT_MAP.sexo] = OPCOES_SEXO[sexoKey];
       if (statusKey in OPCOES_STATUS) fieldsToUpdate[INPUT_MAP.status] = OPCOES_STATUS[statusKey];
