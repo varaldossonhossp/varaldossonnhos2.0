@@ -1,80 +1,69 @@
-let eventos = [];
-let editIndex = null;
+const sessionId = Date.now().toString();
 
-function atualizarLista() {
+async function salvarEvento(data){
+  const form = new FormData();
+  for(const k in data){ form.append(k, data[k]); }
+  form.append("cadastro_sessao_id", sessionId);
+
+  const r = await fetch("/api/eventos", {
+    method:"POST",
+    body:form
+  });
+
+  return r.json();
+}
+
+async function carregarEventos(){
+  const r = await fetch(`/api/eventos?session=${sessionId}`);
+  const json = await r.json();
+
   const lista = document.getElementById("eventos-lista");
   const total = document.getElementById("total-eventos");
 
-  if (eventos.length === 0) {
-    lista.innerHTML = `<p class="text-center text-gray-500">Nenhum evento cadastrado ainda.</p>`;
-    total.textContent = 0;
+  if(!json.sucesso || json.eventos.length===0){
+    lista.innerHTML = `<p class='text-gray-500'>Nenhum evento cadastrado.</p>`;
+    total.textContent=0;
     return;
   }
 
-  total.textContent = eventos.length;
+  total.textContent=json.eventos.length;
 
-  lista.innerHTML = eventos.map((ev, index) => `
-    <div class="p-4 border rounded-lg shadow-sm bg-blue-50">
-      <p><strong>Nome:</strong> ${ev.nome}</p>
-      <p><strong>Data:</strong> ${ev.data}</p>
-      <p><strong>Limite:</strong> ${ev.limite}</p>
-      <p><strong>Local:</strong> ${ev.local}</p>
-      <p><strong>Status:</strong> ${ev.status}</p>
+  lista.innerHTML=json.eventos.map(ev=>`
+    <div class="p-4 bg-blue-50 border rounded-lg shadow">
+      <p><strong>${ev.nome_evento}</strong></p>
+      <p>Data: ${ev.data_evento}</p>
+      <p>Local: ${ev.local_evento}</p>
 
-      <div class="mt-3 flex gap-3">
-        <button onclick="editar(${index})" class="px-4 py-2 bg-yellow-500 text-white rounded">✏️ Editar</button>
-        <button onclick="excluir(${index})" class="px-4 py-2 bg-red-600 text-white rounded">🗑️ Excluir</button>
+      <div class="mt-3 flex gap-3 justify-center">
+        <button onclick="editar('${ev.id}')" class="px-4 py-2 bg-yellow-600 text-white rounded">✏️ Editar</button>
+        <button onclick="excluir('${ev.id}')" class="px-4 py-2 bg-red-600 text-white rounded">🗑 Excluir</button>
       </div>
     </div>
   `).join("");
 }
 
-document.getElementById("form-evento").addEventListener("submit", e => {
+document.getElementById("form-evento").addEventListener("submit", async e=>{
   e.preventDefault();
 
-  const evento = {
-    nome: nome_evento.value,
-    data: data_evento.value,
-    limite: data_limite.value,
-    local: local_evento.value,
+  const data={
+    nome_evento: nome_evento.value,
+    data_evento: data_evento.value,
+    data_limite_recebimento: data_limite_recebimento.value,
+    local_evento: local_evento.value,
     descricao: descricao.value,
-    status: status_evento.value
+    status_evento: status_evento.value
   };
 
-  if (editIndex === null) {
-    eventos.push(evento);
-  } else {
-    eventos[editIndex] = evento;
-    editIndex = null;
-  }
-
-  atualizarLista();
+  await salvarEvento(data);
+  await carregarEventos();
   e.target.reset();
 });
 
-document.getElementById("btn-limpar").onclick = () => {
-  document.getElementById("form-evento").reset();
-  editIndex = null;
-};
+document.getElementById("btn-limpar").onclick=()=>form-evento.reset();
 
-function editar(i) {
-  const ev = eventos[i];
-
-  nome_evento.value = ev.nome;
-  data_evento.value = ev.data;
-  data_limite.value = ev.limite;
-  local_evento.value = ev.local;
-  descricao.value = ev.descricao;
-  status_evento.value = ev.status;
-
-  editIndex = i;
+async function excluir(id){
+  await fetch(`/api/eventos?id=${id}&session=${sessionId}`,{method:"DELETE"});
+  carregarEventos();
 }
 
-function excluir(i) {
-  if (confirm("Deseja realmente excluir este evento?")) {
-    eventos.splice(i, 1);
-    atualizarLista();
-  }
-}
-
-window.onload = atualizarLista;
+carregarEventos();

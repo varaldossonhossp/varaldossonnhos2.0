@@ -1,11 +1,13 @@
 // ============================================================
-// 💙 VARAL DOS SONHOS — /api/cartinha.js (versão final TCC Cloudinary)
+// 💙 VARAL DOS SONHOS — /api/cartinha.js (versão final TCC Cloudinary + Sessão Admin)
 // ------------------------------------------------------------
 // 🔹 Upload de imagem via Cloudinary (URL pública enviada pelo front-end)
 // 🔹 Compatível com Vercel (sem uso de Base64 nem Buffer)
 // 🔹 Validação de campos Single Select (sexo, status)
-// 🔹 NOVO: integração com eventos (nome_evento, data_evento, data_limite_recebimento, evento_id)
-// 🔹 Mantém GET, POST, PATCH, DELETE e CORS originais
+// 🔹 Integração com eventos
+// 🔹 Mantém GET, POST, PATCH, DELETE originais
+// 🔹 ADIÇÃO: suporte a cadastro_sessao_id (painel admin)
+// 🔹 ADIÇÃO: GET com filtro por sessão (?session=123)
 // ============================================================
 
 import Airtable from "airtable";
@@ -15,7 +17,7 @@ import { IncomingForm } from "formidable";
 // ⚙️ CONFIGURAÇÃO ESSENCIAL PARA FORM-DATA NO VERCEL
 // ============================================================
 export const config = {
-  api: { bodyParser: false }, // ❗ Obrigatório para Formidable
+  api: { bodyParser: false },
   runtime: "nodejs",
 };
 
@@ -37,7 +39,7 @@ function setCors(res) {
 }
 
 // ============================================================
-// 🔄 Parser de formulário multipart (para arquivos e campos)
+// 🔄 Parser de formulário multipart
 // ============================================================
 function parseForm(req) {
   return new Promise((resolve, reject) => {
@@ -66,20 +68,29 @@ export default async function handler(req, res) {
     }
 
     // ============================================================
-    // 🔹 GET — Lista de cartinhas (com filtro opcional por evento)
+    // 🔹 GET — Lista de cartinhas
+    //     (Agora com filtro por evento OU sessão admin)
     // ============================================================
     if (req.method === "GET") {
-      const { evento } = req.query;
+      const { evento, session } = req.query;
 
       let selectConfig = {
         sort: [{ field: "data_cadastro", direction: "desc" }],
       };
 
-      // ✅ Filtra por evento (se parâmetro presente)
+      // 🔵 FILTRO ORIGINAL: EVENTO
       if (evento) {
         selectConfig = {
           ...selectConfig,
           filterByFormula: `{evento_id} = "${evento}"`,
+        };
+      }
+
+      // 🟢 FILTRO NOVO: SESSÃO ADMIN
+      if (session) {
+        selectConfig = {
+          ...selectConfig,
+          filterByFormula: `{cadastro_sessao_id} = "${session}"`,
         };
       }
 
@@ -97,17 +108,24 @@ export default async function handler(req, res) {
         psicologa_responsavel: r.fields.psicologa_responsavel || "",
         imagem_cartinha: r.fields.imagem_cartinha || [],
         status: r.fields.status || "",
+        observacoes_admin: r.fields.observacoes_admin || "",
+
+        // Campos de evento
         nome_evento: r.fields.nome_evento || "",
         data_evento: r.fields.data_evento || "",
         data_limite_recebimento: r.fields.data_limite_recebimento || "",
         evento_id: r.fields.evento_id || "",
+
+        // Sessão
+        cadastro_sessao_id: r.fields.cadastro_sessao_id || "",
       }));
 
       return res.status(200).json({ sucesso: true, cartinha });
     }
 
     // ============================================================
-    // 🔹 POST — Criação de nova cartinha
+    // 🔹 POST — Criar nova cartinha
+    //     (Agora com campo opcional cadastro_sessao_id)
     // ============================================================
     if (req.method === "POST") {
       const sexoValido = ["menino", "menina", "outro"];
@@ -116,11 +134,12 @@ export default async function handler(req, res) {
       const sexo = sexoValido.includes((body.sexo || "").toLowerCase())
         ? body.sexo.toLowerCase()
         : "menino";
+
       const status = statusValido.includes((body.status || "").toLowerCase())
         ? body.status.toLowerCase()
         : "disponivel";
 
-      // ✅ URL Cloudinary enviada pelo front-end
+      // 🔹 Imagem Cloudinary
       let imagem_cartinha = [];
       try {
         imagem_cartinha = body.imagem_cartinha
@@ -130,11 +149,14 @@ export default async function handler(req, res) {
         imagem_cartinha = [];
       }
 
-      // ✅ Campos de evento (novos)
+      // 🔹 Campos de evento
       const nome_evento = body.nome_evento || "";
       const data_evento = body.data_evento || "";
       const data_limite_recebimento = body.data_limite_recebimento || "";
       const evento_id = body.evento_id || "";
+
+      // 🔹 Sessão admin
+      const cadastro_sessao_id = body.cadastro_sessao_id || "";
 
       const novo = await base(tableName).create([
         {
@@ -148,12 +170,17 @@ export default async function handler(req, res) {
             cidade: body.cidade,
             telefone_contato: body.telefone_contato,
             psicologa_responsavel: body.psicologa_responsavel,
+            observacoes_admin: body.observacoes_admin || "",
             status,
-            nome_evento: [eventoSelecionado],
+
+            // Campos de evento
+            nome_evento,
             data_evento,
             data_limite_recebimento,
             evento_id,
-            nome_evento,
+
+            // Sessão admin
+            cadastro_sessao_id,
           },
         },
       ]);
@@ -162,24 +189,19 @@ export default async function handler(req, res) {
     }
 
     // ============================================================
-    // 🔹 PATCH — Atualizar cartinha existente (ou inativar)
+    // 🔹 PATCH — Atualizar cartinha existente
+    //     (Aceita cadastro_sessao_id se vier)
     // ============================================================
     if (req.method === "PATCH") {
       const { id } = req.query;
       if (!id)
-        return res
-          .status(400)
-          .json({ sucesso: false, mensagem: "ID obrigatório para atualização." });
+        return res.status(400).json({
+          sucesso: false,
+          mensagem: "ID obrigatório para atualização.",
+        });
 
       const sexoValido = ["menino", "menina", "outro"];
       const statusValido = ["disponivel", "adotada", "inativa"];
-
-      const sexo = sexoValido.includes((body.sexo || "").toLowerCase())
-        ? body.sexo.toLowerCase()
-        : undefined;
-      const status = statusValido.includes((body.status || "").toLowerCase())
-        ? body.status.toLowerCase()
-        : undefined;
 
       const fieldsToUpdate = {
         nome_crianca: body.nome_crianca,
@@ -189,27 +211,32 @@ export default async function handler(req, res) {
         cidade: body.cidade,
         telefone_contato: body.telefone_contato,
         psicologa_responsavel: body.psicologa_responsavel,
+        observacoes_admin: body.observacoes_admin || "",
       };
 
-      if (sexo) fieldsToUpdate.sexo = sexo;
-      if (status) fieldsToUpdate.status = status;
+      if (sexoValido.includes((body.sexo || "").toLowerCase()))
+        fieldsToUpdate.sexo = body.sexo.toLowerCase();
 
-      // ✅ Atualização de imagem
+      if (statusValido.includes((body.status || "").toLowerCase()))
+        fieldsToUpdate.status = body.status.toLowerCase();
+
       if (body.imagem_cartinha) {
         try {
           const img = JSON.parse(body.imagem_cartinha);
           if (Array.isArray(img)) fieldsToUpdate.imagem_cartinha = img;
-        } catch {
-          console.warn("⚠️ imagem_cartinha inválida no PATCH");
-        }
+        } catch {}
       }
 
-      // ✅ Atualização de vínculo de evento (mantém se vier do front)
+      // 🔹 Atualiza evento (se vier)
       if (body.nome_evento) fieldsToUpdate.nome_evento = body.nome_evento;
       if (body.data_evento) fieldsToUpdate.data_evento = body.data_evento;
       if (body.data_limite_recebimento)
         fieldsToUpdate.data_limite_recebimento = body.data_limite_recebimento;
       if (body.evento_id) fieldsToUpdate.evento_id = body.evento_id;
+
+      // 🔹 Atualiza sessão (se vier)
+      if (body.cadastro_sessao_id)
+        fieldsToUpdate.cadastro_sessao_id = body.cadastro_sessao_id;
 
       const atualizado = await base(tableName).update([
         { id, fields: fieldsToUpdate },
@@ -219,23 +246,29 @@ export default async function handler(req, res) {
     }
 
     // ============================================================
-    // 🔹 DELETE — Exclusão permanente (mantido para compatibilidade)
+    // 🔹 DELETE — Mantido exatamente como estava
     // ============================================================
     if (req.method === "DELETE") {
       const { id } = req.query;
       if (!id)
-        return res.status(400).json({ sucesso: false, mensagem: "ID obrigatório." });
+        return res.status(400).json({
+          sucesso: false,
+          mensagem: "ID obrigatório.",
+        });
 
       await base(tableName).destroy([id]);
-      return res.status(200).json({ sucesso: true, mensagem: "Cartinha excluída!" });
+      return res
+        .status(200)
+        .json({ sucesso: true, mensagem: "Cartinha excluída!" });
     }
 
     // ============================================================
     // ❌ Método não suportado
     // ============================================================
-    res
-      .status(405)
-      .json({ sucesso: false, mensagem: `Método ${req.method} não permitido.` });
+    res.status(405).json({
+      sucesso: false,
+      mensagem: `Método ${req.method} não permitido.`,
+    });
   } catch (e) {
     console.error("🔥 Erro /api/cartinha:", e);
     res.status(500).json({ sucesso: false, mensagem: e.message });

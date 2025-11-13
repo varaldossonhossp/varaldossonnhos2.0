@@ -1,7 +1,7 @@
 let pontos = [];
-let editIndex = null;
+let editIndexPonto = null;
 
-function atualizarLista() {
+function atualizarListaPontos() {
   const lista = document.getElementById("pontos-lista");
   const total = document.getElementById("total-pontos");
 
@@ -13,18 +13,17 @@ function atualizarLista() {
 
   total.textContent = pontos.length;
 
-  lista.innerHTML = pontos.map((p, index) => `
+  lista.innerHTML = pontos.map((p, i) => `
     <div class="p-4 border rounded-lg shadow-sm bg-blue-50">
-      <p><strong>Nome:</strong> ${p.nome}</p>
+      <p><strong>Nome:</strong> ${p.nome_ponto}</p>
       <p><strong>Responsável:</strong> ${p.responsavel}</p>
       <p><strong>Endereço:</strong> ${p.endereco}, Nº ${p.numero}</p>
       <p><strong>Telefone:</strong> ${p.telefone}</p>
-      <p><strong>Email:</strong> ${p.email}</p>
+      <p><strong>E-mail:</strong> ${p.email_ponto}</p>
       <p><strong>Status:</strong> ${p.status}</p>
-
       <div class="mt-3 flex gap-3">
-        <button onclick="editar(${index})" class="px-4 py-2 bg-yellow-500 text-white rounded">✏️ Editar</button>
-        <button onclick="excluir(${index})" class="px-4 py-2 bg-red-600 text-white rounded">🗑️ Excluir</button>
+        <button onclick="editarPonto(${i})" class="px-4 py-2 bg-yellow-500 text-white rounded">✏️ Editar</button>
+        <button onclick="excluirPonto(${i})" class="px-4 py-2 bg-red-600 text-white rounded">🗑 Excluir</button>
       </div>
     </div>
   `).join("");
@@ -34,52 +33,50 @@ document.getElementById("form-ponto").addEventListener("submit", e => {
   e.preventDefault();
 
   const ponto = {
-    nome: nome_ponto.value,
+    nome_ponto: nome_ponto.value,
     responsavel: responsavel.value,
     endereco: endereco.value,
     numero: numero.value,
     telefone: telefone.value,
-    email: email_ponto.value,
+    email_ponto: email_ponto.value,
     horario: horario.value,
     status: status.value
   };
 
-  if (editIndex === null) {
+  if (editIndexPonto === null) {
     pontos.push(ponto);
   } else {
-    pontos[editIndex] = ponto;
-    editIndex = null;
+    pontos[editIndexPonto] = ponto;
+    editIndexPonto = null;
   }
 
-  atualizarLista();
+  atualizarListaPontos();
   e.target.reset();
 });
 
 document.getElementById("btn-limpar").onclick = () => {
   document.getElementById("form-ponto").reset();
-  editIndex = null;
+  editIndexPonto = null;
 };
 
-function editar(i) {
+function editarPonto(i) {
   const p = pontos[i];
-
-  nome_ponto.value = p.nome;
+  nome_ponto.value = p.nome_ponto;
   responsavel.value = p.responsavel;
   endereco.value = p.endereco;
   numero.value = p.numero;
   telefone.value = p.telefone;
-  email_ponto.value = p.email;
+  email_ponto.value = p.email_ponto;
   horario.value = p.horario;
   status.value = p.status;
-
-  editIndex = i;
+  editIndexPonto = i;
 }
 
-function excluir(i) {
-  if (confirm("Deseja realmente excluir este ponto?")) {
+function excluirPonto(i) {
+  if (confirm("Deseja realmente excluir este ponto desta conferência?")) {
     pontos.splice(i, 1);
-    atualizarLista();
+    atualizarListaPontos();
   }
 }
 
-window.onload = atualizarLista;
+window.onload = atualizarListaPontos;
