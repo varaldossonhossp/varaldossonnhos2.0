@@ -1,243 +1,213 @@
 // ============================================================
-// 💙 VARAL DOS SONHOS — /api/cartinha.js (VERSÃO DEFINITIVA)
+// 💙 VARAL DOS SONHOS — /api/cartinha.js (versão final corrigida)
 // ------------------------------------------------------------
-// ✅ CORREÇÃO CRÍTICA: Mapeamento com IDs de campo e de opções CORRETOS.
-// ------------------------------------------------------------
+// 🔹 Upload de imagem via Cloudinary (URL pública enviada pelo front-end)
+// 🔹 Compatível com Vercel (sem uso de Base64 nem Buffer)
+// 🔹 Corrigido: ignora campos lookup (data_limite_recebimento, nome_evento, etc.)
+// 🔹 Corrigido: filtro de cartinhas por evento ativo
+// ============================================================
 
 import Airtable from "airtable";
 import { IncomingForm } from "formidable";
 
 export const config = {
-  api: { bodyParser: false }, 
-  runtime: "nodejs",
+  api: { bodyParser: false },
+  runtime: "nodejs",
 };
 
+// ============================================================
+// 🔹 Conexão com Airtable
+// ============================================================
 const base = new Airtable({ apiKey: process.env.AIRTABLE_API_KEY }).base(
-  process.env.AIRTABLE_BASE_ID
+  process.env.AIRTABLE_BASE_ID
 );
 const tableName = process.env.AIRTABLE_CARTINHA_TABLE || "cartinha";
 
-// 🛑 MAPA DE CAMPOS: Chave=Nome do Input do Frontend, Valor=ID do Campo Airtable
-// ESTES SÃO OS IDs EXATOS DO SEU AIRTABLE.
-const INPUT_MAP = {
-  'id_cartinha': 'fldBfJYnZLdrn7KlM',
-  'nome_crianca': 'fldGr53pEoETn91NG',
-  'idade': 'fld2Co6I3cEUaupqK',
-  'sexo': 'fldc3IxFwc9m8riJK',
-  'irmaos': 'fld3HFOvP98Qnr8bX',
-  'sonho': 'fldeTqtDT5dc5XKjV',
-  'imagem_cartinha': 'fldPIoVj5uVq8sDEQ',
-  'status': 'flduy2pnzF0FgneKz',
-  'escola': 'fld37FvAdM9qhh5gR',
-  'cidade': 'fldPLlgsGmGHfvpbD',
-  'telefone_contato': 'fldl9eSto0ulvAlQF',
-  'psicologa_responsavel': 'fldHA0LgGiAp6GR6B',
-  'observacoes_admin': 'fld6VcuGXrYa9E3Xs',
-  'data_evento': 'fldAn1ps5Y1tnJP6d', // Linked Record
-  'data_cadastro': 'fldp6UNiNXs1yiCQh', // Campo de sistema para ordenação
-};
-
-// IDs das opções Single Select (CORRIGIDOS)
-const OPCOES_SEXO = { 
-  'menino': 'selMQTejKg2j83b0u', 
-  'menina': 'selN6usmszeOgwdo4', 
-  'outro': 'selNiw6EPSWDco0e6' 
-}; 
-const OPCOES_STATUS = { 
-  'disponivel': 'seliXLxLcmD5twbGq', 
-  'adotada': 'seld9JVzSUP4DShWu', 
-  'inativa': 'selaiZI8VgArz1DsT' 
-}; 
-
-// Define a chave para ordenação/filtro
-const FIELD_DATA_CADASTRO = INPUT_MAP.data_cadastro;
-
-
 // ============================================================
-// 🔹 Funções Auxiliares (mantidas)
+// 🔹 CORS
 // ============================================================
 function setCors(res) {
-  res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Methods", "GET,POST,PATCH,DELETE,OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
-}
-
-function parseForm(req) {
-  return new Promise((resolve, reject) => {
-    const form = new IncomingForm({ keepExtensions: true });
-    form.parse(req, (err, fields, files) => {
-      if (err) return reject(err);
-      const parsedFields = {};
-      for (const key in fields) parsedFields[key] = fields[key][0];
-      resolve({ fields: parsedFields, files });
-    });
-  });
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "GET,POST,PATCH,DELETE,OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 }
 
 // ============================================================
-// 🔹 HANDLER PRINCIPAL
+// 🔹 Parse multipart (form-data)
+// ============================================================
+function parseForm(req) {
+  return new Promise((resolve, reject) => {
+    const form = new IncomingForm({ keepExtensions: true });
+    form.parse(req, (err, fields, files) => {
+      if (err) return reject(err);
+      const parsedFields = {};
+      for (const key in fields) parsedFields[key] = fields[key][0];
+      resolve({ fields: parsedFields, files });
+    });
+  });
+}
+
+// ============================================================
+// 🔹 Handler Principal
 // ============================================================
 export default async function handler(req, res) {
-  setCors(res);
-  if (req.method === "OPTIONS") return res.status(204).end();
+  setCors(res);
+  if (req.method === "OPTIONS") return res.status(204).end();
 
-  try {
-    let body = req.body;
-    if (req.method === "POST" || req.method === "PATCH") {
-      const parsed = await parseForm(req);
-      body = parsed.fields;
-    }
+  try {
+    let body = req.body;
+    if (req.method === "POST" || req.method === "PATCH") {
+      const parsed = await parseForm(req);
+      body = parsed.fields;
+    }
 
-    // ============================================================
-    // 🔹 GET — Lista de cartinhas 
-    // ============================================================
-    if (req.method === "GET") {
-      const { evento } = req.query;
+    // ============================================================
+    // 🔹 GET — Listar cartinhas (com filtro opcional por evento)
+    // ============================================================
+    if (req.method === "GET") {
+      const { evento } = req.query;
 
-      let selectConfig = {
-        // ✅ CORREÇÃO: Usando o ID do campo de sistema 'data_cadastro' para ordenação
-        sort: [{ field: FIELD_DATA_CADASTRO, direction: "desc" }], 
-      };
+      let selectConfig = {
+        sort: [{ field: "data_cadastro", direction: "desc" }],
+      };
 
-      if (evento) {
-        // Usa o ID do Linked Record 'data_evento' para filtro
-        selectConfig = {
-          ...selectConfig,
-          filterByFormula: `SEARCH("${evento}", ARRAYJOIN({${INPUT_MAP.data_evento}}))`,
-        };
-      }
+      if (evento) {
+        selectConfig = {
+          ...selectConfig,
+          filterByFormula: `SEARCH("${evento}", ARRAYJOIN({data_evento}))`,
+        };
+      }
 
-      const records = await base(tableName).select(selectConfig).all();
+      const records = await base(tableName).select(selectConfig).all();
 
-      const cartinha = records.map((r) => ({
-        id: r.id,
-        // Leitura de todos os campos: prioritiza o ID do campo para máxima compatibilidade
-        nome_crianca: r.fields[INPUT_MAP.nome_crianca] || r.fields.nome_crianca || "", 
-        idade: r.fields[INPUT_MAP.idade] || r.fields.idade || "",
-        sexo: r.fields[INPUT_MAP.sexo] || r.fields.sexo || "",
-        sonho: r.fields[INPUT_MAP.sonho] || r.fields.sonho || "",
-        escola: r.fields[INPUT_MAP.escola] || r.fields.escola || "",
-        cidade: r.fields[INPUT_MAP.cidade] || r.fields.cidade || "",
-        telefone_contato: r.fields[INPUT_MAP.telefone_contato] || r.fields.telefone_contato || "",
-        psicologa_responsavel: r.fields[INPUT_MAP.psicologa_responsavel] || r.fields.psicologa_responsavel || "",
-        observacoes_admin: r.fields[INPUT_MAP.observacoes_admin] || r.fields.observacoes_admin || "",
-        imagem_cartinha: r.fields[INPUT_MAP.imagem_cartinha] || r.fields.imagem_cartinha || [],
-        status: r.fields[INPUT_MAP.status] || r.fields.status || "",
-        data_cadastro: r.fields[FIELD_DATA_CADASTRO] || r.fields.data_cadastro || "", 
-        
-        // Lookups
-        nome_evento: r.fields["nome_evento (from data_evento)"] || "",
-        data_evento: r.fields["data_evento (from data_evento)"] || "",
-        data_limite_recebimento: r.fields["data_limite_recebimento (from data_evento)"] || "",
-        evento_id: r.fields[INPUT_MAP.data_evento]?.[0] || "", // O ID do Linked Record (se existir)
-      }));
+      const cartinha = records.map((r) => ({
+        id: r.id,
+        nome_crianca: r.fields.nome_crianca || "",
+        idade: r.fields.idade || "",
+        sexo: r.fields.sexo || "",
+        sonho: r.fields.sonho || "",
+        escola: r.fields.escola || "",
+        cidade: r.fields.cidade || "",
+        telefone_contato: r.fields.telefone_contato || "",
+        psicologa_responsavel: r.fields.psicologa_responsavel || "",
+        imagem_cartinha: r.fields.imagem_cartinha || [],
+        status: r.fields.status || "",
+        observacoes_admin: r.fields.observacoes_admin || "",
+        nome_evento: r.fields["nome_evento (from data_evento)"] || "",
+        data_evento: r.fields["data_evento (from data_evento)"] || "",
+        data_limite_recebimento:
+          r.fields["data_limite_recebimento (from data_evento)"] || "",
+      }));
 
-      return res.status(200).json({ sucesso: true, cartinha });
-    }
+      return res.status(200).json({ sucesso: true, cartinha });
+    }
 
-    // ============================================================
-    // 🔹 POST — Criação de nova cartinha
-    // ============================================================
-    if (req.method === "POST") {
-      const sexoKey = (body.sexo || "").toLowerCase();
-      const statusKey = (body.status || "").toLowerCase();
-      const evento_id = body.evento_id || body.data_evento || ""; 
-      
-      let imagem_cartinha = [];
-      try {
-        imagem_cartinha = body.imagem_cartinha ? JSON.parse(body.imagem_cartinha) : [];
-      } catch {
-        imagem_cartinha = [];
-      }
-      
-      // 🛑 CORREÇÃO CRÍTICA: Mapeia o nome do input para o ID do campo (e IDs de opção)
-      const fieldsToCreate = {
-        [INPUT_MAP.nome_crianca]: body.nome_crianca || "",
-        [INPUT_MAP.idade]: parseInt(body.idade) || null,
-        [INPUT_MAP.sexo]: OPCOES_SEXO[sexoKey] || OPCOES_SEXO.menino,
-        [INPUT_MAP.sonho]: body.sonho || "",
-        [INPUT_MAP.imagem_cartinha]: imagem_cartinha,
-        [INPUT_MAP.escola]: body.escola || "",
-        [INPUT_MAP.cidade]: body.cidade || "",
-        [INPUT_MAP.telefone_contato]: body.telefone_contato || "",
-        [INPUT_MAP.psicologa_responsavel]: body.psicologa_responsavel || "",
-        [INPUT_MAP.observacoes_admin]: body.observacoes_admin || "",
-        [INPUT_MAP.status]: OPCOES_STATUS[statusKey] || OPCOES_STATUS.disponivel,
-        [INPUT_MAP.irmaos]: parseInt(body.irmaos) || null,
-        [INPUT_MAP.idade_irmaos]: body.idade_irmaos || "",
-      };
+    // ============================================================
+    // 🔹 POST — Criar nova cartinha
+    // ============================================================
+    if (req.method === "POST") {
+      const sexoValido = ["menino", "menina", "outro"];
+      const statusValido = ["disponivel", "adotada", "inativa"];
 
-      // Adiciona o Linked Record SÓ se o ID for válido (inicia com 'rec')
-      if (evento_id && typeof evento_id === 'string' && evento_id.startsWith('rec')) {
-        fieldsToCreate[INPUT_MAP.data_evento] = [evento_id]; 
-      }
+      const sexo = sexoValido.includes((body.sexo || "").toLowerCase())
+        ? body.sexo.toLowerCase()
+        : "menino";
+      const status = statusValido.includes((body.status || "").toLowerCase())
+        ? body.status.toLowerCase()
+        : "disponivel";
 
-      const novo = await base(tableName).create([{ fields: fieldsToCreate }]);
-      return res.status(200).json({ sucesso: true, novo });
-    }
+      let imagem_cartinha = [];
+      try {
+        imagem_cartinha = body.imagem_cartinha
+          ? JSON.parse(body.imagem_cartinha)
+          : [];
+      } catch {
+        imagem_cartinha = [];
+      }
 
-    // ============================================================
-    // 🔹 PATCH — Atualizar cartinha existente
-    // ============================================================
-    if (req.method === "PATCH") {
-      const { id } = req.query;
-      if (!id) return res.status(400).json({ sucesso: false, mensagem: "ID obrigatório." });
+      const novo = await base(tableName).create([
+        {
+          fields: {
+            nome_crianca: body.nome_crianca,
+            idade: parseInt(body.idade) || null,
+            sexo,
+            sonho: body.sonho,
+            imagem_cartinha,
+            escola: body.escola,
+            cidade: body.cidade,
+            telefone_contato: body.telefone_contato,
+            psicologa_responsavel: body.psicologa_responsavel,
+            status,
+            observacoes_admin: body.observacoes_admin || "",
+            // ✅ Vincula ao evento ativo (Linked Record verdadeiro)
+            data_evento: [body.evento_id],
+          },
+        },
+      ]);
 
-      const sexoKey = (body.sexo || "").toLowerCase();
-      const statusKey = (body.status || "").toLowerCase();
-      const evento_id = body.evento_id || body.data_evento || ""; 
+      return res.status(200).json({ sucesso: true, novo });
+    }
 
-      const fieldsToUpdate = {};
-      
-      // Usa o mapa para garantir que o campo correto seja atualizado
-      if (body.nome_crianca !== undefined) fieldsToUpdate[INPUT_MAP.nome_crianca] = body.nome_crianca;
-      if (body.idade !== undefined) fieldsToUpdate[INPUT_MAP.idade] = parseInt(body.idade) || null;
-      if (body.sonho !== undefined) fieldsToUpdate[INPUT_MAP.sonho] = body.sonho;
-      if (body.escola !== undefined) fieldsToUpdate[INPUT_MAP.escola] = body.escola;
-      if (body.cidade !== undefined) fieldsToUpdate[INPUT_MAP.cidade] = body.cidade;
-      if (body.telefone_contato !== undefined) fieldsToUpdate[INPUT_MAP.telefone_contato] = body.telefone_contato;
-      if (body.psicologa_responsavel !== undefined) fieldsToUpdate[INPUT_MAP.psicologa_responsavel] = body.psicologa_responsavel;
-      if (body.observacoes_admin !== undefined) fieldsToUpdate[INPUT_MAP.observacoes_admin] = body.observacoes_admin;
-      if (body.irmaos !== undefined) fieldsToUpdate[INPUT_MAP.irmaos] = parseInt(body.irmaos) || null;
-      if (body.idade_irmaos !== undefined) fieldsToUpdate[INPUT_MAP.idade_irmaos] = body.idade_irmaos;
+    // ============================================================
+    // 🔹 PATCH — Atualizar cartinha
+    // ============================================================
+    if (req.method === "PATCH") {
+      const { id } = req.query;
+      if (!id)
+        return res
+          .status(400)
+          .json({ sucesso: false, mensagem: "ID obrigatório para atualização." });
 
-      if (sexoKey in OPCOES_SEXO) fieldsToUpdate[INPUT_MAP.sexo] = OPCOES_SEXO[sexoKey];
-      if (statusKey in OPCOES_STATUS) fieldsToUpdate[INPUT_MAP.status] = OPCOES_STATUS[statusKey];
+      const sexoValido = ["menino", "menina", "outro"];
+      const statusValido = ["disponivel", "adotada", "inativa"];
 
-      // Atualização de imagem
-      if (body.imagem_cartinha) {
-        try {
-          const img = JSON.parse(body.imagem_cartinha);
-          if (Array.isArray(img)) fieldsToUpdate[INPUT_MAP.imagem_cartinha] = img;
-        } catch { }
-      }
+      const fieldsToUpdate = {
+        nome_crianca: body.nome_crianca,
+        idade: parseInt(body.idade) || null,
+        sonho: body.sonho,
+        escola: body.escola,
+        cidade: body.cidade,
+        telefone_contato: body.telefone_contato,
+        psicologa_responsavel: body.psicologa_responsavel,
+        observacoes_admin: body.observacoes_admin || "",
+      };
 
-      // Atualização de vínculo de evento (data_evento)
-      if (evento_id && typeof evento_id === 'string' && evento_id.startsWith('rec')) {
-        fieldsToUpdate[INPUT_MAP.data_evento] = [evento_id];
-      } else if (evento_id === "") {
-        fieldsToUpdate[INPUT_MAP.data_evento] = []; 
-      }
+      if (sexoValido.includes(body.sexo)) fieldsToUpdate.sexo = body.sexo;
+      if (statusValido.includes(body.status)) fieldsToUpdate.status = body.status;
 
-      if (Object.keys(fieldsToUpdate).length === 0) {
-        return res.status(400).json({ sucesso: false, mensagem: "Nenhum campo válido para atualização foi fornecido." });
-      }
+      if (body.imagem_cartinha) {
+        try {
+          const img = JSON.parse(body.imagem_cartinha);
+          if (Array.isArray(img)) fieldsToUpdate.imagem_cartinha = img;
+        } catch {}
+      }
 
-      const atualizado = await base(tableName).update([{ id, fields: fieldsToUpdate }]);
-      return res.status(200).json({ sucesso: true, atualizado });
-    }
-    
-    if (req.method === "DELETE") {
-      const { id } = req.query;
-      if (!id) return res.status(400).json({ sucesso: false, mensagem: "ID obrigatório." });
+      if (body.evento_id) fieldsToUpdate.data_evento = [body.evento_id];
 
-      await base(tableName).destroy([id]);
-      return res.status(200).json({ sucesso: true, mensagem: "Cartinha excluída!" });
-    }
-    
-    res.status(405).json({ sucesso: false, mensagem: `Método ${req.method} não permitido.` });
-  } catch (e) {
-    console.error("🔥 Erro /api/cartinha:", e);
-    res.status(500).json({ sucesso: false, mensagem: e.message });
-  }
+      const atualizado = await base(tableName).update([
+        { id, fields: fieldsToUpdate },
+      ]);
+
+      return res.status(200).json({ sucesso: true, atualizado });
+    }
+
+    // ============================================================
+    // 🔹 DELETE — Excluir cartinha
+    // ============================================================
+    if (req.method === "DELETE") {
+      const { id } = req.query;
+      if (!id)
+        return res.status(400).json({ sucesso: false, mensagem: "ID obrigatório." });
+
+      await base(tableName).destroy([id]);
+      return res.status(200).json({ sucesso: true, mensagem: "Cartinha excluída!" });
+    }
+
+    res
+      .status(405)
+      .json({ sucesso: false, mensagem: `Método ${req.method} não permitido.` });
+  } catch (e) {
+    console.error("🔥 Erro /api/cartinha:", e);
+    res.status(500).json({ sucesso: false, mensagem: e.message });
+  }
 }
