@@ -14,90 +14,93 @@
       font-family: "Poppins", sans-serif;
       background-color: #f2f7fc;
     }
-    .card {
-      background: #ffffff;
+    .btn-top {
+      display: inline-flex;
+      gap: 8px;
+      background: #1e88e5;
+      color: white;
+      margin-bottom: 20px;
+      padding: 10px 18px;
+      border-radius: 8px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: .3s;
+      box-shadow: 0 2px 5px rgba(0,0,0,.1);
+      align-items: center;
+    }
+    .btn-top:hover {
+      background: #1565c0;
+      transform: translateY(-2px);
+    }
+    .card-box {
+      background: white;
       border-radius: 20px;
-      box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
-      border: 1px solid #dbeafe;
+      padding: 2rem;
+      border: 1px solid #cfe3ff;
+      box-shadow: 0 3px 8px rgba(0,0,0,.08);
     }
     label {
       font-weight: 600;
-      color: #0f172a;
-      font-size: 0.9rem;
+      color: #003f7d;
+      font-size: 0.95rem;
     }
     input, select, textarea {
-      border-radius: 10px;
-      border: 1px solid #cbd5e1;
+      border: 1px solid #d0d7e2;
       margin-top: 4px;
+      font-size: 0.9rem;
     }
     input:focus, select:focus, textarea:focus {
       outline: none;
-      border-color: #1d4ed8;
-      box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.25);
+      border-color: #1e88e5;
+      box-shadow: 0 0 0 2px rgba(30,136,229,.25);
+    }
+    small {
+      font-size: 0.8rem;
     }
   </style>
 </head>
 
-<body class="bg-slate-50 min-h-screen">
+<body class="bg-gradient-to-b from-blue-50 to-blue-100 min-h-screen">
 
-  <main class="max-w-6xl mx-auto p-6 md:p-10 space-y-8">
+  <main class="max-w-6xl mx-auto p-6 space-y-8">
 
-    <!-- Voltar -->
-    <a href="admin.html"
-       class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 text-white font-semibold shadow hover:bg-blue-700 transition">
-      ⬅️ Voltar
+    <a href="admin.html" class="btn-top">
+      ⬅️ <span>Voltar</span>
     </a>
 
-    <!-- Título -->
-    <section class="text-center">
-      <h1 class="text-3xl md:text-4xl font-extrabold text-slate-900">
-        💌 Cadastro de Cartinhas
-      </h1>
-      <p class="text-slate-600 mt-2">
-        Preencha os dados da criança para que o sonho dela entre no Varal dos Sonhos.
-      </p>
-    </section>
+    <h2 class="text-3xl font-extrabold text-blue-800 text-center">
+      💌 Cadastro de Cartinhas
+    </h2>
 
-    <!-- FORMULÁRIO -->
-    <section class="card p-6 md:p-8">
+    <!-- === FORMULÁRIO ==================================================== -->
+    <section class="card-box mb-4">
       <form id="form-cartinha" class="grid grid-cols-1 md:grid-cols-2 gap-4">
 
-        <h2 class="text-xl font-semibold text-slate-900 md:col-span-2 mb-2 text-center">
-          Cadastro / Edição
-        </h2>
+        <h3 class="text-xl font-semibold text-blue-800 md:col-span-2 text-center mb-4">
+          Cadastro / Edição de Cartinhas
+        </h3>
 
         <!-- Nome / Idade -->
         <div>
           <label for="nome_crianca">👧 Nome da Criança</label>
           <input id="nome_crianca" name="nome_crianca" required
-                 class="w-full px-3 py-2" placeholder="Nome completo" />
+                 placeholder="Nome completo"
+                 class="w-full p-3 rounded-lg" />
         </div>
 
         <div>
           <label for="idade">🎂 Idade</label>
-          <input id="idade" name="idade" type="number" min="0" required
-                 class="w-full px-3 py-2" placeholder="Ex: 7" />
-        </div>
-
-        <!-- Irmãos -->
-        <div>
-          <label for="irmaos">👨‍👩‍👧 Quantidade de Irmãos</label>
-          <input id="irmaos" name="irmaos"
-                 class="w-full px-3 py-2" placeholder="0, 1, 2..." />
-        </div>
-
-        <div>
-          <label for="idade_irmaos">🎁 Idade dos Irmãos</label>
-          <input id="idade_irmaos" name="idade_irmaos"
-                 class="w-full px-3 py-2" placeholder="Ex: 4, 8, 12" />
+          <input type="number" id="idade" name="idade" required min="0" max="18"
+                 placeholder="Ex: 8"
+                 class="w-full p-3 rounded-lg" />
         </div>
 
         <!-- Sexo / Escola -->
         <div>
           <label for="sexo">⚧ Sexo</label>
-          <select id="sexo" name="sexo" class="w-full px-3 py-2">
-            <option value="menino">Menino</option>
+          <select id="sexo" name="sexo" class="w-full p-3 rounded-lg">
             <option value="menina">Menina</option>
+            <option value="menino">Menino</option>
             <option value="outro">Outro</option>
           </select>
         </div>
@@ -105,33 +108,53 @@
         <div>
           <label for="escola">🏫 Escola</label>
           <input id="escola" name="escola"
-                 class="w-full px-3 py-2" placeholder="Nome da escola" />
+                 placeholder="Nome da escola"
+                 class="w-full p-3 rounded-lg" />
+        </div>
+
+        <!-- Irmãos -->
+        <div>
+          <label for="irmaos">👧 Quantidade de Irmãos</label>
+          <input id="irmaos" name="irmaos" type="number" min="0"
+                 placeholder="0, 1, 2..."
+                 class="w-full p-3 rounded-lg" />
+        </div>
+
+        <div>
+          <label for="idade_irmaos">🎁 Idade dos Irmãos</label>
+          <input id="idade_irmaos" name="idade_irmaos"
+                 placeholder="Ex: 4, 8, 12"
+                 class="w-full p-3 rounded-lg" />
         </div>
 
         <!-- Cidade / Psicóloga -->
         <div>
           <label for="cidade">📍 Cidade</label>
-          <input id="cidade" name="cidade"
-                 class="w-full px-3 py-2" placeholder="Cidade" />
+          <input id="cidade" name="cidade" required
+                 placeholder="Cidade"
+                 class="w-full p-3 rounded-lg" />
         </div>
 
         <div>
           <label for="psicologa_responsavel">🧠 Psicóloga Responsável</label>
           <input id="psicologa_responsavel" name="psicologa_responsavel"
-                 class="w-full px-3 py-2" placeholder="Nome da psicóloga" />
+                 placeholder="Nome da psicóloga"
+                 class="w-full p-3 rounded-lg" />
         </div>
 
         <!-- Telefone -->
         <div>
-          <label for="telefone_contato">☎️ Telefone de Contato</label>
-          <input id="telefone_contato" name="telefone_contato"
-                 class="w-full px-3 py-2" placeholder="(11) 99999-9999" />
+          <label for="telefone_contato">📞 Telefone de Contato</label>
+          <input id="telefone_contato" name="telefone_contato" required
+                 placeholder="(11) 91234-5678"
+                 class="w-full p-3 rounded-lg" />
+          <small class="text-gray-500">O número é formatado automaticamente.</small>
         </div>
 
         <!-- Status -->
         <div>
           <label for="status">📌 Status</label>
-          <select id="status" name="status" class="w-full px-3 py-2">
+          <select id="status" name="status" class="w-full p-3 rounded-lg">
             <option value="disponivel">Disponível</option>
             <option value="adotada">Adotada</option>
             <option value="inativa">Inativa</option>
@@ -140,68 +163,60 @@
 
         <!-- Sonho -->
         <div class="md:col-span-2">
-          <label for="sonho">✨ Sonho</label>
-          <textarea id="sonho" name="sonho" rows="3"
-                    class="w-full px-3 py-2"
-                    placeholder="Descreva o sonho da criança"></textarea>
+          <label for="sonho">✨ Sonho / Pedido</label>
+          <textarea id="sonho" name="sonho" rows="3" required
+                    placeholder="Descreva o sonho da criança"
+                    class="w-full p-3 rounded-lg"></textarea>
         </div>
 
-        <!-- Upload Imagem -->
+        <!-- Imagem -->
         <div class="md:col-span-2">
-          <label for="imagem_cartinha">🖼️ Imagem da Cartinha
-            <span class="text-xs text-slate-500">(upload automático via Cloudinary)</span>
-          </label>
-
-          <div class="flex flex-col md:flex-row items-start gap-4 mt-1">
-            <input id="imagem_cartinha" name="imagem_cartinha" type="file" accept="image/*"
-                   class="px-3 py-2 border border-slate-300 rounded-lg bg-white" />
-            <div id="preview-imagem" class="text-sm text-slate-500">
-              Nenhum arquivo selecionado.
-            </div>
-          </div>
-
-          <p class="text-xs text-slate-500 mt-1">
+          <label for="imagem_cartinha">🖼️ Imagem da Cartinha (upload automático via Cloudinary)</label>
+          <input type="file" id="imagem_cartinha" name="imagem_cartinha"
+                 accept=".jpg,.jpeg,.png"
+                 class="mt-2" style="padding-top: 10px;" />
+          <small class="text-gray-600 block">
             O upload é feito automaticamente e o link é salvo no Airtable.
-          </p>
+          </small>
+          <div id="preview-imagem" class="mt-3 text-center"></div>
         </div>
 
-        <!-- Observações -->
+        <!-- Observações Internas -->
         <div class="md:col-span-2">
-          <label for="observacoes_admin">📝 Observações Internas</label>
+          <label for="observacoes_admin">🗒️ Observações Internas</label>
           <textarea id="observacoes_admin" name="observacoes_admin" rows="3"
-                    class="w-full px-3 py-2"
-                    placeholder="Anotações administrativas ou comentários"></textarea>
+                    placeholder="Anotações administrativas ou comentários"
+                    class="w-full p-3 rounded-lg"></textarea>
         </div>
 
         <!-- Botões -->
         <div class="md:col-span-2 flex justify-center gap-4 mt-4">
           <button type="submit"
-                  class="inline-flex items-center gap-2 px-6 py-2 rounded-lg bg-blue-600 text-white font-semibold shadow hover:bg-blue-700 transition">
-            💾 Salvar
+                  class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg shadow-md flex items-center gap-2">
+            💾 <span>Salvar</span>
           </button>
+
           <button type="button" id="btn-limpar"
-                  class="inline-flex items-center gap-2 px-6 py-2 rounded-lg bg-slate-500 text-white font-semibold shadow hover:bg-slate-600 transition">
-            🧹 Limpar
+                  class="bg-gray-500 hover:bg-gray-600 text-white px-8 py-3 rounded-lg shadow-md flex items-center gap-2">
+            🧹 <span>Limpar</span>
           </button>
         </div>
 
       </form>
     </section>
 
-    <!-- LISTA -->
-    <section class="card p-6 md:p-8">
-      <div class="flex flex-wrap items-center justify-between gap-3 border-b pb-3 mb-4">
-        <h2 class="text-xl font-semibold text-slate-900">
-          📋 Cartinhas Cadastradas
-        </h2>
-        <span class="text-base md:text-lg font-bold text-blue-700">
+    <!-- === LISTA DE CONFERÊNCIA ========================================== -->
+    <section class="card-box">
+      <div class="flex justify-between items-center border-b pb-3 mb-4">
+        <h3 class="text-2xl font-semibold text-blue-800">📋 Cartinhas Cadastradas (sessão atual)</h3>
+        <span class="text-lg font-bold text-blue-600">
           Total: <span id="total-cartinhas">0</span>
         </span>
       </div>
 
       <div id="cartinhas-lista" class="space-y-4">
-        <p class="text-center text-slate-500">
-          Nenhuma cartinha cadastrada ainda.
+        <p class="text-center text-gray-500">
+          Nenhuma cartinha cadastrada nesta sessão ainda.
         </p>
       </div>
     </section>
