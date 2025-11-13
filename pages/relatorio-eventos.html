@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🎉 Relatório de Eventos | Varal dos Sonhos</title>
+
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="icon" href="../imagens/favicon.png">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+
+<style>
+  body { background:#f2f7fc; font-family:Poppins; }
+  table th { background:#e0ebff; padding:8px; }
+  table td { padding:8px; border-bottom:1px solid #ddd; }
+
+  @media print {
+    #filtros, .voltar { display:none!important; }
+    body { background:white!important; }
+  }
+</style>
+</head>
+
+<body class="flex flex-col items-center py-8">
+
+<main class="bg-white p-8 rounded-xl shadow-md max-w-5xl w-full">
+
+<header class="flex justify-between border-b pb-3 mb-5">
+  <div class="flex gap-3 items-center">
+    <img src="../imagens/logo.png" class="w-14">
+    <div>
+      <h1 class="text-xl font-bold text-blue-800">Varal dos Sonhos 💙</h1>
+      <p class="text-gray-600 text-sm">Relatório de Eventos</p>
+    </div>
+  </div>
+  <div class="text-right text-sm text-gray-600">
+    <p><strong>Data:</strong> <span id="dataAtual"></span></p>
+    <p><strong>Total:</strong> <span id="totalEventos">0</span></p>
+  </div>
+</header>
+
+<div id="filtros" class="flex gap-3 flex-wrap mb-6">
+
+  <label>Status:</label>
+  <select id="filtroStatus" class="p-2 border rounded">
+    <option value="todos">Todos</option>
+    <option value="proximo">Próximo</option>
+    <option value="em andamento">Em andamento</option>
+    <option value="encerrado">Encerrado</option>
+  </select>
+
+  <label>Destaque:</label>
+  <select id="filtroDestaque" class="p-2 border rounded">
+    <option value="todos">Todos</option>
+    <option value="sim">Sim</option>
+    <option value="nao">Não</option>
+  </select>
+
+  <button id="btnFiltrar" class="btn bg-blue-600 text-white px-4 py-2 rounded-md">Filtrar</button>
+  <button id="btnPDF" class="btn bg-green-600 text-white px-4 py-2 rounded-md">🖨️ Gerar PDF</button>
+
+  <a href="admin.html" class="ml-auto underline text-blue-600 voltar">⬅️ Voltar ao Painel</a>
+</div>
+
+<table class="w-full border-collapse">
+  <thead>
+    <tr>
+      <th>#</th>
+      <th>🎉 Evento</th>
+      <th>📍 Local</th>
+      <th>🗓️ Data Evento</th>
+      <th>📦 Limite</th>
+      <th>🏁 Realização</th>
+      <th>⭐ Destaque</th>
+      <th>📊 Status</th>
+    </tr>
+  </thead>
+  <tbody id="tabelaEventos">
+    <tr><td colspan="8" class="text-center text-gray-500 py-4">Carregando...</td></tr>
+  </tbody>
+</table>
+
+</main>
+
+<script src="../js/relatorio-eventos.js"></script>
+</body>
+</html>

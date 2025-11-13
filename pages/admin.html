@@ -137,8 +137,7 @@
       <nav class="menu">
         <a href="#inicio">🏠 Início</a>
         <a href="#cadastro">📝 Cadastro</a>
-        <a href="#cartinhas">💌 Cartinhas</a>
-        <a href="#pontos">📦 Pontos de Coleta</a>
+        <a href="#relatorios">🗂️ Relatórios</a>
         <a href="#eventos">🎉 Eventos</a>
         <a href="#carrossel">🖼️ Carrossel</a>
         <a href="#gamificacao">🏅 Gamificação</a>
@@ -189,45 +188,38 @@
       </div>
     </section>
 
+<!-- 🗂️ SEÇÃO RELATÓRIOS -->
+<section id="relatorios">
+  <h2 class="section-title">🗂️ Relatórios</h2>
 
-    <!-- 💌 SEÇÃO CARTINHAS -->
-    <section id="cartinhas">
-      <h2 class="section-title">💌 Cartinhas</h2>
-      <div class="card-grid">
-        <div class="action-card" onclick="window.location.href='gerenciarcartinha.html'">
-          <img src="../imagens/logo.png" alt="Adicionar Cartinha" width="80" class="mx-auto" />
-          <h3>Adicionar / Editar Cartinhas</h3>
-          <p>Cadastrar novas cartinhas ou atualizar as existentes.</p>
-        </div>
+  <div class="card-grid">
 
-        <div class="action-card" onclick="window.location.href='relatorio-cartinhas.html'">
-          <img src="../imagens/logo.png" alt="Relatórios Cartinhas" width="80" class="mx-auto" />
-          <h3>Relatórios de Cartinhas</h3>
-          <p>Visualizar e imprimir relatórios com filtros por evento, sexo, status e ponto de coleta.</p>
-        </div>
-      </div>
-    </section>
+    <!-- Relatório de Eventos -->
+    <div class="action-card" onclick="window.location.href='relatorio-eventos.html'">
+      <div style="font-size: 48px; text-align: center;">🎉</div>
+      <h3>Relatório de Eventos</h3>
+      <p>Filtrar eventos por status e gerar um relatório completo.</p>
+    </div>
 
+    <!-- Relatório de Pontos de Coleta -->
+    <div class="action-card" onclick="window.location.href='relatorio-pontos.html'">
+      <div style="font-size: 48px; text-align: center;">📦</div>
+      <h3>Relatório de Pontos de Coleta</h3>
+      <p>Listar e exportar pontos de coleta ativos ou inativos.</p>
+    </div>
+        
+    <!-- Relatório de Cartinhas -->
+    <div class="action-card" onclick="window.location.href='relatorio-cartinhas.html'">
+      <div style="font-size: 48px; text-align: center;">💌</div>
+      <h3>Relatório de Cartinhas</h3>
+      <p>Filtrar, visualizar e gerar PDF com todas as cartinhas do projeto.</p>
+    </div>
 
-    <!-- 📦 SEÇÃO PONTOS DE COLETA -->
-    <section id="pontos">
-      <h2 class="section-title">📦 Pontos de Coleta</h2>
-      <div class="card-grid">
-        <div class="action-card" onclick="window.location.href='gerenciarpontos.html'">
-          <img src="../imagens/logo.png" alt="Cadastrar Ponto" width="80" class="mx-auto" />
-          <h3>Cadastrar / Editar Pontos</h3>
-          <p>Adicionar e atualizar locais de coleta de presentes.</p>
-        </div>
+    
+  </div>
+</section>
 
-        <div class="action-card" onclick="window.location.href='relatorio-pontos.html'">
-          <img src="../imagens/logo.png" alt="Relatórios Pontos" width="80" class="mx-auto" />
-          <h3>Relatórios de Pontos de Coleta</h3>
-          <p>Filtrar pontos ativos/inativos.</p>
-        </div>
-      </div>
-    </section>
-
-
+ 
     <!-- 🎉 SEÇÃO EVENTOS -->
     <section id="eventos">
       <h2 class="section-title">🎉 Eventos</h2>

@@ -3,61 +3,31 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>📋 Relatório de Pontos de Coleta | Varal dos Sonhos</title>
+  <title>📦 Relatório de Pontos de Coleta | Varal dos Sonhos</title>
 
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="icon" href="../imagens/favicon.png" type="image/png" />
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
 
   <style>
-    body { 
-      font-family: "Poppins", sans-serif;
-      background: #f2f7fc;
-    }
-    table th {
-      background: #e0ebff;
-      color: #003366;
-      text-align: left;
-      padding: 8px;
-    }
-    table td {
-      padding: 8px;
-      border-bottom: 1px solid #e2e8f0;
-    }
-    .btn {
-      background-color: #2563eb;
-      color: white;
-      padding: 8px 16px;
-      border-radius: 8px;
-      font-weight: 500;
-      transition: 0.2s;
-    }
-    .btn:hover { background-color: #1d4ed8; }
+    body { font-family: "Poppins", sans-serif; background: #f2f7fc; }
+    table th { background: #e0ebff; color: #003366; padding: 8px; }
+    table td { padding: 8px; border-bottom: 1px solid #e2e8f0; }
 
-    /* 🔹 Modo de impressão: remove botões e filtros, centraliza relatório */
     @media print {
-      body {
-        background: white !important; 
-        print-color-adjust: exact;
-        -webkit-print-color-adjust: exact;
-      }
-      #acoes, #filtros, a.voltar { display: none !important; }
-      main {
-        box-shadow: none !important;
-        border: none !important;
-        margin: 0 auto;
-      }
+      #filtros, .voltar { display: none !important; }
+      body { background: white !important; }
     }
   </style>
 </head>
 
 <body class="min-h-screen flex flex-col items-center py-8 px-4">
-  <main id="relatorio" class="bg-white shadow-md rounded-xl p-8 max-w-5xl w-full border border-blue-100">
+  <main class="bg-white shadow-md rounded-xl p-8 max-w-5xl w-full">
 
-    <!-- 🔹 Cabeçalho -->
+    <!-- Cabeçalho -->
     <header class="flex justify-between items-center mb-6 border-b pb-3">
       <div class="flex items-center gap-3">
-        <img src="../imagens/logo.png" alt="Logo Varal" class="w-14 h-14 object-contain" />
+        <img src="../imagens/logo.png" class="w-14" />
         <div>
           <h1 class="text-xl font-bold text-blue-800">Varal dos Sonhos 💙</h1>
           <p class="text-sm text-gray-600">Relatório de Pontos de Coleta</p>
@@ -70,43 +40,51 @@
       </div>
     </header>
 
-    <!-- 🔹 Filtros -->
-    <div id="filtros" class="flex flex-wrap items-center gap-3 mb-6">
-      <label for="filtroStatus" class="font-medium text-blue-800">Filtrar por Status:</label>
+    <!-- Filtros -->
+    <div id="filtros" class="flex flex-wrap gap-3 mb-6">
+      <label class="font-medium text-blue-800">Cidade:</label>
+      <select id="filtroCidade" class="p-2 border rounded-md">
+        <option value="todos">Todos</option>
+      </select>
+
+      <label class="font-medium text-blue-800">Status:</label>
       <select id="filtroStatus" class="p-2 border rounded-md">
         <option value="todos">Todos</option>
         <option value="ativo">Ativo</option>
         <option value="inativo">Inativo</option>
       </select>
 
-      <button id="btnFiltrar" class="btn">🔍 Filtrar</button>
-      <button id="btnPDF" class="btn bg-green-600 hover:bg-green-700">🖨️ Gerar Relatório</button>
-      <a href="admin.html" class="ml-auto text-blue-600 hover:underline voltar">⬅️ Voltar ao Painel</a>
+      <button id="btnFiltrar" class="btn bg-blue-600 text-white px-4 py-2 rounded-md">Filtrar</button>
+      <button id="btnPDF" class="btn bg-green-600 text-white px-4 py-2 rounded-md">🖨️ Gerar PDF</button>
+
+      <a href="admin.html" class="ml-auto text-blue-600 underline voltar">⬅️ Voltar ao Painel</a>
     </div>
 
-    <!-- 🔹 Tabela -->
+    <!-- Tabela -->
     <section>
-      <h2 class="text-lg font-semibold text-blue-800 mb-4 border-b pb-2">📦 Pontos de Coleta Cadastrados</h2>
-      <div class="overflow-x-auto">
-        <table id="tabelaPontos" class="w-full border-collapse text-sm md:text-base">
-          <thead>
-            <tr>
-              <th>🏠 Nome do Ponto</th>
-              <th>👩‍💼 Responsável</th>
-              <th>📍 Endereço</th>
-              <th>📞 Telefone</th>
-              <th>📊 Status</th>
-            </tr>
-          </thead>
-          <tbody id="tabelaBody">
-            <tr><td colspan="5" class="text-center text-gray-400 py-4">Carregando pontos...</td></tr>
-          </tbody>
-        </table>
-      </div>
+      <h2 class="text-lg font-semibold text-blue-800 mb-4">📦 Pontos Cadastrados</h2>
+
+      <table class="w-full border-collapse">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>📍 Nome</th>
+            <th>🏙️ Cidade</th>
+            <th>📫 Endereço</th>
+            <th>📧 E-mail</th>
+            <th>🕒 Horário</th>
+            <th>👤 Responsável</th>
+            <th>📊 Status</th>
+          </tr>
+        </thead>
+        <tbody id="tabelaPontos">
+          <tr><td colspan="8" class="text-center text-gray-500 py-4">Carregando...</td></tr>
+        </tbody>
+      </table>
     </section>
 
   </main>
 
-  <script src="../js/relatorio-pontos.js"></script>
+<script src="../js/relatorio-pontos.js"></script>
 </body>
 </html>

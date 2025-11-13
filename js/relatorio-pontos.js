@@ -1,82 +1,77 @@
-/* ============================================================
-   💙 VARAL DOS SONHOS — Relatório de Pontos de Coleta (PDF)
-   ------------------------------------------------------------
-   - Consulta pontos via API
-   - Filtro por status ativo/inativo/todos
-   - Geração de PDF visual fiel (html2canvas + jsPDF)
-   ============================================================ */
+// ============================================================
+// 📦 VARAL DOS SONHOS — Relatório Pontos de Coleta
+// ============================================================
 
-const tabelaBody = document.getElementById("tabelaBody");
-const filtroStatus = document.getElementById("filtroStatus");
-const btnFiltrar = document.getElementById("btnFiltrar");
-const btnPDF = document.getElementById("btnPDF");
-const totalPontos = document.getElementById("totalPontos");
-const dataAtual = document.getElementById("dataAtual");
+document.addEventListener("DOMContentLoaded", () => {
+  carregarData();
+  carregarPontos();
 
-let pontos = [];
-
-// ===============================
-// 📅 Exibe a data atual formatada
-// ===============================
-dataAtual.textContent = new Date().toLocaleDateString("pt-BR", {
-  day: "2-digit", month: "long", year: "numeric"
+  document.getElementById("btnFiltrar").addEventListener("click", filtrar);
+  document.getElementById("btnPDF").addEventListener("click", () => window.print());
 });
 
-// ===============================
-// 🔹 Carrega pontos da API
-// ===============================
+function carregarData() {
+  document.getElementById("dataAtual").textContent =
+    new Date().toLocaleDateString("pt-BR");
+}
+
+let pontosOriginais = [];
+
 async function carregarPontos() {
+  const tbody = document.getElementById("tabelaPontos");
+
   try {
-    const resp = await fetch("../api/pontosdecoleta");
-    const data = await resp.json();
-    if (!data.sucesso) throw new Error("Erro ao carregar pontos");
-    pontos = data.pontos;
-    renderizarTabela(pontos);
+    const resp = await fetch("/api/pontosdecoleta");
+    const json = await resp.json();
+
+    if (!json.sucesso) {
+      tbody.innerHTML = `<tr><td colspan="8" class="text-center text-red-500">Erro ao carregar dados</td></tr>`;
+      return;
+    }
+
+    pontosOriginais = json.pontos;
+    preencherTabela(pontosOriginais);
+
   } catch (err) {
-    console.error(err);
-    tabelaBody.innerHTML = `<tr><td colspan="5" class="text-center text-red-500 py-4">Erro ao carregar pontos.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="8" class="text-center text-red-500">Erro inesperado</td></tr>`;
   }
 }
 
-// ===============================
-// 🔹 Renderiza a tabela
-// ===============================
-function renderizarTabela(lista) {
-  totalPontos.textContent = lista.length;
+function preencherTabela(lista) {
+  const tbody = document.getElementById("tabelaPontos");
+  tbody.innerHTML = "";
 
-  if (!lista.length) {
-    tabelaBody.innerHTML = `<tr><td colspan="5" class="text-center text-gray-400 py-4">Nenhum ponto encontrado.</td></tr>`;
-    return;
-  }
+  lista.forEach((p, index) => {
+    const f = p.fields;
 
-  tabelaBody.innerHTML = lista.map(p => `
-    <tr>
-      <td>${p.nome_ponto || "—"}</td>
-      <td>${p.responsavel || "—"}</td>
-      <td>${p.endereco || "—"}</td>
-      <td>${p.telefone || "—"}</td>
-      <td class="font-semibold ${p.status === "ativo" ? "text-green-600" : "text-gray-500"}">${p.status || "—"}</td>
-    </tr>
-  `).join("");
+    tbody.innerHTML += `
+      <tr>
+        <td>${index + 1}</td>
+        <td>${f.nome_ponto}</td>
+        <td>${f.cidade}</td>
+        <td>${f.endereco}</td>
+        <td>${f.email_ponto}</td>
+        <td>${f.horario_funcionamento}</td>
+        <td>${f.responsavel}</td>
+        <td>${f.status || "ativo"}</td>
+      </tr>`;
+  });
+
+  document.getElementById("totalPontos").textContent = lista.length;
 }
 
-// ===============================
-// 🔹 Filtrar tabela
-// ===============================
-btnFiltrar.addEventListener("click", () => {
-  const status = filtroStatus.value;
-  const filtrados = status === "todos" ? pontos : pontos.filter(p => p.status === status);
-  renderizarTabela(filtrados);
-});
+function filtrar() {
+  const cidade = document.getElementById("filtroCidade").value;
+  const status = document.getElementById("filtroStatus").value;
 
-// ===============================
-// 🔹 Gerar PDF 
-// ===============================
-btnPDF.addEventListener("click", () => {
-   window.print();
-});
+  const filtrados = pontosOriginais.filter((p) => {
+    const f = p.fields;
 
-// ===============================
-// 🚀 Inicialização
-// ===============================
-carregarPontos();
+    return (
+      (cidade === "todos" || f.cidade === cidade) &&
+      (status === "todos" || (f.status || "ativo") === status)
+    );
+  });
+
+  preencherTabela(filtrados);
+}
