@@ -5,57 +5,230 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Varal Virtual 💌 | Adote um Sonho</title>
 
-  <!-- Estilos -->
   <link rel="stylesheet" href="../css/style.css" />
-  <link rel="stylesheet" href="../css/cartinha.css" />
   <link rel="stylesheet" href="../css/cloudinho.css" />
-  <link rel="icon" href="../imagens/favicon.png" type="image/png" />
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
-</head>
+  <link rel="icon" href="../imagens/favicon.png" />
 
+  <style>
+    /* ============================================================
+       💙 VARAL DOS SONHOS — CSS EMBUTIDO (SEM QUEBRA)
+       ============================================================ */
+
+    :root {
+      --azul-escuro: #153f5a;
+      --azul-cta: #2f80ed;
+      --corda-cor: #c49a6c;
+      --fundo: linear-gradient(180deg, #e6f2ff 0%, #ffffff 100%);
+    }
+
+    .varal-wrapper {
+      background: var(--fundo);
+      text-align: center;
+      padding: 80px 0 60px;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Título */
+    .titulo-pagina {
+      font-size: 2.3rem;
+      font-weight: 800;
+      color: var(--azul-escuro);
+      text-shadow: 0px 1px 2px rgba(0,0,0,0.1);
+    }
+    .titulo-pagina span:first-child { color: var(--azul-cta); }
+    .titulo-pagina span:last-child { color: var(--azul-escuro); }
+
+    .descricao {
+      color: #27425c;
+      font-size: 1.1rem;
+      font-weight: 400;
+      margin-top: 5px;
+    }
+
+    /* Corda */
+    .corda {
+      width: 100%;
+      max-width: 1050px;
+      height: 6px;
+      margin: 10px auto 36px;
+      background: linear-gradient(90deg, #caa57a, #e4c7a1, #caa57a);
+      border-radius: 3px;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Área e trilho */
+    .varal-area {
+      position: relative;
+      width: 100%;
+      max-width: 1150px;
+      margin: 0 auto;
+      overflow: hidden;
+    }
+
+    .trilho {
+      display: flex;
+      gap: 26px;
+      justify-content: flex-start;
+      align-items: flex-start;
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      padding: 0 60px 20px;
+      scroll-behavior: smooth;
+    }
+    .trilho::-webkit-scrollbar { height: 8px; }
+    .trilho::-webkit-scrollbar-thumb {
+      background: rgba(47,128,237,0.35);
+      border-radius: 6px;
+    }
+
+    /* Gancho (prendedor maior e bonito 💙) */
+    .gancho {
+      flex: 0 0 260px;
+      position: relative;
+      scroll-snap-align: center;
+    }
+    .gancho::before {
+      content: "";
+      position: absolute;
+      top: -58px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 52px;
+      height: 82px;
+      background: url('../imagens/prendedor.png') no-repeat center;
+      background-size: contain;
+      z-index: 10;
+    }
+
+    /* Card */
+    .card-cartinha {
+      background: #fff;
+      border-radius: 18px;
+      border: 2px solid #d8e6f5;
+      box-shadow: 0 4px 16px rgba(0,51,102,0.12);
+      transition: transform .3s ease;
+      min-height: 420px;
+    }
+    .card-cartinha:hover { transform: translateY(-5px); }
+
+    .cartinha-quadro {
+      margin: 14px;
+      background: #f8fbff;
+      border: 1px solid #dbe8f6;
+      border-radius: 14px;
+      overflow: hidden;
+      height: 220px;
+    }
+    .cartinha-quadro img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      cursor: pointer;
+      transition: transform .4s ease;
+    }
+    .cartinha-quadro:hover img { transform: scale(1.04); }
+
+    .info-cartinha {
+      padding: 10px 18px;
+      text-align: left;
+    }
+    .info-cartinha h3 {
+      color: var(--azul-escuro);
+      font-size: 1.2rem;
+      font-weight: 700;
+      margin: 4px 0;
+    }
+
+    .btn-adotar {
+      background: var(--azul-cta);
+      color: #fff;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 999px;
+      width: 80%;
+      margin: 12px auto 18px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: .3s;
+    }
+    .btn-adotar:hover { background: var(--azul-escuro); }
+    .btn-ocupada { background: #f7a300 !important; cursor: not-allowed; }
+
+    /* Setas */
+    .seta-esq, .seta-dir {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      background: var(--azul-cta);
+      color: #fff;
+      border: none;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      font-size: 22px;
+      cursor: pointer;
+      z-index: 100;
+    }
+    .seta-esq:hover, .seta-dir:hover { background: var(--azul-escuro); }
+    .seta-esq { left: 10px; }
+    .seta-dir { right: 10px; }
+
+    /* Modal zoom */
+    .modal-zoom {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.75);
+      justify-content: center;
+      align-items: center;
+      z-index: 2000;
+    }
+    #cartinha-zoom-img { width: 100%; border-radius: 10px; }
+
+  </style>
+
+</head>
 <body>
-  <!-- Cabeçalho dinâmico -->
+
   <div id="header"></div>
 
-  <!-- 🌤️ Conteúdo principal -->
   <main class="varal-wrapper">
-    <div class="varal-title">
-      <h1 class="titulo-pagina">💌 Varal Virtual</h1>
-      <p class="descricao">
-        ✨ Aqui você encontra cartinhas escritas por crianças cheias de sonhos. Arraste para o lado e escolha uma cartinha 💙
-      </p>
-    </div>
+    <h1 class="titulo-pagina">
+      💌 <span>Varal</span> <span>Virtual</span>
+    </h1>
+    <p class="descricao">
+      ✨ Aqui você encontra cartinhas escritas por crianças cheias de sonhos.
+    </p>
 
-    <!-- 🧵 Área do varal com setas -->
     <section class="varal-area">
       <div class="corda"></div>
+
       <button class="nav seta-esq">‹</button>
       <button class="nav seta-dir">›</button>
 
-      <div id="trilho-varal" class="trilho snap">
-        <p style="text-align:center; padding: 20px;">Carregando cartinhas...</p>
+      <div id="trilho-varal" class="trilho">
+        Carregando cartinhas...
       </div>
     </section>
   </main>
 
-  <!-- 🪄 Modal de Zoom -->
+  <!-- Modal Zoom -->
   <div id="modal-cartinha-zoom" class="modal-zoom">
     <div class="modal-content-zoom">
       <span class="close-zoom">&times;</span>
-      <img id="cartinha-zoom-img" src="" alt="Cartinha em zoom" />
-      <p id="nome-cartinha-zoom" class="nome-zoom"></p>
+      <img id="cartinha-zoom-img" src="" />
+      <p id="nome-cartinha-zoom"></p>
     </div>
   </div>
 
-  <!-- Rodapé e assistente -->
   <div id="footer"></div>
   <div id="cloudinho"></div>
 
-  <!-- Carregamento dos componentes -->
   <script>
     async function carregarComponente(id, arquivo) {
-      const base = "../componentes/";
-      const resp = await fetch(base + arquivo);
+      const resp = await fetch("../componentes/" + arquivo);
       if (resp.ok) document.getElementById(id).innerHTML = await resp.text();
     }
     carregarComponente("header", "header.html");
@@ -63,9 +236,8 @@
     carregarComponente("cloudinho", "cloudinho.html");
   </script>
 
-  <!-- Scripts -->
   <script src="../js/cloudinho.js"></script>
-  <script src="../js/cartinha.js"></script>
-  <script src="../js/header.js"></script>
+  <script src="../js/cartinhas.js"></script>
+
 </body>
 </html>

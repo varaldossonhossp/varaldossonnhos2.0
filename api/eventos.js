@@ -11,7 +11,6 @@
 //      /pages/eventos.html
 //      carrossel da home
 //      admin de eventos
-// ✔ Sem quebra de código
 // ============================================================
 
 import Airtable from "airtable";
