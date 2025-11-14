@@ -10,182 +10,229 @@
   <link rel="icon" href="../imagens/favicon.png" />
 
   <style>
-    /* ============================================================
-       💙 VARAL DOS SONHOS — CSS EMBUTIDO (SEM QUEBRA)
-       ============================================================ */
+  /* ============================================================
+   💙 VARAL DOS SONHOS — CSS (CARDS + MODAL + BALANÇO)
+   ============================================================ */
 
-    :root {
-      --azul-escuro: #153f5a;
-      --azul-cta: #2f80ed;
-      --corda-cor: #c49a6c;
-      --fundo: linear-gradient(180deg, #e6f2ff 0%, #ffffff 100%);
-    }
+:root {
+  --azul-escuro: #153f5a;
+  --azul-cta: #2f80ed;
+  --corda-cor: #c49a6c;
+  --fundo: linear-gradient(180deg, #e6f2ff 0%, #ffffff 100%);
+}
 
-    .varal-wrapper {
-      background: var(--fundo);
-      text-align: center;
-      padding: 80px 0 60px;
-      min-height: 100vh;
-      overflow-x: hidden;
-    }
+/* CONTÊINER GERAL */
+.varal-wrapper {
+  background: var(--fundo);
+  text-align: center;
+  padding: 70px 0 60px;
+  min-height: 100vh;
+}
 
-    /* Título */
-    .titulo-pagina {
-      font-size: 2.3rem;
-      font-weight: 800;
-      color: var(--azul-escuro);
-      text-shadow: 0px 1px 2px rgba(0,0,0,0.1);
-    }
-    .titulo-pagina span:first-child { color: var(--azul-cta); }
-    .titulo-pagina span:last-child { color: var(--azul-escuro); }
+/* TÍTULO */
+.titulo-pagina {
+  font-size: 2.3rem;
+  font-weight: 800;
+  color: var(--azul-escuro);
+}
+.titulo-pagina span:first-child { color: var(--azul-cta); }
 
-    .descricao {
-      color: #27425c;
-      font-size: 1.1rem;
-      font-weight: 400;
-      margin-top: 5px;
-    }
+.descricao {
+  color: #27425c;
+  font-size: 1.05rem;
+  margin-bottom: 15px;
+}
 
-    /* Corda */
-    .corda {
-      width: 100%;
-      max-width: 1050px;
-      height: 6px;
-      margin: 10px auto 36px;
-      background: linear-gradient(90deg, #caa57a, #e4c7a1, #caa57a);
-      border-radius: 3px;
-      position: relative;
-      z-index: 1;
-    }
+/* ÁREA DO VARAL */
+.varal-area {
+  position: relative;
+  width: 100%;
+  max-width: 1150px;
+  margin: 0 auto;
+  overflow: hidden;
+}
 
-    /* Área e trilho */
-    .varal-area {
-      position: relative;
-      width: 100%;
-      max-width: 1150px;
-      margin: 0 auto;
-      overflow: hidden;
-    }
+/* TRILHO */
+.trilho {
+  display: flex;
+  gap: 20px;
+  padding: 0 40px 25px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+}
+.trilho::-webkit-scrollbar {
+  height: 8px;
+}
+.trilho::-webkit-scrollbar-thumb {
+  background: rgba(47,128,237,0.35);
+  border-radius: 6px;
+}
 
-    .trilho {
-      display: flex;
-      gap: 26px;
-      justify-content: flex-start;
-      align-items: flex-start;
-      overflow-x: auto;
-      scroll-snap-type: x mandatory;
-      padding: 0 60px 20px;
-      scroll-behavior: smooth;
-    }
-    .trilho::-webkit-scrollbar { height: 8px; }
-    .trilho::-webkit-scrollbar-thumb {
-      background: rgba(47,128,237,0.35);
-      border-radius: 6px;
-    }
+/* ============================================================
+   PRÉNDEDOR (AGORA 100% VISÍVEL)
+   ============================================================ */
+.gancho {
+  flex: 0 0 230px;
+  position: relative;
+  scroll-snap-align: center;
+  padding-top: 60px; /* ESSENCIAL P/ O PRENDEDOR NÃO CORTAR */
+}
+.gancho::before {
+  content: "";
+  position: absolute;
+  top: 0px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 45px;
+  height: 70px;
+  background: url('../imagens/prendedor.png') no-repeat center;
+  background-size: contain;
+  z-index: 10;
+}
 
-    /* Gancho (prendedor maior e bonito 💙) */
-    .gancho {
-      flex: 0 0 260px;
-      position: relative;
-      scroll-snap-align: center;
-    }
-    .gancho::before {
-      content: "";
-      position: absolute;
-      top: -58px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 52px;
-      height: 82px;
-      background: url('../imagens/prendedor.png') no-repeat center;
-      background-size: contain;
-      z-index: 10;
-    }
+/* ============================================================
+   CARD (MENOR, MAIS BONITO E COM BALANÇO)
+   ============================================================ */
+.card-cartinha {
+  background: #fff;
+  border-radius: 16px;
+  border: 2px solid #dbe6f3;
+  box-shadow: 0 4px 16px rgba(0, 51, 102, 0.12);
+  min-height: 350px;
+  transition: transform 0.25s ease;
+  position: relative;
+}
 
-    /* Card */
-    .card-cartinha {
-      background: #fff;
-      border-radius: 18px;
-      border: 2px solid #d8e6f5;
-      box-shadow: 0 4px 16px rgba(0,51,102,0.12);
-      transition: transform .3s ease;
-      min-height: 420px;
-    }
-    .card-cartinha:hover { transform: translateY(-5px); }
+/* BALANÇO SUAVE NO HOVER */
+.card-cartinha:hover {
+  transform: translateY(-4px) rotate(-1.5deg);
+}
 
-    .cartinha-quadro {
-      margin: 14px;
-      background: #f8fbff;
-      border: 1px solid #dbe8f6;
-      border-radius: 14px;
-      overflow: hidden;
-      height: 220px;
-    }
-    .cartinha-quadro img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      cursor: pointer;
-      transition: transform .4s ease;
-    }
-    .cartinha-quadro:hover img { transform: scale(1.04); }
+/* QUADRO DA CARTINHA */
+.cartinha-quadro {
+  margin: 12px;
+  background: #f8fbff;
+  border-radius: 12px;
+  border: 1px solid #dbe8f6;
+  overflow: hidden;
+  height: 180px;
+}
+.cartinha-quadro img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  cursor: pointer;
+  transition: transform .3s;
+}
+.cartinha-quadro:hover img {
+  transform: scale(1.05);
+}
 
-    .info-cartinha {
-      padding: 10px 18px;
-      text-align: left;
-    }
-    .info-cartinha h3 {
-      color: var(--azul-escuro);
-      font-size: 1.2rem;
-      font-weight: 700;
-      margin: 4px 0;
-    }
+/* INFORMAÇÕES — MENOS ESPAÇADAS */
+.info-cartinha {
+  padding: 6px 15px 4px;
+  text-align: left;
+}
+.info-cartinha h3 {
+  color: var(--azul-escuro);
+  font-size: 1.1rem;
+  margin: 3px 0;
+}
+.info-cartinha p {
+  margin: 2px 0;
+  font-size: 0.92rem;
+  color: #294a63;
+}
 
-    .btn-adotar {
-      background: var(--azul-cta);
-      color: #fff;
-      border: none;
-      padding: 12px 20px;
-      border-radius: 999px;
-      width: 80%;
-      margin: 12px auto 18px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: .3s;
-    }
-    .btn-adotar:hover { background: var(--azul-escuro); }
-    .btn-ocupada { background: #f7a300 !important; cursor: not-allowed; }
+/* BOTÕES */
+.btn-adotar {
+  background: var(--azul-cta);
+  color: #fff;
+  border: none;
+  padding: 10px 18px;
+  border-radius: 999px;
+  width: 80%;
+  margin: 10px auto 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: .3s;
+  display: block;
+}
+.btn-adotar:hover {
+  background: var(--azul-escuro);
+}
+.btn-ocupada {
+  background: #f7a300 !important;
+  cursor: not-allowed;
+}
 
-    /* Setas */
-    .seta-esq, .seta-dir {
-      position: absolute;
-      top: 50%;
-      transform: translateY(-50%);
-      background: var(--azul-cta);
-      color: #fff;
-      border: none;
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      font-size: 22px;
-      cursor: pointer;
-      z-index: 100;
-    }
-    .seta-esq:hover, .seta-dir:hover { background: var(--azul-escuro); }
-    .seta-esq { left: 10px; }
-    .seta-dir { right: 10px; }
+/* SETAS */
+.seta-esq, .seta-dir {
+  position: absolute;
+  top: 48%;
+  transform: translateY(-50%);
+  background: var(--azul-cta);
+  color: #fff;
+  border: none;
+  width: 38px;
+  height: 38px;
+  font-size: 22px;
+  border-radius: 50%;
+  cursor: pointer;
+  z-index: 100;
+}
+.seta-esq:hover, .seta-dir:hover { background: var(--azul-escuro); }
+.seta-esq { left: 5px; }
+.seta-dir { right: 5px; }
 
-    /* Modal zoom */
-    .modal-zoom {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.75);
-      justify-content: center;
-      align-items: center;
-      z-index: 2000;
-    }
-    #cartinha-zoom-img { width: 100%; border-radius: 10px; }
+/* ============================================================
+   MODAL — AJUSTA 100% À TELA, CARTINHA NÃO CORTA MAIS
+   ============================================================ */
+.modal-zoom {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.75);
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+  padding: 20px;
+  overflow-y: auto;
+}
+
+.modal-content-zoom {
+  max-width: 900px;
+  width: 100%;
+  background: #fff;
+  padding: 15px;
+  border-radius: 12px;
+  text-align: center;
+  animation: aparecer .3s ease;
+}
+
+@keyframes aparecer {
+  from { opacity: 0; transform: scale(.95); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+#cartinha-zoom-img {
+  width: 100%;
+  max-height: 85vh;     /* NUNCA CORTA! */
+  object-fit: contain;
+}
+
+.close-zoom {
+  float: right;
+  font-size: 32px;
+  cursor: pointer;
+  color: #fff;
+  background: rgba(0,0,0,0.55);
+  padding: 4px 14px;
+  border-radius: 5px;
+  margin-bottom: 6px;
+}
+
 
   </style>
 
@@ -203,7 +250,7 @@
     </p>
 
     <section class="varal-area">
-      <div class="corda"></div>
+      
 
       <button class="nav seta-esq">‹</button>
       <button class="nav seta-dir">›</button>
