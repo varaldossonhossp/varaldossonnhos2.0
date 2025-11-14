@@ -1,151 +1,147 @@
 /* ============================================================
-VARAL DOS SONHOS — Estilo: Pontos de Coleta
-------------------------------------------------------------
-• Visual inspirado no varal das cartinhas.
-• Cores suaves, prendedores e corda com degradê.
-• Design responsivo e compatível com .NET MAUI.
+   VARAL DOS SONHOS — Pontos de Coleta (AJUSTES CORRETOS)
 ============================================================ */
 
+/* Área geral */
 .hero-coleta {
   background: linear-gradient(180deg, #d9ecff 0%, #ffffff 100%);
   text-align: center;
-  padding: 100px 20px 80px;
+  padding: 80px 20px 40px;
   min-height: 100vh;
 }
 
-.logo-coleta {
-  width: 160px;
-  height: auto;
-  margin-bottom: 10px;
-  filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.1));
-}
-
+/* Título no estilo igual ao Varal Virtual */
 .titulo-coleta {
-  color: #003366;
-  font-family: 'Poppins', sans-serif;
-  font-weight: 700;
   font-size: 1.8rem;
-  margin-bottom: 8px;
+  font-weight: 800;
+  color: #153f5a;
+  margin-bottom: 4px;
 }
 
-.corda {
-  width: 100%;
-  max-width: 950px;
-  height: 5px;
-  margin: 24px auto 40px;
-  background: linear-gradient(to right, transparent, #d79e60, #b66b1b, #d79e60, transparent);
-  border-radius: 3px;
-  box-shadow: 0 0 5px rgba(0, 0, 0, 0.15);
+.titulo-coleta::before {
+  content: "📦 ";
 }
 
-/* ==== Cards e prendedores ==== */
+/* Subtítulo */
+.hero-coleta > p {
+  font-size: 0.98rem;
+  color: #40627d;
+  margin-top: -3px;
+  margin-bottom: 18px;
+}
+
+/* Remove a corda excedente */
+.corda { display: none; }
+
+/* ==================== VARAL DE CARDS ==================== */
+
 .cards-grid {
-  width: min(1200px, 90%);
+  width: min(1200px, 94%);
   margin: 0 auto;
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 26px;
+  gap: 35px;
+  padding-top: 10px;
 }
 
+/* Cada gancho com tamanho correto */
 .gancho {
-  position: relative;
   width: 260px;
+  position: relative;
+  padding-top: 70px;        /* 👈 garante espaço para o prendedor */
   text-align: center;
 }
 
+/* Prendedor pequeno e no lugar certo */
 .prendedor {
+  width: 48px;              /* 👈 tamanho real usado no Varal Virtual */
+  height: auto;
   position: absolute;
-  top: -32px;
+  top: 0;
   left: 50%;
   transform: translateX(-50%);
-  width: 36px;
-  z-index: 10;
+  z-index: 20;
 }
 
+/* CARD */
 .card-coleta {
   background: #fff;
-  border: 1px solid #d7e6f5;
+  border: 2px solid #d8e6f3;
   border-radius: 16px;
-  box-shadow: 0 6px 18px rgba(0, 51, 102, 0.12);
+  box-shadow: 0 4px 16px rgba(0,51,102,0.13);
   padding: 16px;
-  transition: all 0.3s ease;
   text-align: left;
+  transition: .3s;
+  min-height: 210px;        /* 👈 garante que o card apareça */
 }
 
 .card-coleta:hover {
   transform: translateY(-4px);
-  box-shadow: 0 10px 24px rgba(0, 51, 102, 0.18);
+  box-shadow: 0 10px 26px rgba(0,51,102,0.20);
 }
 
 .card-titulo {
-  text-align: center;
-  font-size: 1.1rem;
-  color: #003366;
+  font-size: 1.05rem;
   font-weight: 700;
-  margin-bottom: 10px;
+  color: #153f5a;
+  text-align: center;
+  margin-bottom: 8px;
 }
 
 .card-coleta p {
-  font-size: 0.9rem;
-  color: #27425c;
-  margin: 4px 0;
+  font-size: 0.88rem;
+  margin: 3px 0;
+  color: #294a63;
 }
 
-/* ==== Botão do mapa ==== */
+/* BOTÃO */
 .btn-mapa {
   display: block;
+  margin: 12px auto 3px;
   width: 80%;
-  margin: 12px auto 0;
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: #2f80ed;
   border: none;
-  padding: 8px 10px;
-  border-radius: 12px;
-  background: #4A90E2;
   color: #fff;
   font-weight: 600;
-  cursor: pointer;
-  transition: background 0.25s ease, transform 0.2s ease;
-  box-shadow: 0 4px 10px rgba(74, 144, 226, 0.3);
+  transition: .25s;
 }
 
 .btn-mapa:hover {
-  background: #003366;
-  transform: translateY(-2px);
+  background: #153f5a;
 }
 
-/* ==== Modal centralizado ==== */
+/* ==================== MODAL CORRIGIDO ==================== */
+
 .modal {
   display: none;
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.75);
+  background: rgba(0,0,0,0.75);
+  z-index: 5000;
+
+  /* 👇 Centraliza perfeitamente */
   justify-content: center;
   align-items: center;
-  z-index: 3000;
 }
 
 .modal.aberto {
   display: flex;
-  animation: fadeIn 0.3s ease forwards;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
 }
 
 .modal-content {
   background: #fff;
-  border-radius: 14px;
-  max-width: 640px;
+  padding: 14px;
   width: 90%;
-  padding: 10px;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
-  position: relative;
-  animation: zoomIn 0.35s ease;
+  max-width: 640px;
+  border-radius: 16px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.45);
+  animation: abrir .3s ease;
 }
 
-@keyframes zoomIn {
+@keyframes abrir {
   from { transform: scale(0.9); opacity: 0; }
   to { transform: scale(1); opacity: 1; }
 }
@@ -154,27 +150,24 @@ VARAL DOS SONHOS — Estilo: Pontos de Coleta
   width: 100%;
   height: 420px;
   border: none;
-  border-radius: 8px;
+  border-radius: 10px;
 }
 
 .close {
   position: absolute;
-  top: 8px;
-  right: 14px;
+  top: 12px;
+  right: 18px;
+  font-size: 28px;
+  font-weight: bold;
   background: none;
   border: none;
-  font-size: 26px;
-  font-weight: 700;
   color: #333;
   cursor: pointer;
 }
+.close:hover { color: #999; }
 
-.close:hover {
-  color: #999;
-}
-
-/* ==== Responsividade ==== */
+/* RESPONSIVO */
 @media (max-width: 768px) {
-  .gancho { width: 90%; }
-  .prendedor { top: -26px; width: 30px; }
+  .gancho { width: 88%; padding-top: 70px; }
+  .prendedor { width: 40px; }
 }
