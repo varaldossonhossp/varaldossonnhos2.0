@@ -41,11 +41,9 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     lista.forEach(r => {
 
-      const nome =
-        r.primeiro_nome ||
-        r.nome_crianca ||
-        "Criança";
 
+      const nome = r.primeiro_nome || (r.nome_crianca ? r.nome_crianca.split(" ")[0] : "Criança");
+  
       const idade = r.idade ?? "—";
       const sonho = r.sonho || "Sonho não informado.";
       const irmaos = r.irmaos ?? 0;
