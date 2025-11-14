@@ -15,78 +15,49 @@ async function carregarPontosDeColeta() {
   const lista = document.getElementById("lista-pontos");
   const msg = document.getElementById("mensagem-status");
 
-  if (!lista) {
-    console.error("Elemento #lista-pontos não encontrado no HTML.");
-    return;
-  }
-
   lista.innerHTML = "<p class='placeholder'>Carregando pontos de coleta...</p>";
-  if (msg) msg.style.display = "none";
+  msg.style.display = "none";
 
   try {
     const resp = await fetch("/api/pontosdecoleta");
     if (!resp.ok) throw new Error(`Erro HTTP ${resp.status}`);
-
     const dados = await resp.json();
-    if (!dados?.sucesso) {
-      throw new Error("Resposta da API sem flag de sucesso.");
-    }
 
-    // ✅ Aceita tanto `pontos` quanto `pontos_coleta`
-    const listaBruta =
-      dados.pontos ||
-      dados.pontos_coleta ||
-      [];
+    if (!dados.sucesso || !dados.pontos)
+      throw new Error("Resposta inválida da API.");
 
-    if (!Array.isArray(listaBruta)) {
-      throw new Error("Formato inesperado: a lista de pontos não é um array.");
-    }
-
-    // Apenas pontos com status "ativo"
-    const ativos = listaBruta.filter(
-      (p) => (p.status || "").toString().toLowerCase() === "ativo"
-    );
+    const ativos = dados.pontos.filter(p => p.status?.toLowerCase() === "ativo");
 
     if (ativos.length === 0) {
-      lista.innerHTML =
-        "<p class='placeholder erro'>Nenhum ponto ativo encontrado.</p>";
+      lista.innerHTML = "<p class='placeholder erro'>Nenhum ponto ativo encontrado.</p>";
       return;
     }
 
     // Cria cards dinâmicos
-    lista.innerHTML = ativos
-      .map(
-        (p) => `
+    lista.innerHTML = ativos.map(p => `
       <div class="gancho">
         <img src="../imagens/prendedor.png" alt="Prendedor" class="prendedor" />
         <div class="card-coleta">
-          <h3 class="card-titulo">${p.nome_ponto || "Ponto sem nome"}</h3>
-          <p><strong>📍 Endereço:</strong> ${p.endereco || "—"}</p>
-          <p><strong>🕒 Horário:</strong> ${
-            p.horario || p.horario_funcionamento || "A combinar"
-          }</p>
-          <p><strong>👤 Responsável:</strong> ${p.responsavel || "—"}</p>
-          <p><strong>📞 Telefone:</strong> ${p.telefone || "—"}</p>
-          <button class="btn-mapa" data-endereco="${(p.endereco || "")
-            .replace(/"/g, "&quot;")}">
+          <h3 class="card-titulo">${p.nome_ponto}</h3>
+          <p><strong>📍 Endereço:</strong> ${p.endereco}</p>
+          <p><strong>🕒 Horário:</strong> ${p.horario}</p>
+          <p><strong>👤 Responsável:</strong> ${p.responsavel}</p>
+          <p><strong>📞 Telefone:</strong> ${p.telefone}</p>
+          <button class="btn-mapa" data-endereco="${p.endereco}, ${p.nome_ponto}">
             💙 Ver no mapa
           </button>
         </div>
       </div>
-    `
-      )
-      .join("");
+    `).join("");
 
     // Adiciona ação aos botões de mapa
-    document.querySelectorAll(".btn-mapa").forEach((btn) => {
-      btn.addEventListener("click", (e) =>
-        abrirMapa(e.currentTarget.dataset.endereco)
-      );
+    document.querySelectorAll(".btn-mapa").forEach(btn => {
+      btn.addEventListener("click", e => abrirMapa(e.target.dataset.endereco));
     });
+
   } catch (err) {
     console.error("Erro ao carregar pontos:", err);
-    lista.innerHTML =
-      "<p class='placeholder erro'>Erro ao carregar pontos de coleta.</p>";
+    lista.innerHTML = "<p class='placeholder erro'>Erro ao carregar pontos de coleta.</p>";
   }
 }
 
@@ -107,15 +78,11 @@ function abrirMapa(endereco) {
 
     // Fechamento por clique
     modal.querySelector(".close").addEventListener("click", fecharModal);
-    modal.addEventListener("click", (e) => {
-      if (e.target === modal) fecharModal();
-    });
+    modal.addEventListener("click", e => { if (e.target === modal) fecharModal(); });
   }
 
   const iframe = modal.querySelector("#mapFrame");
-  iframe.src = `https://maps.google.com/maps?q=${encodeURIComponent(
-    endereco
-  )}&z=15&output=embed`;
+  iframe.src = `https://maps.google.com/maps?q=${encodeURIComponent(endereco)}&z=15&output=embed`;
   modal.classList.add("aberto");
 }
 
