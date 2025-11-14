@@ -27,13 +27,15 @@
 .titulo-coleta {
   font-size: 1.8rem;
   font-weight: 800;
-  color: #153f5a;
-  margin-bottom: 4px;
+  color: var(--azul-escuro);
+  margin-bottom: 0px;
 }
+
+.titulo-coleta span:first-child { color: var(--azul-cta); }
 
 .titulo-coleta::before {
   content: "📦 ";
-  font-size: 1.6rem;
+  
 }
 
 /* Subtítulo */
@@ -193,8 +195,9 @@
   <div id="header"></div>
 
   <main class="hero-coleta">
-    <h1 class="titulo-coleta">Pontos de Coleta</h1>
-    <p>Confira onde você pode entregar os presentes das cartinhas adotadas 💌</p>
+    <h1 class="titulo-coleta"><span>Pontos</span> <span>de Coleta</span></h1>
+
+    <p>⬇️Confira onde você pode entregar os presentes das cartinhas adotadas.</p>
 
     <section id="lista-pontos" class="cards-grid">
       <p class="placeholder">Carregando pontos de coleta...</p>
