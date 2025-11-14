@@ -1,52 +1,52 @@
 // ============================================================
-// 💙 VARAL DOS SONHOS — /api/eventos.js (versão unificada final)
+// 💙 VARAL DOS SONHOS — /api/eventos.js (versão final TCC)
 // ------------------------------------------------------------
-// 🔹 Compatível com a página eventos.html (Varal dos Sonhos)
-// 🔹 Unifica as versões "TCC" + "eventos-page"
-// 🔹 Suporte a ?status=... | ?tipo=home|admin|all
-// 🔹 Retorna todos os campos, incluindo contadores e imagens
-// 🔹 100% compatível com Airtable + Vercel
+// ✔ Retorna todos os eventos
+// ✔ Campos usados pelo cadastro de cartinhas:
+//      - nome_evento
+//      - data_evento
+//      - data_limite_recebimento
+//      - data_realizacao_evento
+// ✔ Mantém compatibilidade com:
+//      /pages/eventos.html
+//      carrossel da home
+//      admin de eventos
+// ✔ Sem quebra de código
 // ============================================================
 
 import Airtable from "airtable";
+
+// ============================================================
+// Vercel Runtime
+// ============================================================
 export const config = { runtime: "nodejs" };
 
 // ============================================================
-// 📦 Funções utilitárias
+// 🔧 Inicialização Airtable
 // ============================================================
-const ok = (res, data) => res.status(200).json(data);
-const err = (res, code, msg, detalhe) =>
-  res.status(code).json({ sucesso: false, mensagem: msg, detalhe });
-
 function getAirtable() {
   const apiKey = process.env.AIRTABLE_API_KEY;
   const baseId = process.env.AIRTABLE_BASE_ID;
   const table = process.env.AIRTABLE_EVENTOS_TABLE || "eventos";
-  if (!apiKey || !baseId)
-    throw new Error("Credenciais Airtable ausentes. Verifique as variáveis de ambiente.");
+
+  if (!apiKey || !baseId) {
+    throw new Error("❌ Credenciais do Airtable ausentes.");
+  }
+
   const base = new Airtable({ apiKey }).base(baseId);
   return { base, table };
 }
 
-// converte campos numéricos ou arrays em inteiros seguros
-function toIntSafe(v) {
-  if (v == null) return 0;
-  if (Array.isArray(v)) return v.length;
-  const n = parseInt(`${v}`.trim(), 10);
-  return Number.isFinite(n) ? n : 0;
-}
-function pick(...vals) {
-  for (const v of vals) if (v !== undefined) return v;
-  return undefined;
-}
-
 // ============================================================
-// 🧩 Mapeamento dos campos da tabela "eventos"
+// 🧩 Mapeamento de campos do evento
+// ------------------------------------------------------------
+// Esta função transforma o registro bruto do Airtable
+// em um formato limpo para o front-end.
 // ============================================================
 function mapEvento(rec) {
   const f = rec.fields || {};
 
-  // imagens
+  // ---- Imagens (Airtable attachment) ---
   const imagem = Array.isArray(f.imagem)
     ? f.imagem.map((x) => ({
         url: x.url,
@@ -56,31 +56,28 @@ function mapEvento(rec) {
       }))
     : [];
 
-  // status e campos básicos
-  const statusRaw = (f.status_evento || "").toString().toLowerCase();
-
-  // contadores (cartinhas / adoções)
-  const cartinhas_total = toIntSafe(
-    pick(f.cartinhas_total, f.cartinha, f.cartinhas, f.qtd_cartinhas, f.qtd_cartinha)
-  );
-  const adocoes_total = toIntSafe(
-    pick(f.adocoes_total, f.adocoes, f.adoções, f.qtd_adocoes, f.qtd_adoções)
-  );
-
   return {
-    id: rec.id,
-    id_evento: f.id_evento ?? null, // autonumber
-    nome_evento: f.nome_evento ?? "",
-    descricao: f.descricao ?? "",
-    local_evento: f.local_evento ?? "",
-    data_evento: f.data_evento ?? null, // início das adoções
+    id: rec.id,                         // ID do Airtable
+    id_evento: f.id_evento ?? null,     // AutoNumber interno
+    nome_evento: f.nome_evento ?? "",   // Nome do evento
+    descricao: f.descricao ?? "",       // Descrição opcional
+    local_evento: f.local_evento ?? "", // Local
+
+    // ---- DATAS USADAS NO CADASTRO DE CARTINHA ----
+    data_evento: f.data_evento ?? null, // Início das adoções
     data_limite_recebimento: f.data_limite_recebimento ?? null,
-    data_realizacao_evento: f.data_realizacao_evento ?? null, // data do evento
-    status_evento: statusRaw,
+    data_realizacao_evento: f.data_realizacao_evento ?? null,
+
+    // ---- Status ----
+    status_evento: (f.status_evento || "").toString().toLowerCase(),
+
+    // ---- Checkbox ----
     destacar_na_homepage: !!f.destacar_na_homepage,
+
+    // ---- Imagem principal ----
     imagem,
-    cartinhas_total,
-    adocoes_total,
+
+    // ---- Campos de ligação ----
     cartinhas: Array.isArray(f.cartinha) ? f.cartinha : [],
     adocoes: Array.isArray(f.adocoes) ? f.adocoes : [],
   };
@@ -88,8 +85,14 @@ function mapEvento(rec) {
 
 // ============================================================
 // 🚀 Handler principal
+// ------------------------------------------------------------
+// Suporta filtros:
+//   - ?tipo=home  → eventos destacados e em andamento
+//   - ?tipo=admin → eventos em andamento (painel admin)
+//   - ?status=proximo|em andamento|encerrado
 // ============================================================
 export default async function handler(req, res) {
+  // ------ CORS ------
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET,OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
@@ -101,10 +104,9 @@ export default async function handler(req, res) {
     const { tipo = "", status = "" } = req.query;
     let filtro = "";
 
-    // ------------------------------------------------------------
-    // 🔹 Compatível com ?tipo=home|admin|all (versão TCC)
-    // 🔹 Compatível com ?status=em andamento|proximo|encerrado (página HTML)
-    // ------------------------------------------------------------
+    // ========================================================
+    // 🔍 FILTROS DE EVENTOS (compatíveis com site atual)
+    // ========================================================
     if (tipo === "home") {
       filtro = "AND({destacar_na_homepage}=1, {status_evento}='em andamento')";
     } else if (tipo === "admin") {
@@ -118,22 +120,34 @@ export default async function handler(req, res) {
 
     const selectConfig = {
       sort: [{ field: "data_evento", direction: "asc" }],
-      pageSize: 50,
     };
     if (filtro) selectConfig.filterByFormula = filtro;
 
-    // ------------------------------------------------------------
-    // 🔹 Busca no Airtable
-    // ------------------------------------------------------------
+    // ========================================================
+    // 📌 Buscar eventos no Airtable
+    // ========================================================
     const registros = await base(table).select(selectConfig).all();
+
+    // ========================================================
+    // 📌 Transformar formato cru → formato usado no site
+    // ========================================================
     const eventos = registros.map(mapEvento);
 
-    // ------------------------------------------------------------
-    // 🔹 Resposta padronizada
-    // ------------------------------------------------------------
-    ok(res, { sucesso: true, total: eventos.length, eventos });
+    // ========================================================
+    // 📌 Resposta final padronizada
+    // ========================================================
+    return res.status(200).json({
+      sucesso: true,
+      total: eventos.length,
+      eventos,
+    });
+
   } catch (e) {
     console.error("🔥 Erro /api/eventos:", e);
-    err(res, 500, "Erro ao listar eventos.", e?.message || e?.toString());
+    return res.status(500).json({
+      sucesso: false,
+      mensagem: "Erro ao listar eventos.",
+      detalhe: e.message || String(e),
+    });
   }
 }
