@@ -11,8 +11,8 @@
 
   <style>
   /* ============================================================
-   💙 VARAL DOS SONHOS — CSS (CARDS + MODAL + BALANÇO)
-   ============================================================ */
+     💙 VARAL DOS SONHOS — CSS (CARD + PRENDEDOR + MODAL + TOAST)
+     ============================================================ */
 
 :root {
   --azul-escuro: #153f5a;
@@ -25,21 +25,21 @@
 .varal-wrapper {
   background: var(--fundo);
   text-align: center;
-  padding: 70px 0 60px;
+  padding: 65px 0 60px;
   min-height: 100vh;
 }
 
 /* TÍTULO */
 .titulo-pagina {
-  font-size: 2.3rem;
+  font-size: 2rem;
   font-weight: 800;
   color: var(--azul-escuro);
 }
 .titulo-pagina span:first-child { color: var(--azul-cta); }
 
 .descricao {
-  color: #27425c;
-  font-size: 1.05rem;
+  color: #294a63;
+  font-size: 1rem;
   margin-bottom: 15px;
 }
 
@@ -61,62 +61,53 @@
   scroll-snap-type: x mandatory;
   scroll-behavior: smooth;
 }
-.trilho::-webkit-scrollbar {
-  height: 8px;
-}
+.trilho::-webkit-scrollbar { height: 8px; }
 .trilho::-webkit-scrollbar-thumb {
   background: rgba(47,128,237,0.35);
   border-radius: 6px;
 }
 
-/* ============================================================
-   PRÉNDEDOR (AGORA 100% VISÍVEL)
-   ============================================================ */
+/* PRÉNDEDOR */
 .gancho {
   flex: 0 0 230px;
   position: relative;
+  padding-top: 60px;
   scroll-snap-align: center;
-  padding-top: 60px; /* ESSENCIAL P/ O PRENDEDOR NÃO CORTAR */
 }
 .gancho::before {
   content: "";
   position: absolute;
-  top: 0px;
+  top: 0;
   left: 50%;
   transform: translateX(-50%);
-  width: 45px;
-  height: 70px;
+  width: 48px;
+  height: 78px;
   background: url('../imagens/prendedor.png') no-repeat center;
   background-size: contain;
   z-index: 10;
 }
 
-/* ============================================================
-   CARD (MENOR, MAIS BONITO E COM BALANÇO)
-   ============================================================ */
+/* CARD */
 .card-cartinha {
   background: #fff;
   border-radius: 16px;
-  border: 2px solid #dbe6f3;
+  border: 2px solid #d8e6f3;
   box-shadow: 0 4px 16px rgba(0, 51, 102, 0.12);
-  min-height: 350px;
+  min-height: 340px;
   transition: transform 0.25s ease;
-  position: relative;
 }
-
-/* BALANÇO SUAVE NO HOVER */
 .card-cartinha:hover {
-  transform: translateY(-4px) rotate(-1.5deg);
+  transform: translateY(-4px) rotate(-1.3deg);
 }
 
-/* QUADRO DA CARTINHA */
+/* QUADRO */
 .cartinha-quadro {
   margin: 12px;
   background: #f8fbff;
   border-radius: 12px;
   border: 1px solid #dbe8f6;
   overflow: hidden;
-  height: 180px;
+  height: 170px;
 }
 .cartinha-quadro img {
   width: 100%;
@@ -125,32 +116,30 @@
   cursor: pointer;
   transition: transform .3s;
 }
-.cartinha-quadro:hover img {
-  transform: scale(1.05);
-}
+.cartinha-quadro:hover img { transform: scale(1.05); }
 
-/* INFORMAÇÕES — MENOS ESPAÇADAS */
+/* INFO */
 .info-cartinha {
   padding: 6px 15px 4px;
   text-align: left;
 }
 .info-cartinha h3 {
+  font-size: 1rem;
   color: var(--azul-escuro);
-  font-size: 1.1rem;
   margin: 3px 0;
 }
 .info-cartinha p {
+  font-size: 0.85rem;
   margin: 2px 0;
-  font-size: 0.92rem;
   color: #294a63;
 }
 
-/* BOTÕES */
+/* BOTÃO */
 .btn-adotar {
   background: var(--azul-cta);
   color: #fff;
   border: none;
-  padding: 10px 18px;
+  padding: 9px 16px;
   border-radius: 999px;
   width: 80%;
   margin: 10px auto 15px;
@@ -159,13 +148,8 @@
   transition: .3s;
   display: block;
 }
-.btn-adotar:hover {
-  background: var(--azul-escuro);
-}
-.btn-ocupada {
-  background: #f7a300 !important;
-  cursor: not-allowed;
-}
+.btn-adotar:hover { background: var(--azul-escuro); }
+.btn-ocupada { background: #f7a300 !important; }
 
 /* SETAS */
 .seta-esq, .seta-dir {
@@ -173,22 +157,20 @@
   top: 48%;
   transform: translateY(-50%);
   background: var(--azul-cta);
-  color: #fff;
+  color: white;
   border: none;
   width: 38px;
   height: 38px;
-  font-size: 22px;
   border-radius: 50%;
   cursor: pointer;
   z-index: 100;
+  font-size: 22px;
 }
 .seta-esq:hover, .seta-dir:hover { background: var(--azul-escuro); }
 .seta-esq { left: 5px; }
 .seta-dir { right: 5px; }
 
-/* ============================================================
-   MODAL — AJUSTA 100% À TELA, CARTINHA NÃO CORTA MAIS
-   ============================================================ */
+/* MODAL */
 .modal-zoom {
   display: none;
   position: fixed;
@@ -196,62 +178,79 @@
   background: rgba(0,0,0,0.75);
   justify-content: center;
   align-items: center;
-  z-index: 2000;
   padding: 20px;
   overflow-y: auto;
+  z-index: 2000;
 }
 
 .modal-content-zoom {
   max-width: 900px;
   width: 100%;
-  background: #fff;
+  background: white;
   padding: 15px;
   border-radius: 12px;
-  text-align: center;
   animation: aparecer .3s ease;
 }
-
 @keyframes aparecer {
-  from { opacity: 0; transform: scale(.95); }
-  to   { opacity: 1; transform: scale(1); }
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
 }
 
 #cartinha-zoom-img {
   width: 100%;
-  max-height: 85vh;     /* NUNCA CORTA! */
+  max-height: 85vh;
   object-fit: contain;
 }
 
 .close-zoom {
   float: right;
   font-size: 32px;
-  cursor: pointer;
-  color: #fff;
+  color: white;
   background: rgba(0,0,0,0.55);
   padding: 4px 14px;
   border-radius: 5px;
-  margin-bottom: 6px;
+  cursor: pointer;
 }
 
+/* ========= TOAST ========= */
+#toast-container {
+  position: fixed;
+  bottom: 25px;
+  right: 20px;
+  z-index: 99999;
+}
+.toast {
+  background: linear-gradient(90deg, #2f80ed, #56ccf2);
+  color: white;
+  padding: 14px 20px;
+  border-radius: 12px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  margin-top: 10px;
+  animation: toastShow .5s forwards;
+  opacity: 0;
+  transform: translateY(20px);
+}
+@keyframes toastShow {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
 
   </style>
-
 </head>
+
 <body>
 
   <div id="header"></div>
 
   <main class="varal-wrapper">
-    <h1 class="titulo-pagina">
-      💌 <span>Varal</span> <span>Virtual</span>
-    </h1>
-    <p class="descricao">
-      ✨ Aqui você encontra cartinhas escritas por crianças cheias de sonhos.
-    </p>
+    <h1 class="titulo-pagina">💌 <span>Varal</span> <span>Virtual</span></h1>
+    <p class="descricao">✨ Aqui você encontra cartinhas escritas por crianças cheias de sonhos.</p>
 
     <section class="varal-area">
-      
-
       <button class="nav seta-esq">‹</button>
       <button class="nav seta-dir">›</button>
 
@@ -261,17 +260,20 @@
     </section>
   </main>
 
-  <!-- Modal Zoom -->
+  <!-- Modal -->
   <div id="modal-cartinha-zoom" class="modal-zoom">
     <div class="modal-content-zoom">
       <span class="close-zoom">&times;</span>
-      <img id="cartinha-zoom-img" src="" />
+      <img id="cartinha-zoom-img" />
       <p id="nome-cartinha-zoom"></p>
     </div>
   </div>
 
   <div id="footer"></div>
   <div id="cloudinho"></div>
+
+  <!-- TOAST -->
+  <div id="toast-container"></div>
 
   <script>
     async function carregarComponente(id, arquivo) {

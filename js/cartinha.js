@@ -1,9 +1,9 @@
 // ============================================================
-// 💙 VARAL DOS SONHOS — /js/cartinha-final.js
-// Cards grandes, balanço, modal 60%
+// 💙 VARAL DOS SONHOS — /js/cartinha.js  (FINAL AJUSTADO)
 // ============================================================
 
 document.addEventListener("DOMContentLoaded", async () => {
+
   const trilho = document.getElementById("trilho-varal");
   const btnEsq = document.querySelector(".seta-esq");
   const btnDir = document.querySelector(".seta-dir");
@@ -15,9 +15,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   let cartinha = [];
 
-  // ============================
-  // 1) BUSCA API
-  // ============================
+  // BUSCA API
   try {
     const resp = await fetch("/api/cartinha");
     if (!resp.ok) throw new Error("Erro ao buscar cartinhas");
@@ -35,14 +33,19 @@ document.addEventListener("DOMContentLoaded", async () => {
     trilho.innerHTML = "<p style='padding:20px;'>Erro ao carregar cartinhas.</p>";
   }
 
-  // ============================
-  // 2) MONTAR CARDS
-  // ============================
+  // ============================================================
+  // MONTAR CARDS
+  // ============================================================
   function montarVaral(lista) {
     trilho.innerHTML = "";
 
     lista.forEach(r => {
-      const nome = r.primeiro_nome || "Criança";
+
+      const nome =
+        r.primeiro_nome ||
+        r.nome_crianca ||
+        "Criança";
+
       const idade = r.idade ?? "—";
       const sonho = r.sonho || "Sonho não informado.";
       const irmaos = r.irmaos ?? 0;
@@ -76,7 +79,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         </button>
       `;
 
-      // Botão
       const btn = card.querySelector(".btn-adotar");
       if (estaNoCarrinho(r.id)) {
         btn.textContent = "No Carrinho 🧺";
@@ -88,7 +90,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         adicionarAoCarrinho({ id: r.id, fields: r }, btn, nome);
       });
 
-      // Zoom da imagem
       card.querySelector(".cartinha-quadro").addEventListener("click", (e) => {
         abrirZoom(e.currentTarget.dataset.img, nome);
       });
@@ -98,9 +99,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
   }
 
-  // ============================
-  // 3) CARRINHO
-  // ============================
+  // ============================================================
+  // CARRINHO
+  // ============================================================
   function estaNoCarrinho(id) {
     const carrinho = JSON.parse(localStorage.getItem("carrinho")) || [];
     return carrinho.some(i => i.id === id);
@@ -115,12 +116,12 @@ document.addEventListener("DOMContentLoaded", async () => {
     btn.classList.add("btn-ocupada");
     btn.disabled = true;
 
-    alert(`💙 A cartinha de ${nome} foi adicionada ao carrinho!`);
+    mostrarToast(`A cartinha de ${nome} foi adicionada ao carrinho.`);
   }
 
-  // ============================
-  // 4) MODAL ZOOM
-  // ============================
+  // ============================================================
+  // MODAL
+  // ============================================================
   function abrirZoom(img, nome) {
     imgZoom.src = img;
     nomeZoom.textContent = `Cartinha de ${nome}`;
@@ -128,15 +129,31 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   closeZoom.onclick = () => (modalZoom.style.display = "none");
-  window.onclick = (e) => {
-    if (e.target === modalZoom) modalZoom.style.display = "none";
-  };
+  window.onclick = (e) => { if (e.target === modalZoom) modalZoom.style.display = "none"; };
 
-  // ============================
-  // 5) SETAS
-  // ============================
+  // ============================================================
+  // SETAS
+  // ============================================================
   const passo = 330;
   btnEsq.onclick = () => trilho.scrollBy({ left: -passo, behavior: "smooth" });
   btnDir.onclick = () => trilho.scrollBy({ left: passo, behavior: "smooth" });
 
 });
+
+// ============================================================
+// TOAST - AVISO BONITO E EMOCIONAL
+// ============================================================
+function mostrarToast(msg) {
+  const area = document.getElementById("toast-container");
+  const toast = document.createElement("div");
+  toast.className = "toast";
+  toast.innerHTML = `💙 ${msg}`;
+
+  area.appendChild(toast);
+
+  setTimeout(() => {
+    toast.style.opacity = "0";
+    toast.style.transform = "translateY(20px)";
+    setTimeout(() => toast.remove(), 400);
+  }, 2600);
+}
