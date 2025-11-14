@@ -26,7 +26,6 @@ async function carregarPontosDeColeta() {
     if (!dados.sucesso || !dados.pontos)
       throw new Error("Resposta inválida da API.");
 
-    // 🔹 Considera somente pontos ativos
     const ativos = dados.pontos.filter(p => p.status?.toLowerCase() === "ativo");
 
     if (ativos.length === 0) {
@@ -34,22 +33,16 @@ async function carregarPontosDeColeta() {
       return;
     }
 
-    // ============================================================
-    // 🔹 Cria cards dinâmicos com CSS de ganchos igual ao Varal Virtual
-    // ============================================================
+    // Cria cards dinâmicos
     lista.innerHTML = ativos.map(p => `
       <div class="gancho">
+        <img src="../imagens/prendedor.png" alt="Prendedor" class="prendedor" />
         <div class="card-coleta">
           <h3 class="card-titulo">${p.nome_ponto}</h3>
-
           <p><strong>📍 Endereço:</strong> ${p.endereco}</p>
-
-          <!-- Campo correto: horario -->
-          <p><strong>🕒 Horário:</strong> ${p.horario || "—"}</p>
-
+          <p><strong>🕒 Horário:</strong> ${p.horario}</p>
           <p><strong>👤 Responsável:</strong> ${p.responsavel}</p>
           <p><strong>📞 Telefone:</strong> ${p.telefone}</p>
-
           <button class="btn-mapa" data-endereco="${p.endereco}, ${p.nome_ponto}">
             💙 Ver no mapa
           </button>
@@ -57,7 +50,7 @@ async function carregarPontosDeColeta() {
       </div>
     `).join("");
 
-    // 🔹 Adiciona ação aos botões de mapa
+    // Adiciona ação aos botões de mapa
     document.querySelectorAll(".btn-mapa").forEach(btn => {
       btn.addEventListener("click", e => abrirMapa(e.target.dataset.endereco));
     });
@@ -83,7 +76,7 @@ function abrirMapa(endereco) {
       </div>`;
     document.body.appendChild(modal);
 
-    // Fechar modal
+    // Fechamento por clique
     modal.querySelector(".close").addEventListener("click", fecharModal);
     modal.addEventListener("click", e => { if (e.target === modal) fecharModal(); });
   }
