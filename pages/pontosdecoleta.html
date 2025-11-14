@@ -1,71 +1,211 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <!-- ============================================================
-       VARAL DOS SONHOS — Página: Pontos de Coleta
-       ------------------------------------------------------------
-       • Exibe os pontos oficiais de coleta de presentes.
-       • Carrega componentes dinâmicos (header, footer, cloudinho).
-       • Integra com Airtable via API /api/pontosdecoleta.
-       • Compatível com WebView (.NET MAUI) e Vercel.
-  ============================================================ -->
-  <meta charset="utf-8" />
+  <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="Locais oficiais para entrega de presentes das cartinhas adotadas." />
-  <title>Pontos de Coleta | Fantástica Fábrica de Sonhos</title>
+  <title>Pontos de Coleta 📦 | Fantástica Fábrica de Sonhos</title>
 
-  <!-- 🎨 Estilos -->
   <link rel="stylesheet" href="../css/style.css" />
-  <link rel="stylesheet" href="../css/pontosdecoleta.css" />
   <link rel="stylesheet" href="../css/cloudinho.css" />
-  <link rel="icon" href="../imagens/favicon.png" type="image/png" />
+  <link rel="icon" href="../imagens/favicon.png" />
+
+  <style>
+/* ============================================================
+   💙 VARAL DOS SONHOS — PADRÃO VISUAL OFICIAL
+   Para: Pontos de Coleta
+============================================================ */
+
+:root {
+  --azul-escuro: #153f5a;
+  --azul-cta: #2f80ed;
+  --corda-cor: #c49a6c;
+  --fundo: linear-gradient(180deg, #e6f2ff 0%, #ffffff 100%);
+}
+
+body {
+  background: var(--fundo);
+}
+
+/* WRAPPER PRINCIPAL */
+.varal-wrapper {
+  text-align: center;
+  padding: 49px 0 40px;
+  min-height: 100vh;
+}
+
+/* ============================================================
+   🎯 TÍTULO — MESMO PADRÃO DO VARAL VIRTUAL
+============================================================ */
+.titulo-pagina {
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: var(--azul-escuro);
+  margin-bottom: 0;
+}
+.titulo-pagina span:first-child {
+  color: var(--azul-cta);
+}
+
+/* SUBTÍTULO */
+.descricao {
+  font-size: 0.95rem;
+  color: #40627d;
+  margin-top: -4px;
+}
+
+/* REMOVER QUALQUER CORDA ANTIGA */
+.corda { display: none !important; }
+
+/* ============================================================
+   🎁 CARDS DE PONTOS DE COLETA — PADRÃO VARAL
+============================================================ */
+.cards-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 26px;
+  padding: 0 20px;
+  margin-top: 35px;
+}
+
+.ponto-item {
+  width: 260px;
+  position: relative;
+  padding-top: 65px;
+}
+
+/* PRENDEDOR */
+.ponto-item::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 48px;
+  height: 78px;
+  transform: translateX(-50%);
+  background: url('../imagens/prendedor.png') no-repeat center;
+  background-size: contain;
+  z-index: 10;
+}
+
+/* CARD */
+.card-ponto {
+  background: #fff;
+  border-radius: 16px;
+  border: 2px solid #d8e6f3;
+  box-shadow: 0 4px 16px rgba(0, 51, 102, 0.12);
+  padding: 20px 18px 25px;
+  transition: 0.25s ease;
+  min-height: 300px;
+}
+.card-ponto:hover {
+  transform: translateY(-4px) rotate(-1.3deg);
+}
+
+.card-ponto h3 {
+  color: var(--azul-escuro);
+  font-size: 1rem;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+
+.card-ponto p {
+  margin: 4px 0;
+  font-size: 0.85rem;
+  color: #294a63;
+}
+
+/* BOTÃO */
+.btn-mapa {
+  display: block;
+  background: var(--azul-cta);
+  color: #fff !important;
+  padding: 10px 20px;
+  text-align: center;
+  border-radius: 999px;
+  font-weight: 600;
+  margin-top: 14px;
+  transition: .3s;
+}
+.btn-mapa:hover {
+  background: var(--azul-escuro);
+}
+
+/* PLACEHOLDER */
+.placeholder {
+  text-align: center;
+  font-size: 1rem;
+  color: #294a63;
+}
+
+/* CLOUDINHO E TOAST — mantém como está */
+#toast-container {
+  position: fixed;
+  left: 50%;
+  bottom: 25vh;
+  transform: translateX(-50%);
+  z-index: 99999;
+}
+.toast {
+  background: linear-gradient(90deg, #2f80ed, #56ccf2);
+  padding: 14px 22px;
+  border-radius: 14px;
+  font-size: 1rem;
+  color: #fff;
+  font-weight: 600;
+  animation: toastShow .45s forwards ease-out;
+  opacity: 0;
+  transform: translateY(20px) scale(0.96);
+}
+@keyframes toastShow {
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+  </style>
 </head>
 
-<body class="bg-gradiente">
-  <!-- Cabeçalho dinâmico -->
-  <div id="header"></div>
+<body>
+
+<div id="header"></div>
+
+<main class="varal-wrapper">
 
   <!-- ============================================================
-       SEÇÃO PRINCIPAL — Varal com pontos de coleta
+       🎯 TÍTULO PADRÃO DO VARAL VIRTUAL
   ============================================================ -->
-  <main class="hero-coleta">
-    <h1 class="titulo-coleta">📦 Pontos de Coleta</h1>
-    <p>Confira onde você pode entregar os presentes das cartinhas adotadas 💌</p>
+  <h1 class="titulo-pagina">
+    📦 <span>Pontos</span> <span>de Coleta</span>
+  </h1>
 
-    <!-- Linha do varal -->
-    <div class="corda"></div>
+  <p class="descricao">
+    ✨ Confira onde você pode entregar os presentes das cartinhas adotadas.
+  </p>
 
-    <!-- Lista dinâmica dos pontos -->
-    <section id="lista-pontos" class="cards-grid">
-      <p class="placeholder">Carregando pontos de coleta...</p>
-    </section>
+  <!-- LISTA DE PONTOS -->
+  <section id="lista-pontos" class="cards-grid">
+    <p class="placeholder">Carregando pontos de coleta...</p>
+  </section>
 
-    <p id="mensagem-status" style="display:none; text-align:center;"></p>
-  </main>
+  <p id="mensagem-status" style="display:none; text-align:center;"></p>
 
-  <!-- Rodapé e assistente virtual -->
-  <div id="footer"></div>
-  <div id="cloudinho"></div>
+</main>
 
-  <!-- ============================================================
-       SCRIPTS DE COMPONENTES E FUNCIONALIDADES
-  ============================================================ -->
-  <script>
-      // Carrega dinamicamente os componentes HTML fixos
-      async function carregarComponente(id, arquivo) {
-        const base = "../componentes/";
-        const resp = await fetch(base + arquivo);
-        if (resp.ok) document.getElementById(id).innerHTML = await resp.text();
-      }
+<div id="footer"></div>
+<div id="cloudinho"></div>
 
-      carregarComponente("header", "header.html");
-      carregarComponente("footer", "footer.html");
-      carregarComponente("cloudinho", "cloudinho.html");
-  </script>
+<script>
+  async function carregarComponente(id, arquivo) {
+    const resp = await fetch("../componentes/" + arquivo);
+    if (resp.ok) document.getElementById(id).innerHTML = await resp.text();
+  }
+  carregarComponente("header", "header.html");
+  carregarComponente("footer", "footer.html");
+  carregarComponente("cloudinho", "cloudinho.html");
+</script>
 
-  <!-- Scripts principais -->
-  <script src="../js/cloudinho.js"></script>
-  <script src="../js/pontosdecoleta.js"></script>
-  <script src="../js/header.js"></script>
+<script src="../js/cloudinho.js"></script>
+<script src="../js/pontosdecoleta.js"></script>
+<script src="../js/header.js"></script>
+
 </body>
 </html>
