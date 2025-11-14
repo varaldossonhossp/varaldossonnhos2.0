@@ -12,24 +12,24 @@ document.addEventListener("DOMContentLoaded", async () => {
   const nomeZoom = document.getElementById("nome-cartinha-zoom");
   const closeZoom = document.querySelector(".close-zoom");
 
-  let cartinhas = [];
+  let cartinha = [];
 
-  // 1) Buscar cartinhas
+  // 1) Buscar cartinha
   try {
     const resp = await fetch("/api/cartinha");
     const json = await resp.json();
 
-    if (!json?.sucesso || !Array.isArray(json.cartinhas)) {
+    if (!json?.sucesso || !Array.isArray(json.cartinha)) {
       trilho.innerHTML = "<p style='padding:20px;'>Nenhuma cartinha disponível.</p>";
       return;
     }
 
-    cartinhas = json.cartinhas;
-    montarVaral(cartinhas);
+    cartinha = json.cartinha;
+    montarVaral(cartinha);
 
   } catch (e) {
     console.error("Erro API cartinha:", e);
-    trilho.innerHTML = "<p>Erro ao carregar cartinhas.</p>";
+    trilho.innerHTML = "<p>Erro ao carregar cartinha.</p>";
   }
 
   // 2) Montagem dos cards
