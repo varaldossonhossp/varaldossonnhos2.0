@@ -11,14 +11,12 @@
 
   <style>
 /* ============================================================
-   💙 VARAL DOS SONHOS — PADRÃO VISUAL OFICIAL
-   Para: Pontos de Coleta
+   💙 PONTOS DE COLETA — VISUAL PADRONIZADO, SEM QUEBRAR MODAL
 ============================================================ */
 
 :root {
   --azul-escuro: #153f5a;
   --azul-cta: #2f80ed;
-  --corda-cor: #c49a6c;
   --fundo: linear-gradient(180deg, #e6f2ff 0%, #ffffff 100%);
 }
 
@@ -26,69 +24,59 @@ body {
   background: var(--fundo);
 }
 
-/* WRAPPER PRINCIPAL */
+/* WRAPPER */
 .varal-wrapper {
   text-align: center;
-  padding: 49px 0 40px;
+  padding: 50px 0 40px;
   min-height: 100vh;
 }
 
-/* ============================================================
-   🎯 TÍTULO — MESMO PADRÃO DO VARAL VIRTUAL
-============================================================ */
+/* ==== Título igual ao Varal Virtual ==== */
 .titulo-pagina {
   font-size: 1.8rem;
   font-weight: 800;
   color: var(--azul-escuro);
-  margin-bottom: 0;
+  margin-bottom: 0px;
 }
-.titulo-pagina span:first-child {
-  color: var(--azul-cta);
-}
+.titulo-pagina span:first-child { color: var(--azul-cta); }
 
-/* SUBTÍTULO */
 .descricao {
   font-size: 0.95rem;
   color: #40627d;
   margin-top: -4px;
 }
 
-/* REMOVER QUALQUER CORDA ANTIGA */
-.corda { display: none !important; }
-
-/* ============================================================
-   🎁 CARDS DE PONTOS DE COLETA — PADRÃO VARAL
-============================================================ */
+/* ==== Cards em GRID (não varal) ==== */
 .cards-grid {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 26px;
-  padding: 0 20px;
-  margin-top: 35px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 28px;
+  padding: 35px 30px 10px;
+  max-width: 1250px;
+  margin: 0 auto;
 }
 
+/* ==== Item com prendedor ==== */
 .ponto-item {
-  width: 260px;
   position: relative;
-  padding-top: 65px;
+  padding-top: 55px;
 }
 
-/* PRENDEDOR */
+/* prendedor moderado */
 .ponto-item::before {
   content: "";
   position: absolute;
   top: 0;
   left: 50%;
-  width: 48px;
-  height: 78px;
+  width: 42px;
+  height: 65px;
   transform: translateX(-50%);
   background: url('../imagens/prendedor.png') no-repeat center;
   background-size: contain;
   z-index: 10;
 }
 
-/* CARD */
+/* ==== Card ==== */
 .card-ponto {
   background: #fff;
   border-radius: 16px;
@@ -96,17 +84,17 @@ body {
   box-shadow: 0 4px 16px rgba(0, 51, 102, 0.12);
   padding: 20px 18px 25px;
   transition: 0.25s ease;
-  min-height: 300px;
+  min-height: 260px;
 }
 .card-ponto:hover {
-  transform: translateY(-4px) rotate(-1.3deg);
+  transform: translateY(-4px);
 }
 
 .card-ponto h3 {
   color: var(--azul-escuro);
   font-size: 1rem;
   font-weight: 700;
-  margin-bottom: 10px;
+  margin-bottom: 8px;
 }
 
 .card-ponto p {
@@ -115,7 +103,7 @@ body {
   color: #294a63;
 }
 
-/* BOTÃO */
+/* ==== Botão ==== */
 .btn-mapa {
   display: block;
   background: var(--azul-cta);
@@ -123,42 +111,19 @@ body {
   padding: 10px 20px;
   text-align: center;
   border-radius: 999px;
+  margin-top: 12px;
   font-weight: 600;
-  margin-top: 14px;
   transition: .3s;
 }
 .btn-mapa:hover {
   background: var(--azul-escuro);
 }
 
-/* PLACEHOLDER */
+/* Placeholder */
 .placeholder {
-  text-align: center;
   font-size: 1rem;
   color: #294a63;
-}
-
-/* CLOUDINHO E TOAST — mantém como está */
-#toast-container {
-  position: fixed;
-  left: 50%;
-  bottom: 25vh;
-  transform: translateX(-50%);
-  z-index: 99999;
-}
-.toast {
-  background: linear-gradient(90deg, #2f80ed, #56ccf2);
-  padding: 14px 22px;
-  border-radius: 14px;
-  font-size: 1rem;
-  color: #fff;
-  font-weight: 600;
-  animation: toastShow .45s forwards ease-out;
-  opacity: 0;
-  transform: translateY(20px) scale(0.96);
-}
-@keyframes toastShow {
-  to { opacity: 1; transform: translateY(0) scale(1); }
+  text-align: center;
 }
 
   </style>
@@ -170,9 +135,6 @@ body {
 
 <main class="varal-wrapper">
 
-  <!-- ============================================================
-       🎯 TÍTULO PADRÃO DO VARAL VIRTUAL
-  ============================================================ -->
   <h1 class="titulo-pagina">
     📦 <span>Pontos</span> <span>de Coleta</span>
   </h1>
@@ -181,12 +143,9 @@ body {
     ✨ Confira onde você pode entregar os presentes das cartinhas adotadas.
   </p>
 
-  <!-- LISTA DE PONTOS -->
   <section id="lista-pontos" class="cards-grid">
     <p class="placeholder">Carregando pontos de coleta...</p>
   </section>
-
-  <p id="mensagem-status" style="display:none; text-align:center;"></p>
 
 </main>
 
