@@ -1,63 +1,79 @@
 // ============================================================
-// 💙 VARAL DOS SONHOS — /js/header.js (Versão compatível modular)
-// ------------------------------------------------------------
-// Lê o login salvo e atualiza o menu do header dinamicamente.
+// 💙 VARAL DOS SONHOS — /js/header.js (FINAL)
+// Header inteligente: Admin / Ponto / Usuário / Visitante
 // ============================================================
 
-async function inicializarHeader() {
-  // Espera o header carregar no DOM
-  const headerDiv = document.getElementById("header");
-  if (!headerDiv || !headerDiv.innerHTML.trim()) {
-    setTimeout(inicializarHeader, 150);
-    return;
-  }
+function inicializarHeader() {
+  const usuario = JSON.parse(localStorage.getItem("usuario_logado"));
 
-  // Espera o HTML ser realmente injetado
   const saudacao = document.getElementById("saudacaoUsuario");
   const linkLogin = document.getElementById("linkLogin");
   const linkCadastro = document.getElementById("linkCadastro");
   const linkSair = document.getElementById("linkSair");
+
   const linkPainelAdmin = document.getElementById("linkPainelAdmin");
+  const linkPainelPonto = document.getElementById("linkPainelPonto");
   const linkConquista = document.getElementById("linkConquista");
 
-  if (!saudacao) return;
+  const toggle = document.getElementById("menu-toggle");
+  const links = document.getElementById("menu-links");
 
-  const usuario = JSON.parse(localStorage.getItem("usuario_logado"));
-
-  if (usuario && usuario.nome) {
-    const nomeCurto = usuario.nome.split(" ")[0];
-    saudacao.textContent = `👋 Olá, ${nomeCurto}!`;
-    saudacao.style.display = "inline-block";
-    linkLogin.style.display = "none";
-    linkCadastro.style.display = "none";
-    linkSair.style.display = "inline-block";
-
-    // Exibe menus conforme tipo
-    if (usuario.tipo === "administrador") {
-      linkPainelAdmin.style.display = "inline-block";
-    } else {
-      linkConquista.style.display = "inline-block";
-    }
-
-    // Logout
-    linkSair.addEventListener("click", (e) => {
-      e.preventDefault();
-      localStorage.removeItem("usuario_logado");
-      alert("💙 Sessão encerrada com sucesso!");
-      window.location.href = "/index.html";
+  // botão mobile
+  if (toggle) {
+    toggle.addEventListener("click", () => {
+      links.classList.toggle("menu-aberto");
     });
-  } else {
-    // Visitante
-    saudacao.style.display = "none";
+  }
+
+  // Visitante
+  if (!usuario) {
+    if (saudacao) saudacao.style.display = "none";
     linkSair.style.display = "none";
     linkPainelAdmin.style.display = "none";
+    linkPainelPonto.style.display = "none";
     linkConquista.style.display = "none";
+
     linkLogin.style.display = "inline-block";
     linkCadastro.style.display = "inline-block";
+    return;
   }
+
+  // Usuário logado
+  saudacao.textContent = `👋 Olá, ${usuario.nome.split(" ")[0]}!`;
+  saudacao.style.display = "inline-block";
+  linkLogin.style.display = "none";
+  linkCadastro.style.display = "none";
+  linkSair.style.display = "inline-block";
+
+  // ADMIN
+  if (usuario.tipo === "administrador") {
+    linkPainelAdmin.style.display = "inline-block";
+    linkPainelPonto.style.display = "none";
+    linkConquista.style.display = "none";
+  }
+
+  // PONTO DE COLETA
+  else if (usuario.tipo === "ponto") {
+    linkPainelPonto.style.display = "inline-block";
+    linkPainelAdmin.style.display = "none";
+    linkConquista.style.display = "none";
+  }
+
+  // DOADOR / VOLUNTÁRIO
+  else {
+    linkConquista.style.display = "inline-block";
+    linkPainelAdmin.style.display = "none";
+    linkPainelPonto.style.display = "none";
+  }
+
+  // Logout
+  linkSair.addEventListener("click", (e) => {
+    e.preventDefault();
+    localStorage.removeItem("usuario_logado");
+    window.location.href = "/index.html";
+  });
 }
 
-// Executa após o carregamento total da página
 document.addEventListener("DOMContentLoaded", () => {
-  inicializarHeader();
+  setTimeout(inicializarHeader, 150);
 });

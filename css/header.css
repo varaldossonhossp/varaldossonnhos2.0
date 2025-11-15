@@ -1,74 +1,91 @@
 /* ============================================================
-💙 VARAL DOS SONHOS — header.css
----------------------------------------------------------------
-Estilo do cabeçalho fixo e responsivo
+💙 VARAL DOS SONHOS — header.css (FINAL)
 ============================================================ */
+
 .header-site {
-  background: linear-gradient(90deg, #4A90E2, #6fb3ff);
-  color: white;
+  background: linear-gradient(180deg, #ffffff 90%, #eaf3ff 100%);
   padding: 12px 20px;
   position: sticky;
   top: 0;
   z-index: 999;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 3px 15px rgba(74, 144, 226, 0.12);
 }
 
-.header-site .menu {
+.menu {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  flex-wrap: wrap;
-}
-
-.logo a {
-  font-size: 20px;
-  font-weight: 700;
-  color: white;
-  text-decoration: none;
 }
 
 .menu-links {
   list-style: none;
   display: flex;
   gap: 20px;
-  padding: 0;
-  margin: 0;
   align-items: center;
+  margin: 0;
+  padding: 0;
 }
 
 .menu-links li a {
-  color: white;
-  text-decoration: none;
+  color: #003366;
   font-weight: 500;
-  transition: opacity 0.3s ease;
+  padding: 8px 10px;
+  border-radius: 6px;
+  text-decoration: none;
+  transition: 0.25s;
 }
 
 .menu-links li a:hover {
-  opacity: 0.8;
+  color: #4A90E2;
+  background: rgba(74,144,226,0.08);
 }
 
-/* Responsividade */
-@media (max-width: 768px) {
-  .menu {
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
+/* ============================================
+   MOBILE / MENU HAMBÚRGUER
+============================================ */
+
+.menu-toggle {
+  display: none;
+  background: none;
+  border: none;
+  font-size: 28px;
+  cursor: pointer;
+  color: #003366;
+}
+
+/* MOBILE */
+@media (max-width: 850px) {
+
+  .menu-toggle {
+    display: block;
   }
 
   .menu-links {
+    display: none;
     flex-direction: column;
-    gap: 10px;
+    background: white;
+    width: 80%;
+    padding: 20px 10px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    position: absolute;
+    right: 20px;
+    top: 80px;
   }
-}
 
-.header-site {
-  background: linear-gradient(180deg, #ffffff 90%, #eaf3ff 100%);
-  box-shadow: 0 3px 15px rgba(74, 144, 226, 0.12);
-}
-.menu-links a {
-  font-weight: 500;
-}
-.menu-links a:hover {
-  color: #4A90E2;
-  background: rgba(74,144,226,0.08);
+  .menu-links.menu-aberto {
+    display: flex;
+  }
+
+  .menu-links li {
+    width: 100%;
+    text-align: right;
+    padding: 6px 0;
+  }
+
+  .menu-links li a {
+    display: block;
+    width: 100%;
+    font-size: 17px;
+  }
 }

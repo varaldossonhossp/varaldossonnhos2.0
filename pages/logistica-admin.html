@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>📦 Logística das Doações | Painel Administrativo</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="icon" href="../imagens/favicon.png" />
+
+  <style>
+    body { font-family: "Poppins", sans-serif; background:#e3f2fd; }
+    .sidebar {
+      width: 240px; background:#4086d6; color:white; height:100vh;
+      position:fixed; top:0; left:0; display:flex; flex-direction:column;
+      justify-content:space-between; box-shadow:2px 0 6px rgba(0,0,0,0.1);
+    }
+    .menu a { padding:12px 20px; display:block; color:white; text-decoration:none; }
+    .menu a:hover { background:#64b5f6; }
+    .content { margin-left:260px; padding:40px; }
+    .card {
+      background:white; padding:20px; border-radius:14px;
+      box-shadow:0 3px 10px rgba(0,0,0,0.1);
+      margin-bottom:20px;
+    }
+    .btn { padding:6px 10px; background:#1e88e5; color:white;
+      border:none; border-radius:8px; cursor:pointer; }
+  </style>
+</head>
+
+<body>
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div>
+      <h2 class="text-xl font-bold p-6">⚙️ Painel Admin</h2>
+      <nav class="menu">
+        <a href="admin.html">🏠 Início</a>
+        <a href="logistica-admin.html">📦 Logística das Doações</a>
+        <a href="cadastroevento.html">🎉 Eventos</a>
+        <a href="cadastropontocoleta.html">📦 Pontos de Coleta</a>
+        <a href="cadastrocartinha.html">💌 Cartinhas</a>
+        <a href="relatorio-eventos.html">🗂️ Relatórios</a>
+        <a href="gerenciargamificacao.html">🏅 Gamificação</a>
+       </nav>
+    </div>
+
+    <button onclick="window.location.href='../index.html'" class="m-4 p-3 rounded bg-white/20">⬅️ Voltar ao Site</button>
+  </aside>
+
+  <!-- CONTEÚDO -->
+  <main class="content">
+    <h1 class="text-3xl font-bold text-blue-800 mb-6">📦 Logística das Doações</h1>
+    <p class="text-gray-600 mb-6">
+      Aqui você confirma adoções e envia o e-mail automático para o doador comprar o presente 💙
+    </p>
+
+    <div class="card">
+      <h2 class="text-xl font-semibold text-blue-600 mb-4">Adoções aguardando confirmação</h2>
+
+      <table class="w-full">
+        <thead class="bg-blue-100">
+          <tr>
+            <th class="p-2 text-left">Criança</th>
+            <th class="p-2 text-left">Sonho</th>
+            <th class="p-2 text-left">Doador</th>
+            <th class="p-2 text-left">Ação</th>
+          </tr>
+        </thead>
+
+        <tbody id="listaAguardando"></tbody>
+      </table>
+    </div>
+
+  </main>
+
+  <script>
+  async function carregarAdoacoes() {
+    const tbody = document.getElementById("listaAguardando");
+    tbody.innerHTML =
+      '<tr><td colspan="4" class="p-3 text-center text-gray-500">Carregando...</td></tr>';
+
+    try {
+      const r = await fetch("/api/listAdocoes");
+      const json = await r.json();
+
+      if (!json.sucesso) {
+        console.error(json.mensagem || json);
+        alert("Erro ao carregar adoções.");
+        return;
+      }
+
+      const lista = (json.adocoes || []).filter(
+        (a) => a.status_adocao === "aguardando confirmacao"
+      );
+
+      tbody.innerHTML = "";
+
+      if (lista.length === 0) {
+        tbody.innerHTML =
+          '<tr><td colspan="4" class="p-3 text-center text-gray-500">Nenhuma adoção pendente de confirmação.</td></tr>';
+        return;
+      }
+
+      lista.forEach((a) => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td class="p-2">${a.nome_crianca || "—"}</td>
+          <td class="p-2">${a.sonho || "—"}</td>
+          <td class="p-2">${a.nome_doador || "—"}</td>
+          <td class="p-2">
+            <button class="btn" onclick="confirmar('${a.id_record}')">
+              Confirmar
+            </button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    } catch (err) {
+      console.error(err);
+      alert("Erro ao carregar adoções (ver console da página).");
+    }
+  }
+
+  async function confirmar(idAdocao) {
+    if (!confirm("Confirmar esta adoção e enviar e-mail ao doador?")) return;
+
+    try {
+      const r = await fetch(`/api/confirmar?id_adocao=${idAdocao}`);
+      if (!r.ok) {
+        const txt = await r.text();
+        console.error("Erro em /api/confirmar:", txt);
+        alert("Erro ao confirmar adoção.");
+        return;
+      }
+
+      // Se /api/confirmar devolve HTML de sucesso, abrimos em nova aba
+      const html = await r.text();
+      const janela = window.open("", "_blank");
+      janela.document.write(html);
+
+      carregarAdoacoes();
+    } catch (err) {
+      console.error(err);
+      alert("Erro de comunicação com a API de confirmação.");
+    }
+  }
+
+  document.addEventListener("DOMContentLoaded", carregarAdoacoes);
+</script>
+
+
+</body>
+</html>

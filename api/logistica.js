@@ -1,12 +1,16 @@
 // ============================================================
-// 💙 VARAL DOS SONHOS — /api/logistica.js
+// 💙 VARAL DOS SONHOS — /api/logistica.js (VERSÃO FINAL COMPLETA)
 // ------------------------------------------------------------
-// • Endpoint responsável pela LOGÍSTICA dos pontos de coleta.
-// • Atualiza o status da adoção (tabela “adocoes”) para
-//   “presente recebido”.
-// • Dispara um e-mail automático ao doador confirmando que
-//   o presente chegou ao ponto de coleta.
-// • Integrações: Airtable (banco de dados) + Mailjet (SMTP/API).
+// Fluxo do ponto de coleta:
+//  • RECEBIMENTO  → status = "presente recebido"
+//      - Cria ponto_movimentos
+//      - Envia EmailJS → admin
+//
+//  • RETIRADA     → status = "presente entregue"
+//      - Cria ponto_movimentos
+//      - Envia MAILJET → doador
+//
+// Compatível com Node 20 / Vercel
 // ============================================================
 
 import Airtable from "airtable";
@@ -15,145 +19,204 @@ import fetch from "node-fetch";
 export const config = { runtime: "nodejs" };
 
 // ============================================================
-// 🌐 FUNÇÃO PRINCIPAL (Handler padrão Next.js / Vercel)
+// ⚙️ VARIÁVEIS DAS TABELAS
 // ============================================================
-export default async function handler(req, res) {
+const TB_ADOCOES = "adocoes";
+const TB_MOV = "ponto_movimentos";
+const TB_USUARIOS = "usuario";
+const TB_CARTINHAS = "cartinha";
 
-  // -------------------------------
-  // 1️⃣ Verifica o método HTTP
-  // -------------------------------
-  if (req.method !== "POST") {
-    return res.status(405).json({
-      success: false,
-      message: "Método não permitido. Utilize POST."
+// ============================================================
+// 🔧 Função para parsear body (Node 20)
+// ============================================================
+async function parseBody(req) {
+  return new Promise(resolve => {
+    let data = "";
+    req.on("data", chunk => data += chunk);
+    req.on("end", () => {
+      try { resolve(JSON.parse(data || "{}")); }
+      catch { resolve({}); }
     });
-  }
+  });
+}
 
-  // -------------------------------
-  // 2️⃣ Extrai os dados recebidos do frontend (body da requisição)
-  // -------------------------------
-  const {
-    id_adocao,
-    donor_email,
-    donor_name,
-    child_name,
-    child_gift,
-    order_id,
-    pickup_name,
-    pickup_address,
-    pickup_phone
-  } = req.body;
-
-  if (!id_adocao || !donor_email) {
-    return res.status(400).json({
-      success: false,
-      message: "Campos obrigatórios ausentes: id_adocao e donor_email."
-    });
-  }
-
+// ============================================================
+// 📩 Email ADMIN (EmailJS) — Recebimento
+// ============================================================
+async function enviarEmailAdmin_EmailJS(data) {
   try {
-    // ============================================================
-    // 🔹 3️⃣ Conexão com o Airtable
-    // ------------------------------------------------------------
-    // O Airtable é usado como banco de dados “no-code” do projeto.
-    // Aqui fazemos a autenticação usando as variáveis de ambiente.
-    // ============================================================
-    const base = new Airtable({ apiKey: process.env.AIRTABLE_API_KEY })
-      .base(process.env.AIRTABLE_BASE_ID);
-
-    // ------------------------------------------------------------
-    // Atualiza o campo “status_adocao” da tabela “adocoes”
-    // para o valor literal “presente recebido”.
-    // ------------------------------------------------------------
-    await base("adocoes").update([
-      { id: id_adocao, fields: { status_adocao: "presente recebido" } },
-    ]);
-
-    console.log(`✅ Adoção ${id_adocao} atualizada para “presente recebido”.`);
-
-    // ============================================================
-    // 🔹 4️⃣ Envio de e-mail via API do Mailjet
-    // ------------------------------------------------------------
-    // O Mailjet é um serviço SMTP/API que permite disparar
-    // e-mails transacionais e personalizáveis com templates.
-    // Aqui utilizamos o template 7473367 (Presente Recebido).
-    // ============================================================
-
-    const apiKey = process.env.MAILJET_API_KEY;
-    const apiSecret = process.env.MAILJET_SECRET_KEY;
-    const templateId = process.env.MAILJET_TEMPLATE_ID_RECEBIDO;
-    const fromEmail = process.env.MAILJET_FROM_EMAIL;
-    const fromName = process.env.MAILJET_FROM_NAME;
-
-    const received_date = new Date().toLocaleDateString("pt-BR");
-
-    // Corpo da requisição HTTP para o endpoint do Mailjet
-    const mailjetPayload = {
-      Messages: [
-        {
-          From: { Email: fromEmail, Name: fromName },
-          To: [{ Email: donor_email, Name: donor_name }],
-          TemplateID: parseInt(templateId),
-          TemplateLanguage: true,
-          Subject: "🎁 Presente Recebido - Varal dos Sonhos 💙",
-          Variables: {
-            donor_name,
-            child_name,
-            child_gift,
-            order_id,
-            received_date,
-            pickup_name,
-            pickup_address,
-            pickup_phone,
-          },
-        },
-      ],
+    const payload = {
+      service_id: process.env.EMAILJS_SERVICE_ID_ADMIN,
+      template_id: process.env.EMAILJS_TEMPLATE_ID_RECEBIMENTO,
+      user_id: process.env.EMAILJS_PUBLIC_KEY,
+      accessToken: process.env.EMAILJS_PRIVATE_KEY,
+      template_params: {
+        ponto_nome: data.ponto_nome,
+        id_adocao: data.id_adocao,
+        nome_crianca: data.nome_crianca,
+        nome_doador: data.nome_doador
+      }
     };
 
-    // ------------------------------------------------------------
-    // Dispara a requisição usando o método POST autenticado
-    // ------------------------------------------------------------
-    const response = await fetch("https://api.mailjet.com/v3.1/send", {
+    const r = await fetch("https://api.emailjs.com/api/v1.0/email/send", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+
+    return r.ok;
+  } catch {
+    return false;
+  }
+}
+
+// ============================================================
+// 📩 Email DOADOR (Mailjet) — Retirada / Presente entregue
+// ============================================================
+async function enviarEmailDoador_Mailjet(data) {
+  try {
+    const payload = {
+      Messages: [
+        {
+          From: { 
+            Email: process.env.MAILJET_FROM_EMAIL,
+            Name: process.env.MAILJET_FROM_NAME
+          },
+          To: [{ Email: data.email_doador, Name: data.nome_doador }],
+          TemplateID: parseInt(process.env.MAILJET_TEMPLATE_ID_ENTREGA),
+          TemplateLanguage: true,
+          Subject: "🎁 Seu presente foi entregue! 💙",
+          Variables: {
+            donor_name: data.nome_doador,
+            child_name: data.nome_crianca,
+            child_gift: data.sonho,
+            evento: data.evento_nome,
+          }
+        }
+      ]
+    };
+
+    const r = await fetch("https://api.mailjet.com/v3.1/send", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         Authorization:
-          "Basic " + Buffer.from(`${apiKey}:${apiSecret}`).toString("base64"),
+          "Basic " + Buffer.from(`${process.env.MAILJET_API_KEY}:${process.env.MAILJET_SECRET_KEY}`).toString("base64"),
       },
-      body: JSON.stringify(mailjetPayload),
+      body: JSON.stringify(payload),
     });
 
-    const data = await response.json();
+    return r.ok;
+  } catch {
+    return false;
+  }
+}
 
-    // ------------------------------------------------------------
-    // Caso o Mailjet retorne erro, ele é tratado aqui
-    // ------------------------------------------------------------
-    if (!response.ok) {
-      console.error("❌ Erro no envio via Mailjet:", data);
-      throw new Error("Falha no envio de e-mail pelo Mailjet.");
+// ============================================================
+// 🌟 HANDLER PRINCIPAL
+// ============================================================
+export default async function handler(req, res) {
+  if (req.method !== "POST")
+    return res.status(405).json({ sucesso: false, mensagem: "Método não permitido." });
+
+  const base = new Airtable({ apiKey: process.env.AIRTABLE_API_KEY })
+    .base(process.env.AIRTABLE_BASE_ID);
+
+  const body = await parseBody(req);
+
+  const { acao, id_adocao, id_ponto, responsavel, observacoes, foto } = body;
+
+  if (!acao || !id_adocao || !id_ponto)
+    return res.status(400).json({ sucesso: false, mensagem: "Campos obrigatórios ausentes." });
+
+  try {
+    // 1) Buscar adoção completa
+    const ado = await base(TB_ADOCOES).find(id_adocao);
+    const f = ado.fields;
+
+    // 2) Buscar dados extras
+    const idCartinha = f.id_cartinha ? f.id_cartinha[0] : null;
+    const idUsuario = f.id_usuario ? f.id_usuario[0] : null;
+
+    const cart = idCartinha ? await base(TB_CARTINHAS).find(idCartinha) : null;
+    const user = idUsuario ? await base(TB_USUARIOS).find(idUsuario) : null;
+
+    const nomeCrianca = cart?.get("nome_crianca") || "";
+    const sonho = cart?.get("sonho") || "";
+    const nomeDoador = user?.get("nome_usuario") || "";
+    const emailDoador = user?.get("email_usuario") || "";
+
+    // ============================================================
+    // 📥 RECEBER PRESENTE
+    // ============================================================
+    if (acao === "receber") {
+
+      await base(TB_ADOCOES).update([
+        { id: id_adocao, fields: { status_adocao: "presente recebido" } }
+      ]);
+
+      await base(TB_MOV).create([
+        {
+          fields: {
+            id_ponto: [id_ponto],
+            id_adocao: [id_adocao],
+            tipo_movimento: "recebimento",
+            responsavel,
+            observacoes,
+            foto,
+            data: new Date().toISOString()
+          }
+        }
+      ]);
+
+      await enviarEmailAdmin_EmailJS({
+        id_adocao,
+        ponto_nome: id_ponto,
+        nome_crianca: nomeCrianca,
+        nome_doador: nomeDoador
+      });
+
+      return res.status(200).json({ sucesso: true, mensagem: "Recebimento registrado." });
     }
 
-    console.log("✅ E-mail enviado via Mailjet:", data);
+    // ============================================================
+    // 🚚 RETIRADA
+    // ============================================================
+    if (acao === "retirar") {
 
-    // ============================================================
-    // 🔹 5️⃣ Retorno final de sucesso (para o frontend)
-    // ============================================================
-    return res.status(200).json({
-      success: true,
-      message: "Status atualizado e e-mail de confirmação enviado com sucesso.",
-      details: data
-    });
+      await base(TB_ADOCOES).update([
+        { id: id_adocao, fields: { status_adocao: "presente entregue" } }
+      ]);
 
-  } catch (error) {
-    // ============================================================
-    // ❌ 6️⃣ Tratamento de erros gerais
-    // ============================================================
-    console.error("❌ Erro interno /api/logistica:", error);
+      await base(TB_MOV).create([
+        {
+          fields: {
+            id_ponto: [id_ponto],
+            id_adocao: [id_adocao],
+            tipo_movimento: "retirada",
+            responsavel,
+            observacoes,
+            foto,
+            data: new Date().toISOString()
+          }
+        }
+      ]);
 
-    return res.status(500).json({
-      success: false,
-      message: "Erro interno ao atualizar o status ou enviar e-mail.",
-      details: error.message
-    });
+      await enviarEmailDoador_Mailjet({
+        nome_doador: nomeDoador,
+        email_doador: emailDoador,
+        nome_crianca: nomeCrianca,
+        sonho,
+        evento_nome: "Evento de entrega"
+      });
+
+      return res.status(200).json({ sucesso: true, mensagem: "Retirada registrada." });
+    }
+
+    return res.status(400).json({ sucesso: false, mensagem: "Ação desconhecida." });
+
+  } catch (e) {
+    console.error(e);
+    return res.status(500).json({ sucesso: false, mensagem: e.message });
   }
 }

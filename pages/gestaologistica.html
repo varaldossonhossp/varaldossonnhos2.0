@@ -88,7 +88,7 @@
       list.innerHTML = "<p class='text-center text-gray-500 py-4'>Carregando...</p>";
 
       try {
-        const res = await fetch("/api/listAdocoes.js");
+        const res = await fetch("/api/listAdocoes");
         const data = await res.json();
 
         list.innerHTML = "";

@@ -1,5 +1,5 @@
 // ============================================================
-// 💙 VARAL DOS SONHOS — Relatório de Cartinhas (Versão Final)
+// 💙 VARAL DOS SONHOS — Relatório de Cartinhas (Versão Completa)
 // ============================================================
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -18,37 +18,28 @@ function carregarData() {
 }
 
 // ============================================================
-// 🔹 Filtros
+// 🔹 Carregar Filtros
 // ============================================================
 async function carregarFiltros() {
   try {
     const eventosResp = await fetch("/api/eventos");
-    const pontosResp = await fetch("/api/pontosdecoleta");
-
     const eventosJson = await eventosResp.json();
-    const pontosJson = await pontosResp.json();
 
     const selEvento = document.getElementById("filtroEvento");
-    const selPonto = document.getElementById("filtroPonto");
+    const selIdade = document.getElementById("filtroIdade");
+    const selEscola = document.getElementById("filtroEscola");
 
     // EVENTOS
     eventosJson.eventos?.forEach((ev) => {
+      if (!ev.fields?.nome_evento) return;
       const opt = document.createElement("option");
-      opt.value = ev.id;
+      opt.value = ev.fields.nome_evento;
       opt.textContent = ev.fields.nome_evento;
       selEvento.appendChild(opt);
     });
 
-    // PONTOS DE COLETA
-    pontosJson.pontos?.forEach((p) => {
-      const opt = document.createElement("option");
-      opt.value = p.fields.nome_ponto;
-      opt.textContent = p.fields.nome_ponto;
-      selPonto.appendChild(opt);
-    });
-
   } catch (err) {
-    console.error("Erro filtros:", err);
+    console.error("Erro ao carregar filtros:", err);
   }
 }
 
@@ -70,6 +61,10 @@ async function carregarCartinhas() {
     }
 
     cartinhasOriginais = json.cartinha;
+
+    // Preencher select de idade e escola baseado nos dados reais
+    preencherFiltrosDinamicos(cartinhasOriginais);
+
     preencherTabela(cartinhasOriginais);
 
   } catch (err) {
@@ -79,7 +74,32 @@ async function carregarCartinhas() {
 }
 
 // ============================================================
-// 🔹 Preencher Tabela (EVENTO + PONTO OK)
+// 🔹 Preencher filtros idade/escola dinamicamente
+// ============================================================
+function preencherFiltrosDinamicos(lista) {
+  const selIdade = document.getElementById("filtroIdade");
+  const selEscola = document.getElementById("filtroEscola");
+
+  const idades = [...new Set(lista.map(f => f.idade).filter(Boolean))].sort((a, b) => a - b);
+  const escolas = [...new Set(lista.map(f => f.escola).filter(Boolean))].sort();
+
+  idades.forEach(i => {
+    const opt = document.createElement("option");
+    opt.value = i;
+    opt.textContent = i;
+    selIdade.appendChild(opt);
+  });
+
+  escolas.forEach(e => {
+    const opt = document.createElement("option");
+    opt.value = e;
+    opt.textContent = e;
+    selEscola.appendChild(opt);
+  });
+}
+
+// ============================================================
+// 🔹 Preencher Tabela
 // ============================================================
 function preencherTabela(lista) {
   const tbody = document.getElementById("tabelaBody");
@@ -100,14 +120,9 @@ function preencherTabela(lista) {
         <td>${f.sonho || "-"}</td>
         <td>${f.escola || "-"}</td>
         <td>${f.cidade || "-"}</td>
-
-        <!-- Nome correto do ponto de coleta -->
-        <td>${f.nome_ponto || "-"}</td>
-
-        <!-- Nome do evento -->
-        <td>${f.nome_evento || "-"}</td>
-
+        <td>${f.evento_nome || "-"}</td>
         <td>${f.status || "-"}</td>
+        <td>${f.irmaos ?? "-"}</td>
       </tr>
     `;
   });
@@ -116,30 +131,44 @@ function preencherTabela(lista) {
 }
 
 // ============================================================
-// 🔹 Filtrar
+// 🔹 FILTRAR (com todos os filtros)
 // ============================================================
 function filtrar() {
-  const ev = document.getElementById("filtroEvento").value;
-  const ponto = document.getElementById("filtroPonto").value;
-  const sexo = document.getElementById("filtroSexo").value;
-  const status = document.getElementById("filtroStatus").value;
+  const filtroEvento = document.getElementById("filtroEvento").value;
+  const filtroSexo = document.getElementById("filtroSexo").value;
+  const filtroStatus = document.getElementById("filtroStatus").value;
+  const filtroIdade = document.getElementById("filtroIdade").value;
+  const filtroEscola = document.getElementById("filtroEscola").value;
+  const filtroIrmao = document.getElementById("filtroIrmao").value;
 
   const filtradas = cartinhasOriginais.filter((f) => {
 
-    // Filtro por evento
     const eventoOK =
-      ev === "todos" || f.id_evento?.includes(ev);
+      filtroEvento === "todos" ||
+      f.evento_nome?.toLowerCase() === filtroEvento.toLowerCase();
 
-    // Filtro por ponto (usando nome_ponto)
-    const pontoOK =
-      ponto === "todos" || f.nome_ponto === ponto;
+    const sexoOK =
+      filtroSexo === "todos" ||
+      f.sexo?.toLowerCase() === filtroSexo.toLowerCase();
 
-    return (
-      eventoOK &&
-      pontoOK &&
-      (sexo === "todos" || f.sexo === sexo) &&
-      (status === "todos" || f.status === status)
-    );
+    const statusOK =
+      filtroStatus === "todos" ||
+      f.status?.toLowerCase() === filtroStatus.toLowerCase();
+
+    const idadeOK =
+      filtroIdade === "todos" ||
+      Number(f.idade) === Number(filtroIdade);
+
+    const escolaOK =
+      filtroEscola === "todos" ||
+      f.escola?.toLowerCase() === filtroEscola.toLowerCase();
+
+    const irmaoOK =
+      filtroIrmao === "todos" ||
+      (filtroIrmao === "sim" && Number(f.irmaos) > 0) ||
+      (filtroIrmao === "nao" && Number(f.irmaos) === 0);
+
+    return eventoOK && sexoOK && statusOK && idadeOK && escolaOK && irmaoOK;
   });
 
   preencherTabela(filtradas);

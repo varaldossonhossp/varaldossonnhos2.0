@@ -1,29 +1,38 @@
 <!-- ============================================================
-💙 VARAL DOS SONHOS — /componentes/header.html
----------------------------------------------------------------
-Menu dinâmico com visibilidade ajustada pelo login do usuário.
+💙 VARAL DOS SONHOS — /componentes/header.html (FINAL RESPONSIVO)
 ============================================================ -->
 <header class="header-site">
   <nav class="menu">
+
+    <!-- LOGO -->
     <div class="logo">
-      <img src="/imagens/logo.png" width="100" height="auto" alt="Logo Varal dos Sonhos" />
+      <a href="/index.html">
+        <img src="/imagens/logo.png" width="95" alt="Logo Varal dos Sonhos" />
+      </a>
     </div>
 
+    <!-- Botão Mobile -->
+    <button class="menu-toggle" id="menu-toggle">☰</button>
+
+    <!-- LINKS DO MENU -->
     <ul class="menu-links" id="menu-links">
       <li><a href="/index.html">Início</a></li>
       <li><a href="/pages/cartinha.html">Varal Virtual</a></li>
       <li><a href="/pages/pontosdecoleta.html">Pontos de Coleta</a></li>
       <li><a href="/pages/carrinho.html">Carrinho</a></li>
 
+      <!-- VISÍVEIS SOMENTE LOGADO -->
+      <li><a id="linkPainelAdmin" href="/pages/admin.html" style="display:none;">⚙️ Painel Admin</a></li>
+      <li><a id="linkPainelPonto" href="/pages/painel-ponto.html" style="display:none;">⚙️ Painel Controle</a></li>
+      <li><a id="linkConquista" href="/pages/conquistas.html" style="display:none;">🏆 Conquistas</a></li>
+
+      <!-- Login/Logout -->
       <li><a id="linkLogin" href="/pages/login.html">🔑 Login</a></li>
       <li><a id="linkCadastro" href="/pages/cadastro.html">📝 Cadastro</a></li>
 
-      <li><a id="linkPainelAdmin" href="/pages/admin.html" style="display:none;">⚙️Painel Admin</a></li>
-      <li><a id="linkConquista" href="/pages/conquistas.html" style="display:none;">🏆Conquistas</a></li>
-
-      <li><span id="saudacaoUsuario" style="display:none;"></span></li>
-      <li><a id="linkSair" href="#" style="display:none;">[➜ Sair</a></li>
-
+      <li><span id="saudacaoUsuario" style="display:none; font-weight:600;"></span></li>
+      <li><a id="linkSair" href="#" style="display:none;">↳ Sair</a></li>
     </ul>
+
   </nav>
 </header>

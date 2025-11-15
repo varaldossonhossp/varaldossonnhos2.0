@@ -31,7 +31,6 @@
     }
     .btn:hover { background-color: #1d4ed8; }
 
-    /* 🔹 Impressão */
     @media print {
       body {
         background: white !important;
@@ -67,35 +66,72 @@
     </header>
 
     <!-- 🔹 Filtros -->
-    <div id="filtros" class="flex flex-wrap items-center gap-3 mb-6">
-      <label for="filtroEvento" class="font-medium text-blue-800">Evento:</label>
-      <select id="filtroEvento" class="p-2 border rounded-md">
-        <option value="todos">Todos</option>
-      </select>
+    <div id="filtros" class="flex flex-wrap items-center gap-4 mb-6">
 
-      <label for="filtroPonto" class="font-medium text-blue-800">Ponto de Coleta:</label>
-      <select id="filtroPonto" class="p-2 border rounded-md">
-        <option value="todos">Todos</option>
-      </select>
+      <!-- Status -->
+      <div>
+        <label class="font-medium text-blue-800">Status da Cartinha:</label>
+        <select id="filtroStatus" class="p-2 border rounded-md">
+          <option value="todos">Todos</option>
+          <option value="disponivel">Disponível</option>
+          <option value="adotada">Adotada</option>
+          <option value="inativa">Inativa</option>
+        </select>
+      </div>
 
-      <label for="filtroSexo" class="font-medium text-blue-800">Sexo:</label>
-      <select id="filtroSexo" class="p-2 border rounded-md">
-        <option value="todos">Todos</option>
-        <option value="menino">Menino</option>
-        <option value="menina">Menina</option>
-        <option value="outro">Outro</option>
-      </select>
+      <!-- Evento -->
+      <div>
+        <label class="font-medium text-blue-800">Evento:</label>
+        <select id="filtroEvento" class="p-2 border rounded-md">
+          <option value="todos">Todos</option>
+        </select>
+      </div>
 
-      <label for="filtroStatus" class="font-medium text-blue-800">Status:</label>
-      <select id="filtroStatus" class="p-2 border rounded-md">
-        <option value="todos">Todos</option>
-        <option value="disponivel">Disponível</option>
-        <option value="adotada">Adotada</option>
-        <option value="inativa">Inativa</option>
-      </select>
+      <!-- Escola -->
+      <div>
+        <label class="font-medium text-blue-800">Escola:</label>
+        <select id="filtroEscola" class="p-2 border rounded-md">
+          <option value="todos">Todas</option>
+        </select>
+      </div>
 
+      <!-- Idade -->
+      <div>
+        <label class="font-medium text-blue-800">Idade:</label>
+        <select id="filtroIdade" class="p-2 border rounded-md">
+          <option value="todos">Todas</option>
+          <option value="0-5">0 a 5</option>
+          <option value="6-10">6 a 10</option>
+          <option value="11-15">11 a 15</option>
+          <option value="16-18">16 a 18</option>
+        </select>
+      </div>
+
+      <!-- Sexo -->
+      <div>
+        <label class="font-medium text-blue-800">Sexo:</label>
+        <select id="filtroSexo" class="p-2 border rounded-md">
+          <option value="todos">Todos</option>
+          <option value="menino">Menino</option>
+          <option value="menina">Menina</option>
+          <option value="outro">Outro</option>
+        </select>
+      </div>
+
+      <!-- Irmãos -->
+      <div>
+        <label class="font-medium text-blue-800">Irmãos:</label>
+        <select id="filtroIrmaos" class="p-2 border rounded-md">
+          <option value="todos">Todos</option>
+          <option value="sim">Sim</option>
+          <option value="nao">Não</option>
+        </select>
+      </div>
+
+      <!-- Botões -->
       <button id="btnFiltrar" class="btn">🔍 Filtrar</button>
       <button id="btnPDF" class="btn bg-green-600 hover:bg-green-700">🖨️ Gerar Relatório</button>
+
       <a href="admin.html" class="ml-auto text-blue-600 hover:underline voltar">⬅️ Voltar ao Painel</a>
     </div>
 
@@ -113,7 +149,7 @@
               <th>Sonho</th>
               <th>Escola</th>
               <th>Cidade</th>
-              <th>Ponto de Coleta</th>
+              <th>Irmãos</th>
               <th>Evento</th>
               <th>Status</th>
             </tr>
@@ -127,6 +163,135 @@
 
   </main>
 
-  <script src="../js/relatorio-cartinhas.js"></script>
+  <!-- ==================== JS ==================== -->
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  carregarData();
+  carregarCartinhas();
+  document.getElementById("btnFiltrar").addEventListener("click", filtrar);
+  document.getElementById("btnPDF").addEventListener("click", () => window.print());
+});
+
+// Data
+function carregarData() {
+  document.getElementById("dataAtual").textContent =
+    new Date().toLocaleDateString("pt-BR");
+}
+
+let cartinhasOriginais = [];
+
+// CARREGAR CARTINHAS
+async function carregarCartinhas() {
+  const tbody = document.getElementById("tabelaBody");
+
+  try {
+    const resp = await fetch("/api/cartinha");
+    const json = await resp.json();
+
+    if (!json.sucesso) {
+      tbody.innerHTML = `<tr><td colspan="10" class="text-center text-red-500">Erro ao carregar dados</td></tr>`;
+      return;
+    }
+
+    cartinhasOriginais = json.cartinha;
+
+    preencherFiltros();
+    preencherTabela(cartinhasOriginais);
+
+  } catch (err) {
+    console.error(err);
+    tbody.innerHTML = `<tr><td colspan="10" class="text-center text-red-500">Erro inesperado</td></tr>`;
+  }
+}
+
+// Preenche filtros dinâmicos
+function preencherFiltros() {
+  const selEvento = document.getElementById("filtroEvento");
+  const selEscola = document.getElementById("filtroEscola");
+
+  const eventos = new Set();
+  const escolas = new Set();
+
+  cartinhasOriginais.forEach(c => {
+    if (c.evento_nome) eventos.add(c.evento_nome);
+    if (c.escola) escolas.add(c.escola);
+  });
+
+  eventos.forEach(ev => {
+    selEvento.innerHTML += `<option value="${ev}">${ev}</option>`;
+  });
+
+  escolas.forEach(es => {
+    selEscola.innerHTML += `<option value="${es}">${es}</option>`;
+  });
+}
+
+// Preencher tabela
+function preencherTabela(lista) {
+  const tbody = document.getElementById("tabelaBody");
+  tbody.innerHTML = "";
+
+  if (!lista.length) {
+    tbody.innerHTML = `<tr><td colspan="10" class="text-center text-gray-500 py-4">Nenhuma cartinha encontrada</td></tr>`;
+    return;
+  }
+
+  lista.forEach((f, index) => {
+    tbody.innerHTML += `
+      <tr>
+        <td>${index + 1}</td>
+        <td>${f.nome_crianca || "-"}</td>
+        <td>${f.idade || "-"}</td>
+        <td>${f.sexo || "-"}</td>
+        <td>${f.sonho || "-"}</td>
+        <td>${f.escola || "-"}</td>
+        <td>${f.cidade || "-"}</td>
+        <td>${f.irmaos ?? "-"}</td>
+        <td>${f.evento_nome || "-"}</td>
+        <td>${f.status || "-"}</td>
+      </tr>
+    `;
+  });
+
+  document.getElementById("totalCartinhas").textContent = lista.length;
+}
+
+// FILTRAR
+function filtrar() {
+  const status = document.getElementById("filtroStatus").value;
+  const evento = document.getElementById("filtroEvento").value;
+  const escola = document.getElementById("filtroEscola").value;
+  const idadeFaixa = document.getElementById("filtroIdade").value;
+  const sexo = document.getElementById("filtroSexo").value;
+  const irmaosFiltro = document.getElementById("filtroIrmaos").value;
+
+  const filtradas = cartinhasOriginais.filter(f => {
+
+    let idadeOk = true;
+    if (idadeFaixa !== "todos") {
+      const [min, max] = idadeFaixa.split("-").map(Number);
+      idadeOk = f.idade >= min && f.idade <= max;
+    }
+
+    const irmaosOk =
+      irmaosFiltro === "todos" ||
+      (irmaosFiltro === "sim" && f.irmaos > 0) ||
+      (irmaosFiltro === "nao" && f.irmaos == 0);
+
+    return (
+      (status === "todos" || f.status === status) &&
+      (evento === "todos" || f.evento_nome === evento) &&
+      (escola === "todos" || f.escola === escola) &&
+      idadeOk &&
+      (sexo === "todos" || f.sexo === sexo) &&
+      irmaosOk
+    );
+  });
+
+  preencherTabela(filtradas);
+}
+</script>
+
 </body>
 </html>

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>💼 Painel Administrativo | Varal dos Sonhos</title>
+  <title>⚙️ Painel Administrativo | Varal dos Sonhos</title>
 
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
@@ -133,9 +133,13 @@
   <!-- 🔹 MENU LATERAL -->
   <aside class="sidebar">
     <div>
-      <h2>⚙️Painel Administrativo</h2>
+      <h2>⚙️ Painel Administrativo</h2>
       <nav class="menu">
-        <a href="#inicio">Início</a>
+        <a href="#inicio">🏠 Início</a>
+
+        <!-- NOVO ITEM — LOGÍSTICA -->
+        <a href="#logistica">🚚 Logística das Doações</a>
+
         <a href="#cadastro">📝 Cadastro</a>
         <a href="#relatorios">🗂️ Relatórios</a>
         <a href="#eventos">🎉 Eventos</a>
@@ -143,7 +147,10 @@
         <a href="#gamificacao">🏅 Gamificação</a>
       </nav>
     </div>
-    <button class="btn-voltar" onclick="window.location.href='../index.html'">⬅️ Voltar ao Site</button>
+
+    <button class="btn-voltar" onclick="window.location.href='../index.html'">
+      ⬅️ Voltar ao Site
+    </button>
   </aside>
 
   <!-- 🔹 CONTEÚDO PRINCIPAL -->
@@ -151,34 +158,52 @@
 
     <!-- 🌟 SEÇÃO INÍCIO -->
     <section id="inicio">
-      <h1 class="text-3xl font-bold text-blue-800 mb-6">Bem-vindo(a) ao Painel Administrativo</h1>
+      <h1 class="text-3xl font-bold text-blue-800 mb-6">
+        Bem-vindo(a) ao Painel Administrativo
+      </h1>
       <p class="text-gray-600 mb-8">
         Selecione uma das opções abaixo para gerenciar o conteúdo do Varal dos Sonhos 💙
       </p>
     </section>
 
+    <!-- 🚚 SEÇÃO LOGÍSTICA -->
+    <section id="logistica">
+      <h2 class="section-title">🚚 Logística das Doações</h2>
 
-    <!-- ⭐⭐⭐ NOVA SEÇÃO CADASTRO ⭐⭐⭐ -->
+      <div class="card-grid">
+
+        <!-- Card Logística -->
+        <div class="action-card" onclick="window.location.href='logistica-admin.html'">
+          <div style="font-size: 48px; text-align: center;">🚚</div>
+          <h3>Gerenciar Logística</h3>
+          <p>Confirmar adoções, acompanhar entregas e controlar toda a movimentação.</p>
+        </div>
+
+      </div>
+    </section>
+
+
+    <!-- 📝 CADASTRO -->
     <section id="cadastro">
       <h2 class="section-title">📝 Cadastro</h2>
 
       <div class="card-grid">
 
-        <!-- Card Evento -->
+        <!-- Evento -->
         <div class="action-card" onclick="window.location.href='cadastroevento.html'">
           <div style="font-size: 48px; text-align: center;">🎉</div>
           <h3>Cadastrar Evento</h3>
           <p>Cadastro rápido de novos eventos.</p>
         </div>
 
-        <!-- Card Ponto de Coleta -->
+        <!-- Ponto -->
         <div class="action-card" onclick="window.location.href='cadastropontocoleta.html'">
           <div style="font-size: 48px; text-align: center;">📦</div>
           <h3>Cadastrar Ponto de Coleta</h3>
           <p>Adicionar novos locais de entrega.</p>
         </div>
 
-        <!-- Card Cartinha -->
+        <!-- Cartinha -->
         <div class="action-card" onclick="window.location.href='cadastrocartinha.html'">
           <div style="font-size: 48px; text-align: center;">💌</div>
           <h3>Cadastrar Cartinha</h3>
@@ -188,72 +213,62 @@
       </div>
     </section>
 
-<!-- 🗂️ SEÇÃO RELATÓRIOS -->
-<section id="relatorios">
-  <h2 class="section-title">🗂️ Relatórios</h2>
+    <!-- 🗂️ RELATÓRIOS -->
+    <section id="relatorios">
+      <h2 class="section-title">🗂️ Relatórios</h2>
 
-  <div class="card-grid">
+      <div class="card-grid">
 
-    <!-- Relatório de Eventos -->
-    <div class="action-card" onclick="window.location.href='relatorio-eventos.html'">
-      <div style="font-size: 48px; text-align: center;">🎉</div>
-      <h3>Relatório de Eventos</h3>
-      <p>Filtrar eventos por status e gerar um relatório completo.</p>
-    </div>
+        <div class="action-card" onclick="window.location.href='relatorio-eventos.html'">
+          <div style="font-size: 48px; text-align: center;">🎉</div>
+          <h3>Relatório de Eventos</h3>
+          <p>Filtrar eventos por status e gerar relatórios completos.</p>
+        </div>
 
-    <!-- Relatório de Pontos de Coleta -->
-    <div class="action-card" onclick="window.location.href='relatorio-pontos.html'">
-      <div style="font-size: 48px; text-align: center;">📦</div>
-      <h3>Relatório de Pontos de Coleta</h3>
-      <p>Listar e exportar pontos de coleta ativos ou inativos.</p>
-    </div>
-        
-    <!-- Relatório de Cartinhas -->
-    <div class="action-card" onclick="window.location.href='relatorio-cartinhas.html'">
-      <div style="font-size: 48px; text-align: center;">💌</div>
-      <h3>Relatório de Cartinhas</h3>
-      <p>Filtrar, visualizar e gerar PDF com todas as cartinhas do projeto.</p>
-    </div>
+        <div class="action-card" onclick="window.location.href='relatorio-pontos.html'">
+          <div style="font-size: 48px; text-align: center;">📦</div>
+          <h3>Relatório de Pontos de Coleta</h3>
+          <p>Listar e exportar pontos de coleta.</p>
+        </div>
 
-    
-  </div>
-</section>
+        <div class="action-card" onclick="window.location.href='relatorio-cartinhas.html'">
+          <div style="font-size: 48px; text-align: center;">💌</div>
+          <h3>Relatório de Cartinhas</h3>
+          <p>Visualizar e gerar PDF com as cartinhas.</p>
+        </div>
 
- 
-    <!-- 🎉 SEÇÃO EVENTOS -->
+      </div>
+    </section>
+
+    <!-- 🎉 EVENTOS -->
     <section id="eventos">
       <h2 class="section-title">🎉 Eventos</h2>
       <div class="card-grid">
         <div class="action-card" onclick="window.location.href='gerenciareventos.html'">
-          <img src="../imagens/logo.png" alt="Gerenciar Eventos" width="80" class="mx-auto" />
+          <img src="../imagens/logo.png" width="80" class="mx-auto" />
           <h3>Gerenciar Eventos</h3>
-          <p>Adicionar e editar eventos sazonais do projeto.</p>
         </div>
       </div>
     </section>
 
-
-    <!-- 🖼️ SEÇÃO CARROSSEL -->
+    <!-- 🖼️ CARROSSEL -->
     <section id="carrossel">
       <h2 class="section-title">🖼️ Carrossel</h2>
       <div class="card-grid">
         <div class="action-card" onclick="window.location.href='gerenciarcarrossel.html'">
-          <img src="../imagens/logo.png" alt="Gerenciar Carrossel" width="80" class="mx-auto" />
+          <img src="../imagens/logo.png" width="80" class="mx-auto" />
           <h3>Gerenciar Carrossel</h3>
-          <p>Atualizar imagens e destaques exibidos na página inicial.</p>
         </div>
       </div>
     </section>
 
-
-    <!-- 🏅 SEÇÃO GAMIFICAÇÃO -->
+    <!-- 🏅 GAMIFICAÇÃO -->
     <section id="gamificacao">
       <h2 class="section-title">🏅 Gamificação</h2>
       <div class="card-grid">
         <div class="action-card" onclick="window.location.href='gerenciargamificacao.html'">
-          <img src="../imagens/logo.png" alt="Gerenciar Gamificação" width="80" class="mx-auto" />
+          <img src="../imagens/logo.png" width="80" class="mx-auto" />
           <h3>Gerenciar Gamificação</h3>
-          <p>Visualizar pontos, conquistas e desempenho dos doadores.</p>
         </div>
       </div>
     </section>
