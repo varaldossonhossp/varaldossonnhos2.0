@@ -1,25 +1,50 @@
 // ============================================================
-// 💼 VARAL DOS SONHOS — /api/admin.js (versão TCC + eventos admin)
-// ------------------------------------------------------------
-// API segura para gerenciamento de EVENTOS (CRUD).
-// Exige token administrativo (ADMIN_SECRET) configurado no Vercel.
+// 📘 DOCUMENTAÇÃO TÉCNICA — /api/admin.js
+// ============================================================
+// 🔹 Finalidade da API:
+//     - API administrativa (protegida por token) usada para
+//       GERENCIAR EVENTOS do Varal dos Sonhos.
+//     - Implementa CRUD completo (Criar, Listar, Atualizar, Excluir).
+//     - É utilizada SOMENTE pelo painel administrativo.
+//     - A página pública NÃO usa esta API.
 //
-// 🔹 Tabela: "eventos"
-// 🔹 Campos usados atualmente:
+// 🔹 Arquivos / Telas que consomem esta API:
+//     - /pages/admin/cadastroevento.html
+//     - /js/admin.js  (funções do painel)
+//     - qualquer tela administrativa que edite eventos futuramente.
 //
-//  - nome_evento            (Single line text)
-//  - local_evento           (Single line text)
-//  - descricao              (Long text)
-//  - data_evento            (Date — início das adoções)
-//  - data_limite_recebimento(Date — limite para receber presentes)
-//  - data_realizacao_evento (Date — data do evento)
-//  - status_evento          (Single select: "em andamento" | "proximo" | "encerrado")
-//  - destacar_na_homepage   (Checkbox — destacar carrossel na home)
-//  - imagem                 (Attachment[] — fotos do evento)
-//  - ativo                  (Checkbox / Boolean — controle interno opcional)
+// 🔹 Tabela utilizada no Airtable:
+//     🗂  Tabela: **eventos**
 //
-// Esta API é usada pelo painel administrativo (ex: cadastroevento.html)
-// e NÃO pela página pública de listagem (que usa /api/eventos.js).
+// 🔹 Campos utilizados pela API (conforme Airtable):
+//     - id_evento               (ID do registro — automático Airtable)
+//     - nome_evento             (Single line text)
+//     - local_evento            (Single line text)
+//     - descricao               (Long text)
+//     - data_evento             (Date)
+//     - data_limite_recebimento (Date)
+//     - data_realizacao_evento  (Date)
+//     - status_evento           (Single select: encerrado | em andamento | proximo)
+//     - destacar_na_homepage    (Checkbox)
+//     - imagem                  (Attachment[])
+//     - ativo                   (Checkbox / Boolean)
+//
+// 🔹 Operações implementadas:
+//     • GET    → listar todos os eventos
+//     • POST   (acao === "criar")      → criar novo evento
+//     • POST   (acao === "atualizar")  → atualizar campos parciais
+//     • POST   (acao === "excluir")    → excluir evento
+//
+// 🔹 Variáveis de ambiente exigidas:
+//     - ADMIN_SECRET             (token do administrador)
+//     - AIRTABLE_API_KEY         (chave Airtable)
+//     - AIRTABLE_BASE_ID         (base Airtable)
+//     - AIRTABLE_EVENTOS_TABLE   (nome da tabela — opcional)
+//
+// 🔹 Regras de segurança:
+//     - Toda requisição precisa do header:  x-admin-token: SEU_TOKEN
+//     - Sem token válido → 401 Token inválido.
+//
 // ============================================================
 
 import Airtable from "airtable";

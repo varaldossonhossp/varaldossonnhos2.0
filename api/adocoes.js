@@ -1,11 +1,33 @@
 // ============================================================
-// 💙 VARAL DOS SONHOS — /api/adocoes.js (versão final TCC revisada)
+// 💙 VARAL DOS SONHOS — /api/adocoes.js
 // ------------------------------------------------------------
-// • POST → Cria nova adoção
-// • PUT  → Atualiza status_adocao (ex: “presente recebido”)
-// • Atualiza cartinha → status “adotada”
+// Funções principais:
+// • POST → Cria nova adoção pelo usuário
+// • PUT  → Atualiza status_adocao (usado por voluntários / logística)
+// • Atualiza a tabela cartinha → status “adotada”
 // • Envia e-mail ao ADMIN com link de confirmação
+// • Realiza buscas cruzadas em 3 tabelas para compor o e-mail
+//
+// Tabelas acessadas:
+// • adocoes
+// • cartinha
+// • usuario
+// • pontos_coleta
+//
+// Arquivos do front que chamam esta API:
+// • js/carrinho.js        → POST (criar adoção)
+// • js/logistica.js       → PUT (atualizar status)
+// • pages/carrinho.html   → fluxo público de adoção
+// • pages/logistica.html  → fluxo interno de logística/voluntários
+//
+// Funções internas:
+// • handler()
+// • PUT → atualizarStatus()
+// • POST → criarAdoção()
+// • Função interna: buscaDetalhada() (Promise.all)
+// • Função interna: enviaEmailAdmin()
 // ============================================================
+
 
 import Airtable from "airtable";
 
