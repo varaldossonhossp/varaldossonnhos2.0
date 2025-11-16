@@ -10,6 +10,41 @@
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
 
   <style>
+
+  /* Margens do conteúdo na tela */
+  body {
+    padding: 20px;
+  }
+
+  /* 🔵 CONFIGURAÇÃO DE IMPRESSÃO */
+  @page {
+    size: A4;
+    margin: 2cm; /* margem padrão acadêmica */
+  }
+
+  @media print {
+    body {
+      background: white !important;
+      padding: 0 !important; /* remove padding da tela */
+    }
+
+    main {
+      box-shadow: none !important;
+      border-radius: 0 !important;
+      padding: 0 !important;
+    }
+
+    /* Remove elementos indesejados na impressão */
+    #filtros, .voltar {
+      display: none !important;
+    }
+
+    table th, table td {
+      padding: 6px !important;
+      font-size: 12px !important;
+    }
+  }
+
     body { font-family: "Poppins", sans-serif; background: #f2f7fc; }
     table th { background: #e0ebff; color: #003366; padding: 8px; }
     table td { padding: 8px; border-bottom: 1px solid #e2e8f0; }
