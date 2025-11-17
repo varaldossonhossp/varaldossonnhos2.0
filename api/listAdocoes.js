@@ -1,16 +1,30 @@
 // ============================================================
-// 💙 VARAL DOS SONHOS — /api/listAdocoes.js (CORRIGIDA FINAL)
+// 💙 VARAL DOS SONHOS — /api/listAdocoes.js
 // ------------------------------------------------------------
-// Fornece lista completa para painéis de logística (admin/ponto).
-// Campos garantidos:
-//  - id_record
-//  - id_cartinha
-//  - nome_crianca
-//  - sonho
-//  - nome_usuario (doador)
-//  - email_usuario
-//  - nome_ponto
-//  - status_adocao
+// Função:
+//   • Fornece uma lista RESUMIDA de todas as adoções para os
+//     painéis de logística (admin + pontos de coleta).
+//
+// Como é usado:
+//   • pages/logistica-admin.html  → carrega todas as adoções
+//   • js/logistica-admin.js       → filtra por status_adocao
+//
+// Campos garantidos no retorno de cada adoção:
+//   - id_record        → ID do registro na tabela "adocoes" (Airtable)
+//   - id_cartinha      → número da cartinha (lookup da tabela cartinha)
+//   - nome_crianca     → nome da criança
+//   - sonho            → sonho / presente
+//   - nome_usuario     → nome do doador
+//   - email_usuario    → e-mail do doador
+//   - telefone_usuario → telefone do doador
+//   - nome_ponto       → nome do ponto de coleta
+//   - status_adocao    → situação da adoção
+//
+// Status usados no fluxo de logística:
+//   • "aguardando confirmacao"
+//   • "confirmada"
+//   • "presente recebido"
+//   • "presente entregue"
 // ============================================================
 
 import Airtable from "airtable";
@@ -21,6 +35,7 @@ const base = new Airtable({ apiKey: process.env.AIRTABLE_API_KEY })
 export const config = { runtime: "nodejs" };
 
 export default async function handler(req, res) {
+  // Apenas GET é permitido
   if (req.method !== "GET") {
     return res.status(405).json({
       sucesso: false,
@@ -29,17 +44,26 @@ export default async function handler(req, res) {
   }
 
   try {
-    const records = await base("adocoes")
-      .select({ sort: [{ field: "id_doacao", direction: "asc" }] })
+    // Nome da tabela pode vir do .env (mais flexível)
+    const tabelaAdocoes = process.env.AIRTABLE_ADOCOES_TABLE || "adocoes";
+
+    // Busca TODAS as adoções (poderia ser paginada no futuro)
+    const records = await base(tabelaAdocoes)
+      .select({
+        // Se existir o campo id_doacao, ordena por ele
+        sort: [{ field: "id_doacao", direction: "asc" }],
+      })
       .all();
 
+    // Mapeia os registros para um formato mais simples para o front
     const adocoes = records.map((r) => {
       const f = r.fields || {};
 
       return {
+        // ID do registro no Airtable (é o que usamos em /api/confirmar e /api/logistica)
         id_record: r.id,
 
-        // ID numérico da cartinha (lookup)
+        // ID numérico da cartinha (lookup da tabela "cartinha")
         id_cartinha:
           f.id_cartinha ||
           f["id_cartinha (from nome_crianca)"] ||
@@ -85,12 +109,16 @@ export default async function handler(req, res) {
           f["nome_ponto (from pontos_coleta) 2"] ||
           "",
 
+        // Status da adoção usado no painel de logística
         status_adocao: f.status_adocao || "aguardando confirmacao",
       };
     });
 
-    return res.status(200).json({ sucesso: true, adocoes });
-
+    // Resposta final
+    return res.status(200).json({
+      sucesso: true,
+      adocoes,
+    });
   } catch (err) {
     console.error("❌ Erro ao listar adoções:", err);
     return res.status(500).json({

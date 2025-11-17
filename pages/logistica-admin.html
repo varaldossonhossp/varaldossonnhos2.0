@@ -6,314 +6,334 @@
 // das doações: confirmação de adoções e envio de e-mails.
 // ============================================================  
 -->
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>📦 Logística das Doações | Painel Administrativo</title>
+  <title>📦 Logística das Doações | Varal dos Sonhos</title>
 
-  <!-- Framework visual TailwindCSS (CDN) -->
+  <!-- Tailwind -->
   <script src="https://cdn.tailwindcss.com"></script>
 
-  <!-- Fonte padrão do sistema -->
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
-
-  <!-- Ícone da aba -->
+  <!-- Fonte padrão -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="icon" href="../imagens/favicon.png" />
 
   <style>
-    /* Estilos globais do painel */
     body { font-family: "Poppins", sans-serif; background:#e3f2fd; }
 
-    /* Barra lateral fixa */
+    /* Sidebar exclusiva da logística */
     .sidebar {
-      width: 240px; background:#4086d6; color:white; height:100vh;
-      position:fixed; top:0; left:0; display:flex; flex-direction:column;
-      justify-content:space-between; box-shadow:2px 0 6px rgba(0,0,0,0.1);
+      width: 270px;
+      background: #1565c0;
+      color: white;
+      height: 100vh;
+      position: fixed;
+      left: 0;
+      top: 0;
+      padding: 20px 0;
+      box-shadow: 3px 0px 10px rgba(0,0,0,0.15);
     }
 
-    .menu a {
-      padding:12px 20px; display:block;
-      color:white; text-decoration:none;
+    .sidebar h2 {
+      padding-left: 28px;
+      font-size: 22px;
+      font-weight: 700;
+      margin-bottom: 30px;
     }
-    .menu a:hover { background:#64b5f6; }
 
-    /* Área de conteúdo à direita */
-    .content { margin-left:260px; padding:40px; }
+    .sidebar a {
+      display: block;
+      padding: 14px 30px;
+      margin: 4px 0;
+      text-decoration: none;
+      color: white;
+      font-weight: 500;
+      transition: .2s;
+    }
+    .sidebar a:hover {
+      background: #1e88e5;
+      padding-left: 40px;
+    }
 
-    /* Cartões principais ("Aguardando" e "Confirmadas") */
+    /* Área da direita */
+    .content {
+      margin-left: 290px;
+      padding: 40px;
+    }
+
     .card {
-      background:white;
-      padding:20px;
-      border-radius:16px;
-      box-shadow:0 3px 10px rgba(0,0,0,0.1);
+      background: white;
+      padding: 25px;
+      border-radius: 18px;
+      margin-bottom: 40px;
+      box-shadow: 0 3px 8px rgba(0,0,0,0.1);
     }
 
-    /* Cartões individuais de cada adoção */
     .card-item {
-      background:#fff;
-      border:1px solid #dbeafe;
-      border-radius:16px;
-      padding:20px;
-      margin-bottom:16px;
-      box-shadow:0 2px 6px rgba(0,0,0,0.05);
+      background:white;
+      border-radius: 14px;
+      padding: 20px;
+      border: 1px solid #d0e2ff;
+      margin-bottom: 16px;
     }
 
-    /* Botões personalizados */
-    .btn-blue {
-      background:#1e88e5; color:white;
-      padding:10px 18px; border-radius:10px;
-      font-weight:600; cursor:pointer;
-    }
-
-    .btn-green {
-      background:#2e7d32; color:white;
-      padding:10px 18px; border-radius:10px;
-      font-weight:600; cursor:pointer;
-    }
-
-    /* Tags de informações */
-    .tag {
+    .tag{
       background:#e3f2fd;
       padding:4px 10px;
       border-radius:8px;
       font-size:13px;
-      color:#1e3a8a;
+      margin-right:4px;
+      color:#0d47a1;
+    }
+
+    .btn-blue{
+      background:#1e88e5;color:white;padding:10px 16px;border-radius:10px;
+      font-weight:600;
+    }
+    .btn-green{
+      background:#2e7d32;color:white;padding:10px 16px;border-radius:10px;
+      font-weight:600;
+    }
+    .btn-orange{
+      background:#ef6c00;color:white;padding:10px 16px;border-radius:10px;
+      font-weight:600;
     }
   </style>
 </head>
 
 <body>
 
-  <!-- ==========================================
-       📌 SIDEBAR - Menu lateral do administrador
-       ========================================== -->
-  <aside class="sidebar">
-    <div>
-      <h2 class="text-xl font-bold p-6">⚙️ Painel Admin</h2>
+<!-- ==========================================================
+     📌 SIDEBAR EXCLUSIVA DA LOGÍSTICA
+=========================================================== -->
+<aside class="sidebar">
+  <h2>📦 Logística</h2>
 
-      <!-- Menu principal -->
-      <nav class="menu">
-        <a href="admin.html">🏠 Início</a>
-        <a href="logistica-admin.html">📦 Logística das Doações</a>
-        <a href="cadastroevento.html">🎉 Eventos</a>
-        <a href="cadastropontocoleta.html">📦 Pontos de Coleta</a>
-        <a href="cadastrocartinha.html">💌 Cartinhas</a>
-        <a href="relatorio-eventos.html">🗂️ Relatórios</a>
-        <a href="gerenciargamificacao.html">🏅 Gamificação</a>
-       </nav>
-    </div>
+  <a href="#sec-pendentes">⏳ Aguardando Confirmação</a>
+  <a href="#sec-confirmadas">📬 Aguardando Receber</a>
+  <a href="#sec-coletar">🚚 Aguardando Coletar</a>
 
-    <!-- Voltar ao site -->
-    <button onclick="window.location.href='../index.html'" class="m-4 p-3 rounded bg-white/20">
-      ⬅️ Voltar ao Site
-    </button>
-  </aside>
+  <hr class="my-6 border-white/40">
+
+  <a href="admin.html">⬅️ Voltar ao Painel Admin</a>
+  <a href="../index.html">🏠 Voltar ao Site</a>
+</aside>
 
 
 
-  <!-- ===================================================
-       📌 CONTEÚDO PRINCIPAL DO PAINEL
-       =================================================== -->
-  <main class="content">
+<!-- ==========================================================
+     📌 CONTEÚDO PRINCIPAL
+=========================================================== -->
+<main class="content">
 
-    <h1 class="text-3xl font-bold text-blue-800 mb-6">📦 Logística das Doações</h1>
-    <p class="text-gray-600 mb-6">
-      Aqui você confirma adoções e acompanha o recebimento dos presentes 💙
-    </p>
-
-
-    <!-- =============================
-         SEÇÃO 1 — Aguardando
-         ============================= -->
-    <section class="card mb-10">
-      <h2 class="text-2xl font-semibold text-blue-700 mb-4">
-        ⏳ Adoções aguardando confirmação
-      </h2>
-
-      <!-- Onde os cartões serão carregados via JS -->
-      <div id="cardsAguardando"></div>
-    </section>
+  <h1 class="text-3xl font-bold text-blue-800 mb-6">
+    📦 Logística das Doações
+  </h1>
 
 
-    <!-- =============================
-         SEÇÃO 2 — Confirmadas
-         ============================= -->
-    <section class="card">
-      <h2 class="text-2xl font-semibold text-green-700 mb-4">
-        ✅ Adoções confirmadas
-      </h2>
-
-      <!-- Onde os cartões serão carregados via JS -->
-      <div id="cardsConfirmadas"></div>
-    </section>
-
-  </main>
+  <!-- ======================================================
+       1 — AGUARDANDO CONFIRMAÇÃO
+  ====================================================== -->
+  <section id="sec-pendentes" class="card">
+    <h2 class="text-2xl font-bold text-blue-600 mb-4">⏳ Aguardando Confirmação</h2>
+    <div id="cardsPendentes"></div>
+  </section>
 
 
+  <!-- ======================================================
+       2 — AGUARDANDO RECEBER (Confirmadas)
+  ====================================================== -->
+  <section id="sec-confirmadas" class="card">
+    <h2 class="text-2xl font-bold text-green-700 mb-4">📬 Aguardando Receber</h2>
+    <div id="cardsConfirmadas"></div>
+  </section>
 
-<!-- ======================================================
-     📌 SCRIPT JS — Carregar adoções e aplicar ações
-     ====================================================== -->
+
+  <!-- ======================================================
+       3 — AGUARDANDO COLETAR (Presente recebido)
+  ====================================================== -->
+  <section id="sec-coletar" class="card">
+    <h2 class="text-2xl font-bold text-orange-700 mb-4">🚚 Aguardando Coletar</h2>
+    <div id="cardsColetar"></div>
+  </section>
+
+
+</main>
+
+
+<!-- ==========================================================
+     📌 SCRIPT DE LÓGICA
+=========================================================== -->
 <script>
 
-/* ----------------------------------------------
-   🔄 Função principal: busca todas as adoções
-   via API `/api/listAdocoes.js`
-   ---------------------------------------------- */
-async function carregarAdoacoes() {
-
-  const c1 = document.getElementById("cardsAguardando");
+async function carregarAdoacoes(){
+  const c1 = document.getElementById("cardsPendentes");
   const c2 = document.getElementById("cardsConfirmadas");
+  const c3 = document.getElementById("cardsColetar");
 
-  c1.innerHTML = "<p>Carregando...</p>";
-  c2.innerHTML = "<p>Carregando...</p>";
+  c1.innerHTML = c2.innerHTML = c3.innerHTML = "<p>Carregando...</p>";
 
-  try {
-    // API que retorna todas adoções e seus dados resumidos
-    const r = await fetch("/api/listAdocoes");
-    const json = await r.json();
+  const r = await fetch("/api/listAdocoes");
+  const { sucesso, adocoes } = await r.json();
 
-    if (!json.sucesso) {
-      alert("Erro ao carregar adoções.");
-      return;
-    }
+  if(!sucesso){ alert("Erro ao carregar adoções."); return; }
 
-    const lista = json.adocoes || [];
+  // FILTRAR
+  const pendentes = adocoes.filter(a => a.status_adocao === "aguardando confirmacao");
+  const confirmadas = adocoes.filter(a => a.status_adocao === "confirmada");
+  const coletar = adocoes.filter(a => a.status_adocao === "presente recebido");
 
-    // Filtrar adoções por status
-    const pendentes = lista.filter(a => a.status_adocao === "aguardando confirmacao");
-    const confirmadas = lista.filter(a => a.status_adocao === "confirmada");
+  // ========== 1) PENDENTES ==========
+  c1.innerHTML = pendentes.length ? "" : "<p class='text-gray-600'>Nenhuma adoção pendente.</p>";
 
+  pendentes.forEach(a=>{
+    c1.innerHTML += `
+      <div class="card-item">
+        <p class="font-bold text-lg">${a.nome_crianca}</p>
+        <p class="text-gray-600 text-sm">🎁 ${a.sonho}</p>
 
-
-    /* ---------------------------
-       SEÇÃO 1 — Pendentes
-       --------------------------- */
-    c1.innerHTML = "";
-    if (pendentes.length === 0)
-      c1.innerHTML = `<p class="text-gray-500">Nenhuma adoção pendente.</p>`;
-
-    pendentes.forEach(a => {
-      c1.innerHTML += `
-        <div class="card-item">
-
-          <p class="font-semibold text-blue-900 text-lg">${a.nome_crianca}</p>
-          <p class="text-sm text-gray-600">🎁 ${a.sonho}</p>
-
-          <!-- Tags com informações resumidas -->
-          <div class="mt-2">
-            <span class="tag">🆔 Cartinha: ${a.id_cartinha}</span>
-            <span class="tag">👤 Doador: ${a.nome_usuario || "—"}</span>
-            <span class="tag">📦 Ponto: ${a.nome_ponto || "—"}</span>
-          </div>
-
-          <!-- Botão azul para confirmar adoção -->
-          <button class="btn-blue mt-4"
-            onclick="confirmarAdoção('${a.id_record}')">
-            Confirmar adoção
-          </button>
-
+        <div class="mt-2">
+          <span class="tag">🆔 Cartinha: ${a.id_cartinha}</span>
+          <span class="tag">👤 ${a.nome_usuario}</span>
         </div>
-      `;
-    });
+
+        <button class="btn-blue mt-4" onclick="confirmarAdoção('${a.id_record}')">
+          ✔ Confirmar
+        </button>
+      </div>
+    `;
+  });
 
 
 
-    /* ---------------------------
-       SEÇÃO 2 — Confirmadas
-       --------------------------- */
-    c2.innerHTML = "";
-    if (confirmadas.length === 0)
-      c2.innerHTML = `<p class="text-gray-500">Nenhuma adoção confirmada.</p>`;
+  // ========== 2) CONFIRMADAS ==========
+  c2.innerHTML = confirmadas.length ? "" : "<p class='text-gray-600'>Nenhuma adoção confirmada ainda.</p>";
 
-    confirmadas.forEach(a => {
-      c2.innerHTML += `
-        <div class="card-item">
+  confirmadas.forEach(a=>{
+    c2.innerHTML += `
+      <div class="card-item">
+        <p class="font-bold text-lg">${a.nome_crianca}</p>
+        <p class="text-gray-600 text-sm">🎁 ${a.sonho}</p>
 
-          <p class="font-semibold text-green-900 text-lg">${a.nome_crianca}</p>
-          <p class="text-sm text-gray-600">🎁 ${a.sonho}</p>
-
-          <div class="mt-2">
-            <span class="tag">🆔 Cartinha: ${a.id_cartinha}</span>
-            <span class="tag">📦 Ponto: ${a.nome_ponto || "—"}</span>
-          </div>
-
-          <!-- Botão verde para marcar como PRESENTE RECEBIDO -->
-          <button class="btn-green mt-4"
-            onclick="coletado('${a.id_record}')">
-            Coletado
-          </button>
-
+        <div class="mt-2">
+          <span class="tag">🆔 Cartinha: ${a.id_cartinha}</span>
+          <span class="tag">📦 Ponto: ${a.nome_ponto || "—"}</span>
         </div>
-      `;
-    });
 
-  } catch (e) {
-    console.error(e);
-    alert("Erro ao carregar dados da logística.");
+        <button class="btn-green mt-4" onclick="receberPresente('${a.id_record}', '${a.nome_ponto}')">
+          📦 Recebido
+        </button>
+      </div>
+    `;
+  });
+
+
+
+  // ========== 3) COLETAR ==========
+  c3.innerHTML = coletar.length ? "" : "<p class='text-gray-600'>Nenhum presente aguardando coleta.</p>";
+
+  coletar.forEach(a=>{
+    c3.innerHTML += `
+      <div class="card-item">
+        <p class="font-bold text-lg">${a.nome_crianca}</p>
+        <p class="text-gray-600 text-sm">🎁 ${a.sonho}</p>
+
+        <div class="mt-2">
+          <span class="tag">🆔 Cartinha: ${a.id_cartinha}</span>
+          <span class="tag">📦 Ponto: ${a.nome_ponto || "—"}</span>
+        </div>
+
+        <button class="btn-orange mt-4" onclick="coletarPresente('${a.id_record}', '${a.nome_ponto}')">
+          🚚 Coletado
+        </button>
+      </div>
+    `;
+  });
+
+}
+
+
+
+// ==============================
+// ✔ AÇÃO — CONFIRMAR
+// ==============================
+async function confirmarAdoção(id){
+  if(!confirm("Confirmar adoção?")) return;
+
+  const r = await fetch("/api/confirmar?id_adocao="+id);
+
+  if(r.ok){
+    alert("Adoção confirmada!");
+    carregarAdoacoes();
+  } else {
+    alert("Erro ao confirmar.");
   }
 }
 
 
 
-
-/* ---------------------------------------------------
-   🟦 Função — Confirmar Adoção (Admin)
-   Chama a API `/api/confirmar?id_adocao=`
-   --------------------------------------------------- */
-async function confirmarAdoção(idAdocao) {
-
-  if (!confirm("Confirmar adoção e enviar e-mail ao doador?")) return;
-
-  const r = await fetch(`/api/confirmar?id_adocao=${idAdocao}`);
-
-  if (!r.ok) {
-    alert("Erro ao confirmar adoção.");
-    return;
-  }
-
-  alert("Adoção confirmada com sucesso!");
-  carregarAdoacoes();
-}
-
-
-
-/* ---------------------------------------------------
-   🟩 Função — Marcar presente como RECEBIDO
-   Chama a API `/api/logistica` com acao="receber"
-   --------------------------------------------------- */
-async function coletado(idAdocao) {
-
-  if (!confirm("Marcar como PRESENTE RECEBIDO?")) return;
+// ==============================
+// ✔ AÇÃO — RECEBER PRESENTE
+// ==============================
+async function receberPresente(idAdocao, pontoNome){
+  if(!confirm(`Confirmar que o presente foi RECEBIDO no ponto ${pontoNome}?`)) return;
 
   const r = await fetch("/api/logistica", {
-    method: "POST",
-    headers: {"Content-Type": "application/json"},
-    body: JSON.stringify({
-      acao: "receber",    // RECEBIMENTO de presente
-      id_adocao: idAdocao,
-      id_ponto: "1",      // em produção deve usar o real
-      responsavel: "Admin do Sistema"
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({
+      acao:"receber",
+      id_adocao:idAdocao,
+      id_ponto:"recIDdoPontoReal", 
+      responsavel:"Admin",
+      observacoes:""
     })
   });
 
-  if (!r.ok) {
-    alert("Erro ao registrar coleta.");
-    return;
-  }
+  const json = await r.json();
 
-  alert("Presente marcado como RECEBIDO!");
-  carregarAdoacoes();
+  if(json.sucesso){
+    alert("Presente marcado como RECEBIDO!");
+    carregarAdoacoes();
+  } else {
+    alert("Erro: "+json.mensagem);
+  }
 }
 
 
 
-/* ---------------------------------------------------
-   Inicia carregamento automático ao abrir a página
-   --------------------------------------------------- */
+// ==============================
+// ✔ AÇÃO — COLETAR / ENTREGAR FINAL
+// ==============================
+async function coletarPresente(idAdocao, pontoNome){
+  if(!confirm(`Confirmar que o presente foi COLETADO no ponto ${pontoNome}?`)) return;
+
+  const r = await fetch("/api/logistica", {
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({
+      acao:"coletar",
+      id_adocao:idAdocao,
+      id_ponto:"recIDdoPontoReal",
+      responsavel:"Admin",
+      observacoes:""
+    })
+  });
+
+  const json = await r.json();
+
+  if(json.sucesso){
+    alert("Presente marcado como ENTREGUE!");
+    carregarAdoacoes();
+  } else {
+    alert("Erro: "+json.mensagem);
+  }
+}
+
+
+
 document.addEventListener("DOMContentLoaded", carregarAdoacoes);
 
 </script>
