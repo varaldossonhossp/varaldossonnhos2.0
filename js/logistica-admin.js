@@ -1,3 +1,11 @@
+// ============================================================
+// 💙 VARAL DOS SONHOS — js/logistica-admin.js
+// ------------------------------------------------------------
+// Script do painel administrativo de logística:
+// • Lista adoções pendentes de confirmação
+// • Botão para confirmar adoção (chama /api/adocoes PUT)
+// ============================================================
+
 async function carregarAdocoes() {
   try {
     const r = await fetch("/api/adocoes");

@@ -1,3 +1,12 @@
+  <!--
+// ---------------------------------------------
+// 💙 VARAL DOS SONHOS — pages/logistica-admin.html
+// ------------------------------------------------------------
+// Página do painel administrativo para gerenciar a logística
+// das doações: confirmação de adoções e envio de e-mails.
+// ============================================================  
+-->
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -5,36 +14,87 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>📦 Logística das Doações | Painel Administrativo</title>
 
+  <!-- Framework visual TailwindCSS (CDN) -->
   <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Fonte padrão do sistema -->
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+  <!-- Ícone da aba -->
   <link rel="icon" href="../imagens/favicon.png" />
 
   <style>
+    /* Estilos globais do painel */
     body { font-family: "Poppins", sans-serif; background:#e3f2fd; }
+
+    /* Barra lateral fixa */
     .sidebar {
       width: 240px; background:#4086d6; color:white; height:100vh;
       position:fixed; top:0; left:0; display:flex; flex-direction:column;
       justify-content:space-between; box-shadow:2px 0 6px rgba(0,0,0,0.1);
     }
-    .menu a { padding:12px 20px; display:block; color:white; text-decoration:none; }
-    .menu a:hover { background:#64b5f6; }
-    .content { margin-left:260px; padding:40px; }
-    .card {
-      background:white; padding:20px; border-radius:14px;
-      box-shadow:0 3px 10px rgba(0,0,0,0.1);
-      margin-bottom:20px;
+
+    .menu a {
+      padding:12px 20px; display:block;
+      color:white; text-decoration:none;
     }
-    .btn { padding:6px 10px; background:#1e88e5; color:white;
-      border:none; border-radius:8px; cursor:pointer; }
+    .menu a:hover { background:#64b5f6; }
+
+    /* Área de conteúdo à direita */
+    .content { margin-left:260px; padding:40px; }
+
+    /* Cartões principais ("Aguardando" e "Confirmadas") */
+    .card {
+      background:white;
+      padding:20px;
+      border-radius:16px;
+      box-shadow:0 3px 10px rgba(0,0,0,0.1);
+    }
+
+    /* Cartões individuais de cada adoção */
+    .card-item {
+      background:#fff;
+      border:1px solid #dbeafe;
+      border-radius:16px;
+      padding:20px;
+      margin-bottom:16px;
+      box-shadow:0 2px 6px rgba(0,0,0,0.05);
+    }
+
+    /* Botões personalizados */
+    .btn-blue {
+      background:#1e88e5; color:white;
+      padding:10px 18px; border-radius:10px;
+      font-weight:600; cursor:pointer;
+    }
+
+    .btn-green {
+      background:#2e7d32; color:white;
+      padding:10px 18px; border-radius:10px;
+      font-weight:600; cursor:pointer;
+    }
+
+    /* Tags de informações */
+    .tag {
+      background:#e3f2fd;
+      padding:4px 10px;
+      border-radius:8px;
+      font-size:13px;
+      color:#1e3a8a;
+    }
   </style>
 </head>
 
 <body>
 
-  <!-- SIDEBAR -->
+  <!-- ==========================================
+       📌 SIDEBAR - Menu lateral do administrador
+       ========================================== -->
   <aside class="sidebar">
     <div>
       <h2 class="text-xl font-bold p-6">⚙️ Painel Admin</h2>
+
+      <!-- Menu principal -->
       <nav class="menu">
         <a href="admin.html">🏠 Início</a>
         <a href="logistica-admin.html">📦 Logística das Doações</a>
@@ -46,110 +106,217 @@
        </nav>
     </div>
 
-    <button onclick="window.location.href='../index.html'" class="m-4 p-3 rounded bg-white/20">⬅️ Voltar ao Site</button>
+    <!-- Voltar ao site -->
+    <button onclick="window.location.href='../index.html'" class="m-4 p-3 rounded bg-white/20">
+      ⬅️ Voltar ao Site
+    </button>
   </aside>
 
-  <!-- CONTEÚDO -->
+
+
+  <!-- ===================================================
+       📌 CONTEÚDO PRINCIPAL DO PAINEL
+       =================================================== -->
   <main class="content">
+
     <h1 class="text-3xl font-bold text-blue-800 mb-6">📦 Logística das Doações</h1>
     <p class="text-gray-600 mb-6">
-      Aqui você confirma adoções e envia o e-mail automático para o doador comprar o presente 💙
+      Aqui você confirma adoções e acompanha o recebimento dos presentes 💙
     </p>
 
-    <div class="card">
-      <h2 class="text-xl font-semibold text-blue-600 mb-4">Adoções aguardando confirmação</h2>
 
-      <table class="w-full">
-        <thead class="bg-blue-100">
-          <tr>
-            <th class="p-2 text-left">Criança</th>
-            <th class="p-2 text-left">Sonho</th>
-            <th class="p-2 text-left">Doador</th>
-            <th class="p-2 text-left">Ação</th>
-          </tr>
-        </thead>
+    <!-- =============================
+         SEÇÃO 1 — Aguardando
+         ============================= -->
+    <section class="card mb-10">
+      <h2 class="text-2xl font-semibold text-blue-700 mb-4">
+        ⏳ Adoções aguardando confirmação
+      </h2>
 
-        <tbody id="listaAguardando"></tbody>
-      </table>
-    </div>
+      <!-- Onde os cartões serão carregados via JS -->
+      <div id="cardsAguardando"></div>
+    </section>
+
+
+    <!-- =============================
+         SEÇÃO 2 — Confirmadas
+         ============================= -->
+    <section class="card">
+      <h2 class="text-2xl font-semibold text-green-700 mb-4">
+        ✅ Adoções confirmadas
+      </h2>
+
+      <!-- Onde os cartões serão carregados via JS -->
+      <div id="cardsConfirmadas"></div>
+    </section>
 
   </main>
 
-  <script>
-  async function carregarAdoacoes() {
-    const tbody = document.getElementById("listaAguardando");
-    tbody.innerHTML =
-      '<tr><td colspan="4" class="p-3 text-center text-gray-500">Carregando...</td></tr>';
 
-    try {
-      const r = await fetch("/api/listAdocoes");
-      const json = await r.json();
 
-      if (!json.sucesso) {
-        console.error(json.mensagem || json);
-        alert("Erro ao carregar adoções.");
-        return;
-      }
+<!-- ======================================================
+     📌 SCRIPT JS — Carregar adoções e aplicar ações
+     ====================================================== -->
+<script>
 
-      const lista = (json.adocoes || []).filter(
-        (a) => a.status_adocao === "aguardando confirmacao"
-      );
+/* ----------------------------------------------
+   🔄 Função principal: busca todas as adoções
+   via API `/api/listAdocoes.js`
+   ---------------------------------------------- */
+async function carregarAdoacoes() {
 
-      tbody.innerHTML = "";
+  const c1 = document.getElementById("cardsAguardando");
+  const c2 = document.getElementById("cardsConfirmadas");
 
-      if (lista.length === 0) {
-        tbody.innerHTML =
-          '<tr><td colspan="4" class="p-3 text-center text-gray-500">Nenhuma adoção pendente de confirmação.</td></tr>';
-        return;
-      }
+  c1.innerHTML = "<p>Carregando...</p>";
+  c2.innerHTML = "<p>Carregando...</p>";
 
-      lista.forEach((a) => {
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-          <td class="p-2">${a.nome_crianca || "—"}</td>
-          <td class="p-2">${a.sonho || "—"}</td>
-          <td class="p-2">${a.nome_doador || "—"}</td>
-          <td class="p-2">
-            <button class="btn" onclick="confirmar('${a.id_record}')">
-              Confirmar
-            </button>
-          </td>
-        `;
-        tbody.appendChild(tr);
-      });
-    } catch (err) {
-      console.error(err);
-      alert("Erro ao carregar adoções (ver console da página).");
+  try {
+    // API que retorna todas adoções e seus dados resumidos
+    const r = await fetch("/api/listAdocoes");
+    const json = await r.json();
+
+    if (!json.sucesso) {
+      alert("Erro ao carregar adoções.");
+      return;
     }
+
+    const lista = json.adocoes || [];
+
+    // Filtrar adoções por status
+    const pendentes = lista.filter(a => a.status_adocao === "aguardando confirmacao");
+    const confirmadas = lista.filter(a => a.status_adocao === "confirmada");
+
+
+
+    /* ---------------------------
+       SEÇÃO 1 — Pendentes
+       --------------------------- */
+    c1.innerHTML = "";
+    if (pendentes.length === 0)
+      c1.innerHTML = `<p class="text-gray-500">Nenhuma adoção pendente.</p>`;
+
+    pendentes.forEach(a => {
+      c1.innerHTML += `
+        <div class="card-item">
+
+          <p class="font-semibold text-blue-900 text-lg">${a.nome_crianca}</p>
+          <p class="text-sm text-gray-600">🎁 ${a.sonho}</p>
+
+          <!-- Tags com informações resumidas -->
+          <div class="mt-2">
+            <span class="tag">🆔 Cartinha: ${a.id_cartinha}</span>
+            <span class="tag">👤 Doador: ${a.nome_usuario || "—"}</span>
+            <span class="tag">📦 Ponto: ${a.nome_ponto || "—"}</span>
+          </div>
+
+          <!-- Botão azul para confirmar adoção -->
+          <button class="btn-blue mt-4"
+            onclick="confirmarAdoção('${a.id_record}')">
+            Confirmar adoção
+          </button>
+
+        </div>
+      `;
+    });
+
+
+
+    /* ---------------------------
+       SEÇÃO 2 — Confirmadas
+       --------------------------- */
+    c2.innerHTML = "";
+    if (confirmadas.length === 0)
+      c2.innerHTML = `<p class="text-gray-500">Nenhuma adoção confirmada.</p>`;
+
+    confirmadas.forEach(a => {
+      c2.innerHTML += `
+        <div class="card-item">
+
+          <p class="font-semibold text-green-900 text-lg">${a.nome_crianca}</p>
+          <p class="text-sm text-gray-600">🎁 ${a.sonho}</p>
+
+          <div class="mt-2">
+            <span class="tag">🆔 Cartinha: ${a.id_cartinha}</span>
+            <span class="tag">📦 Ponto: ${a.nome_ponto || "—"}</span>
+          </div>
+
+          <!-- Botão verde para marcar como PRESENTE RECEBIDO -->
+          <button class="btn-green mt-4"
+            onclick="coletado('${a.id_record}')">
+            Coletado
+          </button>
+
+        </div>
+      `;
+    });
+
+  } catch (e) {
+    console.error(e);
+    alert("Erro ao carregar dados da logística.");
+  }
+}
+
+
+
+
+/* ---------------------------------------------------
+   🟦 Função — Confirmar Adoção (Admin)
+   Chama a API `/api/confirmar?id_adocao=`
+   --------------------------------------------------- */
+async function confirmarAdoção(idAdocao) {
+
+  if (!confirm("Confirmar adoção e enviar e-mail ao doador?")) return;
+
+  const r = await fetch(`/api/confirmar?id_adocao=${idAdocao}`);
+
+  if (!r.ok) {
+    alert("Erro ao confirmar adoção.");
+    return;
   }
 
-  async function confirmar(idAdocao) {
-    if (!confirm("Confirmar esta adoção e enviar e-mail ao doador?")) return;
+  alert("Adoção confirmada com sucesso!");
+  carregarAdoacoes();
+}
 
-    try {
-      const r = await fetch(`/api/confirmar?id_adocao=${idAdocao}`);
-      if (!r.ok) {
-        const txt = await r.text();
-        console.error("Erro em /api/confirmar:", txt);
-        alert("Erro ao confirmar adoção.");
-        return;
-      }
 
-      // Se /api/confirmar devolve HTML de sucesso, abrimos em nova aba
-      const html = await r.text();
-      const janela = window.open("", "_blank");
-      janela.document.write(html);
 
-      carregarAdoacoes();
-    } catch (err) {
-      console.error(err);
-      alert("Erro de comunicação com a API de confirmação.");
-    }
+/* ---------------------------------------------------
+   🟩 Função — Marcar presente como RECEBIDO
+   Chama a API `/api/logistica` com acao="receber"
+   --------------------------------------------------- */
+async function coletado(idAdocao) {
+
+  if (!confirm("Marcar como PRESENTE RECEBIDO?")) return;
+
+  const r = await fetch("/api/logistica", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({
+      acao: "receber",    // RECEBIMENTO de presente
+      id_adocao: idAdocao,
+      id_ponto: "1",      // em produção deve usar o real
+      responsavel: "Admin do Sistema"
+    })
+  });
+
+  if (!r.ok) {
+    alert("Erro ao registrar coleta.");
+    return;
   }
 
-  document.addEventListener("DOMContentLoaded", carregarAdoacoes);
+  alert("Presente marcado como RECEBIDO!");
+  carregarAdoacoes();
+}
+
+
+
+/* ---------------------------------------------------
+   Inicia carregamento automático ao abrir a página
+   --------------------------------------------------- */
+document.addEventListener("DOMContentLoaded", carregarAdoacoes);
+
 </script>
-
 
 </body>
 </html>
