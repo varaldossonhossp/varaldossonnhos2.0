@@ -131,7 +131,7 @@ export default async function handler(req, res) {
       data_adocao: new Date().toISOString().split("T")[0],
       status_adocao: "aguardando confirmacao",
       nome_crianca: [nome_crianca_id],
-      usuario: [nome_usuario_id],
+      usuario: [String(nome_usuario_id)],
     };
 
     if (data_evento_id) fieldsToCreate.data_evento = [data_evento_id];
