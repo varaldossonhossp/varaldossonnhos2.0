@@ -8,7 +8,7 @@
 
 <img src="./imagens/logo.png" width="180" alt="Fantástica Fábrica de Sonhos">
 
-> Plataforma solidária para adoção de cartinhas de Natal e realização de sonhos de crianças.
+> Plataforma solidária para adoção de cartinhas e realização de sonhos de crianças.
 
 [![Deploy Vercel](https://img.shields.io/badge/deploy-Vercel-black?style=for-the-badge&logo=vercel)](https://vercel.com)
 [![Airtable](https://img.shields.io/badge/Database-Airtable-blue?style=for-the-badge&logo=airtable)](https://airtable.com)
