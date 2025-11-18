@@ -3,7 +3,11 @@
 // ------------------------------------------------------------
 // Página do painel administrativo para gerenciar a logística
 // das doações: confirmação de adoções e envio de e-mails.
-// ============================================================ -->
+//     Painel para gerenciar a logística das doações:
+//     • Aguardando confirmação
+//     • Aguardando receber
+//     • Aguardando coletar
+//=========================================================== -->
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -120,7 +124,6 @@
 </aside>
 
 
-
 <!-- ==========================================================
      📌 CONTEÚDO PRINCIPAL
 =========================================================== -->
@@ -130,36 +133,31 @@
     📦 Logística das Doações
   </h1>
 
-
   <!-- ======================================================
        1 — AGUARDANDO CONFIRMAÇÃO
   ====================================================== -->
   <section id="sec-pendentes" class="card">
-    <h2 class="text-2xl font-bold text-blue-600 mb-4">⏳Aguardando Confirmação</h2>
+    <h2 class="text-2xl font-bold text-blue-600 mb-4">⏳ Aguardando Confirmação</h2>
     <div id="cardsPendentes"></div>
   </section>
 
-
   <!-- ======================================================
-       2 — AGUARDANDO RECEBER (Confirmadas)
+       2 — AGUARDANDO RECEBER
   ====================================================== -->
   <section id="sec-confirmadas" class="card">
-    <h2 class="text-2xl font-bold text-green-700 mb-4">📬Aguardando Receber</h2>
+    <h2 class="text-2xl font-bold text-green-700 mb-4">📬 Aguardando Receber</h2>
     <div id="cardsConfirmadas"></div>
   </section>
 
-
   <!-- ======================================================
-       3 — AGUARDANDO COLETAR (Presente recebido)
+       3 — AGUARDANDO COLETAR
   ====================================================== -->
   <section id="sec-coletar" class="card">
-    <h2 class="text-2xl font-bold text-orange-700 mb-4">🚚Aguardando Coletar</h2>
+    <h2 class="text-2xl font-bold text-orange-700 mb-4">🚚 Aguardando Coletar</h2>
     <div id="cardsColetar"></div>
   </section>
 
-
 </main>
-
 
 <!-- ==========================================================
      📌 SCRIPT DE LÓGICA
@@ -178,14 +176,12 @@ async function carregarAdoacoes(){
 
   if(!sucesso){ alert("Erro ao carregar adoções."); return; }
 
-  // FILTRAR
-  const pendentes = adocoes.filter(a => a.status_adocao === "aguardando confirmacao");
+  const pendentes  = adocoes.filter(a => a.status_adocao === "aguardando confirmacao");
   const confirmadas = adocoes.filter(a => a.status_adocao === "confirmada");
-  const coletar = adocoes.filter(a => a.status_adocao === "presente recebido");
+  const coletar     = adocoes.filter(a => a.status_adocao === "presente recebido");
 
-  // ========== 1) PENDENTES ==========
+  // -------- PENDENTES --------
   c1.innerHTML = pendentes.length ? "" : "<p class='text-gray-600'>Nenhuma adoção pendente.</p>";
-
   pendentes.forEach(a=>{
     c1.innerHTML += `
       <div class="card-item">
@@ -197,18 +193,15 @@ async function carregarAdoacoes(){
           <span class="tag">👤 ${a.nome_usuario}</span>
         </div>
 
-        <button class="btn-blue mt-4" onclick="confirmarAdoção('${a.id_record}')">
+        <button class="btn-blue mt-4" onclick="confirmarAdocao('${a.id_record}')">
           ✔ Confirmar
         </button>
       </div>
     `;
   });
 
-
-
-  // ========== 2) CONFIRMADAS ==========
-  c2.innerHTML = confirmadas.length ? "" : "<p class='text-gray-600'>Nenhuma adoção confirmada ainda.</p>";
-
+  // -------- CONFIRMADAS --------
+  c2.innerHTML = confirmadas.length ? "" : "<p class='text-gray-600'>Nenhuma adoção confirmada.</p>";
   confirmadas.forEach(a=>{
     c2.innerHTML += `
       <div class="card-item">
@@ -220,18 +213,16 @@ async function carregarAdoacoes(){
           <span class="tag">📦 Ponto: ${a.nome_ponto || "—"}</span>
         </div>
 
-        <button class="btn-green mt-4" onclick="receberPresente('${a.id_record}', '${a.nome_ponto}')">
+        <button class="btn-green mt-4"
+          onclick="receberPresente('${a.id_record}', '${a.id_ponto}')">
           📦 Recebido
         </button>
       </div>
     `;
   });
 
-
-
-  // ========== 3) COLETAR ==========
+  // -------- COLETAR --------
   c3.innerHTML = coletar.length ? "" : "<p class='text-gray-600'>Nenhum presente aguardando coleta.</p>";
-
   coletar.forEach(a=>{
     c3.innerHTML += `
       <div class="card-item">
@@ -243,7 +234,8 @@ async function carregarAdoacoes(){
           <span class="tag">📦 Ponto: ${a.nome_ponto || "—"}</span>
         </div>
 
-        <button class="btn-orange mt-4" onclick="coletarPresente('${a.id_record}', '${a.nome_ponto}')">
+        <button class="btn-orange mt-4"
+          onclick="coletarPresente('${a.id_record}', '${a.id_ponto}')">
           🚚 Coletado
         </button>
       </div>
@@ -254,10 +246,10 @@ async function carregarAdoacoes(){
 
 
 
-// ==============================
-// ✔ AÇÃO — CONFIRMAR
-// ==============================
-async function confirmarAdoção(id){
+// ==========================================================
+// ✔ CONFIRMAR ADOÇÃO
+// ==========================================================
+async function confirmarAdocao(id){
   if(!confirm("Confirmar adoção?")) return;
 
   const r = await fetch("/api/confirmar?id_adocao="+id);
@@ -272,11 +264,11 @@ async function confirmarAdoção(id){
 
 
 
-// ==============================
-// ✔ AÇÃO — RECEBER PRESENTE
-// ==============================
-async function receberPresente(idAdocao, pontoNome){
-  if(!confirm(`Confirmar que o presente foi RECEBIDO no ponto ${pontoNome}?`)) return;
+// ==========================================================
+// ✔ RECEBER PRESENTE (PONTO)
+// ==========================================================
+async function receberPresente(idAdocao, idPonto){
+  if(!confirm("Confirmar que o presente foi RECEBIDO no ponto?")) return;
 
   const r = await fetch("/api/logistica", {
     method:"POST",
@@ -284,7 +276,7 @@ async function receberPresente(idAdocao, pontoNome){
     body:JSON.stringify({
       acao:"receber",
       id_adocao:idAdocao,
-      id_ponto:"recIDdoPontoReal", 
+      id_ponto:idPonto,
       responsavel:"Admin",
       observacoes:""
     })
@@ -302,11 +294,11 @@ async function receberPresente(idAdocao, pontoNome){
 
 
 
-// ==============================
-// ✔ AÇÃO — COLETAR / ENTREGAR FINAL
-// ==============================
-async function coletarPresente(idAdocao, pontoNome){
-  if(!confirm(`Confirmar que o presente foi COLETADO no ponto ${pontoNome}?`)) return;
+// ==========================================================
+// ✔ COLETAR PRESENTE
+// ==========================================================
+async function coletarPresente(idAdocao, idPonto){
+  if(!confirm("Confirmar que o presente foi COLETADO no ponto?")) return;
 
   const r = await fetch("/api/logistica", {
     method:"POST",
@@ -314,7 +306,7 @@ async function coletarPresente(idAdocao, pontoNome){
     body:JSON.stringify({
       acao:"coletar",
       id_adocao:idAdocao,
-      id_ponto:"recIDdoPontoReal",
+      id_ponto:idPonto,
       responsavel:"Admin",
       observacoes:""
     })

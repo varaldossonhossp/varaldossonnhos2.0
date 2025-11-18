@@ -56,7 +56,6 @@ const base = new Airtable({
 
 export default async function handler(req, res) {
 
-  // Apenas método GET é permitido
   if (req.method !== "GET") {
     return res.status(405).json({
       sucesso: false,
@@ -65,101 +64,73 @@ export default async function handler(req, res) {
   }
 
   try {
-    // ------------------------------------------------------------
-    // 1. BUSCAR TODAS AS ADOÇÕES
-    // ------------------------------------------------------------
     const records = await base("adocoes")
       .select({
         sort: [{ field: "id_doacao", direction: "asc" }],
       })
       .all();
 
-    // Array final a ser devolvido
     const adocoes = [];
 
-    // ------------------------------------------------------------
-    // 2. PROCESSAR CADA ADOÇÃO COM JOIN REAL
-    // ------------------------------------------------------------
     for (const r of records) {
       const f = r.fields || {};
 
-      // ------------------------------------------------------------
-      // 🟦 2.1 - BUSCA DA CARTINHA (JOIN)
-      // ------------------------------------------------------------
+      // Cartinha
       let cart = {};
-      const idCartinha = f.nome_crianca?.[0]; // linked record real
-
+      const idCartinha = f.nome_crianca?.[0];
       if (idCartinha) {
         try {
           cart = await base("cartinha").find(idCartinha);
-        } catch (e) {
-          console.error("Erro ao buscar cartinha:", e);
-        }
+        } catch (e) {}
       }
 
-      // ------------------------------------------------------------
-      // 🟩 2.2 - BUSCA DO USUÁRIO (JOIN)
-      // ------------------------------------------------------------
+      // Usuário
       let usuario = {};
       const idUsuario = f.usuario?.[0];
-
       if (idUsuario) {
         try {
           usuario = await base("usuario").find(idUsuario);
-        } catch (e) {
-          console.error("Erro ao buscar usuário:", e);
-        }
+        } catch (e) {}
       }
 
-      // ------------------------------------------------------------
-      // 🟧 2.3 - BUSCA DO PONTO DE COLETA (JOIN)
-      // ------------------------------------------------------------
+      // Ponto de coleta
       let ponto = {};
-      const idPonto = f.pontos_coleta?.[0];
-
+      const idPonto = f.pontos_coleta?.[0];  // <--- ID REAL DO PONTO
       if (idPonto) {
         try {
           ponto = await base("pontos_coleta").find(idPonto);
-        } catch (e) {
-          console.error("Erro ao buscar ponto:", e);
-        }
+        } catch (e) {}
       }
 
-      // ------------------------------------------------------------
-      // 🟪 2.4 - OBJETO FINAL CONSOLIDADO
-      // ------------------------------------------------------------
+      // OBJETO FINAL
       adocoes.push({
-        id_record: r.id, // ID real da adoção no Airtable
+        id_record: r.id,
 
-        // Dados da criança
+        // Criança
         id_cartinha: cart.fields?.id_cartinha || "",
         nome_crianca: cart.fields?.nome_crianca || "",
         sonho: cart.fields?.sonho || "",
 
-        // Dados do doador
+        // Usuário
         nome_usuario: usuario.fields?.nome_usuario || "",
         email_usuario: usuario.fields?.email_usuario || "",
         telefone_usuario: usuario.fields?.telefone || "",
 
-        // Dados do ponto
+        // Ponto (CORREÇÃO AQUI)
+        id_ponto: idPonto || "",
         nome_ponto: ponto.fields?.nome_ponto || "",
 
-        // Status atual da adoção
+        // Status
         status_adocao: f.status_adocao || "aguardando confirmacao",
       });
     }
 
-    // ------------------------------------------------------------
-    // 3. RETORNO FINAL PARA O FRONT-END
-    // ------------------------------------------------------------
     return res.status(200).json({
       sucesso: true,
       adocoes,
     });
 
   } catch (error) {
-    console.error("🔥 ERRO LIST ADOCOES:", error);
-
     return res.status(500).json({
       sucesso: false,
       mensagem: "Erro interno ao listar adoções.",
