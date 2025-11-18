@@ -1,4 +1,11 @@
-// Carrossel automático com fallback local
+// ============================================================
+// 💙 VARAL DOS SONHOS — Carrossel de Eventos
+// ------------------------------------------------------------
+// Script do carrossel de eventos na homepage:
+// • Busca eventos destacados via /api/eventos
+// • Exibe imagens em loop automático
+// ============================================================ 
+
 document.addEventListener("DOMContentLoaded", async () => {
   const el = document.getElementById("carrossel-eventos");
   if (!el) return;

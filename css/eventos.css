@@ -1,3 +1,12 @@
+/* // ============================================================
+// 💙 VARAL DOS SONHOS — /css/eventos.css
+// ------------------------------------------------------------
+// Estilos CSS para a página de eventos do Varal dos Sonhos:
+// • Layout responsivo em grid
+// • Cards interativos para cada evento
+// • Filtros de seleção
+// ============================================================ */
+
 /* ===== Layout base da página ===== */
 .container { max-width: 1120px; margin: 0 auto; padding: 24px 16px; }
 .hero-eventos h1 { font-size: 2rem; margin: 0 0 6px; color: #7ca2fd; }

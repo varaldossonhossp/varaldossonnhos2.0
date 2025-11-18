@@ -1,5 +1,10 @@
 // ============================================================
-// 📦 VARAL DOS SONHOS — Relatório Pontos de Coleta (SEM CIDADE)
+// 📦 VARAL DOS SONHOS — Relatório Pontos de Coleta
+// ------------------------------------------------------------
+// Página administrativa para gerar relatórios de pontos de coleta:
+// • Carrega pontos via /api/pontosdecoleta
+// • Filtro dinâmico: Status
+// • Geração de PDF via impressão do navegador
 // ============================================================
 
 document.addEventListener("DOMContentLoaded", () => {

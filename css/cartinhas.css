@@ -1,6 +1,9 @@
 /* ============================================================
-💙 VARAL DOS SONHOS — css/cartinhas.css (versão ajustada final)
-Compatível com Vercel + .NET MAUI WebView
+💙 VARAL DOS SONHOS — css/cartinhas.css
+------------------------------------------------------------
+Estilos CSS para a página de adoção de cartinhas do Varal dos Sonhos:
+• Layout em formato de varal com prendedores
+• Cards interativos para cada cartinha
 ============================================================ */
 
 :root {

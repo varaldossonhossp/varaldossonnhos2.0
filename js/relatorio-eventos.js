@@ -1,5 +1,10 @@
 // ============================================================
 // 🎉 VARAL DOS SONHOS — Relatório de Eventos
+// ------------------------------------------------------------
+// Página administrativa para gerar relatórios de eventos:
+// • Carrega eventos via /api/admin
+// • Filtros dinâmicos: Status, Destaque
+// • Geração de PDF via impressão do navegador
 // ============================================================
 
 document.addEventListener("DOMContentLoaded", () => {

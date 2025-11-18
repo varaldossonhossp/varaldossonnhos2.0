@@ -1,5 +1,5 @@
 // ============================================================
-// 💼 VARAL DOS SONHOS — /js/admin.js
+// VARAL DOS SONHOS — /js/admin.js
 // ------------------------------------------------------------
 // Painel de administração: lista e confirma adoções.
 // Ao confirmar, muda o status no Airtable e dispara e-mail

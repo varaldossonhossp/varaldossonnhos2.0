@@ -1,5 +1,10 @@
 // ============================================================
 // 💙 VARAL DOS SONHOS — Relatório de Cartinhas (Versão Completa)
+// ------------------------------------------------------------
+// Página administrativa para gerar relatórios de cartinhas:
+// • Carrega cartinhas via /api/cartinha
+// • Filtros dinâmicos: Evento, Sexo, Status, Idade, Escola, Irmãos
+// • Geração de PDF via impressão do navegador
 // ============================================================
 
 document.addEventListener("DOMContentLoaded", () => {

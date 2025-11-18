@@ -1,7 +1,9 @@
 // ============================================================
 // 🎮 VARAL DOS SONHOS — /api/gamificacao.js (corrigida)
 // ------------------------------------------------------------
-// Controla pontuação, conquistas e progressão de nível dos usuários
+// API para gerenciar o sistema de gamificação dos usuários:
+// • Consulta e atualização do progresso via Airtable
+// • Campos: nível, pontos de coração, total de cartinhas adotadas, título da conquista
 // ============================================================
 
 import Airtable from "airtable";

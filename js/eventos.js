@@ -1,4 +1,10 @@
-// js/eventos.js
+// ============================================================
+// 💙 VARAL DOS SONHOS — /js/eventos.js
+// ------------------------------------------------------------ 
+// Script do carrossel de eventos na homepage:
+// • Busca eventos via /api/eventos
+// • Exibe cards de eventos com status automático
+// ============================================================
 
 const API_URL = '/api/eventos';
 const VARAL_URL = 'https://varaldossonnhos2-0.vercel.app/pages/cartinha.html';

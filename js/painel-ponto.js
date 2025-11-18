@@ -1,7 +1,9 @@
 // ============================================================
-// 💙 VARAL DOS SONHOS — painel-ponto.js (FINAL CORRIGIDO)
-// Painel do ponto de coleta → conecta API de adoções + logística
-// NÃO QUEBRA NENHUMA OUTRA PÁGINA
+// 💙 VARAL DOS SONHOS — painel-ponto.js
+// ------------------------------------------------------------
+// Painel de controle do Ponto de Coleta:
+// • Lista adoções para receber e retirar
+// • Botões para registrar recebimento e retirada
 // ============================================================
 
 // Endpoints

@@ -1,6 +1,9 @@
 // ============================================================
 // 💙 VARAL DOS SONHOS — /js/header.js (FINAL)
-// Header inteligente: Admin / Ponto / Usuário / Visitante
+// ------------------------------------------------------------
+// Script do cabeçalho (header) do site:
+// • Gerencia exibição de links conforme tipo de usuário logado
+// • Suporta usuários: visitante, doador, voluntário, admin, ponto de coleta
 // ============================================================
 
 function inicializarHeader() {

@@ -1,7 +1,11 @@
 /* ============================================================
-💬 CLOUDINHO - Visual completo
-Mascote flutuante + balão + chat fixo
-============================================================ */
+// 💬 VARAL DOS SONHOS — /css/cloudinho.css
+// ------------------------------------------------------------
+// Estilos CSS para o Cloudinho, assistente inteligente do Varal dos Sonhos:
+// • Botão flutuante com mascote
+// • Janela de chat interativa
+// ============================================================ */
+
 
 /* Mascote */
 .cloudinho-botao {

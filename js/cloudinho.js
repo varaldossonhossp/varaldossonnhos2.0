@@ -1,7 +1,13 @@
 // ============================================================
 // ☁️ CLOUDINHO INTELIGENTE — v5.4 (conexão direta + balão + chat)
 // ------------------------------------------------------------
-// Busca respostas da tabela "cloudinho" no Airtable via API
+// Componente de chat inteligente que busca respostas na tabela
+// "cloudinho" do Airtable via API.
+//
+// Funcionalidades:
+// • Balão flutuante automático com mensagens de boas-vindas
+// • Chat interativo com envio de perguntas e exibição de respostas
+// • Verificação automática da conexão com a API do Cloudinho
 // ============================================================
 
 async function inicializarCloudinho() {

@@ -1,8 +1,13 @@
 /* ============================================================
-💼 VARAL DOS SONHOS — /css/admin.css
----------------------------------------------------------------
-Painel administrativo — estilo de tabela e botões.
-============================================================ */
+// 💙 VARAL DOS SONHOS — /css/admin.css
+// ------------------------------------------------------------
+// Estilos CSS para páginas administrativas do Varal dos Sonhos: 
+// • Layout responsivo
+// • Painéis estilizados
+// • Tabelas interativas
+// • Botões de ação
+// ============================================================ */
+
 
 .admin-container {
   display: flex;

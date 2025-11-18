@@ -1,6 +1,11 @@
 // ============================================================
 // 👥 VARAL DOS SONHOS — /api/usuarios.js (versão funcional final)
 // ------------------------------------------------------------
+// ✔ Cadastro de novos usuários
+// ✔ Login de usuários (doador, voluntário, admin)
+// ✔ Validação de campos obrigatórios
+// ✔ Verificação de e-mail duplicado
+// ✔ Respostas JSON padronizadas
 // Rotas:
 //   • POST /api/usuarios   → acao: "cadastro" ou "login"
 // ============================================================

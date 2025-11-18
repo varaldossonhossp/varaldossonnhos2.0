@@ -1,6 +1,13 @@
 // ============================================================
 // 💙 VARAL DOS SONHOS — /js/cartinha.js  (FINAL AJUSTADO)
+// ------------------------------------------------------------
+// Página de exibição das cartinhas disponíveis para adoção:
+// • Busca cartinhas via /api/cartinha
+// • Mostra cards em varal horizontal com scroll
+// • Botão para adicionar ao carrinho (localStorage)
+// • Modal de zoom na imagem da cartinha
 // ============================================================
+
 
 document.addEventListener("DOMContentLoaded", async () => {
 
