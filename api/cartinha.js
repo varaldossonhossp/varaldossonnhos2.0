@@ -138,7 +138,7 @@ export default async function handler(req, res) {
         idade_irmaos: r.fields.idade_irmaos || "",
         status: r.fields.status || "",
         observacoes_admin: r.fields.observacoes_admin || "",
-        cadastro_sessao_id: r.fields.cadastro_sessao_id || "",
+        
 
         // Retornos de campos auxiliares (se existirem)
         nome_evento: r.fields.nome_evento || "",
@@ -199,8 +199,7 @@ export default async function handler(req, res) {
         imagem_cartinha = [];
       }
 
-      const cadastro_sessao_id = body.cadastro_sessao_id || "";
-
+      
       const fields = {
         nome_crianca: body.nome_crianca,
         idade: body.idade ? parseInt(body.idade, 10) : null,
@@ -288,10 +287,7 @@ export default async function handler(req, res) {
         }
       }
 
-      if (body.cadastro_sessao_id) {
-        fieldsToUpdate.cadastro_sessao_id = body.cadastro_sessao_id;
-      }
-
+     
       const atualizado = await base(tableName).update([
         { id, fields: fieldsToUpdate },
       ]);
