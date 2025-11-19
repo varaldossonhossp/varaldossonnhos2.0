@@ -10,289 +10,278 @@
 //   • pages/admin-cartinhas.html
 //   • js/nova-cartinha.js
 //   • js/editar-cartinha.js
+// ------------------------------------------------------------
+// TOTALMENTE CORRIGIDO — CAMPOS REAIS DO AIRTABLE:
+//   • eventos  (Linked Record real da tabela cartinha)
+//   • id_evento NÃO EXISTE → removido
 // ============================================================
 
-// -----------------------------------------------------------
-// Cloudinary
-// -----------------------------------------------------------
-const CLOUD_NAME = "drnn5zmxi";
-const UPLOAD_PRESET = "unsigned_uploads";
+import Airtable from "airtable";
+import { IncomingForm } from "formidable";
 
-let uploadedUrl = "";
-let cartinhasSessao = [];
-let editIndex = null;
+export const config = {
+  api: { bodyParser: false },
+  runtime: "nodejs",
+};
 
-// ============================================================
-// INICIALIZAÇÃO
-// ============================================================
-document.addEventListener("DOMContentLoaded", () => {
-  const form = document.getElementById("form-cartinha");
-  const previewImagem = document.getElementById("preview-imagem");
-  const btnLimpar = document.getElementById("btn-limpar");
+// Airtable
+const base = new Airtable({ apiKey: process.env.AIRTABLE_API_KEY }).base(
+  process.env.AIRTABLE_BASE_ID
+);
+const tableName = process.env.AIRTABLE_CARTINHA_TABLE || "cartinha";
 
-  const campoDataEvento = document.getElementById("data_evento_info");
-  const campoDataLimite = document.getElementById("data_limite_info");
+// CORS
+function setCors(res) {
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "GET,POST,PATCH,DELETE,OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+}
 
-  // ============================================================
-  // Title Case automático em alguns campos
-  // ============================================================
-  const titleCase = (str) =>
-    str.toLowerCase().replace(/(?:^|\s)\S/g, (c) => c.toUpperCase());
+// Parse form-data
+function parseForm(req) {
+  return new Promise((resolve, reject) => {
+    const form = new IncomingForm({ keepExtensions: true });
 
-  ["nome_crianca", "escola", "cidade", "psicologa_responsavel", "sonho"].forEach(
-    (id) => {
-      const el = document.getElementById(id);
-      el.addEventListener("blur", () => {
-        if (el.value.trim()) el.value = titleCase(el.value.trim());
-      });
-    }
-  );
+    form.parse(req, (err, fields, files) => {
+      if (err) return reject(err);
 
-  // ============================================================
-  // Máscara telefone
-  // ============================================================
-  document.getElementById("telefone_contato").addEventListener("input", (e) => {
-    let v = e.target.value.replace(/\D/g, "");
-    if (v.length > 10) v = v.replace(/^(\d{2})(\d{5})(\d{4}).*/, "($1) $2-$3");
-    else if (v.length > 5) v = v.replace(/^(\d{2})(\d{4})(\d{0,4}).*/, "($1) $2-$3");
-    else if (v.length > 2) v = v.replace(/^(\d{2})(\d{0,5})/, "($1) $2");
-    e.target.value = v;
+      const parsedFields = {};
+      for (const key in fields) {
+        parsedFields[key] = Array.isArray(fields[key])
+          ? fields[key][0]
+          : fields[key];
+      }
+
+      resolve({ fields: parsedFields, files });
+    });
   });
+}
 
-  // ============================================================
-  // 🎉 CARREGAR EVENTOS NO SELECT
-  // ============================================================
-  async function carregarEventos() {
-    try {
-      const resp = await fetch("/api/eventos");
-      const json = await resp.json();
-      if (!json.sucesso) return;
+// ============================================================
+// 🔹 HANDLER PRINCIPAL
+// ============================================================
+export default async function handler(req, res) {
+  setCors(res);
+  if (req.method === "OPTIONS") return res.status(204).end();
 
-      const select = document.getElementById("id_evento");
+  try {
+    let body = req.body;
 
-      json.eventos.forEach((ev) => {
-        const opt = document.createElement("option");
-        opt.value = ev.id;
-        opt.textContent = `${ev.nome_evento} — ${ev.data_evento}`;
-        opt.dataset.data_evento = ev.data_evento;
-        opt.dataset.data_limite = ev.data_limite_recebimento;
-        select.appendChild(opt);
-      });
-
-      // Exibir datas ao trocar o evento
-      select.addEventListener("change", () => {
-        const selected = select.options[select.selectedIndex];
-        campoDataEvento.textContent = selected.dataset.data_evento || "-";
-        campoDataLimite.textContent = selected.dataset.data_limite || "-";
-      });
-    } catch (err) {
-      console.error("Erro ao carregar eventos:", err);
-    }
-  }
-  carregarEventos();
-
-  // ============================================================
-  // Upload Cloudinary
-  // ============================================================
-  form.imagem_cartinha.addEventListener("change", async () => {
-    const file = form.imagem_cartinha.files[0];
-    if (!file) return;
-
-    previewImagem.innerHTML =
-      "<p class='text-blue-600'>Enviando imagem...</p>";
-
-    const fd = new FormData();
-    fd.append("file", file);
-    fd.append("upload_preset", UPLOAD_PRESET);
-
-    const resp = await fetch(
-      `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`,
-      { method: "POST", body: fd }
-    );
-
-    const data = await resp.json();
-    if (data.secure_url) {
-      uploadedUrl = data.secure_url;
-      previewImagem.innerHTML = `<img src="${uploadedUrl}" class="w-32 rounded shadow" />`;
-    }
-  });
-
-  // ============================================================
-  // SALVAR (POST / PATCH)
-  // ============================================================
-  form.addEventListener("submit", async (e) => {
-    e.preventDefault();
-
-    const isEdit = editIndex !== null;
-    const atual = isEdit ? cartinhasSessao[editIndex] : null;
-
-    const urlImg = uploadedUrl || (atual ? atual.imagem_cartinha : "");
-
-    // ⛔ ATENÇÃO: payload AGORA NÃO TEM MAIS cadastro_sessao_id
-    const payload = {
-      nome_crianca: form.nome_crianca.value,
-      idade: form.idade.value,
-      sexo: form.sexo.value,
-      escola: form.escola.value,
-      cidade: form.cidade.value,
-      telefone_contato: form.telefone_contato.value,
-      psicologa_responsavel: form.psicologa_responsavel.value,
-      irmaos: form.irmaos.value,
-      idade_irmaos: form.idade_irmaos.value,
-      sonho: form.sonho.value,
-      observacoes_admin: form.observacoes_admin.value,
-      status: form.status.value,
-      id_evento: form.id_evento.value,
-      imagem_cartinha: urlImg
-        ? JSON.stringify([{ url: urlImg }])
-        : JSON.stringify([]),
-    };
-
-    const fd = new FormData();
-    Object.entries(payload).forEach(([k, v]) => fd.append(k, v));
-
-    // NOVO
-    if (!isEdit) {
-      const resp = await fetch("/api/cartinha", { method: "POST", body: fd });
-      const json = await resp.json();
-      if (!json.sucesso) return alert("Erro ao salvar!");
-
-      const idAirtable = json.novo[0].id;
-      cartinhasSessao.push({ id: idAirtable, ...payload, imagem_cartinha: urlImg });
-      alert("💙 Cartinha cadastrada!");
+    if (req.method === "POST" || req.method === "PATCH") {
+      const parsed = await parseForm(req);
+      body = parsed.fields;
     }
 
-    // EDITAR
-    else {
-      const resp = await fetch(`/api/cartinha?id=${atual.id}`, {
-        method: "PATCH",
-        body: fd,
-      });
+    // ========================================================
+    // 🔹 GET — Listar cartinhas (AGORA CORRETO COM eventos)
+    // ========================================================
+    if (req.method === "GET") {
+      const { evento } = req.query;
 
-      const json = await resp.json();
-      if (!json.sucesso) return alert("Erro ao atualizar!");
-
-      cartinhasSessao[editIndex] = {
-        ...cartinhasSessao[editIndex],
-        ...payload,
-        imagem_cartinha: urlImg,
+      let selectConfig = {
+        sort: [{ field: "data_cadastro", direction: "desc" }],
       };
 
-      alert("Atualizada com sucesso ✔");
+      if (evento) {
+        selectConfig.filterByFormula = `{eventos} = "${evento}"`;
+      }
+
+      const records = await base(tableName).select(selectConfig).all();
+
+      // Carregar todos os eventos
+      const eventosAirtable = await base("eventos").select().all();
+      const eventosMap = {};
+
+      eventosAirtable.forEach((ev) => {
+        eventosMap[ev.id] = ev.fields.nome_evento || "";
+      });
+
+      const cartinha = records.map((r) => {
+        const idEventos = r.fields.eventos || [];
+
+        return {
+          id: r.id,
+          nome_crianca: r.fields.nome_crianca || "",
+          idade: r.fields.idade || "",
+          sexo: r.fields.sexo || "",
+          sonho: r.fields.sonho || "",
+          escola: r.fields.escola || "",
+          cidade: r.fields.cidade || "",
+          telefone_contato: r.fields.telefone_contato || "",
+          psicologa_responsavel: r.fields.psicologa_responsavel || "",
+          imagem_cartinha: r.fields.imagem_cartinha || [],
+          irmaos: r.fields.irmaos ?? null,
+          idade_irmaos: r.fields.idade_irmaos || "",
+          status: r.fields.status || "",
+          observacoes_admin: r.fields.observacoes_admin || "",
+          eventos: idEventos,
+
+          // Nome do evento
+          evento_nome: idEventos.map((id) => eventosMap[id] || "").join(", "),
+        };
+      });
+
+      return res.status(200).json({ sucesso: true, cartinha });
     }
 
-    form.reset();
-    previewImagem.innerHTML = "";
-    uploadedUrl = "";
-    editIndex = null;
-    atualizarLista();
-  });
+    // ========================================================
+    // 🔹 POST — Criar CARTINHA
+    // ========================================================
+    if (req.method === "POST") {
+      const sexoValido = ["menino", "menina", "outro"];
+      const statusValido = ["disponivel", "adotada", "inativa"];
 
-  // Botão limpar
-  btnLimpar.addEventListener("click", () => {
-    form.reset();
-    previewImagem.innerHTML = "";
-    uploadedUrl = "";
-    editIndex = null;
-  });
+      const sexo = sexoValido.includes((body.sexo || "").toLowerCase())
+        ? body.sexo.toLowerCase()
+        : "menina";
 
-  atualizarLista();
-});
+      const status = statusValido.includes((body.status || "").toLowerCase())
+        ? body.status.toLowerCase()
+        : "disponivel";
 
-// ============================================================
-// LISTA DE CONFERÊNCIA
-// ============================================================
-function atualizarLista() {
-  const lista = document.getElementById("cartinhas-lista");
-  const total = document.getElementById("total-cartinhas");
+      let irmaosNumber = null;
+      if (body.irmaos !== undefined && body.irmaos !== "") {
+        const n = parseInt(String(body.irmaos).replace(/\D/g, ""), 10);
+        if (!Number.isNaN(n)) irmaosNumber = n;
+      }
 
-  if (!cartinhasSessao.length) {
-    lista.innerHTML = `<p class="text-gray-500 text-center">Nenhuma cartinha cadastrada.</p>`;
-    total.textContent = "0";
-    return;
-  }
+      // imagem
+      let imagem_cartinha = [];
+      try {
+        if (body.imagem_cartinha) {
+          const arr = JSON.parse(body.imagem_cartinha);
+          if (Array.isArray(arr)) {
+            imagem_cartinha = arr.map((i) =>
+              typeof i === "string" ? { url: i } : i
+            );
+          }
+        }
+      } catch {
+        imagem_cartinha = [];
+      }
 
-  total.textContent = cartinhasSessao.length;
+      const fields = {
+        nome_crianca: body.nome_crianca,
+        idade: body.idade ? parseInt(body.idade, 10) : null,
+        sexo,
+        sonho: body.sonho,
+        escola: body.escola,
+        cidade: body.cidade,
+        telefone_contato: body.telefone_contato,
+        psicologa_responsavel: body.psicologa_responsavel,
+        observacoes_admin: body.observacoes_admin || "",
+        status,
+        idade_irmaos: body.idade_irmaos,
+      };
 
-  lista.innerHTML = cartinhasSessao
-    .map(
-      (c, idx) => `
-  <div class="p-4 bg-blue-50 border rounded-lg shadow relative">
+      if (irmaosNumber !== null) fields.irmaos = irmaosNumber;
 
-    ${
-      c.imagem_cartinha
-        ? `<img src="${c.imagem_cartinha}" class="w-24 h-24 rounded-lg shadow float-right ml-4">`
-        : ""
+      // 🔹 CORRETO: eventos
+      if (body.id_evento) {
+        fields.eventos = [body.id_evento];
+      }
+
+      if (imagem_cartinha.length > 0) fields.imagem_cartinha = imagem_cartinha;
+
+      const novo = await base(tableName).create([{ fields }]);
+
+      return res.status(200).json({ sucesso: true, novo });
     }
 
-    <p><strong>Nome:</strong> ${c.nome_crianca}</p>
-    <p><strong>Idade:</strong> ${c.idade}</p>
-    <p><strong>Sexo:</strong> ${c.sexo}</p>
-    <p><strong>Evento:</strong> ${c.id_evento}</p>
-    <p><strong>Sonho:</strong> ${c.sonho}</p>
+    // ========================================================
+    // 🔹 PATCH — Atualizar cartinha
+    // ========================================================
+    if (req.method === "PATCH") {
+      const { id } = req.query;
 
-    <div class="flex gap-4 mt-3">
-      <button onclick="editarCartinha(${idx})"
-        class="px-4 py-2 bg-yellow-500 text-white rounded-lg shadow">
-        ✏️ Editar
-      </button>
+      if (!id)
+        return res.status(400).json({
+          sucesso: false,
+          mensagem: "ID obrigatório para atualização.",
+        });
 
-      <button onclick="excluirCartinha(${idx})"
-        class="px-4 py-2 bg-red-600 text-white rounded-lg shadow">
-        🗑️ Excluir
-      </button>
-    </div>
-  </div>
-  `
-    )
-    .join("");
-}
+      const sexoValido = ["menino", "menina", "outro"];
+      const statusValido = ["disponivel", "adotada", "inativa"];
 
-// ============================================================
-// EDITAR
-// ============================================================
-function editarCartinha(idx) {
-  const c = cartinhasSessao[idx];
-  const form = document.getElementById("form-cartinha");
+      const fieldsToUpdate = {
+        nome_crianca: body.nome_crianca,
+        idade: body.idade ? parseInt(body.idade, 10) : null,
+        sonho: body.sonho,
+        escola: body.escola,
+        cidade: body.cidade,
+        telefone_contato: body.telefone_contato,
+        psicologa_responsavel: body.psicologa_responsavel,
+        observacoes_admin: body.observacoes_admin || "",
+        idade_irmaos: body.idade_irmaos || "",
+      };
 
-  form.nome_crianca.value = c.nome_crianca;
-  form.idade.value = c.idade;
-  form.sexo.value = c.sexo;
-  form.escola.value = c.escola;
-  form.cidade.value = c.cidade;
-  form.telefone_contato.value = c.telefone_contato;
-  form.psicologa_responsavel.value = c.psicologa_responsavel;
-  form.irmaos.value = c.irmaos;
-  form.idade_irmaos.value = c.idade_irmaos;
-  form.sonho.value = c.sonho;
-  form.observacoes_admin.value = c.observacoes_admin;
-  form.status.value = c.status;
-  form.id_evento.value = c.id_evento;
+      if (sexoValido.includes((body.sexo || "").toLowerCase())) {
+        fieldsToUpdate.sexo = body.sexo.toLowerCase();
+      }
 
-  uploadedUrl = c.imagem_cartinha;
-  document.getElementById("preview-imagem").innerHTML = uploadedUrl
-    ? `<img src="${uploadedUrl}" class="w-32 rounded shadow">`
-    : "";
+      if (statusValido.includes((body.status || "").toLowerCase())) {
+        fieldsToUpdate.status = body.status.toLowerCase();
+      }
 
-  editIndex = idx;
-  window.scrollTo({ top: 0, behavior: "smooth" });
-}
+      if (body.irmaos !== undefined) {
+        if (body.irmaos === "") fieldsToUpdate.irmaos = null;
+        else {
+          const n = parseInt(String(body.irmaos).replace(/\D/g, ""), 10);
+          if (!Number.isNaN(n)) fieldsToUpdate.irmaos = n;
+        }
+      }
 
-// ============================================================
-// EXCLUIR
-// ============================================================
-async function excluirCartinha(idx) {
-  const c = cartinhasSessao[idx];
-  if (!confirm("Excluir esta cartinha?")) return;
+      // imagem
+      if (body.imagem_cartinha) {
+        try {
+          const arr = JSON.parse(body.imagem_cartinha);
+          if (Array.isArray(arr)) {
+            fieldsToUpdate.imagem_cartinha = arr.map((i) =>
+              typeof i === "string" ? { url: i } : i
+            );
+          }
+        } catch {}
+      }
 
-  if (c.id) {
-    const resp = await fetch(`/api/cartinha?id=${c.id}`, {
-      method: "DELETE",
+      // 🔹 CORRETO: eventos
+      if (body.id_evento) {
+        fieldsToUpdate.eventos = [body.id_evento];
+      }
+
+      const atualizado = await base(tableName).update([
+        { id, fields: fieldsToUpdate },
+      ]);
+
+      return res.status(200).json({ sucesso: true, atualizado });
+    }
+
+    // ========================================================
+    // 🔹 DELETE
+    // ========================================================
+    if (req.method === "DELETE") {
+      const { id } = req.query;
+      if (!id)
+        return res.status(400).json({
+          sucesso: false,
+          mensagem: "ID obrigatório.",
+        });
+
+      await base(tableName).destroy([id]);
+      return res.status(200).json({
+        sucesso: true,
+        mensagem: "Cartinha excluída!",
+      });
+    }
+
+    res.status(405).json({
+      sucesso: false,
+      mensagem: `Método ${req.method} não permitido.`,
     });
-    const json = await resp.json();
-    if (!json.sucesso) return alert("Erro ao excluir");
+  } catch (e) {
+    console.error("🔥 Erro /api/cartinha:", e);
+    return res.status(500).json({
+      sucesso: false,
+      mensagem: e.message || "Erro interno no servidor.",
+    });
   }
-
-  cartinhasSessao.splice(idx, 1);
-  atualizarLista();
 }
