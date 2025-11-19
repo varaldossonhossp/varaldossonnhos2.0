@@ -10,36 +10,39 @@
 // e atualiza os elementos visuais conforme definido.
 // ============================================================
 // Uso:
-// • Inclua este script na página pública (ex: index.html)
+// • Este script deve estar na página pública (ex: index.html)
 // • Certifique-se de que os elementos HTML tenham as classes:
 //   - .logo-header       → Imagem do logo no header
 //   - .footer-nuvem      → Imagem da nuvem no footer
 //   - .instagram-link    → Link do Instagram
 // Carregamento ao iniciar a página
-// ============================================================ 
+// ============================================================
 
 document.addEventListener("DOMContentLoaded", async () => {
   try {
-    const r = await fetch("/api/admin?tipo=config_site");
+    const r = await fetch("/api/eventos?tipo=site");
     const json = await r.json();
     const cfg = json.config || {};
 
-    if (cfg.logo_header){
-      const el = document.querySelector(".logo-header");
-      if (el) el.src = cfg.logo_header;
+    // LOGO HEADER
+    if (cfg.logo_header) {
+      document.querySelectorAll(".logo-header")
+        .forEach(el => el.src = cfg.logo_header);
     }
 
-    if (cfg.nuvem_footer){
-      const el = document.querySelector(".footer-nuvem");
-      if (el) el.src = cfg.nuvem_footer;
+    // NUVEM DO FOOTER + HOME
+    if (cfg.nuvem_footer) {
+      document.querySelectorAll(".footer-nuvem")
+        .forEach(el => el.src = cfg.nuvem_footer);
     }
 
-    if (cfg.instagram_url){
-      const el = document.querySelector(".instagram-link");
-      if (el) el.href = cfg.instagram_url;
+    // INSTAGRAM
+    if (cfg.instagram_url) {
+      document.querySelectorAll(".instagram-link")
+        .forEach(el => el.href = cfg.instagram_url);
     }
 
-  } catch (e){
-    console.log("Erro ao carregar config:", e);
+  } catch (e) {
+    console.log("Erro carregando config do site:", e);
   }
 });

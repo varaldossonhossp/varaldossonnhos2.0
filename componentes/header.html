@@ -1,40 +1,44 @@
 <!-- ============================================================
-// 💙 VARAL DOS SONHOS — /componentes/header.html (FINAL RESPONSIVO)
+// 💙 VARAL DOS SONHOS — /componentes/header.html 
 // ---------------------------------------------------------------
 // Cabeçalho (header) do site com menu de navegação responsivo:
 // • Links dinâmicos conforme tipo de usuário logado
 // • Suporta usuários: visitante, doador, voluntário, admin, ponto de coleta.
 ============================================================ -->
 
+<!-- /componentes/header.html -->
 <header class="header-site">
   <nav class="menu">
 
     <!-- LOGO -->
     <div class="logo">
       <a href="/index.html">
-        <img src="/imagens/logo.png" width="95" alt="Logo Varal dos Sonhos" />
+        <img src="/imagens/logo.png"
+             width="95"
+             alt="Logo Varal dos Sonhos"
+             class="logo-header" />
       </a>
     </div>
 
-    <!-- LINKS DO MENU -->
     <ul class="menu-links" id="menu-links">
       <li><a href="/index.html">Início</a></li>
       <li><a href="/pages/cartinha.html">Varal Virtual</a></li>
       <li><a href="/pages/pontosdecoleta.html">Pontos de Coleta</a></li>
       <li><a href="/pages/carrinho.html">Carrinho</a></li>
 
-      <!-- VISÍVEIS SOMENTE LOGADO -->
       <li><a id="linkPainelAdmin" href="/pages/admin.html" style="display:none;">⚙️ Painel Admin</a></li>
-      <li><a id="linkPainelPonto" href="/pages/painel-ponto.html" style="display:none;">⚙️ Painel Controle</a></li>
+      <li><a id="linkPainelPonto" href="/pages/painel-ponto.html" style="display:none;">⚙️ Painel Ponto</a></li>
       <li><a id="linkConquista" href="/pages/conquistas.html" style="display:none;">🏆 Conquistas</a></li>
 
-      <!-- Login/Logout -->
       <li><a id="linkLogin" href="/pages/login.html">🔑 Login</a></li>
       <li><a id="linkCadastro" href="/pages/cadastro.html">📝 Cadastro</a></li>
 
-      <li><span id="saudacaoUsuario" style="display:none; font-weight:600;"></span></li>
+      <li><span id="saudacaoUsuario" style="display:none;font-weight:600;"></span></li>
       <li><a id="linkSair" href="#" style="display:none;">↳ Sair</a></li>
     </ul>
 
   </nav>
 </header>
+
+<script src="/js/config-site-loader.js"></script>
+

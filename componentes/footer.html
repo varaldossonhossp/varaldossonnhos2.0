@@ -1,18 +1,29 @@
-<!-- ============================================================
-💙 VARAL DOS SONHOS — /componentes/footer.html
----------------------------------------------------------------
-Rodapé fixo com créditos e link do Instagram
-============================================================ -->
+<!-- 
+// ============================================================
+// 💙 VARAL DOS SONHOS — /componentes/footer.html
+// ---------------------------------------------------------------
+// Rodapé fixo com créditos e link do Instagram
+// • Atualiza automaticamente o ano atual
+// • Nuvem decorativa no rodapé (configurável via admin)
+//============================================================ -->
 
 <footer class="footer-site">
   <p>© <span id="anoAtual"></span> Fantástica Fábrica de Sonhos — Desenvolvido com amor 💙</p>
+
   <div class="redes-sociais">
-    <a href="https://www.instagram.com/varal.dos.sonhos?utm_source=qr&igsh=MTFyamJpcWs4b250bQ%3D%3D" target="_blank" rel="noopener">
-      <img src="/imagens/instagram.png" alt="Instagram" class="icone-instagram" />
+    <a href="https://www.instagram.com/"
+       target="_blank"
+       rel="noopener"
+       class="instagram-link">
+      <img src="/imagens/instagram.png" class="icone-instagram" alt="Instagram"/>
       <span>#Siga nosso Instagram</span>
     </a>
   </div>
+
+  <img src="/imagens/nuvem.png" alt="Nuvem rodapé" class="footer-nuvem">
 </footer>
+
 <script>document.getElementById("anoAtual").textContent = new Date().getFullYear();</script>
 
+<script src="/js/config-site-loader.js"></script>
 
