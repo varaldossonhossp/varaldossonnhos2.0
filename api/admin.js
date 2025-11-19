@@ -84,10 +84,8 @@ function getToken(req) {
 
 function requireAuth(req, res) {
 
-  // ⚠ IMPORTANTE:
-  // GET config_site NÃO precisa de token → usada pelo site público
   if (req.method === "GET" && req.query.tipo === "config_site") {
-    return true;
+    return true; // leitura pública
   }
 
   const secret = process.env.ADMIN_SECRET;
@@ -106,10 +104,7 @@ function requireAuth(req, res) {
 function getBase() {
   const apiKey = process.env.AIRTABLE_API_KEY;
   const baseId = process.env.AIRTABLE_BASE_ID;
-
-  if (!apiKey || !baseId)
-    throw new Error("Chaves do Airtable ausentes.");
-
+  if (!apiKey || !baseId) throw new Error("Chaves do Airtable ausentes.");
   return new Airtable({ apiKey }).base(baseId);
 }
 
@@ -124,7 +119,6 @@ export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Headers", "Content-Type,x-admin-token");
   if (req.method === "OPTIONS") return res.status(204).end();
 
-  // Auth (POST exige token, GET config_site não)
   if (!requireAuth(req, res)) return;
 
   const base = getBase();
@@ -165,15 +159,10 @@ export default async function handler(req, res) {
     const { acao } = req.body || {};
 
     // ------------------------------------------------------------
-    // 🔧 SALVAR CONFIG DO SITE (LOGO / NUVEM / INSTAGRAM)
-    //
-    // body:
-    //   acao:"salvar_config_site"
-    //   campo:"logo" | "nuvem" | "instagram"
-    //   valor:"https://..."
+    // 🔧 SALVAR CONFIG DO SITE (CORRIGIDO)
     // ------------------------------------------------------------
     if (acao === "salvar_config_site") {
-
+      
       const { campo, valor } = req.body;
 
       if (!campo || !valor)
@@ -187,9 +176,19 @@ export default async function handler(req, res) {
 
       const fields = {};
 
-      if (campo === "logo")      fields.logo_header   = valor;
-      if (campo === "nuvem")     fields.nuvem_footer  = valor;
-      if (campo === "instagram") fields.instagram_url = valor;
+      // 🔥 CORREÇÃO IMPORTANTE: ATTACHMENT PARA IMAGENS
+      if (campo === "logo") {
+        fields.logo_header = [{ url: valor }];
+      }
+
+      if (campo === "nuvem") {
+        fields.nuvem_footer = [{ url: valor }];
+      }
+
+      // 🔹 instagram NÃO é attachment
+      if (campo === "instagram") {
+        fields.instagram_url = valor;
+      }
 
       fields.updated_at = new Date().toISOString();
 

@@ -20,29 +20,45 @@
 
 document.addEventListener("DOMContentLoaded", async () => {
   try {
-    const r = await fetch("/api/eventos?tipo=site");
+    const r = await fetch("/api/admin?tipo=config_site");
     const json = await r.json();
-    const cfg = json.config || {};
 
-    // LOGO HEADER
-    if (cfg.logo_header) {
-      document.querySelectorAll(".logo-header")
-        .forEach(el => el.src = cfg.logo_header);
+    if (!json.sucesso || !json.config) return;
+
+    const cfg = json.config;
+
+    // ============================================================
+    // 1) LOGO HEADER (attachment)
+    // ============================================================
+    if (Array.isArray(cfg.logo_header) && cfg.logo_header.length > 0) {
+      const urlLogo = cfg.logo_header[0].url;
+
+      document.querySelectorAll(".logo-header").forEach(el => {
+        el.src = urlLogo;
+      });
     }
 
-    // NUVEM DO FOOTER + HOME
-    if (cfg.nuvem_footer) {
-      document.querySelectorAll(".footer-nuvem")
-        .forEach(el => el.src = cfg.nuvem_footer);
+    // ============================================================
+    // 2) NUVEM FOOTER / HOME (attachment)
+    // ============================================================
+    if (Array.isArray(cfg.nuvem_footer) && cfg.nuvem_footer.length > 0) {
+      const urlNuvem = cfg.nuvem_footer[0].url;
+
+      document.querySelectorAll(".footer-nuvem").forEach(el => {
+        el.src = urlNuvem;
+      });
     }
 
-    // INSTAGRAM
+    // ============================================================
+    // 3) INSTAGRAM URL (texto)
+    // ============================================================
     if (cfg.instagram_url) {
-      document.querySelectorAll(".instagram-link")
-        .forEach(el => el.href = cfg.instagram_url);
+      document.querySelectorAll(".instagram-link").forEach(el => {
+        el.href = cfg.instagram_url;
+      });
     }
 
   } catch (e) {
-    console.log("Erro carregando config do site:", e);
+    console.error("Erro ao carregar config do site:", e);
   }
 });
