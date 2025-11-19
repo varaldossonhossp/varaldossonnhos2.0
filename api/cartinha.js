@@ -26,6 +26,9 @@
 //   - observacoes_admin     (Long text)
 //   - status                (Single select: disponivel/adotada/inativa)
 //   - id_evento             (Linked record → eventos)
+//  - id_evento é um linked record que referencia a tabela "eventos".
+//    Na resposta da API, o nome do evento é retornado no campo
+//    evento_nome, que é gerado dinamicamente a partir do ID.
 //
 // - Mantém GET, PATCH e DELETE funcionando normalmente.
 // - Adiciona suporte a POST (criação de nova cartinha)
@@ -34,37 +37,29 @@
 import Airtable from "airtable";
 import { IncomingForm } from "formidable";
 
-// ============================================================
-// ⚙️ Config form-data para Vercel
-// ============================================================
 export const config = {
   api: { bodyParser: false },
   runtime: "nodejs",
 };
 
-// ============================================================
-// 🔹 Conexão Airtable
-// ============================================================
+// Airtable
 const base = new Airtable({ apiKey: process.env.AIRTABLE_API_KEY }).base(
   process.env.AIRTABLE_BASE_ID
 );
 const tableName = process.env.AIRTABLE_CARTINHA_TABLE || "cartinha";
 
-// ============================================================
-// 🔹 CORS
-// ============================================================
+// CORS
 function setCors(res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET,POST,PATCH,DELETE,OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 }
 
-// ============================================================
-// 🔄 Parser para multipart/form-data (formidable)
-// ============================================================
+// Parse form-data
 function parseForm(req) {
   return new Promise((resolve, reject) => {
     const form = new IncomingForm({ keepExtensions: true });
+
     form.parse(req, (err, fields, files) => {
       if (err) return reject(err);
 
@@ -96,7 +91,7 @@ export default async function handler(req, res) {
     }
 
     // ========================================================
-    // 🔹 GET — Listar cartinhas
+    // 🔹 GET — Listar cartinhas (AGORA COM evento_nome)
     // ========================================================
     if (req.method === "GET") {
       const { evento } = req.query;
@@ -106,36 +101,48 @@ export default async function handler(req, res) {
       };
 
       if (evento) {
-        // filtra pelo ID do evento (campo ligado id_evento)
         selectConfig.filterByFormula = `{id_evento} = "${evento}"`;
       }
 
       const records = await base(tableName).select(selectConfig).all();
 
-      const cartinha = records.map((r) => ({
-        id: r.id,
-        nome_crianca: r.fields.nome_crianca || "",
-        idade: r.fields.idade || "",
-        sexo: r.fields.sexo || "",
-        sonho: r.fields.sonho || "",
-        escola: r.fields.escola || "",
-        cidade: r.fields.cidade || "",
-        telefone_contato: r.fields.telefone_contato || "",
-        psicologa_responsavel: r.fields.psicologa_responsavel || "",
-        imagem_cartinha: r.fields.imagem_cartinha || [],
-        irmaos: r.fields.irmaos ?? null,
-        idade_irmaos: r.fields.idade_irmaos || "",
-        status: r.fields.status || "",
-        observacoes_admin: r.fields.observacoes_admin || "",
-        // 🔹 id_evento vem como ARRAY de IDs de evento
-        id_evento: r.fields.id_evento || [],
-      }));
+      // 🔹 Carregar eventos uma única vez
+      const eventosAirtable = await base("eventos").select().all();
+      const eventosMap = {};
+
+      eventosAirtable.forEach((ev) => {
+        eventosMap[ev.id] = ev.fields.nome_evento || "";
+      });
+
+      const cartinha = records.map((r) => {
+        const idEventos = r.fields.id_evento || [];
+
+        return {
+          id: r.id,
+          nome_crianca: r.fields.nome_crianca || "",
+          idade: r.fields.idade || "",
+          sexo: r.fields.sexo || "",
+          sonho: r.fields.sonho || "",
+          escola: r.fields.escola || "",
+          cidade: r.fields.cidade || "",
+          telefone_contato: r.fields.telefone_contato || "",
+          psicologa_responsavel: r.fields.psicologa_responsavel || "",
+          imagem_cartinha: r.fields.imagem_cartinha || [],
+          irmaos: r.fields.irmaos ?? null,
+          idade_irmaos: r.fields.idade_irmaos || "",
+          status: r.fields.status || "",
+          observacoes_admin: r.fields.observacoes_admin || "",
+          id_evento: idEventos,
+          // 🔥 Nome do evento expandido
+          evento_nome: idEventos.map((id) => eventosMap[id] || "").join(", "),
+        };
+      });
 
       return res.status(200).json({ sucesso: true, cartinha });
     }
 
     // ========================================================
-    // 🔹 POST — Criar nova cartinha
+    // 🔹 POST — Criar
     // ========================================================
     if (req.method === "POST") {
       const sexoValido = ["menino", "menina", "outro"];
@@ -149,17 +156,16 @@ export default async function handler(req, res) {
         ? body.status.toLowerCase()
         : "disponivel";
 
-      // Número de irmãos (Number no Airtable)
+      // irmãos
       let irmaosNumber = null;
       if (body.irmaos !== undefined && body.irmaos !== "") {
         const n = parseInt(String(body.irmaos).replace(/\D/g, ""), 10);
         if (!Number.isNaN(n)) irmaosNumber = n;
       }
 
-      // Idade dos irmãos
       const idade_irmaos = body.idade_irmaos || "";
 
-      // Imagem (array de attachments)
+      // imagem
       let imagem_cartinha = [];
       try {
         if (body.imagem_cartinha) {
@@ -190,7 +196,7 @@ export default async function handler(req, res) {
 
       if (irmaosNumber !== null) fields.irmaos = irmaosNumber;
 
-      // 🔹 RELACIONAR A CARTINHA AO EVENTO (campo link id_evento)
+      // 🔹 vincular evento
       if (body.id_evento) {
         fields.id_evento = [body.id_evento];
       }
@@ -202,10 +208,11 @@ export default async function handler(req, res) {
     }
 
     // ========================================================
-    // 🔹 PATCH — Atualizar cartinha existente
+    // 🔹 PATCH — Atualizar
     // ========================================================
     if (req.method === "PATCH") {
       const { id } = req.query;
+
       if (!id)
         return res.status(400).json({
           sucesso: false,
@@ -235,7 +242,7 @@ export default async function handler(req, res) {
         fieldsToUpdate.status = body.status.toLowerCase();
       }
 
-      // Atualiza nº de irmãos
+      // irmãos
       if (body.irmaos !== undefined) {
         if (body.irmaos === "") {
           fieldsToUpdate.irmaos = null;
@@ -245,7 +252,7 @@ export default async function handler(req, res) {
         }
       }
 
-      // Atualizar imagem
+      // imagem
       if (body.imagem_cartinha) {
         try {
           const arr = JSON.parse(body.imagem_cartinha);
@@ -257,7 +264,7 @@ export default async function handler(req, res) {
         } catch {}
       }
 
-      // 🔹 Atualizar vínculo com evento, se vier novo id_evento
+      // 🔹 atualizar evento
       if (body.id_evento) {
         fieldsToUpdate.id_evento = [body.id_evento];
       }
@@ -270,7 +277,7 @@ export default async function handler(req, res) {
     }
 
     // ========================================================
-    // 🔹 DELETE — Excluir cartinha
+    // 🔹 DELETE
     // ========================================================
     if (req.method === "DELETE") {
       const { id } = req.query;
