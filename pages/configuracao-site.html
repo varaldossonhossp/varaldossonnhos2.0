@@ -12,113 +12,129 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>⚙️ Configuração do Site | Varal dos Sonhos</title>
-
+  <meta charset="UTF-8">
+  <title>⚙ Configuração do Site</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
-
   <style>
-    body { font-family: "Poppins", sans-serif; background: #e3f2fd; }
-    .card { background: white; padding: 24px; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-    .btn-azul {
-      background: #1e88e5;
-      color: white;
-      padding: 12px 22px;
-      border-radius: 10px;
-      font-weight: 600;
-      transition: .3s;
-      display: inline-block;
-      margin-top: 40px;
-    }
-    .btn-azul:hover {
-      background: #1565c0;
-    }
+    body { background: #e3f2fd; font-family: Poppins, sans-serif; }
+    .card { background:white; padding:25px; border-radius:16px; box-shadow:0 4px 12px rgba(0,0,0,.1); }
+    .btn-blue { background:#1e88e5; padding:10px 20px; color:white; border-radius:8px; }
   </style>
 </head>
 
 <body class="p-10">
 
   <h1 class="text-3xl font-bold text-blue-700 mb-6">⚙️ Configuração Geral do Site</h1>
-  <p class="text-gray-600 mb-8">Personalize o site para sua ONG: logo, nuvem e Instagram.</p>
 
-  <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 
     <!-- LOGO -->
     <div class="card">
-      <h2 class="text-xl font-bold text-blue-600 mb-3">🖼️ Logotipo</h2>
-      <p class="text-gray-600 mb-3">Envie um novo logo para substituir o atual.</p>
-
-      <input type="file" id="logoUpload" class="mb-3" />
-      <button onclick="salvarLogo()" class="px-4 py-2 bg-blue-600 text-white rounded">Salvar Logo</button>
-
-      <div id="previewLogo" class="mt-4"></div>
+      <h2 class="text-xl font-bold text-blue-600 mb-2">🖼 Logotipo</h2>
+      <input type="file" id="logoUpload" class="mb-2">
+      <button onclick="salvarLogo()" class="btn-blue">Salvar Logo</button>
+      <div id="previewLogo" class="mt-3"></div>
     </div>
 
     <!-- NUVEM -->
     <div class="card">
-      <h2 class="text-xl font-bold text-blue-600 mb-3">☁️ Imagem da Nuvem</h2>
-      <p class="text-gray-600 mb-3">Troque a nuvem padrão por qualquer imagem.</p>
-
-      <input type="file" id="nuvemUpload" class="mb-3" />
-      <button onclick="salvarNuvem()" class="px-4 py-2 bg-blue-600 text-white rounded">Salvar Nuvem</button>
-
-      <div id="previewNuvem" class="mt-4"></div>
+      <h2 class="text-xl font-bold text-blue-600 mb-2">☁️ Imagem da Nuvem</h2>
+      <input type="file" id="nuvemUpload" class="mb-2">
+      <button onclick="salvarNuvem()" class="btn-blue">Salvar Nuvem</button>
+      <div id="previewNuvem" class="mt-3"></div>
     </div>
 
-    <!-- INSTAGRAM -->
+    <!-- Instagram -->
     <div class="card col-span-1 md:col-span-2">
-      <h2 class="text-xl font-bold text-blue-600 mb-3">📱 Link do Instagram</h2>
-      <p class="text-gray-600 mb-3">Altere o link que aparece no rodapé do site.</p>
-
-      <input id="instagram" type="text" class="w-full p-2 border rounded mb-4" placeholder="https://instagram.com/suaong" />
-
-      <button onclick="salvarInstagram()" class="px-4 py-2 bg-blue-600 text-white rounded">Salvar Link</button>
+      <h2 class="text-xl font-bold text-blue-600 mb-2">📱 Link do Instagram</h2>
+      <input id="instagram" class="w-full border p-2 rounded mb-3" placeholder="https://instagram.com/suaong">
+      <button onclick="salvarInstagram()" class="btn-blue">Salvar</button>
     </div>
 
   </div>
 
-  <!-- BOTÃO VOLTAR -->
-  <a href="admin.html" class="btn-azul">⬅ Voltar ao Painel Administrativo</a>
+  <a href="admin.html" class="btn-blue mt-6 inline-block">⬅ Voltar ao Painel Administrativo</a>
 
-  <script>
-    const CLOUD_NAME = "drnn5zmxi";
-    const PRESET = "unsigned_uploads";
+<script>
+const TOKEN = "varaladmin";
+const CLOUD_NAME = "drnn5zmxi";
+const PRESET = "unsigned_uploads";
 
-    async function uploadImagem(file){
-      const fd = new FormData();
-      fd.append("file", file);
-      fd.append("upload_preset", PRESET);
+async function uploadImagem(file){
+  const fd = new FormData();
+  fd.append("file", file);
+  fd.append("upload_preset", PRESET);
 
-      const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, { method: "POST", body: fd });
-      const data = await res.json();
-      return data.secure_url;
-    }
+  const r = await fetch(
+    `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`,
+    { method:"POST", body:fd }
+  );
+  return (await r.json()).secure_url;
+}
 
-    async function salvarLogo(){
-      const file = document.getElementById("logoUpload").files[0];
-      if (!file) return alert("Selecione uma imagem!");
-      const url = await uploadImagem(file);
-      await fetch("/api/configsite", { method: "POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({ campo:"logo", valor:url })});
-      alert("Logo atualizada!");
-    }
+async function salvarLogo(){
+  const file = logoUpload.files[0];
+  if (!file) return alert("Selecione uma imagem");
 
-    async function salvarNuvem(){
-      const file = document.getElementById("nuvemUpload").files[0];
-      if (!file) return alert("Selecione uma imagem!");
-      const url = await uploadImagem(file);
-      await fetch("/api/configsite", { method: "POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({ campo:"nuvem", valor:url })});
-      alert("Imagem da nuvem alterada!");
-    }
+  const url = await uploadImagem(file);
 
-    async function salvarInstagram(){
-      const link = document.getElementById("instagram").value;
-      if (!link.trim()) return alert("Informe o link!");
-      await fetch("/api/configsite", { method: "POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({ campo:"instagram", valor:link })});
-      alert("Link atualizado!");
-    }
-  </script>
+  await fetch("/api/admin", {
+    method:"POST",
+    headers:{
+      "Content-Type":"application/json",
+      "x-admin-token":TOKEN
+    },
+    body: JSON.stringify({
+      acao:"salvar_config_site",
+      logo_header:url
+    })
+  });
+
+  alert("Logo atualizada!");
+  previewLogo.innerHTML = `<img src="${url}" width="150">`;
+}
+
+async function salvarNuvem(){
+  const file = nuvemUpload.files[0];
+  if (!file) return alert("Selecione uma imagem");
+
+  const url = await uploadImagem(file);
+
+  await fetch("/api/admin", {
+    method:"POST",
+    headers:{
+      "Content-Type":"application/json",
+      "x-admin-token":TOKEN
+    },
+    body: JSON.stringify({
+      acao:"salvar_config_site",
+      nuvem_footer:url
+    })
+  });
+
+  alert("Nuvem atualizada!");
+  previewNuvem.innerHTML = `<img src="${url}" width="150">`;
+}
+
+async function salvarInstagram(){
+  const link = instagram.value.trim();
+  if (!link) return alert("Informe o link");
+
+  await fetch("/api/admin", {
+    method:"POST",
+    headers:{
+      "Content-Type":"application/json",
+      "x-admin-token":TOKEN
+    },
+    body: JSON.stringify({
+      acao:"salvar_config_site",
+      instagram_url:link
+    })
+  });
+
+  alert("Instagram atualizado!");
+}
+</script>
 
 </body>
 </html>

@@ -7,7 +7,7 @@
 //     - Implementa CRUD completo (Criar, Listar, Atualizar, Excluir).
 //     - É utilizada SOMENTE pelo painel administrativo.
 //     - A página pública NÃO usa esta API.
-//     - - Gerencia a tabela de CONFIGURAÇÃO DO SITE
+//     - Gerencia a tabela de CONFIGURAÇÃO DO SITE
 //       (logo, nuvem, instagram etc. em config_site).
 //
 // 🔹 Arquivos / Telas que consomem esta API:
@@ -57,6 +57,12 @@
 //     - Toda requisição precisa do header:  x-admin-token: SEU_TOKEN
 //     - Sem token válido → 401 Token inválido.
 // ============================================================
+// DOCUMENTAÇÃO TÉCNICA — /api/admin.js
+// ============================================================
+// 🔹 Finalidade da API:
+//     - Gerenciar EVENTOS
+//     - Gerenciar CONFIGURAÇÃO DO SITE (config_site)
+// ============================================================
 
 import Airtable from "airtable";
 
@@ -81,9 +87,12 @@ function getToken(req) {
 function requireAuth(req, res) {
   const secret = process.env.ADMIN_SECRET;
   if (!secret) return err(res, 500, "ADMIN_SECRET não configurado.");
+
   const token = getToken(req);
   if (!token) return err(res, 401, "Token ausente.");
+
   if (token !== secret) return err(res, 401, "Token inválido.");
+
   return true;
 }
 
@@ -94,9 +103,8 @@ function getBase() {
   const apiKey = process.env.AIRTABLE_API_KEY;
   const baseId = process.env.AIRTABLE_BASE_ID;
 
-  if (!apiKey || !baseId) {
-    throw new Error("Chaves do Airtable ausentes (AIRTABLE_API_KEY / AIRTABLE_BASE_ID).");
-  }
+  if (!apiKey || !baseId)
+    throw new Error("Chaves do Airtable ausentes.");
 
   return new Airtable({ apiKey }).base(baseId);
 }
@@ -112,46 +120,35 @@ export default async function handler(req, res) {
   if (req.method === "OPTIONS") return res.status(204).end();
 
   // Auth
-  const auth = requireAuth(req, res);
-  if (auth !== true) return;
+  if (!requireAuth(req, res)) return;
 
   const base = getBase();
   const eventosTable = process.env.AIRTABLE_EVENTOS_TABLE || "eventos";
-  const configTable  = process.env.AIRTABLE_CONFIG_SITE_TABLE || "config_site";
+  const configTable = process.env.AIRTABLE_CONFIG_SITE_TABLE || "config_site";
 
   const { tipo = "" } = req.query;
 
   try {
     // ==========================================================
-    // 📋 GET
+    // 📋 GET — CONFIG SITE
+    // ==========================================================
+    if (req.method === "GET" && tipo === "config_site") {
+      const registros = await base(configTable)
+        .select({ maxRecords: 1 })
+        .all();
+
+      const rec = registros[0] || null;
+
+      return ok(res, {
+        sucesso: true,
+        config: rec ? { id: rec.id, ...rec.fields } : null,
+      });
+    }
+
+    // ==========================================================
+    // 📋 GET — EVENTOS
     // ==========================================================
     if (req.method === "GET") {
-
-      // ---------------------------------------
-      // 🔧 GET CONFIG_SITE
-      //    /api/admin?tipo=config_site
-      // ---------------------------------------
-      if (tipo === "config_site") {
-        const registros = await base(configTable)
-          .select({ maxRecords: 1 })
-          .all();
-
-        const rec = registros[0] || null;
-
-        return ok(res, {
-          sucesso: true,
-          config: rec
-            ? {
-                id: rec.id,
-                ...rec.fields,
-              }
-            : null,
-        });
-      }
-
-      // ---------------------------------------
-      // 📅 GET EVENTOS (padrão)
-      // ---------------------------------------
       const registros = await base(eventosTable).select().all();
       return ok(res, { sucesso: true, eventos: registros });
     }
@@ -159,125 +156,114 @@ export default async function handler(req, res) {
     // ==========================================================
     // 📝 POST
     // ==========================================================
-    if (req.method === "POST") {
-      const body = req.body || {};
-      const { acao } = body;
+    const body = req.body || {};
+    const { acao } = body;
 
-      // --------------------------------------------------------
-      // 🔧 SALVAR CONFIG_SITE
-      //    acao = "salvar_config_site"
-      // --------------------------------------------------------
-      if (acao === "salvar_config_site") {
-        const {
-          id_config,          // opcional (id Airtable para update)
-          logo_header,
-          nuvem_footer,
-          instagram_url,
-          nome_ong,
-          descricao_homepage,
-          email_contato,
-          telefone_contato,
-        } = body;
+    // ----------------------------------------------------------
+    // 🔧 SALVAR CONFIG SITE (campo e valor)
+    //
+    // usado pela página configuracao-site.html
+    //
+    // body:
+    //   campo: "logo" | "nuvem" | "instagram"
+    //   valor: "url ou texto"
+    // ----------------------------------------------------------
+    if (acao === "salvar_config_site") {
+      const { campo, valor } = body;
 
-        const camposConfig = {
-          logo_header: logo_header || "",
-          nuvem_footer: nuvem_footer || "",
-          instagram_url: instagram_url || "",
-          nome_ong: nome_ong || "",
-          descricao_homepage: descricao_homepage || "",
-          email_contato: email_contato || "",
-          telefone_contato: telefone_contato || "",
-          updated_at: new Date().toISOString(),
-        };
+      if (!campo || !valor)
+        return err(res, 400, "Campo e valor obrigatórios.");
 
-        let recordId = id_config;
+      // BUSCAR registro único OU criar
+      const existentes = await base(configTable)
+        .select({ maxRecords: 1 })
+        .all();
 
-        // Se já veio um id_config → atualizar
-        if (id_config) {
-          const atualizado = await base(configTable).update([
-            { id: id_config, fields: camposConfig },
-          ]);
-          recordId = atualizado[0].id;
-        } else {
-          // Se não veio id_config, cria um novo registro
-          const criado = await base(configTable).create([
-            { fields: camposConfig },
-          ]);
-          recordId = criado[0].id;
-        }
+      let recordId = existentes[0]?.id;
 
-        return ok(res, {
-          sucesso: true,
-          id: recordId,
-        });
+      const fields = {};
+      if (campo === "logo") fields.logo_header = valor;
+      if (campo === "nuvem") fields.nuvem_footer = valor;
+      if (campo === "instagram") fields.instagram_url = valor;
+
+      fields.updated_at = new Date().toISOString();
+
+      if (recordId) {
+        await base(configTable).update([{ id: recordId, fields }]);
+      } else {
+        const novo = await base(configTable).create([{ fields }]);
+        recordId = novo[0].id;
       }
 
-      // --------------------------------------------------------
-      // 🆕 EVENTOS — Criar novo evento
-      // --------------------------------------------------------
-      if (acao === "criar") {
-        const {
-          nome_evento,
-          local_evento,
-          descricao,
-          data_evento,
-          data_limite_recebimento,
-          data_realizacao_evento,
-          status_evento,
-          destacar_na_homepage,
-          imagem,
-        } = body;
-
-        const novo = await base(eventosTable).create([
-          {
-            fields: {
-              nome_evento,
-              local_evento,
-              descricao,
-              data_evento: data_evento || null,
-              data_limite_recebimento: data_limite_recebimento || null,
-              data_realizacao_evento: data_realizacao_evento || null,
-              destacar_na_homepage: !!destacar_na_homepage,
-              imagem: Array.isArray(imagem) ? imagem : [],
-              status_evento: status_evento || "em andamento",
-              ativo: true,
-            },
-          },
-        ]);
-
-        return ok(res, { sucesso: true, id: novo[0].id });
-      }
-
-      // --------------------------------------------------------
-      // ✏️ EVENTOS — Atualizar evento existente
-      //   - "fields" vem direto do front (campos parciais)
-      // --------------------------------------------------------
-      if (acao === "atualizar") {
-        const { id_evento, fields } = body;
-        if (!id_evento || !fields) {
-          return err(res, 400, "Dados insuficientes.");
-        }
-
-        await base(eventosTable).update([{ id: id_evento, fields }]);
-        return ok(res, { sucesso: true });
-      }
-
-      // --------------------------------------------------------
-      // 🗑️ EVENTOS — Excluir evento
-      // --------------------------------------------------------
-      if (acao === "excluir") {
-        const { id_evento } = body;
-        if (!id_evento) return err(res, 400, "id_evento ausente.");
-        await base(eventosTable).destroy([id_evento]);
-        return ok(res, { sucesso: true });
-      }
-
-      return err(res, 400, "Ação inválida.");
+      return ok(res, { sucesso: true, id: recordId });
     }
 
-    return err(res, 405, "Método não suportado.");
+    // ----------------------------------------------------------
+    // 🆕 EVENTOS — Criar
+    // ----------------------------------------------------------
+    if (acao === "criar") {
+      const {
+        nome_evento,
+        local_evento,
+        descricao,
+        data_evento,
+        data_limite_recebimento,
+        data_realizacao_evento,
+        status_evento,
+        destacar_na_homepage,
+        imagem,
+      } = body;
+
+      const novo = await base(eventosTable).create([
+        {
+          fields: {
+            nome_evento,
+            local_evento,
+            descricao,
+            data_evento: data_evento || null,
+            data_limite_recebimento: data_limite_recebimento || null,
+            data_realizacao_evento: data_realizacao_evento || null,
+            destacar_na_homepage: !!destacar_na_homepage,
+            imagem: Array.isArray(imagem) ? imagem : [],
+            status_evento: status_evento || "em andamento",
+            ativo: true,
+          },
+        },
+      ]);
+
+      return ok(res, { sucesso: true, id: novo[0].id });
+    }
+
+    // ----------------------------------------------------------
+    // ✏️ EVENTOS — Atualizar
+    // ----------------------------------------------------------
+    if (acao === "atualizar") {
+      const { id_evento, fields } = body;
+      if (!id_evento || !fields)
+        return err(res, 400, "Dados insuficientes.");
+
+      await base(eventosTable).update([{ id: id_evento, fields }]);
+
+      return ok(res, { sucesso: true });
+    }
+
+    // ----------------------------------------------------------
+    // 🗑️ EVENTOS — Excluir
+    // ----------------------------------------------------------
+    if (acao === "excluir") {
+      const { id_evento } = body;
+
+      if (!id_evento)
+        return err(res, 400, "id_evento ausente.");
+
+      await base(eventosTable).destroy([id_evento]);
+
+      return ok(res, { sucesso: true });
+    }
+
+    return err(res, 400, "Ação inválida.");
   } catch (e) {
     console.error("Erro /api/admin:", e);
-    return err(res, 500, e.message || "Erro interno.");
+    return err(res, 500, e.message);
   }
 }
