@@ -62,7 +62,32 @@ function getAirtable() {
 }
 
 // ============================================================
-// 🟦 Mapeamento de evento (mantido)
+// 🟦 Mapeamento seguro de config_site (resolve attachments)
+// ============================================================
+function mapConfig(fields) {
+  if (!fields) return null;
+
+  return {
+    nome_ong: fields.nome_ong || "",
+    instagram_url: fields.instagram_url || "",
+    descricao_homepage: fields.descricao_homepage || "",
+    email_contato: fields.email_contato || "",
+    telefone_contato: fields.telefone_contato || "",
+
+    // LOGO HEADER (URL pura)
+    logo_header: Array.isArray(fields.logo_header)
+      ? fields.logo_header[0]?.url || ""
+      : fields.logo_header || "",
+
+    // NUVEM FOOTER (URL pura)
+    nuvem_footer: Array.isArray(fields.nuvem_footer)
+      ? fields.nuvem_footer[0]?.url || ""
+      : fields.nuvem_footer || ""
+  };
+}
+
+// ============================================================
+// 🟦 Mapeamento de evento (mantido exatamente igual)
 // ============================================================
 function mapEvento(rec) {
   const f = rec.fields || {};
@@ -107,7 +132,7 @@ export default async function handler(req, res) {
     const { tipo = "", status = "" } = req.query;
 
     // ==========================================================
-    // 📌 1 — CONFIGURAÇÃO DO SITE (sem token)
+    // 📌 1 — CONFIG DO SITE (corrigida: agora retorna URL pura)
     // ==========================================================
     if (tipo === "site") {
       const registros = await base(configTable)
@@ -118,12 +143,12 @@ export default async function handler(req, res) {
 
       return res.status(200).json({
         sucesso: true,
-        config: rec ? rec.fields : null
+        config: rec ? mapConfig(rec.fields) : null
       });
     }
 
     // ==========================================================
-    // 📌 2 — EVENTOS (comportamento original mantido)
+    // 📌 2 — EVENTOS (mantido igual)
     // ==========================================================
     let filtro = "";
 
