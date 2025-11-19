@@ -57,12 +57,6 @@
 //     - Toda requisição precisa do header:  x-admin-token: SEU_TOKEN
 //     - Sem token válido → 401 Token inválido.
 // ============================================================
-// DOCUMENTAÇÃO TÉCNICA — /api/admin.js
-// ============================================================
-// 🔹 Finalidade da API:
-//     - Gerenciar EVENTOS
-//     - Gerenciar CONFIGURAÇÃO DO SITE (config_site)
-// ============================================================
 
 import Airtable from "airtable";
 
