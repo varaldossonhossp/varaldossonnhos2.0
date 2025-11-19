@@ -26,13 +26,14 @@
 //   - idade_irmaos          (Single line text)
 //   - observacoes_admin     (Long text)
 //   - status                (Single select: disponivel/adotada/inativa)
-//   - id_evento             (Linked record → eventos)
-//  - id_evento é um linked record que referencia a tabela "eventos".
-//    Na resposta da API, o nome do evento é retornado no campo
-//    evento_nome, que é gerado dinamicamente a partir do ID.
 //
 // - Mantém GET, PATCH e DELETE funcionando normalmente.
 // - Adiciona suporte a POST (criação de nova cartinha)
+// ============================================================
+// ------------------------------------------------------------
+// TOTALMENTE CORRIGIDO — CAMPOS REAIS DO AIRTABLE:
+//   • eventos  (Linked Record real da tabela cartinha)
+//   • id_evento NÃO EXISTE → removido
 // ============================================================
 
 import Airtable from "airtable";
@@ -92,7 +93,7 @@ export default async function handler(req, res) {
     }
 
     // ========================================================
-    // 🔹 GET — Listar cartinhas (AGORA COM evento_nome)
+    // 🔹 GET — Listar cartinhas (AGORA CORRETO COM eventos)
     // ========================================================
     if (req.method === "GET") {
       const { evento } = req.query;
@@ -102,12 +103,12 @@ export default async function handler(req, res) {
       };
 
       if (evento) {
-        selectConfig.filterByFormula = `{id_evento} = "${evento}"`;
+        selectConfig.filterByFormula = `{eventos} = "${evento}"`;
       }
 
       const records = await base(tableName).select(selectConfig).all();
 
-      // 🔹 Carregar eventos uma única vez
+      // Carregar todos os eventos
       const eventosAirtable = await base("eventos").select().all();
       const eventosMap = {};
 
@@ -116,7 +117,7 @@ export default async function handler(req, res) {
       });
 
       const cartinha = records.map((r) => {
-        const idEventos = r.fields.id_evento || [];
+        const idEventos = r.fields.eventos || [];
 
         return {
           id: r.id,
@@ -133,8 +134,9 @@ export default async function handler(req, res) {
           idade_irmaos: r.fields.idade_irmaos || "",
           status: r.fields.status || "",
           observacoes_admin: r.fields.observacoes_admin || "",
-          id_evento: idEventos,
-          // 🔥 Nome do evento expandido
+          eventos: idEventos,
+
+          // Nome do evento
           evento_nome: idEventos.map((id) => eventosMap[id] || "").join(", "),
         };
       });
@@ -143,7 +145,7 @@ export default async function handler(req, res) {
     }
 
     // ========================================================
-    // 🔹 POST — Criar
+    // 🔹 POST — Criar CARTINHA
     // ========================================================
     if (req.method === "POST") {
       const sexoValido = ["menino", "menina", "outro"];
@@ -157,14 +159,11 @@ export default async function handler(req, res) {
         ? body.status.toLowerCase()
         : "disponivel";
 
-      // irmãos
       let irmaosNumber = null;
       if (body.irmaos !== undefined && body.irmaos !== "") {
         const n = parseInt(String(body.irmaos).replace(/\D/g, ""), 10);
         if (!Number.isNaN(n)) irmaosNumber = n;
       }
-
-      const idade_irmaos = body.idade_irmaos || "";
 
       // imagem
       let imagem_cartinha = [];
@@ -192,24 +191,25 @@ export default async function handler(req, res) {
         psicologa_responsavel: body.psicologa_responsavel,
         observacoes_admin: body.observacoes_admin || "",
         status,
-        idade_irmaos,
+        idade_irmaos: body.idade_irmaos,
       };
 
       if (irmaosNumber !== null) fields.irmaos = irmaosNumber;
 
-      // 🔹 vincular evento
+      // 🔹 CORRETO: eventos
       if (body.id_evento) {
-        fields.id_evento = [body.id_evento];
+        fields.eventos = [body.id_evento];
       }
 
       if (imagem_cartinha.length > 0) fields.imagem_cartinha = imagem_cartinha;
 
       const novo = await base(tableName).create([{ fields }]);
+
       return res.status(200).json({ sucesso: true, novo });
     }
 
     // ========================================================
-    // 🔹 PATCH — Atualizar
+    // 🔹 PATCH — Atualizar cartinha
     // ========================================================
     if (req.method === "PATCH") {
       const { id } = req.query;
@@ -243,11 +243,9 @@ export default async function handler(req, res) {
         fieldsToUpdate.status = body.status.toLowerCase();
       }
 
-      // irmãos
       if (body.irmaos !== undefined) {
-        if (body.irmaos === "") {
-          fieldsToUpdate.irmaos = null;
-        } else {
+        if (body.irmaos === "") fieldsToUpdate.irmaos = null;
+        else {
           const n = parseInt(String(body.irmaos).replace(/\D/g, ""), 10);
           if (!Number.isNaN(n)) fieldsToUpdate.irmaos = n;
         }
@@ -265,9 +263,9 @@ export default async function handler(req, res) {
         } catch {}
       }
 
-      // 🔹 atualizar evento
+      // 🔹 CORRETO: eventos
       if (body.id_evento) {
-        fieldsToUpdate.id_evento = [body.id_evento];
+        fieldsToUpdate.eventos = [body.id_evento];
       }
 
       const atualizado = await base(tableName).update([
