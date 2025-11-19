@@ -56,18 +56,22 @@
 // 🔹 Regras de segurança:
 //     - Toda requisição precisa do header:  x-admin-token: SEU_TOKEN
 //     - Sem token válido → 401 Token inválido.
+//
+// 🔹 Segurança:
+//     - POST exige token ADMIN_SECRET
+//     - GET config_site é público (para ser lido no index)
 // ============================================================
 
 import Airtable from "airtable";
 
 export const config = { runtime: "nodejs" };
 
-const ok = (res, data) => res.status(200).json(data);
-const err = (res, code, msg) =>
-  res.status(code).json({ sucesso: false, mensagem: msg });
+// Respostas
+const ok  = (res, data) => res.status(200).json(data);
+const err = (res, code, msg) => res.status(code).json({ sucesso:false, mensagem:msg });
 
 // ============================================================
-// 🔐 Autenticação administrativa
+// 🔐 AUTENTICAÇÃO — usada somente no POST
 // ============================================================
 function getToken(req) {
   return (
@@ -79,19 +83,25 @@ function getToken(req) {
 }
 
 function requireAuth(req, res) {
+
+  // ⚠ IMPORTANTE:
+  // GET config_site NÃO precisa de token → usada pelo site público
+  if (req.method === "GET" && req.query.tipo === "config_site") {
+    return true;
+  }
+
   const secret = process.env.ADMIN_SECRET;
   if (!secret) return err(res, 500, "ADMIN_SECRET não configurado.");
 
   const token = getToken(req);
   if (!token) return err(res, 401, "Token ausente.");
-
   if (token !== secret) return err(res, 401, "Token inválido.");
 
   return true;
 }
 
 // ============================================================
-// 📡 Conexão Airtable
+// 📡 CONEXÃO AIRTABLE
 // ============================================================
 function getBase() {
   const apiKey = process.env.AIRTABLE_API_KEY;
@@ -107,25 +117,27 @@ function getBase() {
 // 🧩 HANDLER PRINCIPAL
 // ============================================================
 export default async function handler(req, res) {
+
   // CORS
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type,x-admin-token");
   if (req.method === "OPTIONS") return res.status(204).end();
 
-  // Auth
+  // Auth (POST exige token, GET config_site não)
   if (!requireAuth(req, res)) return;
 
   const base = getBase();
   const eventosTable = process.env.AIRTABLE_EVENTOS_TABLE || "eventos";
-  const configTable = process.env.AIRTABLE_CONFIG_SITE_TABLE || "config_site";
+  const configTable  = process.env.AIRTABLE_CONFIG_SITE_TABLE || "config_site";
 
   const { tipo = "" } = req.query;
 
   try {
-    // ==========================================================
-    // 📋 GET — CONFIG SITE
-    // ==========================================================
+
+    // ============================================================
+    // 📋 GET — CONFIG SITE (sem token)
+    // ============================================================
     if (req.method === "GET" && tipo === "config_site") {
       const registros = await base(configTable)
         .select({ maxRecords: 1 })
@@ -139,45 +151,44 @@ export default async function handler(req, res) {
       });
     }
 
-    // ==========================================================
-    // 📋 GET — EVENTOS
-    // ==========================================================
+    // ============================================================
+    // 📋 GET — EVENTOS (com token)
+    // ============================================================
     if (req.method === "GET") {
       const registros = await base(eventosTable).select().all();
       return ok(res, { sucesso: true, eventos: registros });
     }
 
-    // ==========================================================
-    // 📝 POST
-    // ==========================================================
-    const body = req.body || {};
-    const { acao } = body;
+    // ============================================================
+    // 📝 POST — AÇÕES ADMINISTRATIVAS
+    // ============================================================
+    const { acao } = req.body || {};
 
-    // ----------------------------------------------------------
-    // 🔧 SALVAR CONFIG SITE (campo e valor)
-    //
-    // usado pela página configuracao-site.html
+    // ------------------------------------------------------------
+    // 🔧 SALVAR CONFIG DO SITE (LOGO / NUVEM / INSTAGRAM)
     //
     // body:
-    //   campo: "logo" | "nuvem" | "instagram"
-    //   valor: "url ou texto"
-    // ----------------------------------------------------------
+    //   acao:"salvar_config_site"
+    //   campo:"logo" | "nuvem" | "instagram"
+    //   valor:"https://..."
+    // ------------------------------------------------------------
     if (acao === "salvar_config_site") {
-      const { campo, valor } = body;
+
+      const { campo, valor } = req.body;
 
       if (!campo || !valor)
         return err(res, 400, "Campo e valor obrigatórios.");
 
-      // BUSCAR registro único OU criar
-      const existentes = await base(configTable)
+      const registros = await base(configTable)
         .select({ maxRecords: 1 })
         .all();
 
-      let recordId = existentes[0]?.id;
+      let recordId = registros[0]?.id;
 
       const fields = {};
-      if (campo === "logo") fields.logo_header = valor;
-      if (campo === "nuvem") fields.nuvem_footer = valor;
+
+      if (campo === "logo")      fields.logo_header   = valor;
+      if (campo === "nuvem")     fields.nuvem_footer  = valor;
       if (campo === "instagram") fields.instagram_url = valor;
 
       fields.updated_at = new Date().toISOString();
@@ -189,73 +200,47 @@ export default async function handler(req, res) {
         recordId = novo[0].id;
       }
 
-      return ok(res, { sucesso: true, id: recordId });
+      return ok(res, { sucesso:true, id:recordId });
     }
 
-    // ----------------------------------------------------------
-    // 🆕 EVENTOS — Criar
-    // ----------------------------------------------------------
+    // ------------------------------------------------------------
+    // 🆕 EVENTO — CRIAR
+    // ------------------------------------------------------------
     if (acao === "criar") {
-      const {
-        nome_evento,
-        local_evento,
-        descricao,
-        data_evento,
-        data_limite_recebimento,
-        data_realizacao_evento,
-        status_evento,
-        destacar_na_homepage,
-        imagem,
-      } = body;
-
       const novo = await base(eventosTable).create([
-        {
-          fields: {
-            nome_evento,
-            local_evento,
-            descricao,
-            data_evento: data_evento || null,
-            data_limite_recebimento: data_limite_recebimento || null,
-            data_realizacao_evento: data_realizacao_evento || null,
-            destacar_na_homepage: !!destacar_na_homepage,
-            imagem: Array.isArray(imagem) ? imagem : [],
-            status_evento: status_evento || "em andamento",
-            ativo: true,
-          },
-        },
+        { fields: req.body }
       ]);
-
       return ok(res, { sucesso: true, id: novo[0].id });
     }
 
-    // ----------------------------------------------------------
-    // ✏️ EVENTOS — Atualizar
-    // ----------------------------------------------------------
+    // ------------------------------------------------------------
+    // ✏️ EVENTO — ATUALIZAR
+    // ------------------------------------------------------------
     if (acao === "atualizar") {
-      const { id_evento, fields } = body;
+      const { id_evento, fields } = req.body;
+
       if (!id_evento || !fields)
         return err(res, 400, "Dados insuficientes.");
 
-      await base(eventosTable).update([{ id: id_evento, fields }]);
-
-      return ok(res, { sucesso: true });
+      await base(eventosTable).update([{ id:id_evento, fields }]);
+      return ok(res, { sucesso:true });
     }
 
-    // ----------------------------------------------------------
-    // 🗑️ EVENTOS — Excluir
-    // ----------------------------------------------------------
+    // ------------------------------------------------------------
+    // 🗑️ EVENTO — EXCLUIR
+    // ------------------------------------------------------------
     if (acao === "excluir") {
-      const { id_evento } = body;
+      const { id_evento } = req.body;
 
       if (!id_evento)
         return err(res, 400, "id_evento ausente.");
 
       await base(eventosTable).destroy([id_evento]);
-
-      return ok(res, { sucesso: true });
+      return ok(res, { sucesso:true });
     }
 
     return err(res, 400, "Ação inválida.");
+
   } catch (e) {
     console.error("Erro /api/admin:", e);
     return err(res, 500, e.message);
