@@ -2,63 +2,58 @@
 // 🎨 VARAL DOS SONHOS — /js/config-site-loader.js
 // ------------------------------------------------------------
 // Script para carregar configuração visual do site:
-// • Logo do header
-// • Nuvem do footer
+// • Logo do header (logo_header)
+// • Nuvem animada do INDEX (nuvem_index)
 // • Link do Instagram
 //
-// Carrega configuração do site via API administrativa
-// e atualiza os elementos visuais conforme definido.
-// ============================================================
-// Uso:
-// • Este script deve estar na página pública (ex: index.html)
-// • Certifique-se de que os elementos HTML tenham as classes:
-//   - .logo-header       → Imagem do logo no header
-//   - .footer-nuvem      → Imagem da nuvem no footer
-//   - .instagram-link    → Link do Instagram
-// Carregamento ao iniciar a página
+// Dados vêm de:  GET /api/admin?tipo=config_site
+// Tabela Airtable:
+//   - config_site
+// Campos importantes (Airtable):
+//   - logo_header  (Attachment[])
+//   - nuvem_index  (Attachment[])
+//   - instagram_url (texto)
 // ============================================================
 
 document.addEventListener("DOMContentLoaded", async () => {
   try {
-    const r = await fetch("/api/admin?tipo=config_site");
-    const json = await r.json();
+    const resp = await fetch("/api/admin?tipo=config_site");
+    const json = await resp.json();
 
-    if (!json.sucesso || !json.config) return;
+    if (!json.sucesso || !json.config) {
+      console.warn("Config do site não encontrada.");
+      return;
+    }
 
     const cfg = json.config;
 
-    // ============================================================
-    // 1) LOGO HEADER (attachment)
-    // ============================================================
-    if (Array.isArray(cfg.logo_header) && cfg.logo_header.length > 0) {
-      const urlLogo = cfg.logo_header[0].url;
+    // --- Logo (attachment) ---
+    const logoAtt = Array.isArray(cfg.logo_header) ? cfg.logo_header[0] : null;
+    const logoUrl = logoAtt && logoAtt.url ? logoAtt.url : null;
 
+    if (logoUrl) {
       document.querySelectorAll(".logo-header").forEach(el => {
-        el.src = urlLogo;
+        el.src = logoUrl;
       });
     }
 
-    // ============================================================
-    // 2) NUVEM FOOTER / HOME (attachment)
-    // ============================================================
-    if (Array.isArray(cfg.nuvem_footer) && cfg.nuvem_footer.length > 0) {
-      const urlNuvem = cfg.nuvem_footer[0].url;
+    // --- Nuvem do INDEX (attachment nuvem_index) ---
+    const nuvemAtt = Array.isArray(cfg.nuvem_index) ? cfg.nuvem_index[0] : null;
+    const nuvemUrl = nuvemAtt && nuvemAtt.url ? nuvemAtt.url : null;
 
-      document.querySelectorAll(".footer-nuvem").forEach(el => {
-        el.src = urlNuvem;
+    if (nuvemUrl) {
+      document.querySelectorAll(".nuvem-index").forEach(el => {
+        el.src = nuvemUrl;
       });
     }
 
-    // ============================================================
-    // 3) INSTAGRAM URL (texto)
-    // ============================================================
+    // --- Instagram (texto normal) ---
     if (cfg.instagram_url) {
       document.querySelectorAll(".instagram-link").forEach(el => {
         el.href = cfg.instagram_url;
       });
     }
-
   } catch (e) {
-    console.error("Erro ao carregar config do site:", e);
+    console.log("Erro carregando config do site:", e);
   }
 });

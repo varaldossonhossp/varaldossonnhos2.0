@@ -1,29 +1,38 @@
 <!-- ============================================================
- 💙 VARAL DOS SONHOS — configuracao-site.html (VERSÃO FINAL)
- ------------------------------------------------------------
- Página centralizada no padrão do painel:
-  ✔ Carrega automaticamente as configs
-  ✔ Exibe em modo leitura
-  ✔ Botão EDITAR habilita os campos
-  ✔ Botão SALVAR atualiza tudo
-  ✔ Estilo igual à página de Cartinhas
+⚙️ VARAL DOS SONHOS — /pages/configuracao-site.html
+------------------------------------------------------------
+Configuração geral do site para qualquer ONG usar.
+
+Campos:
+✔ Nome da ONG
+✔ Descrição da Homepage
+✔ Logotipo (logo_header)
+✔ Nuvem Animada do Index (nuvem_index)
+✔ Instagram
+✔ E-mail de Contato
+✔ Telefone de Contato (com máscara)
+
+Integra com:
+  - /api/admin?tipo=config_site (GET)
+  - /api/admin  (POST acao="salvar_config_site")
+  - /js/configuracao-site.js
 ============================================================ -->
 
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>⚙️ Configuração Geral do Site</title>
+  <meta charset="UTF-8" />
+  <title>⚙ Configuração do Site | Varal dos Sonhos</title>
 
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="icon" href="../imagens/favicon.png" type="image/png" />
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
 
   <style>
     body {
-      background-color: #f2f7fc;
       font-family: "Poppins", sans-serif;
+      background-color: #f2f7fc;
     }
     .btn-top {
       display: inline-flex;
@@ -39,217 +48,160 @@
       box-shadow: 0 2px 5px rgba(0,0,0,.1);
       align-items: center;
     }
-    .btn-top:hover { background:#1565c0; transform: translateY(-2px); }
-
+    .btn-top:hover {
+      background: #1565c0;
+      transform: translateY(-2px);
+    }
     .card-box {
-      background:white;
-      border-radius:20px;
-      padding:2rem;
-      border:1px solid #cfe3ff;
-      box-shadow:0 3px 8px rgba(0,0,0,.08);
+      background: white;
+      border-radius: 20px;
+      padding: 2rem;
+      border: 1px solid #cfe3ff;
+      box-shadow: 0 3px 8px rgba(0,0,0,.08);
     }
     label {
-      font-weight:600;
-      color:#003f7d;
+      font-weight: 600;
+      color: #003f7d;
+      font-size: 0.95rem;
     }
-    input, textarea {
-      border:1px solid #d0d7e2;
-      margin-top:4px;
-      font-size:0.9rem;
+    input, select, textarea {
+      border: 1px solid #d0d7e2;
+      margin-top: 4px;
+      font-size: 0.9rem;
     }
-    input:disabled, textarea:disabled {
-      background:#e8eef7;
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: #1e88e5;
+      box-shadow: 0 0 0 2px rgba(30,136,229,.25);
+    }
+    small {
+      font-size: 0.8rem;
     }
   </style>
 </head>
 
-<body class="min-h-screen">
+<body class="bg-gradient-to-b from-blue-50 to-blue-100 min-h-screen">
+  <main class="max-w-5xl mx-auto p-6 space-y-8">
 
-  <!-- ============================ -->
-  <!--     CONTAINER PRINCIPAL     -->
-  <!-- ============================ -->
-  <main class="max-w-4xl mx-auto p-6 space-y-8">
-
-    <!-- Botão voltar padrão -->
+    <!-- Botão Voltar -->
     <a href="admin.html" class="btn-top">
       ⬅️ <span>Voltar</span>
     </a>
 
-    <h2 class="text-3xl font-extrabold text-blue-800 text-center">
+    <h2 class="text-3xl font-extrabold text-blue-800 text-center mb-2">
       ⚙️ Configuração Geral do Site
     </h2>
 
-    <p id="status" class="text-blue-700 text-center font-semibold mb-3">
+    <p id="statusCarregando" class="text-center text-blue-700 font-semibold">
       ⏳ Carregando dados...
     </p>
 
-    <!-- ==== CARD PRINCIPAL ==== -->
+    <!-- Ficha única -->
     <section class="card-box">
+      <form id="form-config" class="space-y-6">
 
-      <form class="grid grid-cols-1 gap-6" id="form-config">
-
-        <!-- NOME ONG -->
+        <!-- Nome / Descrição -->
         <div>
-          <label>Nome da ONG</label>
-          <input id="nome_ong" class="w-full p-3 rounded-lg" disabled />
+          <label for="nome_ong">🏛 Nome da ONG</label>
+          <input id="nome_ong" name="nome_ong"
+                 class="w-full p-3 rounded-lg"
+                 placeholder="Ex: Varal dos Sonhos"
+                 data-editavel />
         </div>
 
-        <!-- DESCRIÇÃO -->
         <div>
-          <label>Descrição da Homepage</label>
-          <textarea id="descricao_homepage" rows="3" class="w-full p-3 rounded-lg" disabled></textarea>
+          <label for="descricao_homepage">📝 Descrição da Homepage</label>
+          <textarea id="descricao_homepage" name="descricao_homepage" rows="3"
+                    class="w-full p-3 rounded-lg"
+                    placeholder="Resumo que aparece na parte principal do site"
+                    data-editavel></textarea>
         </div>
 
-        <!-- LOGO + NUVEM -->
+        <!-- Logo + Nuvem -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-
+          <!-- Logo -->
           <div>
-            <label>🖼 Logotipo da ONG</label>
-            <div id="previewLogo" class="my-2"></div>
-            <input type="file" id="logoUpload" class="hidden" />
+            <label class="block mb-1">🖼 Logotipo da ONG</label>
+            <div class="flex items-center gap-4">
+              <div class="border rounded-lg p-2 bg-slate-50 flex items-center justify-center min-h-[80px] min-w-[80px]">
+                <img id="logoPreview" alt="Logo atual" class="max-h-16 max-w-full object-contain" />
+              </div>
+              <div class="flex flex-col gap-2">
+                <input type="file" id="logoUpload" accept=".png,.jpg,.jpeg"
+                       class="text-sm"
+                       data-editavel />
+                <small class="text-gray-500">Envie uma imagem em PNG ou JPG.</small>
+              </div>
+            </div>
           </div>
 
+          <!-- Nuvem Animada INDEX -->
           <div>
-            <label>☁️ Nuvem Rodapé</label>
-            <div id="previewNuvem" class="my-2"></div>
-            <input type="file" id="nuvemUpload" class="hidden" />
+            <label class="block mb-1">☁️ Nuvem Animada (Index)</label>
+            <div class="flex items-center gap-4">
+              <div class="border rounded-lg p-2 bg-slate-50 flex items-center justify-center min-h-[80px] min-w-[80px]">
+                <img id="nuvemPreview" alt="Nuvem animada atual" class="max-h-16 max-w-full object-contain" />
+              </div>
+              <div class="flex flex-col gap-2">
+                <input type="file" id="nuvemUpload" accept=".png,.jpg,.jpeg,.gif"
+                       class="text-sm"
+                       data-editavel />
+                <small class="text-gray-500">
+                  Esta imagem aparece como <strong>Nuvem animada</strong> na página inicial.
+                </small>
+              </div>
+            </div>
           </div>
-
         </div>
 
         <!-- Instagram -->
         <div>
-          <label>📱 Instagram</label>
-          <input id="instagram_url" class="w-full p-3 rounded-lg" disabled />
+          <label for="instagram_url">📱 Instagram</label>
+          <input id="instagram_url" name="instagram_url"
+                 class="w-full p-3 rounded-lg"
+                 placeholder="https://instagram.com/suaong"
+                 data-editavel />
         </div>
 
-        <!-- Email -->
+        <!-- E-mail -->
         <div>
-          <label>📧 E-mail de Contato</label>
-          <input id="email_contato" class="w-full p-3 rounded-lg" disabled />
+          <label for="email_contato">📧 E-mail de Contato</label>
+          <input id="email_contato" name="email_contato"
+                 class="w-full p-3 rounded-lg"
+                 placeholder="contato@suaong.org"
+                 data-editavel />
         </div>
 
         <!-- Telefone -->
         <div>
-          <label>📞 Telefone de Contato</label>
-          <input id="telefone_contato" class="w-full p-3 rounded-lg" disabled />
+          <label for="telefone_contato">📞 Telefone de Contato</label>
+          <input id="telefone_contato" name="telefone_contato"
+                 class="w-full p-3 rounded-lg"
+                 placeholder="(11) 99999-9999"
+                 data-editavel />
+          <small class="text-gray-500">
+            O número é formatado automaticamente com máscara.
+          </small>
         </div>
 
-        <!-- BOTÕES -->
-        <div class="flex justify-center gap-4 mt-4">
-          <button id="btnEditar" type="button"
+        <!-- Botões -->
+        <div class="flex justify-center gap-4 pt-4">
+          <button type="button" id="btnEditar"
                   class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg shadow-md flex items-center gap-2">
             ✏️ <span>Editar</span>
           </button>
 
-          <button id="btnSalvar" type="button"
-                  class="bg-green-600 hover:bg-green-700 text-white px-8 py-3 rounded-lg shadow-md flex items-center gap-2 hidden">
-            💾 <span>Salvar Alterações</span>
+          <button type="submit" id="btnSalvar"
+                  class="bg-green-600 hover:bg-green-700 text-white px-8 py-3 rounded-lg shadow-md flex items-center gap-2"
+                  disabled>
+            💾 <span>Salvar</span>
           </button>
         </div>
 
       </form>
-
     </section>
-
   </main>
 
-
-<script>
-const TOKEN = "varaladmin";
-const CLOUD_NAME = "drnn5zmxi";
-const PRESET = "unsigned_uploads";
-let recordId = null;
-
-// =============== UPLOAD CLOUDINARY =======================
-async function uploadImagem(file){
-  const fd = new FormData();
-  fd.append("file", file);
-  fd.append("upload_preset", PRESET);
-
-  const r = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, {
-    method:"POST", body:fd
-  });
-  return (await r.json()).secure_url;
-}
-
-// =============== CARREGAR CONFIG ==========================
-async function carregarConfig(){
-  const r = await fetch("/api/admin?tipo=config_site");
-  const json = await r.json();
-
-  if (!json.config) {
-    document.getElementById("status").textContent = "Nenhuma configuração cadastrada.";
-    return;
-  }
-
-  document.getElementById("status").textContent = "";
-
-  const cfg = json.config;
-  recordId = cfg.id;
-
-  nome_ong.value = cfg.nome_ong || "";
-  descricao_homepage.value = cfg.descricao_homepage || "";
-  instagram_url.value = cfg.instagram_url || "";
-  email_contato.value = cfg.email_contato || "";
-  telefone_contato.value = cfg.telefone_contato || "";
-
-  if (cfg.logo_header)
-    previewLogo.innerHTML = `<img src="${cfg.logo_header}" width="150">`;
-
-  if (cfg.nuvem_footer)
-    previewNuvem.innerHTML = `<img src="${cfg.nuvem_footer}" width="180">`;
-}
-
-carregarConfig();
-
-// =============== HABILITAR EDIÇÃO ========================
-btnEditar.onclick = () => {
-  document.querySelectorAll("input, textarea")
-    .forEach(el => el.disabled = false);
-
-  logoUpload.classList.remove("hidden");
-  nuvemUpload.classList.remove("hidden");
-
-  btnEditar.classList.add("hidden");
-  btnSalvar.classList.remove("hidden");
-};
-
-// =============== SALVAR ALTERAÇÕES ========================
-btnSalvar.onclick = async () => {
-  let logoUrl = null;
-  let nuvemUrl = null;
-
-  if (logoUpload.files[0]) logoUrl = await uploadImagem(logoUpload.files[0]);
-  if (nuvemUpload.files[0]) nuvemUrl = await uploadImagem(nuvemUpload.files[0]);
-
-  const fields = {
-    nome_ong: nome_ong.value,
-    descricao_homepage: descricao_homepage.value,
-    instagram_url: instagram_url.value,
-    email_contato: email_contato.value,
-    telefone_contato: telefone_contato.value,
-    updated_at: new Date().toISOString()
-  };
-
-  if (logoUrl) fields.logo_header = logoUrl;
-  if (nuvemUrl) fields.nuvem_footer = nuvemUrl;
-
-  await fetch("/api/admin", {
-    method:"POST",
-    headers:{ "Content-Type":"application/json", "x-admin-token":TOKEN },
-    body: JSON.stringify({
-      acao:"salvar_config_site",
-      campo:"update",
-      valor:fields,
-      id:recordId
-    })
-  });
-
-  alert("Configurações atualizadas!");
-  location.reload();
-};
-</script>
-
+  <script src="../js/configuracao-site.js"></script>
 </body>
 </html>
