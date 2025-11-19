@@ -38,7 +38,7 @@ async function carregarFiltros() {
     eventosJson.eventos?.forEach((ev) => {
       if (!ev.fields?.nome_evento) return;
       const opt = document.createElement("option");
-      opt.value = ev.fields.nome_evento;
+      opt.value = ev.id;
       opt.textContent = ev.fields.nome_evento;
       selEvento.appendChild(opt);
     });
@@ -150,7 +150,9 @@ function filtrar() {
 
     const eventoOK =
       filtroEvento === "todos" ||
-      f.evento_nome?.toLowerCase() === filtroEvento.toLowerCase();
+      f.id_evento === filtroEvento ||
+      (Array.isArray(f.id_evento) && f.id_evento.includes(filtroEvento));
+
 
     const sexoOK =
       filtroSexo === "todos" ||
