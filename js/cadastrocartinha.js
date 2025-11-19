@@ -76,6 +76,7 @@ document.addEventListener("DOMContentLoaded", () => {
         opt.textContent = `${ev.nome_evento} — ${ev.data_evento}`;
         opt.dataset.data_evento = ev.data_evento;
         opt.dataset.data_limite = ev.data_limite_recebimento;
+        opt.dataset.nome_evento = ev.nome_evento;
         select.appendChild(opt);
       });
 
@@ -145,6 +146,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
       // 🔥 CORRETO: campo REAL NO AIRTABLE
       id_evento: form.id_evento.value,
+      nome_evento: form.id_evento.selectedOptions[0]?.dataset.nome_evento || "",
+
 
       imagem_cartinha: urlImg
         ? JSON.stringify([{ url: urlImg }])
@@ -236,7 +239,7 @@ function atualizarLista() {
     <p><strong>Nome:</strong> ${c.nome_crianca}</p>
     <p><strong>Idade:</strong> ${c.idade}</p>
     <p><strong>Sexo:</strong> ${c.sexo}</p>
-    <p><strong>Evento:</strong> ${c.id_evento}</p>
+    <p><strong>Evento:</strong> ${c.nome_evento || "—"}</p>
     <p><strong>Sonho:</strong> ${c.sonho}</p>
 
     <div class="flex gap-4 mt-3">
