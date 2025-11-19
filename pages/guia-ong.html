@@ -1,0 +1,130 @@
+<!-- ============================================================
+     📘 VARAL DOS SONHOS — /pages/guia-ong.html
+     ------------------------------------------------------------
+     Guia de instalação / onboarding para qualquer ONG usar o site.
+============================================================ -->
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>📘 Guia para ONGs | Varal dos Sonhos</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="icon" href="../imagens/favicon.png" type="image/png" />
+
+  <style>
+    body {
+      font-family: "Poppins", sans-serif;
+      background-color: #e3f2fd;
+      color: #1e293b;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex justify-center">
+
+  <main class="w-full max-w-4xl p-6 md:p-10">
+
+    <!-- Botão azul para voltar -->
+    <button
+      onclick="window.location.href='admin.html'"
+      class="mb-6 inline-flex items-center gap-2 px-5 py-2 rounded-lg bg-blue-600 text-white font-semibold shadow hover:bg-blue-700 transition"
+    >
+      ⬅️ Voltar ao Painel Admin
+    </button>
+
+    <header class="mb-8">
+      <h1 class="text-3xl md:text-4xl font-bold text-blue-800 mb-3">
+        Guia para ONGs — Como usar o Varal dos Sonhos
+      </h1>
+      <p class="text-gray-700">
+        Este guia explica, passo a passo, como qualquer ONG pode configurar a sua
+        própria versão do site <strong>Varal dos Sonhos</strong> com contas próprias
+        de Airtable, Cloudinary e EmailJS.
+      </p>
+    </header>
+
+    <section class="space-y-6">
+
+      <!-- 1. Airtable -->
+      <article class="bg-white rounded-2xl shadow p-5">
+        <h2 class="text-xl font-semibold text-blue-700 mb-2">1. Criar a base no Airtable 📊</h2>
+        <ol class="list-decimal list-inside space-y-1 text-gray-700 text-sm md:text-base">
+          <li>Criar uma conta gratuita em <strong>airtable.com</strong>.</li>
+          <li>Criar uma nova base (base de dados) e importar o modelo fornecido pelo projeto Varal dos Sonhos.</li>
+          <li>Conferir se as tabelas existem: <em>usuario, cartinha, adocoes, pontos_coleta, eventos, gamificacao, regras_gamificacao, cloudinho, ponto_movimentos, config_site</em>.</li>
+          <li>Gerar uma chave de API e o ID da base (serão usados na Vercel).</li>
+        </ol>
+      </article>
+
+      <!-- 2. Cloudinary -->
+      <article class="bg-white rounded-2xl shadow p-5">
+        <h2 class="text-xl font-semibold text-blue-700 mb-2">2. Configurar o Cloudinary 🖼️</h2>
+        <ol class="list-decimal list-inside space-y-1 text-gray-700 text-sm md:text-base">
+          <li>Criar conta em <strong>cloudinary.com</strong>.</li>
+          <li>Anotar o <strong>cloud name</strong> do projeto.</li>
+          <li>Criar um <strong>upload preset</strong> do tipo <em>unsigned</em> para permitir uploads pelo site.</li>
+          <li>Atualizar as variáveis de ambiente na Vercel com o cloud name e o preset.</li>
+        </ol>
+      </article>
+
+      <!-- 3. EmailJS -->
+      <article class="bg-white rounded-2xl shadow p-5">
+        <h2 class="text-xl font-semibold text-blue-700 mb-2">3. Configurar o EmailJS 📧</h2>
+        <ol class="list-decimal list-inside space-y-1 text-gray-700 text-sm md:text-base">
+          <li>Criar conta em <strong>emailjs.com</strong>.</li>
+          <li>Criar um <strong>Service</strong> (ligado ao e-mail da ONG).</li>
+          <li>Criar os <strong>templates de e-mail</strong> usados no site:
+            confirmação para o doador, notificação para o administrador etc.</li>
+          <li>Anotar: <em>service_id</em>, <em>template_id</em>, <em>public_key</em> e <em>private_key</em>
+            e configurar na Vercel.</li>
+        </ol>
+      </article>
+
+      <!-- 4. Vercel -->
+      <article class="bg-white rounded-2xl shadow p-5">
+        <h2 class="text-xl font-semibold text-blue-700 mb-2">4. Publicar o site na Vercel 🚀</h2>
+        <ol class="list-decimal list-inside space-y-1 text-gray-700 text-sm md:text-base">
+          <li>Fazer um fork ou baixar o código-fonte do Varal dos Sonhos.</li>
+          <li>Criar um projeto na <strong>Vercel</strong> e conectar ao repositório.</li>
+          <li>Configurar as variáveis de ambiente:
+            <em>AIRTABLE_API_KEY, AIRTABLE_BASE_ID, EMAILJS_SERVICE_ID, EMAILJS_TEMPLATES, CLOUDINARY_* etc.</em></li>
+          <li>Fazer o deploy e testar o fluxo completo:
+            login, adoção, e-mails e relatórios.</li>
+        </ol>
+      </article>
+
+      <!-- 5. Estilo do site -->
+      <article class="bg-white rounded-2xl shadow p-5">
+        <h2 class="text-xl font-semibold text-blue-700 mb-2">5. Personalizar o estilo do site 🎨</h2>
+        <p class="text-gray-700 text-sm md:text-base mb-2">
+          A personalização visual é feita pela tabela <strong>config_site</strong> do Airtable
+          e pela tela <strong>Estilo do Site</strong> no painel administrativo.
+        </p>
+        <ul class="list-disc list-inside space-y-1 text-gray-700 text-sm md:text-base">
+          <li><strong>Logo header:</strong> imagem que aparece no topo do site.</li>
+          <li><strong>Nuvem / imagem da home:</strong> imagem principal da campanha.</li>
+          <li><strong>Instagram URL:</strong> link para o perfil oficial da ONG.</li>
+          <li><strong>Nome da ONG, e-mail e telefone:</strong> usados no rodapé e contatos.</li>
+        </ul>
+      </article>
+
+      <!-- 6. Checklist -->
+      <article class="bg-white rounded-2xl shadow p-5">
+        <h2 class="text-xl font-semibold text-blue-700 mb-2">6. Checklist final ✅</h2>
+        <ul class="list-disc list-inside space-y-1 text-gray-700 text-sm md:text-base">
+          <li>Consigo logar como administrador?</li>
+          <li>Consigo cadastrar eventos, pontos e cartinhas?</li>
+          <li>O carrossel e as imagens carregam normalmente?</li>
+          <li>O logo e a nuvem estão com a identidade visual da ONG?</li>
+          <li>Os e-mails de teste chegaram para o doador e para o admin?</li>
+          <li>O link do Instagram leva para o perfil correto?</li>
+        </ul>
+      </article>
+
+    </section>
+  </main>
+</body>
+</html>

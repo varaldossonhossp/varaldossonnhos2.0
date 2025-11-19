@@ -1,8 +1,12 @@
 <!-- ============================================================
-⚙️ VARAL DOS SONHOS — /pages/admin.html
-------------------------------------------------------------
-Painel Administrativo com nova seção:
-✔ Configuração do Site → (Eventos + Carrossel)
+     ⚙️ VARAL DOS SONHOS — /pages/admin.html
+     ------------------------------------------------------------
+     Painel Administrativo principal:
+     • Logística das doações
+     • Cadastros (eventos, pontos, cartinhas)
+     • Relatórios
+     • Configuração do Site (eventos, carrossel, estilo, guia ONG)
+     • Gamificação
 ============================================================ -->
 
 <!DOCTYPE html>
@@ -143,10 +147,20 @@ Painel Administrativo com nova seção:
       <h2>⚙️ Painel Administrativo</h2>
       <nav class="menu">
         <a href="#inicio">🏠 Início</a>
+
+        <!-- LOGÍSTICA -->
         <a href="#logistica">🚚 Logística das Doações</a>
+
+        <!-- CADASTRO -->
         <a href="#cadastro">📝 Cadastro</a>
+
+        <!-- RELATÓRIOS -->
         <a href="#relatorios">🗂️ Relatórios</a>
-        <a href="#configuracao">⚙️ Configurações do Site</a>
+
+        <!-- NOVO: CONFIGURAÇÃO DO SITE -->
+        <a href="#config-site">⚙️ Configuração do Site</a>
+
+        <!-- GAMIFICAÇÃO -->
         <a href="#gamificacao">🏅 Gamificação</a>
       </nav>
     </div>
@@ -169,15 +183,16 @@ Painel Administrativo com nova seção:
       </p>
     </section>
 
-    <!-- 🚚 LOGÍSTICA -->
+    <!-- 🚚 SEÇÃO LOGÍSTICA -->
     <section id="logistica">
       <h2 class="section-title">🚚 Logística das Doações</h2>
 
       <div class="card-grid">
+        <!-- Card Logística -->
         <div class="action-card" onclick="window.location.href='logistica-admin.html'">
-          <div style="font-size: 48px;">🚚</div>
+          <div style="font-size: 48px; text-align: center;">🚚</div>
           <h3>Gerenciar Logística</h3>
-          <p>Confirmar adoções e acompanhar entregas.</p>
+          <p>Confirmar adoções, acompanhar entregas e controlar toda a movimentação.</p>
         </div>
       </div>
     </section>
@@ -188,22 +203,25 @@ Painel Administrativo com nova seção:
 
       <div class="card-grid">
 
+        <!-- Evento -->
         <div class="action-card" onclick="window.location.href='cadastroevento.html'">
-          <div style="font-size: 48px;">🎉</div>
+          <div style="font-size: 48px; text-align: center;">🎉</div>
           <h3>Cadastrar Evento</h3>
           <p>Cadastro rápido de novos eventos.</p>
         </div>
 
+        <!-- Ponto -->
         <div class="action-card" onclick="window.location.href='cadastropontocoleta.html'">
-          <div style="font-size: 48px;">📦</div>
+          <div style="font-size: 48px; text-align: center;">📦</div>
           <h3>Cadastrar Ponto de Coleta</h3>
           <p>Adicionar novos locais de entrega.</p>
         </div>
 
+        <!-- Cartinha -->
         <div class="action-card" onclick="window.location.href='cadastrocartinha.html'">
-          <div style="font-size: 48px;">💌</div>
+          <div style="font-size: 48px; text-align: center;">💌</div>
           <h3>Cadastrar Cartinha</h3>
-          <p>Registrar novas cartinhas.</p>
+          <p>Registrar novas cartinhas no sistema.</p>
         </div>
 
       </div>
@@ -214,43 +232,54 @@ Painel Administrativo com nova seção:
       <h2 class="section-title">🗂️ Relatórios</h2>
 
       <div class="card-grid">
+
         <div class="action-card" onclick="window.location.href='relatorio-eventos.html'">
-          <div style="font-size: 48px;">🎉</div>
+          <div style="font-size: 48px; text-align: center;">🎉</div>
           <h3>Relatório de Eventos</h3>
+          <p>Filtrar eventos por status e gerar relatórios completos.</p>
         </div>
 
         <div class="action-card" onclick="window.location.href='relatorio-pontos.html'">
-          <div style="font-size: 48px;">📦</div>
-          <h3>Relatório de Pontos</h3>
+          <div style="font-size: 48px; text-align: center;">📦</div>
+          <h3>Relatório de Pontos de Coleta</h3>
+          <p>Listar e exportar pontos de coleta.</p>
         </div>
 
         <div class="action-card" onclick="window.location.href='relatorio-cartinhas.html'">
-          <div style="font-size: 48px;">💌</div>
+          <div style="font-size: 48px; text-align: center;">💌</div>
           <h3>Relatório de Cartinhas</h3>
+          <p>Visualizar e gerar PDF com as cartinhas.</p>
         </div>
+
       </div>
     </section>
 
     <!-- ⚙️ CONFIGURAÇÃO DO SITE -->
-    <section id="configuracao">
+    <section id="config-site">
       <h2 class="section-title">⚙️ Configuração do Site</h2>
 
       <div class="card-grid">
 
-        <!-- Eventos -->
+        <!-- Gerenciar Eventos (já existia, agora agrupado aqui) -->
         <div class="action-card" onclick="window.location.href='gerenciareventos.html'">
-          <div style="font-size: 48px;">🎉</div>
+          <div style="font-size: 48px; text-align: center;">🎉</div>
           <h3>Gerenciar Eventos</h3>
-          <p>Editar, destacar e controlar eventos.</p>
+          <p>Editar, destacar e atualizar os eventos da campanha.</p>
         </div>
 
-        <!-- ⚙️ CONFIGURAÇÃO GERAL DO SITE -->
-        <div class="action-card" onclick="window.location.href='configuracao-site.html'">
-          <div style="font-size: 48px;">⚙️</div>
-          <h3>Configuração Geral do Site</h3>
-          <p>Alterar logo, nuvem do site e link do Instagram.</p>
+        <!-- Estilo do Site (usa tabela config_site) -->
+        <div class="action-card" onclick="window.location.href='config-site.html'">
+          <div style="font-size: 48px; text-align: center;">🎨</div>
+          <h3>Estilo do Site</h3>
+          <p>Alterar logo da header, nuvem, nome da ONG e link do Instagram.</p>
         </div>
 
+        <!-- NOVO: Guia para ONGs -->
+        <div class="action-card" onclick="window.location.href='guia-ong.html'">
+          <div style="font-size: 48px; text-align: center;">📘</div>
+          <h3>Guia para ONGs</h3>
+          <p>Passo a passo para qualquer ONG instalar e configurar o site.</p>
+        </div>
 
       </div>
     </section>
@@ -258,11 +287,11 @@ Painel Administrativo com nova seção:
     <!-- 🏅 GAMIFICAÇÃO -->
     <section id="gamificacao">
       <h2 class="section-title">🏅 Gamificação</h2>
-
       <div class="card-grid">
         <div class="action-card" onclick="window.location.href='gerenciargamificacao.html'">
-          <img src="../imagens/logo.png" width="80" class="mx-auto" />
+          <img src="../imagens/logo.png" width="80" class="mx-auto" alt="Varal dos Sonhos" />
           <h3>Gerenciar Gamificação</h3>
+          <p>Configurar pontos, níveis e recompensas para doadores e voluntários.</p>
         </div>
       </div>
     </section>

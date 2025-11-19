@@ -22,6 +22,19 @@
   <style>
     body { font-family: "Poppins", sans-serif; background: #e3f2fd; }
     .card { background: white; padding: 24px; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+    .btn-azul {
+      background: #1e88e5;
+      color: white;
+      padding: 12px 22px;
+      border-radius: 10px;
+      font-weight: 600;
+      transition: .3s;
+      display: inline-block;
+      margin-top: 40px;
+    }
+    .btn-azul:hover {
+      background: #1565c0;
+    }
   </style>
 </head>
 
@@ -34,7 +47,7 @@
 
     <!-- LOGO -->
     <div class="card">
-      <h2 class="text-xl font-bold text-blue-600 mb-3">🖼️ Logo do Header</h2>
+      <h2 class="text-xl font-bold text-blue-600 mb-3">🖼️ Logotipo</h2>
       <p class="text-gray-600 mb-3">Envie um novo logo para substituir o atual.</p>
 
       <input type="file" id="logoUpload" class="mb-3" />
@@ -65,6 +78,9 @@
     </div>
 
   </div>
+
+  <!-- BOTÃO VOLTAR -->
+  <a href="admin.html" class="btn-azul">⬅ Voltar ao Painel Administrativo</a>
 
   <script>
     const CLOUD_NAME = "drnn5zmxi";

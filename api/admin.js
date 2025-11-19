@@ -7,14 +7,17 @@
 //     - Implementa CRUD completo (Criar, Listar, Atualizar, Excluir).
 //     - É utilizada SOMENTE pelo painel administrativo.
 //     - A página pública NÃO usa esta API.
+//     - - Gerencia a tabela de CONFIGURAÇÃO DO SITE
+//       (logo, nuvem, instagram etc. em config_site).
 //
 // 🔹 Arquivos / Telas que consomem esta API:
 //     - /pages/admin/cadastroevento.html
 //     - /js/admin.js  (funções do painel)
 //     - qualquer tela administrativa que edite eventos futuramente.
 //
-// 🔹 Tabela utilizada no Airtable:
-//     🗂  Tabela: **eventos**
+// 🔹 Tabelas utilizadas no Airtable:
+//     🗂  Tabela: eventos       (CRUD completo)
+//     🗂  Tabela: config_site   (configuração visual do site)
 //
 // 🔹 Campos utilizados pela API (conforme Airtable):
 //     - id_evento               (ID do registro — automático Airtable)
@@ -30,24 +33,33 @@
 //     - ativo                   (Checkbox / Boolean)
 //
 // 🔹 Operações implementadas:
-//     • GET    → listar todos os eventos
-//     • POST   (acao === "criar")      → criar novo evento
-//     • POST   (acao === "atualizar")  → atualizar campos parciais
-//     • POST   (acao === "excluir")    → excluir evento
+//
+//   EVENTOS (tabela "eventos"):
+//     • GET                      → listar todos os eventos
+//     • POST acao="criar"        → criar novo evento
+//     • POST acao="atualizar"    → atualizar campos parciais
+//     • POST acao="excluir"      → excluir evento
+//
+//   CONFIG_SITE (tabela "config_site"):
+//     • GET ?tipo=config_site
+//          → retorna o primeiro registro de configuração
+//     • POST acao="salvar_config_site"
+//          → cria/atualiza o registro de configuração
 //
 // 🔹 Variáveis de ambiente exigidas:
-//     - ADMIN_SECRET             (token do administrador)
-//     - AIRTABLE_API_KEY         (chave Airtable)
-//     - AIRTABLE_BASE_ID         (base Airtable)
-//     - AIRTABLE_EVENTOS_TABLE   (nome da tabela — opcional)
+//     - ADMIN_SECRET               (token do administrador)
+//     - AIRTABLE_API_KEY           (chave Airtable)
+//     - AIRTABLE_BASE_ID           (base Airtable)
+//     - AIRTABLE_EVENTOS_TABLE     (nome da tabela de eventos — opcional)
+//     - AIRTABLE_CONFIG_SITE_TABLE (nome da tabela de config — opcional)
 //
 // 🔹 Regras de segurança:
 //     - Toda requisição precisa do header:  x-admin-token: SEU_TOKEN
 //     - Sem token válido → 401 Token inválido.
-//
 // ============================================================
 
 import Airtable from "airtable";
+
 export const config = { runtime: "nodejs" };
 
 const ok = (res, data) => res.status(200).json(data);
@@ -78,47 +90,131 @@ function requireAuth(req, res) {
 // ============================================================
 // 📡 Conexão Airtable
 // ============================================================
-function getAirtable() {
+function getBase() {
   const apiKey = process.env.AIRTABLE_API_KEY;
   const baseId = process.env.AIRTABLE_BASE_ID;
-  const table = process.env.AIRTABLE_EVENTOS_TABLE || "eventos";
-  if (!apiKey || !baseId) throw new Error("Chaves Airtable ausentes.");
-  const base = new Airtable({ apiKey }).base(baseId);
-  return { base, table };
+
+  if (!apiKey || !baseId) {
+    throw new Error("Chaves do Airtable ausentes (AIRTABLE_API_KEY / AIRTABLE_BASE_ID).");
+  }
+
+  return new Airtable({ apiKey }).base(baseId);
 }
 
 // ============================================================
 // 🧩 HANDLER PRINCIPAL
 // ============================================================
 export default async function handler(req, res) {
+  // CORS
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type,x-admin-token");
   if (req.method === "OPTIONS") return res.status(204).end();
 
+  // Auth
   const auth = requireAuth(req, res);
   if (auth !== true) return;
 
-  const { base, table } = getAirtable();
+  const base = getBase();
+  const eventosTable = process.env.AIRTABLE_EVENTOS_TABLE || "eventos";
+  const configTable  = process.env.AIRTABLE_CONFIG_SITE_TABLE || "config_site";
+
+  const { tipo = "" } = req.query;
 
   try {
-    // ============================================================
-    // 📋 GET — Lista todos os eventos (retorna registros Airtable)
-    // ============================================================
+    // ==========================================================
+    // 📋 GET
+    // ==========================================================
     if (req.method === "GET") {
-      const registros = await base(table).select().all();
+
+      // ---------------------------------------
+      // 🔧 GET CONFIG_SITE
+      //    /api/admin?tipo=config_site
+      // ---------------------------------------
+      if (tipo === "config_site") {
+        const registros = await base(configTable)
+          .select({ maxRecords: 1 })
+          .all();
+
+        const rec = registros[0] || null;
+
+        return ok(res, {
+          sucesso: true,
+          config: rec
+            ? {
+                id: rec.id,
+                ...rec.fields,
+              }
+            : null,
+        });
+      }
+
+      // ---------------------------------------
+      // 📅 GET EVENTOS (padrão)
+      // ---------------------------------------
+      const registros = await base(eventosTable).select().all();
       return ok(res, { sucesso: true, eventos: registros });
     }
 
-    // ============================================================
-    // 🆕 POST — Criação / Atualização / Exclusão
-    // ============================================================
+    // ==========================================================
+    // 📝 POST
+    // ==========================================================
     if (req.method === "POST") {
-      const { acao, id_evento, fields } = req.body || {};
+      const body = req.body || {};
+      const { acao } = body;
 
-      // ----------------------------------------------------------
-      // 🆕 Criar novo evento
-      // ----------------------------------------------------------
+      // --------------------------------------------------------
+      // 🔧 SALVAR CONFIG_SITE
+      //    acao = "salvar_config_site"
+      // --------------------------------------------------------
+      if (acao === "salvar_config_site") {
+        const {
+          id_config,          // opcional (id Airtable para update)
+          logo_header,
+          nuvem_footer,
+          instagram_url,
+          nome_ong,
+          descricao_homepage,
+          email_contato,
+          telefone_contato,
+        } = body;
+
+        const camposConfig = {
+          logo_header: logo_header || "",
+          nuvem_footer: nuvem_footer || "",
+          instagram_url: instagram_url || "",
+          nome_ong: nome_ong || "",
+          descricao_homepage: descricao_homepage || "",
+          email_contato: email_contato || "",
+          telefone_contato: telefone_contato || "",
+          updated_at: new Date().toISOString(),
+        };
+
+        let recordId = id_config;
+
+        // Se já veio um id_config → atualizar
+        if (id_config) {
+          const atualizado = await base(configTable).update([
+            { id: id_config, fields: camposConfig },
+          ]);
+          recordId = atualizado[0].id;
+        } else {
+          // Se não veio id_config, cria um novo registro
+          const criado = await base(configTable).create([
+            { fields: camposConfig },
+          ]);
+          recordId = criado[0].id;
+        }
+
+        return ok(res, {
+          sucesso: true,
+          id: recordId,
+        });
+      }
+
+      // --------------------------------------------------------
+      // 🆕 EVENTOS — Criar novo evento
+      // --------------------------------------------------------
       if (acao === "criar") {
         const {
           nome_evento,
@@ -130,9 +226,9 @@ export default async function handler(req, res) {
           status_evento,
           destacar_na_homepage,
           imagem,
-        } = req.body;
+        } = body;
 
-        const novo = await base(table).create([
+        const novo = await base(eventosTable).create([
           {
             fields: {
               nome_evento,
@@ -152,24 +248,27 @@ export default async function handler(req, res) {
         return ok(res, { sucesso: true, id: novo[0].id });
       }
 
-      // ----------------------------------------------------------
-      // ✏️ Atualizar evento existente
+      // --------------------------------------------------------
+      // ✏️ EVENTOS — Atualizar evento existente
       //   - "fields" vem direto do front (campos parciais)
-// ----------------------------------------------------------
+      // --------------------------------------------------------
       if (acao === "atualizar") {
-        if (!id_evento || !fields)
+        const { id_evento, fields } = body;
+        if (!id_evento || !fields) {
           return err(res, 400, "Dados insuficientes.");
+        }
 
-        await base(table).update([{ id: id_evento, fields }]);
+        await base(eventosTable).update([{ id: id_evento, fields }]);
         return ok(res, { sucesso: true });
       }
 
-      // ----------------------------------------------------------
-      // 🗑️ Excluir evento
-      // ----------------------------------------------------------
+      // --------------------------------------------------------
+      // 🗑️ EVENTOS — Excluir evento
+      // --------------------------------------------------------
       if (acao === "excluir") {
+        const { id_evento } = body;
         if (!id_evento) return err(res, 400, "id_evento ausente.");
-        await base(table).destroy([id_evento]);
+        await base(eventosTable).destroy([id_evento]);
         return ok(res, { sucesso: true });
       }
 
