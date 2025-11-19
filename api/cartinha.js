@@ -13,6 +13,7 @@
 //
 //   Tabela CARTINHA – campos usados aqui:
 //   - nome_crianca          (Single line text)
+//   - primeiro_nome         (Formula)
 //   - idade                 (Number)
 //   - sexo                  (Single select: menino/menina/outro)
 //   - sonho                 (Long text)
