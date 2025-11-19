@@ -1,19 +1,25 @@
 // ============================================================
-// 💙 VARAL DOS SONHOS — js/cadastrocartinha.js (COMPLETO)
+// 💙 VARAL DOS SONHOS — js/cadastrocartinha.js 
 // ------------------------------------------------------------
-// - Carrega eventos com datas
-// - Mostra datas do evento ao selecionar
+// - Carrega eventos
 // - Upload Cloudinary
-// - Salvar / Editar / Excluir cartinhas
+// - Salvar, editar e excluir cartinhas
+// - 100% compatível com API /api/cartinha.js atual
+// ------------------------------------------------------------
+// Utilizado em:
+//   • pages/admin-cartinhas.html
+//   • js/nova-cartinha.js
+//   • js/editar-cartinha.js
 // ============================================================
 
+// -----------------------------------------------------------
 // Cloudinary
+// -----------------------------------------------------------
 const CLOUD_NAME = "drnn5zmxi";
 const UPLOAD_PRESET = "unsigned_uploads";
 
 let uploadedUrl = "";
 let cartinhasSessao = [];
-let cadastroSessaoId = null;
 let editIndex = null;
 
 // ============================================================
@@ -28,16 +34,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const campoDataLimite = document.getElementById("data_limite_info");
 
   // ============================================================
-  // Criar ID da sessão
-  // ============================================================
-  cadastroSessaoId = sessionStorage.getItem("cadastro_sessao_id");
-  if (!cadastroSessaoId) {
-    cadastroSessaoId = "sessao-" + Date.now();
-    sessionStorage.setItem("cadastro_sessao_id", cadastroSessaoId);
-  }
-
-  // ============================================================
-  // Title Case
+  // Title Case automático em alguns campos
   // ============================================================
   const titleCase = (str) =>
     str.toLowerCase().replace(/(?:^|\s)\S/g, (c) => c.toUpperCase());
@@ -75,14 +72,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
       json.eventos.forEach((ev) => {
         const opt = document.createElement("option");
-
         opt.value = ev.id;
-
         opt.textContent = `${ev.nome_evento} — ${ev.data_evento}`;
-
         opt.dataset.data_evento = ev.data_evento;
         opt.dataset.data_limite = ev.data_limite_recebimento;
-
         select.appendChild(opt);
       });
 
@@ -135,6 +128,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const urlImg = uploadedUrl || (atual ? atual.imagem_cartinha : "");
 
+    // ⛔ ATENÇÃO: payload AGORA NÃO TEM MAIS cadastro_sessao_id
     const payload = {
       nome_crianca: form.nome_crianca.value,
       idade: form.idade.value,
@@ -148,7 +142,6 @@ document.addEventListener("DOMContentLoaded", () => {
       sonho: form.sonho.value,
       observacoes_admin: form.observacoes_admin.value,
       status: form.status.value,
-      cadastro_sessao_id: cadastroSessaoId,
       id_evento: form.id_evento.value,
       imagem_cartinha: urlImg
         ? JSON.stringify([{ url: urlImg }])
@@ -175,6 +168,7 @@ document.addEventListener("DOMContentLoaded", () => {
         method: "PATCH",
         body: fd,
       });
+
       const json = await resp.json();
       if (!json.sucesso) return alert("Erro ao atualizar!");
 

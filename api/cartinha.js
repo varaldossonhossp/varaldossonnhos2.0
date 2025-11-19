@@ -19,16 +19,26 @@
 //   - idade_irmaos          (Single line text)
 //   - observacoes_admin     (Long text)
 //   - status                (Single select: disponivel/adotada/inativa)
-//   - cadastro_sessao_id    (Single line text — opcional)
+//   - id_evento             (Single line text)
 //
-// - Mantém GET, PATCH e DELETE sem quebrar código existente
+// - Mantém GET, PATCH e DELETE funcionando normalmente.
+// Funcionalidades:
+// - Upload de imagem via Cloudinary (pronto para form-data)
+// - Cadastrar, editar, listar e excluir cartinhas
+// - Compatível com Vercel (form-data + formidable)
+// ------------------------------------------------------------
+// Esta API é utilizada em:
+//   • pages/admin-cartinhas.html
+//   • js/admin-cartinhas.js
+//  • js/nova-cartinha.js
+//   • js/editar-cartinha.js
 // ============================================================
 
 import Airtable from "airtable";
 import { IncomingForm } from "formidable";
 
 // ============================================================
-// ⚙️ Configuração essencial para form-data no Vercel
+// ⚙️ Config form-data para Vercel
 // ============================================================
 export const config = {
   api: { bodyParser: false },
@@ -36,7 +46,7 @@ export const config = {
 };
 
 // ============================================================
-// 🔹 Conexão com Airtable
+// 🔹 Conexão Airtable
 // ============================================================
 const base = new Airtable({ apiKey: process.env.AIRTABLE_API_KEY }).base(
   process.env.AIRTABLE_BASE_ID
@@ -44,7 +54,7 @@ const base = new Airtable({ apiKey: process.env.AIRTABLE_API_KEY }).base(
 const tableName = process.env.AIRTABLE_CARTINHA_TABLE || "cartinha";
 
 // ============================================================
-// 🔹 Função utilitária para CORS
+// 🔹 CORS
 // ============================================================
 function setCors(res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -53,19 +63,21 @@ function setCors(res) {
 }
 
 // ============================================================
-// 🔄 Parser de formulário multipart
+// 🔄 Parser para multipart/form-data (formidable)
 // ============================================================
 function parseForm(req) {
   return new Promise((resolve, reject) => {
     const form = new IncomingForm({ keepExtensions: true });
     form.parse(req, (err, fields, files) => {
       if (err) return reject(err);
+
       const parsedFields = {};
       for (const key in fields) {
         parsedFields[key] = Array.isArray(fields[key])
           ? fields[key][0]
           : fields[key];
       }
+
       resolve({ fields: parsedFields, files });
     });
   });
@@ -80,50 +92,29 @@ export default async function handler(req, res) {
 
   try {
     let body = req.body;
+
     if (req.method === "POST" || req.method === "PATCH") {
       const parsed = await parseForm(req);
       body = parsed.fields;
     }
 
-  // ========================================================
-  // 🔹 GET — Lista de cartinhas 
-  // ========================================================
-  if (req.method === "GET") {
-    const { evento, session } = req.query;
+    // ========================================================
+    // 🔹 GET — Listar cartinhas
+    // ========================================================
+    if (req.method === "GET") {
+      const { evento } = req.query;
 
-    let selectConfig = {
-      sort: [{ field: "data_cadastro", direction: "desc" }],
-    };
+      let selectConfig = {
+        sort: [{ field: "data_cadastro", direction: "desc" }],
+      };
 
-    if (evento) {
-      selectConfig.filterByFormula = `{id_evento} = "${evento}"`;
-    }
-
-    if (session) {
-      selectConfig.filterByFormula = `{cadastro_sessao_id} = "${session}"`;
-    }
-
-    // 1) Buscar todas as CARTINHAS
-    const records = await base(tableName).select(selectConfig).all();
-
-    // 2) Buscar todos os EVENTOS uma única vez
-    const eventosAirtable = await base("eventos").select().all();
-    const eventosById = {};
-    eventosAirtable.forEach((ev) => {
-      eventosById[ev.id] = ev.fields.nome_evento || "";
-    });
-
-    // 3) Expandir evento_nome em cada cartinha
-    const cartinha = records.map((r) => {
-      let evento_nome = "";
-
-      if (Array.isArray(r.fields.id_evento)) {
-        evento_nome = r.fields.id_evento
-          .map((id) => eventosById[id] || "")
-          .join(", ");
+      if (evento) {
+        selectConfig.filterByFormula = `{id_evento} = "${evento}"`;
       }
 
-      return {
+      const records = await base(tableName).select(selectConfig).all();
+
+      const cartinha = records.map((r) => ({
         id: r.id,
         nome_crianca: r.fields.nome_crianca || "",
         idade: r.fields.idade || "",
@@ -138,22 +129,11 @@ export default async function handler(req, res) {
         idade_irmaos: r.fields.idade_irmaos || "",
         status: r.fields.status || "",
         observacoes_admin: r.fields.observacoes_admin || "",
-        
-
-        // Retornos de campos auxiliares (se existirem)
-        nome_evento: r.fields.nome_evento || "",
-        data_evento: r.fields.data_evento || "",
-        data_limite_recebimento: r.fields.data_limite_recebimento || "",
         id_evento: r.fields.id_evento || "",
+      }));
 
-        // 👉 EXPANSÃO REAL DO NOME DO EVENTO
-        evento_nome,
-      };
-    });
-
-    return res.status(200).json({ sucesso: true, cartinha });
-  }
-
+      return res.status(200).json({ sucesso: true, cartinha });
+    }
 
     // ========================================================
     // 🔹 POST — Criar nova cartinha
@@ -162,36 +142,32 @@ export default async function handler(req, res) {
       const sexoValido = ["menino", "menina", "outro"];
       const statusValido = ["disponivel", "adotada", "inativa"];
 
-      // Normaliza sexo / status
-      const sexo =
-        sexoValido.includes((body.sexo || "").toLowerCase()) ?
-          body.sexo.toLowerCase() :
-          "menina";
+      const sexo = sexoValido.includes((body.sexo || "").toLowerCase())
+        ? body.sexo.toLowerCase()
+        : "menina";
 
-      const status =
-        statusValido.includes((body.status || "").toLowerCase()) ?
-          body.status.toLowerCase() :
-          "disponivel";
+      const status = statusValido.includes((body.status || "").toLowerCase())
+        ? body.status.toLowerCase()
+        : "disponivel";
 
-      // Número de irmãos (campo Number no Airtable)
+      // Número de irmãos (Number no Airtable)
       let irmaosNumber = null;
       if (body.irmaos !== undefined && body.irmaos !== "") {
         const n = parseInt(String(body.irmaos).replace(/\D/g, ""), 10);
         if (!Number.isNaN(n)) irmaosNumber = n;
       }
 
-      // Idade dos irmãos (texto livre)
+      // Idade dos irmãos
       const idade_irmaos = body.idade_irmaos || "";
 
       // Imagem (array de attachments)
       let imagem_cartinha = [];
       try {
         if (body.imagem_cartinha) {
-          const parsed = JSON.parse(body.imagem_cartinha);
-          if (Array.isArray(parsed)) {
-            // Garantimos que está no formato [{ url }]
-            imagem_cartinha = parsed.map((item) =>
-              typeof item === "string" ? { url: item } : item
+          const arr = JSON.parse(body.imagem_cartinha);
+          if (Array.isArray(arr)) {
+            imagem_cartinha = arr.map((i) =>
+              typeof i === "string" ? { url: i } : i
             );
           }
         }
@@ -199,7 +175,6 @@ export default async function handler(req, res) {
         imagem_cartinha = [];
       }
 
-      
       const fields = {
         nome_crianca: body.nome_crianca,
         idade: body.idade ? parseInt(body.idade, 10) : null,
@@ -212,18 +187,12 @@ export default async function handler(req, res) {
         observacoes_admin: body.observacoes_admin || "",
         status,
         idade_irmaos,
-        cadastro_sessao_id,
       };
 
-      if (imagem_cartinha.length > 0) {
-        fields.imagem_cartinha = imagem_cartinha;
-      }
-      if (irmaosNumber !== null) {
-        fields.irmaos = irmaosNumber;
-      }
+      if (irmaosNumber !== null) fields.irmaos = irmaosNumber;
+      if (imagem_cartinha.length > 0) fields.imagem_cartinha = imagem_cartinha;
 
       const novo = await base(tableName).create([{ fields }]);
-
       return res.status(200).json({ sucesso: true, novo });
     }
 
@@ -232,12 +201,11 @@ export default async function handler(req, res) {
     // ========================================================
     if (req.method === "PATCH") {
       const { id } = req.query;
-      if (!id) {
+      if (!id)
         return res.status(400).json({
           sucesso: false,
           mensagem: "ID obrigatório para atualização.",
         });
-      }
 
       const sexoValido = ["menino", "menina", "outro"];
       const statusValido = ["disponivel", "adotada", "inativa"];
@@ -262,10 +230,9 @@ export default async function handler(req, res) {
         fieldsToUpdate.status = body.status.toLowerCase();
       }
 
-      // Atualiza número de irmãos, se vier
+      // Atualiza nº de irmãos
       if (body.irmaos !== undefined) {
         if (body.irmaos === "") {
-          // Se vier vazio, podemos remover / setar null
           fieldsToUpdate.irmaos = null;
         } else {
           const n = parseInt(String(body.irmaos).replace(/\D/g, ""), 10);
@@ -273,21 +240,18 @@ export default async function handler(req, res) {
         }
       }
 
-      // Atualiza imagem, se vier
+      // Atualizar imagem
       if (body.imagem_cartinha) {
         try {
-          const imgParsed = JSON.parse(body.imagem_cartinha);
-          if (Array.isArray(imgParsed)) {
-            fieldsToUpdate.imagem_cartinha = imgParsed.map((item) =>
-              typeof item === "string" ? { url: item } : item
+          const arr = JSON.parse(body.imagem_cartinha);
+          if (Array.isArray(arr)) {
+            fieldsToUpdate.imagem_cartinha = arr.map((i) =>
+              typeof i === "string" ? { url: i } : i
             );
           }
-        } catch {
-          // se der erro, ignora imagem para não quebrar
-        }
+        } catch {}
       }
 
-     
       const atualizado = await base(tableName).update([
         { id, fields: fieldsToUpdate },
       ]);
@@ -300,12 +264,11 @@ export default async function handler(req, res) {
     // ========================================================
     if (req.method === "DELETE") {
       const { id } = req.query;
-      if (!id) {
+      if (!id)
         return res.status(400).json({
           sucesso: false,
           mensagem: "ID obrigatório.",
         });
-      }
 
       await base(tableName).destroy([id]);
       return res.status(200).json({
@@ -314,16 +277,13 @@ export default async function handler(req, res) {
       });
     }
 
-    // ========================================================
-    // ❌ Método não suportado
-    // ========================================================
     res.status(405).json({
       sucesso: false,
       mensagem: `Método ${req.method} não permitido.`,
     });
   } catch (e) {
     console.error("🔥 Erro /api/cartinha:", e);
-    res.status(500).json({
+    return res.status(500).json({
       sucesso: false,
       mensagem: e.message || "Erro interno no servidor.",
     });
