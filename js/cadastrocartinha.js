@@ -34,7 +34,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const campoDataLimite = document.getElementById("data_limite_info");
 
   // ============================================================
-  // Title Case automático em alguns campos
+  // Title Case automático
   // ============================================================
   const titleCase = (str) =>
     str.toLowerCase().replace(/(?:^|\s)\S/g, (c) => c.toUpperCase());
@@ -79,7 +79,6 @@ document.addEventListener("DOMContentLoaded", () => {
         select.appendChild(opt);
       });
 
-      // Exibir datas ao trocar o evento
       select.addEventListener("change", () => {
         const selected = select.options[select.selectedIndex];
         campoDataEvento.textContent = selected.dataset.data_evento || "-";
@@ -89,6 +88,7 @@ document.addEventListener("DOMContentLoaded", () => {
       console.error("Erro ao carregar eventos:", err);
     }
   }
+
   carregarEventos();
 
   // ============================================================
@@ -128,7 +128,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const urlImg = uploadedUrl || (atual ? atual.imagem_cartinha : "");
 
-    // ⛔ ATENÇÃO: payload AGORA NÃO TEM MAIS cadastro_sessao_id
+    // ajuste: id_evento → eventos
     const payload = {
       nome_crianca: form.nome_crianca.value,
       idade: form.idade.value,
@@ -142,7 +142,10 @@ document.addEventListener("DOMContentLoaded", () => {
       sonho: form.sonho.value,
       observacoes_admin: form.observacoes_admin.value,
       status: form.status.value,
+
+      // 🔥 CORRETO: campo REAL NO AIRTABLE
       id_evento: form.id_evento.value,
+
       imagem_cartinha: urlImg
         ? JSON.stringify([{ url: urlImg }])
         : JSON.stringify([]),
@@ -158,7 +161,12 @@ document.addEventListener("DOMContentLoaded", () => {
       if (!json.sucesso) return alert("Erro ao salvar!");
 
       const idAirtable = json.novo[0].id;
-      cartinhasSessao.push({ id: idAirtable, ...payload, imagem_cartinha: urlImg });
+      cartinhasSessao.push({
+        id: idAirtable,
+        ...payload,
+        imagem_cartinha: urlImg,
+      });
+
       alert("💙 Cartinha cadastrada!");
     }
 
@@ -267,6 +275,8 @@ function editarCartinha(idx) {
   form.sonho.value = c.sonho;
   form.observacoes_admin.value = c.observacoes_admin;
   form.status.value = c.status;
+
+  // ajuste correto
   form.id_evento.value = c.id_evento;
 
   uploadedUrl = c.imagem_cartinha;

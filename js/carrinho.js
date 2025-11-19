@@ -48,6 +48,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const sonho = fields.sonho || "Não informado";
     const img =
       (fields.imagem_cartinha?.[0]?.url || "../imagens/sem-foto.png");
+
     listaCartinhas.innerHTML += `
       <div class="cartinha-card">
         <img src="${img}" alt="${nome}" onerror="this.src='../imagens/sem-foto.png'"/>
@@ -64,7 +65,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     console.log("🗺️ Pontos carregados:", json);
 
     const lista = (json?.pontos || json?.records || []).map((p) => ({
-      id: p.id_ponto || p.id || p.recordId,
+      id: p.id || p.recordId || p.id_ponto, // recordId real
       nome: p.nome_ponto || p.fields?.nome_ponto || "Ponto",
       endereco: p.endereco || p.fields?.endereco || "",
       telefone: p.telefone || p.fields?.telefone || "",
@@ -74,7 +75,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     selectPonto.innerHTML = '<option value="">Selecione um ponto...</option>';
     lista.forEach((p) => {
       const opt = document.createElement("option");
-      opt.value = p.id;
+      opt.value = p.id; // recordId correto
       opt.textContent = p.nome;
       opt.dataset.endereco = p.endereco;
       opt.dataset.telefone = p.telefone;
@@ -103,27 +104,36 @@ document.addEventListener("DOMContentLoaded", async () => {
   backdrop?.addEventListener("click", () => fecharMapa(mapModal, backdrop, mapFrame));
 
   // ============================================================
-  // 4️⃣ Finalizar adoção
+  // 4️⃣ Finalizar adoção — CORRIGIDO
   // ============================================================
   btnFinalizar.addEventListener("click", async () => {
     const pontoId = selectPonto.value;
     if (!pontoId) return alert("Escolha um ponto antes de finalizar.");
 
     const usuario = JSON.parse(localStorage.getItem("usuario_logado")) || {};
-    if (!usuario.id) return alert("Faça login antes de adotar.");
+    if (!usuario || !usuario.id) {
+      return alert("Faça login antes de adotar.");
+    }
+
+    const usuarioRecordId = usuario.id; // recordId REAL do usuário
 
     btnFinalizar.disabled = true;
     btnFinalizar.textContent = "Enviando...";
 
     try {
       for (const c of carrinho) {
-        const idCartinha = c.id || c.fields?.id_cartinha || c.fields?.recordId;
-        if (!idCartinha) continue;
+        const idCartinha = c.id || c.recordId || c.fields?.recordId;
+        if (!idCartinha) {
+          console.error("❌ Cartinha sem recordId:", c);
+          continue;
+        }
 
+        // 🔥 CAMPOS REAIS DO AIRTABLE
         const payload = {
-          nome_crianca_id: idCartinha,
-          nome_usuario_id: usuario.id,
-          pontos_coleta_id: pontoId,
+          usuario: [usuarioRecordId],
+          cartinha: [idCartinha],
+          pontos_coleta: [pontoId],
+          status_adocao: "aguardando confirmacao",
         };
 
         const r = await fetch("/api/adocoes", {
@@ -131,8 +141,9 @@ document.addEventListener("DOMContentLoaded", async () => {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
         });
+
         const j = await r.json();
-        if (!j?.success) throw new Error(j?.message || "Erro ao adotar.");
+        if (!j?.sucesso) throw new Error(j?.mensagem || "Erro ao adotar.");
       }
 
       mostrarMensagemFinal("💙 Adoção concluída! O administrador foi notificado.");
