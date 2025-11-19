@@ -1,7 +1,13 @@
 // ============================================================
 // 💙 VARAL DOS SONHOS — /api/cartinha.js
 // ------------------------------------------------------------
-// - Upload de imagem via Cloudinary (já vem pronta do front)
+// - API para gerenciar as cartinhas das crianças:
+//   • Listar cartinhas (GET)
+//   • Criar nova cartinha (POST)
+//   • Editar cartinha existente (PATCH)
+//   • Excluir cartinha (DELETE)
+// - Compatível com uploads de imagem via Cloudinary
+// - Utiliza form-data (formidable) para POST e PATCH
 // - Compatível com Vercel (form-data + formidable)
 // - Campos alinhados com a tabela "cartinha" do Airtable:
 //
@@ -19,19 +25,10 @@
 //   - idade_irmaos          (Single line text)
 //   - observacoes_admin     (Long text)
 //   - status                (Single select: disponivel/adotada/inativa)
-//   - id_evento             (Single line text)
+//   - id_evento             (Linked record → eventos)
 //
 // - Mantém GET, PATCH e DELETE funcionando normalmente.
-// Funcionalidades:
-// - Upload de imagem via Cloudinary (pronto para form-data)
-// - Cadastrar, editar, listar e excluir cartinhas
-// - Compatível com Vercel (form-data + formidable)
-// ------------------------------------------------------------
-// Esta API é utilizada em:
-//   • pages/admin-cartinhas.html
-//   • js/admin-cartinhas.js
-//  • js/nova-cartinha.js
-//   • js/editar-cartinha.js
+// - Adiciona suporte a POST (criação de nova cartinha)
 // ============================================================
 
 import Airtable from "airtable";
@@ -109,6 +106,7 @@ export default async function handler(req, res) {
       };
 
       if (evento) {
+        // filtra pelo ID do evento (campo ligado id_evento)
         selectConfig.filterByFormula = `{id_evento} = "${evento}"`;
       }
 
@@ -129,7 +127,8 @@ export default async function handler(req, res) {
         idade_irmaos: r.fields.idade_irmaos || "",
         status: r.fields.status || "",
         observacoes_admin: r.fields.observacoes_admin || "",
-        id_evento: r.fields.id_evento || "",
+        // 🔹 id_evento vem como ARRAY de IDs de evento
+        id_evento: r.fields.id_evento || [],
       }));
 
       return res.status(200).json({ sucesso: true, cartinha });
@@ -190,6 +189,12 @@ export default async function handler(req, res) {
       };
 
       if (irmaosNumber !== null) fields.irmaos = irmaosNumber;
+
+      // 🔹 RELACIONAR A CARTINHA AO EVENTO (campo link id_evento)
+      if (body.id_evento) {
+        fields.id_evento = [body.id_evento];
+      }
+
       if (imagem_cartinha.length > 0) fields.imagem_cartinha = imagem_cartinha;
 
       const novo = await base(tableName).create([{ fields }]);
@@ -250,6 +255,11 @@ export default async function handler(req, res) {
             );
           }
         } catch {}
+      }
+
+      // 🔹 Atualizar vínculo com evento, se vier novo id_evento
+      if (body.id_evento) {
+        fieldsToUpdate.id_evento = [body.id_evento];
       }
 
       const atualizado = await base(tableName).update([
