@@ -1,9 +1,9 @@
 // ============================================================
-// 💙 VARAL DOS SONHOS — /js/componentes.js (Versão Revisada TCC)
+// 💙 VARAL DOS SONHOS — /js/componentes.js 
 // ------------------------------------------------------------
 // Carrega dinamicamente header, footer e cloudinho e
-// garante que o nome do usuário logado seja exibido
-// corretamente em qualquer página.
+// garante que o nome do usuário logado e a configuração do site
+// (logo, nuvem, etc.) sejam aplicados em todas as páginas.
 // ============================================================
 
 async function carregarComponente(id, arquivo) {
@@ -17,8 +17,14 @@ async function carregarComponente(id, arquivo) {
 
     el.innerHTML = html;
 
-    // Assim que o header for carregado, atualiza login
-    if (id === "header") setTimeout(atualizarLogin, 200);
+    // ⬇️ AQUI — depois que o HEADER CARREGAR
+    if (id === "header") {
+      setTimeout(() => {
+        atualizarLogin();     // já existia
+        aplicarConfigSite();  // ⬅️ ESTA É A LINHA NOVA
+      }, 200);
+    }
+
   } catch (erro) {
     console.error("❌ Erro ao carregar componente:", erro);
   }
@@ -29,8 +35,11 @@ document.addEventListener("DOMContentLoaded", async () => {
   await carregarComponente("footer", "footer.html");
   await carregarComponente("cloudinho", "cloudinho.html");
 
-  // Segurança extra: executa novamente após tudo carregado
-  window.addEventListener("load", atualizarLogin);
+  // Segurança extra
+  window.addEventListener("load", () => {
+    atualizarLogin();
+    aplicarConfigSite(); // aplica a configuração se precisar
+  });
 });
 
 // ============================================================
@@ -39,6 +48,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 function atualizarLogin() {
   const usuarioData =
     localStorage.getItem("usuario") || localStorage.getItem("usuario_logado");
+
   const loginLink = document.getElementById("loginLink");
   const usuarioNome = document.getElementById("usuarioNome");
   const btnLogout = document.getElementById("btnLogout");
@@ -52,7 +62,6 @@ function atualizarLogin() {
     loginLink.style.display = "none";
     btnLogout.style.display = "inline-block";
 
-    // Botão de logout
     btnLogout.onclick = () => {
       localStorage.removeItem("usuario");
       localStorage.removeItem("usuario_logado");
