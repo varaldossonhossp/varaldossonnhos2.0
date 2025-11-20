@@ -182,16 +182,24 @@ export default async function handler(req, res) {
           donor_name: usuarioObj.nome_usuario || "Doador",
           donor_email: usuarioObj.email_usuario || "—",
           donor_phone: usuarioObj.telefone || "—",
+
           child_name: cartinhaObj.nome_crianca || "—",
+          id_cartinha: cartinhaObj.id_cartinha || cartinha,   
           child_gift: cartinhaObj.sonho || "—",
+
           pickup_name: pontoObj.nome_ponto || "—",
           pickup_address: pontoObj.endereco || "—",
           pickup_number: pontoObj.numero || "—",
           pickup_cep: pontoObj.cep || "—",
+          pickup_phone: pontoObj.telefone || "—",              
+          pickup_email: pontoObj.email_ponto || "—",           
+
           order_id: idAdocao,
           confirmation_link: confirmationLink,
+
           to_email: process.env.EMAILJS_ADMIN_EMAIL,
         },
+
       };
 
       await fetch("https://api.emailjs.com/api/v1.0/email/send", {
