@@ -1,5 +1,5 @@
 // ============================================================
-// 💙 VARAL DOS SONHOS — /api/logistica.js
+// 💙 VARAL DOS SONHOS — /api/logistica.js (VERSÃO AJUSTADA CAMPOS REAIS)
 // ------------------------------------------------------------
 // Fluxo da logística após a confirmação da adoção:
 //
@@ -16,25 +16,30 @@
 // IMPORTANTE:
 // Se o e-mail falhar → NÃO muda status e retorna erro.
 // ============================================================
+// ============================================================
+// 💙 VARAL DOS SONHOS — /api/logistica.js (VERSÃO FINAL 2025)
+// ------------------------------------------------------------
+// Compatível com as tabelas reais enviadas por Carina Mendes
+// adocoes → usuario, cartinha, pontos_coleta, id_doacao, status_adocao
+// pontos_movimentos → id_ponto, id_adocao, tipo_movimento, data...
+// ============================================================
 
 import Airtable from "airtable";
 import fetch from "node-fetch";
 
 export const config = { runtime: "nodejs" };
 
-// ------------------------------------------------------------
-// 🗂️ TABELAS UTILIZADAS
-// ------------------------------------------------------------
+// ========================== CONSTANTES ========================
 const TB_ADOCOES = "adocoes";
-const TB_MOV = "ponto_movimentos";
 const TB_USUARIOS = "usuario";
 const TB_CARTINHAS = "cartinha";
 const TB_PONTOS = "pontos_coleta";
+const TB_MOV = "ponto_movimentos";
 
+// ============================================================
+// ▶ Email ADMIN — EmailJS
+// ============================================================
 
-// ------------------------------------------------------------
-// ▶ Email ADMIN — EmailJS (para RECEBIMENTO)
-// ------------------------------------------------------------
 async function enviarEmailAdmin_Recebimento(data) {
   try {
     const payload = {
@@ -46,7 +51,7 @@ async function enviarEmailAdmin_Recebimento(data) {
         ponto_nome: data.ponto_nome,
         nome_crianca: data.nome_crianca,
         nome_doador: data.nome_doador,
-        id_adocao: data.id_adocao
+        id_doacao: data.id_doacao
       }
     };
 
@@ -56,13 +61,7 @@ async function enviarEmailAdmin_Recebimento(data) {
       body: JSON.stringify(payload)
     });
 
-    if (!r.ok) {
-      console.error("❌ Falha no envio EmailJS:", await r.text());
-      return false;
-    }
-
-    console.log("📨 Email enviado ao ADMIN (recebimento)");
-    return true;
+    return r.ok;
 
   } catch (err) {
     console.error("🔥 ERRO EMAIL ADMIN:", err);
@@ -71,9 +70,10 @@ async function enviarEmailAdmin_Recebimento(data) {
 }
 
 
-// ------------------------------------------------------------
-// ▶ Email DOADOR — Mailjet (para COLETA / ENTREGA FINAL)
-// ------------------------------------------------------------
+// ============================================================
+// ▶ Email DOADOR — Mailjet
+// ============================================================
+
 async function enviarEmailDoador_Entrega(data) {
   try {
     const payload = {
@@ -86,14 +86,14 @@ async function enviarEmailDoador_Entrega(data) {
           To: [
             { Email: data.email_doador, Name: data.nome_doador }
           ],
-          TemplateID: parseInt(process.env.MAILJET_TEMPLATE_ID_RECEBIDO),
+          TemplateID: Number(process.env.MAILJET_TEMPLATE_ID_RECEBIDO),
           TemplateLanguage: true,
-          Subject: "🎁 Seu presente foi entregue à equipe! 💙",
+          Subject: "🎁 Seu presente foi entregue à equipe!",
           Variables: {
             donor_name: data.nome_doador,
             child_name: data.nome_crianca,
             child_gift: data.sonho,
-            order_id: data.order_id,
+            order_id: data.id_doacao,
             received_date: data.received_date,
             pickup_name: data.ponto_nome,
             pickup_address: data.ponto_endereco,
@@ -111,18 +111,12 @@ async function enviarEmailDoador_Entrega(data) {
           "Basic " +
           Buffer.from(
             `${process.env.MAILJET_API_KEY}:${process.env.MAILJET_SECRET_KEY}`
-          ).toString("base64"),
+          ).toString("base64")
       },
-      body: JSON.stringify(payload),
+      body: JSON.stringify(payload)
     });
 
-    if (!r.ok) {
-      console.error("❌ Falha no envio Mailjet:", await r.text());
-      return false;
-    }
-
-    console.log("📨 Email enviado ao DOADOR (entrega final)");
-    return true;
+    return r.ok;
 
   } catch (err) {
     console.error("🔥 ERRO EMAIL DOADOR:", err);
@@ -131,42 +125,41 @@ async function enviarEmailDoador_Entrega(data) {
 }
 
 
-// ------------------------------------------------------------
+// ============================================================
 // 🌟 HANDLER PRINCIPAL
-// ------------------------------------------------------------
+// ============================================================
+
 export default async function handler(req, res) {
 
+  // Apenas POST
   if (req.method !== "POST") {
-    return res.status(405).json({
-      sucesso: false,
-      mensagem: "Método não permitido. Use POST."
-    });
+    return res.status(405).json({ sucesso: false, mensagem: "Use POST." });
   }
 
-  // Dados enviados pelo painel
-  const { acao, id_adocao, id_ponto, responsavel, observacoes } = req.body;
+  const { acao, id_registro, responsavel, observacoes } = req.body;
 
-  if (!acao || !id_adocao || !id_ponto) {
-    return res.status(400).json({
-      sucesso: false,
-      mensagem: "Campos obrigatórios ausentes."
-    });
+  if (!acao || !id_registro) {
+    return res.status(400).json({ sucesso: false, mensagem: "Campos ausentes." });
   }
 
   try {
-    const base = new Airtable({
-      apiKey: process.env.AIRTABLE_API_KEY
-    }).base(process.env.AIRTABLE_BASE_ID);
+    const base = new Airtable({ apiKey: process.env.AIRTABLE_API_KEY })
+      .base(process.env.AIRTABLE_BASE_ID);
 
-    // Buscar adoção completa
-    const ado = await base(TB_ADOCOES).find(id_adocao);
+    // ================= Buscar adoção =================
+    const ado = await base(TB_ADOCOES).find(id_registro);
     const f = ado.fields;
 
-    // Buscar dados auxiliares
-    const user = f.id_usuario ? await base(TB_USUARIOS).find(f.id_usuario[0]) : null;
-    const cart = f.id_cartinha ? await base(TB_CARTINHAS).find(f.id_cartinha[0]) : null;
-    const ponto = await base(TB_PONTOS).find(id_ponto);
+    const id_doacao = f.id_doacao;                      // autonumber
+    const usuarioId = f.usuario?.[0];                   // linked record
+    const cartinhaId = f.cartinha?.[0];                 // linked record
+    const pontoId = f.pontos_coleta?.[0];               // linked record (correto)
 
+    const user = await base(TB_USUARIOS).find(usuarioId);
+    const cart = await base(TB_CARTINHAS).find(cartinhaId);
+    const ponto = await base(TB_PONTOS).find(pontoId);
+
+    // Campos derivados
     const nomeCrianca = cart?.fields?.nome_crianca || "";
     const sonho = cart?.fields?.sonho || "";
     const nomeDoador = user?.fields?.nome_usuario || "";
@@ -176,64 +169,53 @@ export default async function handler(req, res) {
     const pontoEndereco = ponto?.fields?.endereco || "";
     const pontoTelefone = ponto?.fields?.telefone || "";
 
-
     // ============================================================
-    // 1) RECEBIMENTO DO PRESENTE
+    // 1️⃣ RECEBER PRESENTE
     // ============================================================
     if (acao === "receber") {
 
-      // ENVIAR EMAIL ANTES DE ALTERAR STATUS
       const enviado = await enviarEmailAdmin_Recebimento({
         ponto_nome: pontoNome,
         nome_crianca: nomeCrianca,
         nome_doador: nomeDoador,
-        id_adocao
+        id_doacao
       });
 
       if (!enviado) {
         return res.status(500).json({
           sucesso: false,
-          mensagem: "Erro ao enviar e-mail. O status NÃO foi alterado."
+          mensagem: "Erro ao enviar e-mail ao ADMIN. Status não alterado."
         });
       }
 
-      // Agora sim altera status
-      await base(TB_ADOCOES).update([
-        { id: id_adocao, fields: { status_adocao: "presente recebido" } }
-      ]);
-
-      // Registrar movimento
-      await base(TB_MOV).create([
-        {
-          fields: {
-            id_ponto: [id_ponto],
-            id_adocao: [id_adocao],
-            tipo_movimento: "recebimento",
-            responsavel,
-            observacoes,
-            data: new Date().toISOString()
-          }
-        }
-      ]);
-
-      return res.status(200).json({
-        sucesso: true,
-        mensagem: "Presente marcado como RECEBIDO."
+      await base(TB_ADOCOES).update(id_registro, {
+        status_adocao: "presente recebido"
       });
+
+      await base(TB_MOV).create({
+        id_ponto: [pontoId],
+        id_adocao: [id_registro],
+        tipo_movimento: "recebimento",
+        responsavel,
+        observacoes,
+        data: new Date().toISOString()
+      });
+
+      return res.json({ sucesso: true, mensagem: "Presente marcado como RECEBIDO" });
     }
 
 
     // ============================================================
-    // 2) COLETA / ENTREGA FINAL
+    // 2️⃣ COLETAR PRESENTE
     // ============================================================
     if (acao === "coletar") {
 
       const enviado = await enviarEmailDoador_Entrega({
-        email_doador: emailDoador,
         nome_doador: nomeDoador,
+        email_doador: emailDoador,
         nome_crianca: nomeCrianca,
         sonho,
-        order_id: id_adocao,
+        id_doacao,
         received_date: new Date().toLocaleDateString("pt-BR"),
         ponto_nome: pontoNome,
         ponto_endereco: pontoEndereco,
@@ -243,48 +225,34 @@ export default async function handler(req, res) {
       if (!enviado) {
         return res.status(500).json({
           sucesso: false,
-          mensagem: "Erro ao enviar e-mail ao doador. O status NÃO foi alterado."
+          mensagem: "Erro ao enviar e-mail ao DOADOR. Status não alterado."
         });
       }
 
-      await base(TB_ADOCOES).update([
-        { id: id_adocao, fields: { status_adocao: "presente entregue" } }
-      ]);
-
-      // Registrar movimento
-      await base(TB_MOV).create([
-        {
-          fields: {
-            id_ponto: [id_ponto],
-            id_adocao: [id_adocao],
-            tipo_movimento: "retirada",
-            responsavel,
-            observacoes,
-            data: new Date().toISOString()
-          }
-        }
-      ]);
-
-      return res.status(200).json({
-        sucesso: true,
-        mensagem: "Presente marcado como ENTREGUE."
+      await base(TB_ADOCOES).update(id_registro, {
+        status_adocao: "presente entregue"
       });
+
+      await base(TB_MOV).create({
+        id_ponto: [pontoId],
+        id_adocao: [id_registro],
+        tipo_movimento: "retirada",
+        responsavel,
+        observacoes,
+        data: new Date().toISOString()
+      });
+
+      return res.json({ sucesso: true, mensagem: "Presente marcado como ENTREGUE" });
     }
 
-
-    // ------------------------------------------------------------
     // Ação inválida
-    // ------------------------------------------------------------
-    return res.status(400).json({
-      sucesso: false,
-      mensagem: "Ação desconhecida."
-    });
+    return res.status(400).json({ sucesso: false, mensagem: "Ação inválida" });
 
   } catch (err) {
     console.error("🔥 ERRO LOGISTICA:", err);
     return res.status(500).json({
       sucesso: false,
-      mensagem: "Erro interno ao executar a ação.",
+      mensagem: "Erro interno.",
       detalhe: err.message
     });
   }
