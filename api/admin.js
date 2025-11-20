@@ -68,13 +68,12 @@ import Airtable from "airtable";
 
 export const config = { runtime: "nodejs" };
 
-// Helpers
 const ok  = (res, data) => res.status(200).json(data);
 const err = (res, code, msg) => res.status(code).json({ sucesso:false, mensagem:msg });
 
-// ============================================================
-// 🔐 TOKEN (somente para POST)
-// ============================================================
+// ------------------------------------------------------------
+// TOKEN
+// ------------------------------------------------------------
 function getToken(req) {
   return (
     req.headers["x-admin-token"] ||
@@ -85,42 +84,33 @@ function getToken(req) {
 }
 
 function requireAuth(req, res) {
-
-  // GET config_site deve ser público
   if (req.method === "GET" && req.query.tipo === "config_site") {
     return true;
   }
 
   const secret = process.env.ADMIN_SECRET;
+  const token  = getToken(req);
 
-  if (!secret) return err(res, 500, "ADMIN_SECRET não configurado.");
-
-  const token = getToken(req);
-
-  if (!token) return err(res, 401, "Token ausente.");
+  if (!secret) return err(res, 500, "ADMIN_SECRET ausente.");
+  if (!token)  return err(res, 401, "Token ausente.");
   if (token !== secret) return err(res, 401, "Token inválido.");
 
   return true;
 }
 
-// ============================================================
-// 📡 Conexão com Airtable
-// ============================================================
+// ------------------------------------------------------------
+// Airtable
+// ------------------------------------------------------------
 function getBase() {
-  const apiKey = process.env.AIRTABLE_API_KEY;
-  const baseId = process.env.AIRTABLE_BASE_ID;
-
-  if (!apiKey || !baseId) throw new Error("Chaves do Airtable ausentes.");
-
-  return new Airtable({ apiKey }).base(baseId);
+  return new Airtable({ apiKey: process.env.AIRTABLE_API_KEY })
+    .base(process.env.AIRTABLE_BASE_ID);
 }
 
-// ============================================================
-// 🧩 HANDLER
-// ============================================================
+// ============================================================================
+// HANDLER
+// ============================================================================
 export default async function handler(req, res) {
 
-  // CORS
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type,x-admin-token");
@@ -138,14 +128,10 @@ export default async function handler(req, res) {
   try {
 
     // ============================================================
-    // 📋 GET — CONFIG_SITE
+    // GET — CONFIG_SITE
     // ============================================================
     if (req.method === "GET" && tipo === "config_site") {
-
-      const registros = await base(configTable)
-        .select({ maxRecords: 1 })
-        .all();
-
+      const registros = await base(configTable).select({ maxRecords: 1 }).all();
       const rec = registros[0] || null;
 
       return ok(res, {
@@ -155,7 +141,7 @@ export default async function handler(req, res) {
     }
 
     // ============================================================
-    // 📋 GET — EVENTOS (token required)
+    // GET EVENTOS
     // ============================================================
     if (req.method === "GET") {
       const registros = await base(eventosTable).select().all();
@@ -163,38 +149,37 @@ export default async function handler(req, res) {
     }
 
     // ============================================================
-    // 📝 POST — AÇÕES
+    // POST — AÇÕES
     // ============================================================
     const body = req.body || {};
     const { acao } = body;
 
-    // ------------------------------------------------------------
-    // 🌟 SALVAR CONFIG_SITE (FICHA ÚNICA)
-    // ------------------------------------------------------------
+    // ============================================================
+    // SALVAR CONFIG_SITE — CORRIGIDO
+    // ============================================================
     if (acao === "salvar_config_site") {
 
-      // Carrega (ou cria) registro único
-      const registros = await base(configTable).select({ maxRecords: 1 }).all();
+      const registros = await base(configTable)
+        .select({ maxRecords: 1 })
+        .all();
+
       let recordId = registros[0]?.id || null;
 
-      // Fonte dos dados
       const dados = body.dados || {};
-
-      // Campos que podem ser alterados
       const fields = {};
 
+      // textos
       if (dados.nome_ong) fields.nome_ong = dados.nome_ong;
       if (dados.descricao_homepage) fields.descricao_homepage = dados.descricao_homepage;
       if (dados.instagram_url) fields.instagram_url = dados.instagram_url;
       if (dados.email_contato) fields.email_contato = dados.email_contato;
       if (dados.telefone_contato) fields.telefone_contato = dados.telefone_contato;
 
-      // LOGO (attachment)
+      // 🔥 attachments corretos
       if (dados.logo_header) {
         fields.logo_header = [{ url: dados.logo_header }];
       }
 
-      // NUVEM INDEX (attachment)
       if (dados.nuvem_index) {
         fields.nuvem_index = [{ url: dados.nuvem_index }];
       }
@@ -206,29 +191,22 @@ export default async function handler(req, res) {
         await base(configTable).update([{ id: recordId, fields }]);
       }
 
-      return ok(res, { sucesso: true, id: recordId });
+      return ok(res, { sucesso:true, id: recordId });
     }
 
-    // ------------------------------------------------------------
-    // EVENTO — CRIAR
-    // ------------------------------------------------------------
+    // ============================================================
+    // CRUD EVENTOS (SEM ALTERAÇÕES)
+    // ============================================================
     if (acao === "criar") {
       const novo = await base(eventosTable).create([{ fields: body }]);
       return ok(res, { sucesso: true, id: novo[0].id });
     }
 
-    // ------------------------------------------------------------
-    // EVENTO — ATUALIZAR
-    // ------------------------------------------------------------
     if (acao === "atualizar") {
-      const { id_evento, fields } = body;
-      await base(eventosTable).update([{ id: id_evento, fields }]);
+      await base(eventosTable).update([{ id: body.id_evento, fields: body.fields }]);
       return ok(res, { sucesso:true });
     }
 
-    // ------------------------------------------------------------
-    // EVENTO — EXCLUIR
-    // ------------------------------------------------------------
     if (acao === "excluir") {
       await base(eventosTable).destroy([body.id_evento]);
       return ok(res, { sucesso:true });
