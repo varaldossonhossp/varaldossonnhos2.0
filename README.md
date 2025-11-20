@@ -1,262 +1,246 @@
-# 💙 Fantástica Fábrica de Sonhos — Varal dos Sonhos 
-### Plataforma Web para Adoção de Cartinhas, Logística Solidária e Gestão de Eventos: 
-### Acesse: https://varaldossonnhos2-0.vercel.app/
-<br>
+# 💙 Varal dos Sonhos
+### Plataforma Web para Gestão de Doações e Conexão Solidária
+
 <div align="center">
-  <img src="./imagens/logo.png" width="220" alt="Logo Fantástica Fábrica de Sonhos">
+  <img src="./imagens/logo.png" width="210" alt="Logo Fantástica Fábrica de Sonhos">
 </div>
 
----
+Acesse a plataforma: **https://varaldossonnhos2-0.vercel.app/**
 
-## 📑 Índice
-
-1. [Descrição Geral do Projeto](#-descrição-geral-do-projeto-tcc)
-2. [Diferenciais do Projeto](#-diferenciais-do-projeto)
-   - [Plataforma Completa](#1-plataforma-completa-e-modular)
-   - [Mascote Cloudinho](#2-mascote-cloudinho--experiência-humanizada)
-   - [Varal Virtual Interativo](#3-varal-virtual-100-interativo)
-   - [Fluxo Logístico Completo](#4-fluxo-logístico-completo-diferencial-raro-em-tccs)
-   - [Envio Automático de E-mails](#5-envio-automático-de-e-mails)
-   - [Painel Administrativo](#6-painel-administrativo-profissional)
-   - [Gestão de Eventos](#7-gestão-de-eventos-com-galeria)
-   - [Segurança](#8-segurança-e-boas-práticas)
-   - [Banco Airtable](#9-banco-de-dados-airtable--rápido-visual-e-integrado)
-   - [Gamificação](#10-gamificação-fase-futuro)
-3. [Arquitetura do Projeto](#-arquitetura-geral-do-projeto)
-4. [Modelagem das Tabelas](#-modelagem-das-tabelas-airtable)
-5. [APIs Principais](#-principais-apis)
-6. [Fluxo Completo do Sistema](#-fluxo-completo-do-sistema)
-7. [Tecnologias Utilizadas](#-tecnologias-utilizadas)
-8. [Autores](#-autores)
-9. [Licença](#-licença)
+Acesso ao Painel Administrativo:  
+**Login:** varaldossonhossp@gmail.com  
+**Senha:** varaladmin  
 
 ---
 
-## 🎓 Descrição Geral do Projeto (TCC)
+# 📑 Índice
 
-O **Varal dos Sonhos** é uma plataforma web desenvolvida como parte do **Trabalho de Conclusão de Curso (TCC)**, criada para **organizar, automatizar e facilitar** o processo de adoção de cartinhas de crianças atendidas por projetos sociais.
+1. [Descrição Geral do Projeto (TCC)](#-descrição-geral-do-projeto-tcc)  
+2. [Diferenciais do Projeto](#-diferenciais-do-projeto)  
+3. [Plataforma SaaS – Multi-ONG](#-plataforma-saas--multi-ong)  
+4. [Arquitetura Geral do Projeto](#-arquitetura-geral-do-projeto)  
+5. [Modelagem das Tabelas (Airtable)](#️-modelagem-das-tabelas-airtable)  
+6. [Principais APIs](#-principais-apis)  
+7. [Fluxo Completo do Sistema](#-fluxo-completo-do-sistema)  
+8. [Tecnologias Utilizadas](#-tecnologias-utilizadas)  
+9. [Mockups do Projeto](#️-mockups-do-projeto)  
+10. [Autores](#-autores)  
+11. [Licença](#-licença)
 
-A solução une:
+---
+
+# 🎓 Descrição Geral do Projeto (TCC)
+
+O **Varal dos Sonhos** é uma plataforma web completa e integrada, desenvolvida como TCC, projetada para organizar, automatizar e facilitar todo o processo de adoção de cartinhas, desde a escolha da criança até a logística final da entrega. Além disso, inclui módulos de gestão de eventos, administração do sistema e personalização visual, tornando-se uma solução moderna e profissional para instituições sociais.
+
+A plataforma reúne:
 
 - 🌐 Front-end responsivo  
-- 🔧 Back-end em APIs serverless  
-- 🗄️ Banco Airtable integrado  
-- 🧩 Painel administrativo profissional  
-- 📬 Envio automático de e-mails  
-- 🚚 Logística completa da entrega do presente  
-- ☁️ Identidade visual com mascote oficial: **Cloudinho**
+- 🔧 Back-end com APIs serverless  
+- 🗄️ Banco Airtable  
+- 🖥️ Painel Administrativo completo  
+- 📬 Fluxo automatizado de e-mails  
+- 🚚 Logística de doações  
+- ☁️ Mascote oficial: **Cloudinho**
 
 ---
 
 # 🌟 Diferenciais do Projeto
 
-Este sistema vai muito além do típico TCC — ele entrega **um ecossistema completo**, com integrações reais e fluxos automatizados.
-
----
+Este TCC entrega um **sistema real**, completo e multi-módulo muito além do comum.
 
 ## 1. Plataforma Completa e Modular
-
 Inclui:
-
-- Front-end multi-páginas  
-- APIs independentes  
-- Banco de dados em nuvem  
+- Front-end profissional  
+- APIs separadas  
+- Fluxo completo de adoção  
+- Logística integrada  
 - Painel administrativo  
-- Logística completa  
-- Envio de e-mails automático  
-- Design exclusivo  
-
----
+- Upload de imagens  
+- E-mail automático  
+- Design moderno  
 
 ## 2. Mascote Cloudinho — Experiência Humanizada
-
 <div align="center">
-  <img src="./imagens/cloudinho.png" width="180" alt="Cloudinho - mascote oficial">
+  <img src="./imagens/cloudinho.png" width="180" alt="Cloudinho mascote">
 </div>
 
-Cloudinho foi criado para:
+Cloudinho:
+- ajuda na navegação  
+- acolhe o usuário  
+- reforça a identidade visual  
+- cria conexão emocional  
 
-- Interagir com usuários  
-- Ajudar na navegação  
-- Tornar o site acolhedor  
-- Reforçar a identidade visual  
-- Humanizar a ação social  
+## 3. Varal Virtual Interativo
+- Cartinhas suspensas por pregadores  
+- Layout temático  
+- Cards animados  
+- Zoom da cartinha  
+- Botão de adoção dinâmico  
+- Filtragem pelo status real da cartinha  
 
----
-
-## 3. Varal Virtual 100% Interativo
-
-- Cartinhas com animações  
-- Pregadores animados  
-- Fotos reais  
-- Botão de adoção  
-- API real puxando dados  
-- Status sincronizado ao Airtable  
-- Interface leve, acessível e encantadora  
-
----
-
-## 4. Fluxo Logístico Completo (Diferencial Raro em TCCs)
-
-Fluxo da doação:
-
-1. Escolha da cartinha  
+## 4. Fluxo Logístico Completo – Diferencial Raro
+Fluxo completo:
+1. Seleção da cartinha  
 2. Adoção  
-3. Seleção do ponto de coleta  
-4. E-mail para doador  
-5. E-mail para ponto de coleta  
+3. Escolha do ponto de coleta  
+4. E-mail ao doador  
+5. E-mail ao ponto de coleta  
 6. Recebimento  
 7. Conferência  
 8. Entrega final  
 9. Histórico no Airtable  
 
-Totalmente automatizado.
-
----
-
 ## 5. Envio Automático de E-mails
+Com EmailJS:
+- confirmação da adoção  
+- alerta ao ponto de coleta  
+- dados completos da entrega  
 
-- Confirmação da adoção  
-- Aviso ao ponto de coleta  
-- Templates padronizados  
-- Dados completos da cartinha e do doador  
-- Feito via EmailJS  
-
----
-
-## 6. Painel Administrativo Profissional
-
-O admin pode:
-
-- Cadastrar eventos  
-- Adicionar fotos  
-- Atualizar status de cartinhas  
-- Gerenciar entregas  
-- Cadastrar pontos de coleta  
-- Destacar eventos na homepage  
-
-Protegido por `ADMIN_SECRET`.
-
----
+## 6. Painel Administrativo
+Permite gerenciar:
+- eventos  
+- pontos de coleta  
+- cartinhas  
+- adoções  
+- configurações gerais do site  
+- destaque de eventos na home  
 
 ## 7. Gestão de Eventos com Galeria
-
-- Nome  
-- Local  
-- Descrição  
-- Data  
-- Status  
-- Destaque  
-- Fotos  
-- Cartinhas vinculadas ao evento  
-
----
+- nome  
+- descrição  
+- local  
+- fotos  
+- status  
+- destaque  
+- vinculação de cartinhas  
 
 ## 8. Segurança e Boas Práticas
-
-- Variáveis no `.env.local`  
-- Tokens não expostos  
-- Arquitetura modular  
+- Variáveis no `.env`  
+- Tokens protegidos  
+- API separada do front  
 - LGPD friendly  
-- API separada do front-end  
+
+## 9. Banco Airtable
+- moderno  
+- visual  
+- intuitivo  
+- ideal para voluntários  
 
 ---
 
-## 9. Banco de Dados Airtable — Rápido, Visual e Integrado
+# ⭐ Plataforma SaaS – Multi-ONG
 
-- Tabelas relacionadas  
-- Histórico completo  
-- Atualizações automáticas  
-- Interface amigável para voluntários  
-- Estrutura simples e robusta  
+Uma das maiores evoluções do sistema é a criação do **módulo de Configuração Geral do Site**, que transformou o projeto em uma **plataforma SaaS (Software as a Service)**.
 
----
+Isso significa que **qualquer ONG pode usar o Varal dos Sonhos** com sua própria identidade visual.
 
-## 10. Gamificação 
+### O admin pode configurar:
+- Nome da ONG  
+- Descrição  
+- Logo da ONG  
+- Nuvem animada da homepage  
+- Instagram  
+- E-mail e telefone  
+- Textos da homepage  
 
-- Pontos por ação  
-- Níveis  
-- Medalhas  
-- Ranking  
+Essas informações são salvas na tabela `config_site` e aplicadas dinamicamente pelo script:
+
+🔹 **Sem necessidade de programador.**  
+🔹 **Sem editar código.**  
+🔹 **Personalização instantânea.**
+
+Com isso, o Varal dos Sonhos 2.0 torna-se um sistema:
+
+✔ escalável  
+✔ replicável  
+✔ multi-ong  
+✔ sustentável  
 
 ---
 
 # 🧩 Arquitetura Geral do Projeto
 
-**Back-end (api/)**
+### **Back-end – /api/**
 - usuarios.js  
-- cartinhas.js  
+- cartinha.js  
 - adocoes.js  
 - eventos.js  
 - pontosdecoleta.js  
 - admin.js  
-- cloudinho.js  
+- config-site.js  
 - gamificacao.js  
 - regras_gamificacao.js  
-- Email.js  
+- email.js  
 
-**Front-end (js/)**
-- header.js, footer.js, cloudinho.js  
-- cartinhas.js, varal.js, carrossel.js  
-- carrinho.js, pontosdecoleta.js, admin.js  
+### **Front-end – /js/**
+- componentes.js  
+- config-site-apply.js  
+- cloudinho.js  
+- cartinha.js  
+- carrinho.js  
+- eventos.js  
+- pontos.js  
+- logistica.js  
 
-**Outros diretórios**
-- **css/** – Estilos  
-- **imagens/** – Logos, mascote e cartinhas  
-- **componentes/** – Header, footer, cloudinho  
-- **pages/** – Páginas HTML  
-- **vercel.json** – Configuração do deploy  
-- **README.md** – Documentação  
- 
+### **Outros diretórios**
+- **css/**  
+- **imagens/**  
+- **componentes/**  
+- **pages/**  
+- **vercel.json**  
+
 ---
 
 # 🗄️ Modelagem das Tabelas (Airtable)
 
-| Tabela | Função | Campos Principais |
-|--------|--------|-------------------|
-| **usuarios** | Cadastro e login | nome, email, telefone, tipo, senha |
-| **cartinhas** | Dados das crianças | nome_crianca, idade, sonho, sexo, imagem, evento, status |
-| **adocoes** | Controle da adoção | id_usuario, id_cartinha, data, ponto, status |
-| **eventos** | Gestão de ações | nome, descrição, local, imagens, status, destaque |
-| **pontos_coleta** | Logística | nome_ponto, endereço, cidade, responsável, email |
-| **gamificacao** | Pontuação | id_usuario, pontos, nivel |
-| **regras_gamificacao** | Regras de XP | ação, pontos_atribuidos |
+| Tabela | Função | Campos |
+|--------|--------|--------|
+| **usuarios** | Cadastro/login | nome, email, telefone, senha |
+| **cartinha** | Dados das crianças | nome, idade, sonho, sexo, evento, status, imagem |
+| **adocoes** | Adoções | cartinha, usuario, ponto, data, status |
+| **eventos** | Ações solidárias | nome, descrição, data, destaque, imagens |
+| **pontos_coleta** | Logística | nome, endereço, responsável, e-mail |
+| **config_site** | SaaS visual | logo, nuvem, instagram, contato |
+| **gamificacao** | Pontos | usuário, pontuação |
+| **regras_gamificacao** | Regras | ação, XP |
 
 ---
 
 # ⚙️ Principais APIs
 
-## `/api/usuarios.js`
-Cadastro e login.
+### `/api/usuarios.js`
+Cadastro, login e validação.
 
-## `/api/cartinhas.js`
-Listagem por evento e status.
+### `/api/cartinha.js`
+Listagem, criação, edição e filtro automático por status.
 
-## `/api/adocoes.js`
-Registra adoção, envia e-mail e muda status.
+### `/api/adocoes.js`
+Cadastro da adoção, e-mail e atualização da cartinha para *adotada*.
 
-## `/api/eventos.js`
+### `/api/eventos.js`
 CRUD de eventos.
 
-## `/api/pontosdecoleta.js`
-Lista pontos ativos.
+### `/api/pontosdecoleta.js`
+Listagem e controle.
 
-## `/api/admin.js`
-Funções restritas por secret.
+### `/api/admin.js`
+Gerencia o módulo SaaS + eventos (token protegido).
 
 ---
 
 # 🔄 Fluxo Completo do Sistema
 
-1. Usuário acessa a home  
-2. Visualiza eventos  
-3. Entra no varal  
-4. Escolhe cartinha  
-5. Finaliza adoção  
-6. API registra tudo  
-7. E-mails enviados  
-8. Logística atualizada  
-9. Entrega final confirmada  
+1. Usuário acessa a Home  
+2. Escolhe um evento  
+3. Entra no Varal Virtual  
+4. Seleciona uma cartinha  
+5. Finaliza a adoção  
+6. API salva tudo  
+7. E-mails são enviados  
+8. Logística recebe  
+9. Admin confirma entrega  
+10. Registro histórico no Airtable  
 
 ---
 
@@ -266,107 +250,69 @@ Funções restritas por secret.
 |--------|-------------|
 | Front-end | HTML, CSS, JavaScript |
 | Back-end | Node.js (Serverless) |
-| Banco de dados | Airtable |
-| E-mails | EmailJS, Mailjet |
+| Banco | Airtable |
 | Hospedagem | Vercel |
+| E-mails | EmailJS, Mailjet |
 | Upload | Cloudinary |
-| Mascote | Cloudinho (HTML + CSS + JS) |
+| UX | Cloudinho Mascote |
 
 ---
+
 # 🖼️ Mockups do Projeto
 
-A seguir, estão os mockups desenvolvidos para representar a identidade visual, usabilidade e fluxo do sistema **Varal dos Sonhos**.  
-Eles ajudam a visualizar a experiência final do usuário antes da implementação.
+*(As imagens abaixo representam o design e os fluxos principais.)*
 
----
+## 🏠 Tela Inicial  
+<img width="1365" height="600" alt="image" src="https://github.com/user-attachments/assets/14261c94-9c5e-4c4a-adad-f8b1608864cf" />
 
-## 🏠 Tela Inicial (Home)
+## 💌 Varal Virtual  
+<img width="1361" height="604" alt="image" src="https://github.com/user-attachments/assets/b0a8cc63-1052-4fbe-ab04-925e640f9789" />
 
-<img width="1283" height="563" alt="image" src="https://github.com/user-attachments/assets/87ebdfee-cdaa-4988-a369-61c75490c265" />
+## 📦 Pontos de Coleta
+<img width="1365" height="598" alt="image" src="https://github.com/user-attachments/assets/cece42d1-5fdc-4ffe-b370-58bf1f57ad55" />
 
----
+## 📝 Cadastro  
+<img width="1361" height="601" alt="image" src="https://github.com/user-attachments/assets/ea45e983-df2b-4e4a-9143-ffdd504024b7" />
 
-## 💌 Varal Virtual de Cartinhas
+## 💙 Adoção  (Carrinho)
+<img width="1200" height="600" alt="image" src="https://github.com/user-attachments/assets/3a1d2212-c38c-41ac-b4dc-d4398733e785" />
 
-<img width="1280" height="558" alt="image" src="https://github.com/user-attachments/assets/51bd0a79-2d4a-40e2-9bcf-cb908277db5a" />
-
----
-
-## 📝 Tela de Cadastro
-
-<img width="1352" height="598" alt="image" src="https://github.com/user-attachments/assets/20f9fc86-4edd-4039-a752-b72369d2e73b" />
-
----
-
-## ❤️ Tela de Adoção (Carrinho)
-
-<img width="1354" height="596" alt="image" src="https://github.com/user-attachments/assets/ae730328-213d-4fd8-86e2-67b18c05e791" />
+## ⚙️ Painel Admin  
+<img width="1365" height="601" alt="image" src="https://github.com/user-attachments/assets/c9bde05f-8229-443f-9c89-958bc10ce866" />
 <br>
-<img width="1355" height="598" alt="image" src="https://github.com/user-attachments/assets/c91fd762-1ef7-4b25-960f-1e10a786b0b0" />
+<img width="1365" height="598" alt="image" src="https://github.com/user-attachments/assets/bd90196b-ebdd-4a5b-9626-b244d46573f0" />
 
----
-
-## ⚙️ Painel Administrativo
-
-<img width="1365" height="602" alt="image" src="https://github.com/user-attachments/assets/5620a63e-26cf-4151-8f92-c0a458f70383" />
+## 🗂️ Relatórios com Filtro e pdf 
+<img width="891" height="592" alt="image" src="https://github.com/user-attachments/assets/1d33514b-1757-45bd-b7e7-4aa13c96a4ff" />
 <br>
-<img width="1365" height="599" alt="image" src="https://github.com/user-attachments/assets/f3cf1634-81f2-4210-8fb3-eb5931679232" />
+<img width="1003" height="617" alt="image" src="https://github.com/user-attachments/assets/ad8683ea-1d68-4e01-b5b2-a17b8033e616" />
+
+## 🚚 Painel de Logística  
+<img width="1363" height="502" alt="image" src="https://github.com/user-attachments/assets/4d19290b-5894-4a04-ab2d-ba6084d05fa6" />
+
+## ⚙️ Módulo SaaS - Configuração do Site 
+<img width="683" height="599" alt="image" src="https://github.com/user-attachments/assets/928af329-41e0-40e0-b037-54d1e10f77c8" />
 <br>
-<img width="1356" height="599" alt="image" src="https://github.com/user-attachments/assets/f56c4fcc-db41-49ed-95cb-6f1ff72dd019" />
+<img width="814" height="535" alt="image" src="https://github.com/user-attachments/assets/68321eb4-9d23-4d8e-a172-36bb22c0df26" />
 <br>
-<img width="1360" height="599" alt="image" src="https://github.com/user-attachments/assets/1eca37f3-a483-42ad-b1f3-d0ec75f78ec0" />
-<br>
-
----
-
-## 📅 Gestão de Eventos
-
-<img width="832" height="600" alt="image" src="https://github.com/user-attachments/assets/61a7c434-24dc-4ffe-b313-1a8b6452a410" />
-<br>
-<img width="820" height="604" alt="image" src="https://github.com/user-attachments/assets/dc6cd3de-db11-443c-9bd1-ac3b1e01d7ec" />
-<br>
-<img width="1221" height="599" alt="image" src="https://github.com/user-attachments/assets/4dc645be-bafc-4f5d-a7d5-b9bc1eca9725" />
-<br>
-<img width="1161" height="604" alt="image" src="https://github.com/user-attachments/assets/61a9f4d8-3a16-48be-a879-9e07e9db5ef8" />
-
----
-
-## 🗂️ Relatórios por filtros (visualização e .pdf)
-
-<img width="781" height="589" alt="image" src="https://github.com/user-attachments/assets/875f770e-f5a9-44ff-b45e-3b5ca53f11f7" />
-<br>
-<img width="930" height="615" alt="image" src="https://github.com/user-attachments/assets/1d238456-e162-415a-a018-a558b736df98" />
-
----
-
-## 🚚 Gerenciamento de Logística das Adoções pelo Admin
-
-<img width="1359" height="597" alt="image" src="https://github.com/user-attachments/assets/30b44f04-4ca1-48f4-857b-7434f8e14d85" />
-<br>
-<img width="1348" height="600" alt="image" src="https://github.com/user-attachments/assets/72e01d4f-cc30-451f-9462-b9665909affe" />
-
----
-
-## 🚚 Gerenciamento de Logística das Adoções pelo Ponto de Coleta
-
-<img width="1365" height="598" alt="image" src="https://github.com/user-attachments/assets/0ae5c3e1-599f-42dd-a7bf-5d9947bd97c3" />
+<img width="597" height="603" alt="image" src="https://github.com/user-attachments/assets/409c443b-5788-429d-86fb-e5361e258a17" />
 
 ---
 
 # 👩‍💻 Autores
 
-- **Carina da Silva Freire**   
-- **Carina de Paula Mendes**   
-- **Celso Gonçalves**   
-- **Erick Carvalho Holanda**
-- **Weverton Eleotério** 
+- **Carina da Silva Freire**  
+- **Carina de Paula Mendes**  
+- **Celso Gonçalves**  
+- **Erick Carvalho Holanda**  
+- **Weverton Eleotério**  
 
 ---
 
 # 📜 Licença
 
 Projeto de uso **educacional e filantrópico**.  
-Uso comercial proibido sem autorização da autora.
+Proibido uso comercial sem autorização da autora.
 
 ---
 
@@ -376,3 +322,5 @@ Uso comercial proibido sem autorização da autora.
 **Varal dos Sonhos 2.0 — Fantástica Fábrica de Sonhos**
 
 </div>
+
+
