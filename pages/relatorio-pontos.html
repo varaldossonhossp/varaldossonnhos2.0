@@ -6,7 +6,6 @@
  • Tabela detalhada dos pontos com informações essenciais
  • Botão para gerar PDF do relatório filtrado
 ============================================================ -->
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -15,7 +14,7 @@
   <title>📦 Relatório de Pontos de Coleta | Varal dos Sonhos</title>
 
   <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="icon" href="../imagens/favicon.png" type="image/png" />
+  <link rel="icon" href="../imagens/favicon.png" />
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
 
   <style>
@@ -31,37 +30,42 @@
       color: #003366;
       padding: 8px;
     }
-
     table td {
       padding: 8px;
       border-bottom: 1px solid #e2e8f0;
     }
 
-    /* ====================== IMPRESSÃO / PDF ====================== */
+    /* ====================== IMPRESSÃO ====================== */
     @page {
       size: A4 portrait;
-      margin: 2cm !important;  /* MARGEM IDEAL PARA PDF */
+      margin: 2cm;
     }
 
     @media print {
+
+      /* Remove estilos do Tailwind */
       body {
+        padding: 0 !important;
+        margin: 0 !important;
         background: white !important;
-        padding: 0 !important;
-        margin: 0 !important;
       }
 
-      main {
-        margin: 0 !important;
-        padding: 0 !important;
-        box-shadow: none !important;
-        border-radius: 0 !important;
-        width: 100% !important;
+      /* WRAPPER criado para gerar a margem real */
+      .print-wrapper {
+        padding: 2cm !important;
       }
 
-      /* Remove elementos indesejados */
+      /* Remove elementos */
       #filtros,
       .voltar {
         display: none !important;
+      }
+
+      main {
+        box-shadow: none !important;
+        border-radius: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
       }
 
       table th, table td {
@@ -73,8 +77,12 @@
   </style>
 </head>
 
-<body class="min-h-screen flex flex-col items-center py-8 px-4">
-  <main class="bg-white shadow-md rounded-xl p-8 max-w-5xl w-full">
+<body>
+
+  <!-- WRAPPER QUE CRIA A MARGEM NA IMPRESSÃO -->
+  <div class="print-wrapper">
+
+  <main class="bg-white shadow-md rounded-xl p-8 max-w-5xl w-full mx-auto">
 
     <!-- Cabeçalho -->
     <header class="flex justify-between items-center mb-6 border-b pb-3">
@@ -95,7 +103,6 @@
     <!-- Filtros -->
     <div id="filtros" class="flex flex-wrap gap-3 mb-6">
       <label class="font-medium text-blue-800">Status:</label>
-
       <select id="filtroStatus" class="p-2 border rounded-md">
         <option value="todos">Todos</option>
         <option value="ativo">Ativo</option>
@@ -132,6 +139,8 @@
     </section>
 
   </main>
+
+  </div> <!-- FIM DO WRAPPER -->
 
   <script src="../js/config-site-apply.js"></script>
   <script src="../js/relatorio-pontos.js"></script>
