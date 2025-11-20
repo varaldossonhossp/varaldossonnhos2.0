@@ -43,13 +43,25 @@
 //   • pages/logistica-admin.html
 //   • js/logistica-admin.js
 //   • /api/logistica.js (para validar pontos e confirmar ações)
+// ------------------------------------------------------------
+// OBJETIVO:
+// Fornecer ao painel de logística uma lista COMPLETA das adoções,
+// expandindo os relacionamentos entre:
+//
+//   • adocoes
+//   • cartinha
+//   • usuario
+//   • pontos_coleta
+//
+// Como o Airtable NÃO envia automaticamente LOOKUPS,
+// buscamos manualmente os dados.
 // ============================================================
 
 import Airtable from "airtable";
 
 export const config = { runtime: "nodejs" };
 
-// Inicializa conexão com o Airtable
+// Inicializa conexão
 const base = new Airtable({
   apiKey: process.env.AIRTABLE_API_KEY,
 }).base(process.env.AIRTABLE_BASE_ID);
@@ -64,6 +76,9 @@ export default async function handler(req, res) {
   }
 
   try {
+    // --------------------------------------------------------
+    // BUSCA TODAS AS ADOÇÕES
+    // --------------------------------------------------------
     const records = await base("adocoes")
       .select({
         sort: [{ field: "id_doacao", direction: "asc" }],
@@ -72,65 +87,90 @@ export default async function handler(req, res) {
 
     const adocoes = [];
 
+    // --------------------------------------------------------
+    // EXPANDE CADA ADOÇÃO
+    // --------------------------------------------------------
     for (const r of records) {
       const f = r.fields || {};
 
-      // Cartinha
+      // ======================================================
+      // 1) CARTINHA (linked record real)
+      // ======================================================
       let cart = {};
-      const idCartinha = f.nome_crianca?.[0];
+      const idCartinha = f.cartinha?.[0]; // ✔ CORRETO
       if (idCartinha) {
         try {
           cart = await base("cartinha").find(idCartinha);
-        } catch (e) {}
+        } catch (e) {
+          console.log("Erro ao buscar cartinha:", e);
+        }
       }
 
-      // Usuário
+      // ======================================================
+      // 2) USUÁRIO (doador)
+      // ======================================================
       let usuario = {};
-      const idUsuario = f.usuario?.[0];
+      const idUsuario = f.usuario?.[0]; // ✔ CORRETO
       if (idUsuario) {
         try {
           usuario = await base("usuario").find(idUsuario);
-        } catch (e) {}
+        } catch (e) {
+          console.log("Erro ao buscar usuário:", e);
+        }
       }
 
-      // Ponto de coleta
+      // ======================================================
+      // 3) PONTO DE COLETA
+      // ======================================================
       let ponto = {};
-      const idPonto = f.pontos_coleta?.[0];  // <--- ID REAL DO PONTO
+      const idPonto = f.pontos_coleta?.[0]; // ✔ CORRETO
       if (idPonto) {
         try {
           ponto = await base("pontos_coleta").find(idPonto);
-        } catch (e) {}
+        } catch (e) {
+          console.log("Erro ao buscar ponto de coleta:", e);
+        }
       }
 
-      // OBJETO FINAL
+      // ======================================================
+      // OBJETO FINAL — do jeito que o painel precisa
+      // ======================================================
       adocoes.push({
         id_record: r.id,
 
-        // Criança
+        // Dados da cartinha
         id_cartinha: cart.fields?.id_cartinha || "",
         nome_crianca: cart.fields?.nome_crianca || "",
         sonho: cart.fields?.sonho || "",
 
-        // Usuário
+        // Dados do usuário (doador)
         nome_usuario: usuario.fields?.nome_usuario || "",
         email_usuario: usuario.fields?.email_usuario || "",
         telefone_usuario: usuario.fields?.telefone || "",
 
-        // Ponto (CORREÇÃO AQUI)
+        // Dados do ponto de coleta
         id_ponto: idPonto || "",
         nome_ponto: ponto.fields?.nome_ponto || "",
+        endereco_ponto: ponto.fields?.endereco || "",
+        numero_ponto: ponto.fields?.numero || "",
+        cep_ponto: ponto.fields?.cep || "",
+        telefone_ponto: ponto.fields?.telefone || "",
 
         // Status
         status_adocao: f.status_adocao || "aguardando confirmacao",
       });
     }
 
+    // ======================================================
+    // RETORNO FINAL
+    // ======================================================
     return res.status(200).json({
       sucesso: true,
       adocoes,
     });
 
   } catch (error) {
+    console.error("🔥 ERRO API listAdocoes:", error);
     return res.status(500).json({
       sucesso: false,
       mensagem: "Erro interno ao listar adoções.",
