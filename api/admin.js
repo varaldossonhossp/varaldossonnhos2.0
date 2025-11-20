@@ -73,7 +73,7 @@ const ok  = (res, data) => res.status(200).json(data);
 const err = (res, code, msg) => res.status(code).json({ sucesso:false, mensagem:msg });
 
 // ============================================================
-// 🔐 TOKEN ADMIN
+// 🔐 TOKEN (somente para POST)
 // ============================================================
 function getToken(req) {
   return (
@@ -86,15 +86,17 @@ function getToken(req) {
 
 function requireAuth(req, res) {
 
-  // GET config_site é público
+  // GET config_site deve ser público
   if (req.method === "GET" && req.query.tipo === "config_site") {
     return true;
   }
 
   const secret = process.env.ADMIN_SECRET;
+
   if (!secret) return err(res, 500, "ADMIN_SECRET não configurado.");
 
   const token = getToken(req);
+
   if (!token) return err(res, 401, "Token ausente.");
   if (token !== secret) return err(res, 401, "Token inválido.");
 
@@ -102,17 +104,19 @@ function requireAuth(req, res) {
 }
 
 // ============================================================
-// 📡 CONEXÃO AIRTABLE
+// 📡 Conexão com Airtable
 // ============================================================
 function getBase() {
   const apiKey = process.env.AIRTABLE_API_KEY;
   const baseId = process.env.AIRTABLE_BASE_ID;
+
   if (!apiKey || !baseId) throw new Error("Chaves do Airtable ausentes.");
+
   return new Airtable({ apiKey }).base(baseId);
 }
 
 // ============================================================
-// 🧩 HANDLER PRINCIPAL
+// 🧩 HANDLER
 // ============================================================
 export default async function handler(req, res) {
 
@@ -120,6 +124,7 @@ export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type,x-admin-token");
+
   if (req.method === "OPTIONS") return res.status(204).end();
 
   if (!requireAuth(req, res)) return;
@@ -129,12 +134,11 @@ export default async function handler(req, res) {
   const configTable  = process.env.AIRTABLE_CONFIG_SITE_TABLE || "config_site";
 
   const { tipo = "" } = req.query;
-  const body = req.body || {};
 
   try {
 
     // ============================================================
-    // 📋 GET — CONFIG_SITE (SEM TOKEN)
+    // 📋 GET — CONFIG_SITE
     // ============================================================
     if (req.method === "GET" && tipo === "config_site") {
 
@@ -151,7 +155,7 @@ export default async function handler(req, res) {
     }
 
     // ============================================================
-    // 📋 GET — EVENTOS (com token)
+    // 📋 GET — EVENTOS (token required)
     // ============================================================
     if (req.method === "GET") {
       const registros = await base(eventosTable).select().all();
@@ -159,86 +163,75 @@ export default async function handler(req, res) {
     }
 
     // ============================================================
-    // 📝 POST — AÇÕES ADMINISTRATIVAS
+    // 📝 POST — AÇÕES
     // ============================================================
+    const body = req.body || {};
     const { acao } = body;
 
     // ------------------------------------------------------------
-    // 🔧 SALVAR CONFIG_SITE — FICHA ÚNICA
+    // 🌟 SALVAR CONFIG_SITE (FICHA ÚNICA)
     // ------------------------------------------------------------
     if (acao === "salvar_config_site") {
 
-      const registros = await base(configTable)
-        .select({ maxRecords: 1 })
-        .all();
-
+      // Carrega (ou cria) registro único
+      const registros = await base(configTable).select({ maxRecords: 1 }).all();
       let recordId = registros[0]?.id || null;
+
+      // Fonte dos dados
+      const dados = body.dados || {};
+
+      // Campos que podem ser alterados
       const fields = {};
 
-      const fonte = body.dados || body.fields || body;
+      if (dados.nome_ong) fields.nome_ong = dados.nome_ong;
+      if (dados.descricao_homepage) fields.descricao_homepage = dados.descricao_homepage;
+      if (dados.instagram_url) fields.instagram_url = dados.instagram_url;
+      if (dados.email_contato) fields.email_contato = dados.email_contato;
+      if (dados.telefone_contato) fields.telefone_contato = dados.telefone_contato;
 
-      if (typeof fonte.nome_ong === "string") fields.nome_ong = fonte.nome_ong;
-      if (typeof fonte.descricao_homepage === "string") fields.descricao_homepage = fonte.descricao_homepage;
-      if (typeof fonte.instagram_url === "string") fields.instagram_url = fonte.instagram_url;
-      if (typeof fonte.email_contato === "string") fields.email_contato = fonte.email_contato;
-      if (typeof fonte.telefone_contato === "string") fields.telefone_contato = fonte.telefone_contato;
-
-      // Logo header
-      if (fonte.logo_header) {
-        if (Array.isArray(fonte.logo_header)) fields.logo_header = fonte.logo_header;
-        else if (typeof fonte.logo_header === "string") fields.logo_header = [{ url: fonte.logo_header }];
+      // LOGO (attachment)
+      if (dados.logo_header) {
+        fields.logo_header = [{ url: dados.logo_header }];
       }
 
-      // Nuvem index
-      if (fonte.nuvem_index) {
-        if (Array.isArray(fonte.nuvem_index)) fields.nuvem_index = fonte.nuvem_index;
-        else if (typeof fonte.nuvem_index === "string") fields.nuvem_index = [{ url: fonte.nuvem_index }];
+      // NUVEM INDEX (attachment)
+      if (dados.nuvem_index) {
+        fields.nuvem_index = [{ url: dados.nuvem_index }];
       }
 
-      // ❗ NÃO ENVIAR updated_at – Airtable NÃO aceita
-      // Ele deve ser um campo automático OU preenchido via Date normal
-      //fields.updated_at = new Date();  // NÃO ENVIAR!
-
-      if (Object.keys(fields).length === 0) {
-        return err(res, 400, "Nenhum campo válido para salvar.");
-      }
-
-      if (recordId) {
-        await base(configTable).update([{ id: recordId, fields }]);
-      } else {
+      if (!recordId) {
         const novo = await base(configTable).create([{ fields }]);
         recordId = novo[0].id;
+      } else {
+        await base(configTable).update([{ id: recordId, fields }]);
       }
 
-      return ok(res, { sucesso: true, id: recordId, fields });
+      return ok(res, { sucesso: true, id: recordId });
     }
 
     // ------------------------------------------------------------
-    // CRIAR EVENTO
+    // EVENTO — CRIAR
     // ------------------------------------------------------------
     if (acao === "criar") {
-      const novo = await base(eventosTable).create([{ fields: body.fields }]);
+      const novo = await base(eventosTable).create([{ fields: body }]);
       return ok(res, { sucesso: true, id: novo[0].id });
     }
 
     // ------------------------------------------------------------
-    // ATUALIZAR EVENTO
+    // EVENTO — ATUALIZAR
     // ------------------------------------------------------------
     if (acao === "atualizar") {
       const { id_evento, fields } = body;
-      if (!id_evento || !fields) return err(res, 400, "Dados insuficientes.");
       await base(eventosTable).update([{ id: id_evento, fields }]);
-      return ok(res, { sucesso: true });
+      return ok(res, { sucesso:true });
     }
 
     // ------------------------------------------------------------
-    // EXCLUIR EVENTO
+    // EVENTO — EXCLUIR
     // ------------------------------------------------------------
     if (acao === "excluir") {
-      const { id_evento } = body;
-      if (!id_evento) return err(res, 400, "id_evento ausente.");
-      await base(eventosTable).destroy([id_evento]);
-      return ok(res, { sucesso: true });
+      await base(eventosTable).destroy([body.id_evento]);
+      return ok(res, { sucesso:true });
     }
 
     return err(res, 400, "Ação inválida.");
@@ -248,4 +241,3 @@ export default async function handler(req, res) {
     return err(res, 500, e.message);
   }
 }
-
