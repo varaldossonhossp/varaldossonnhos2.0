@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>💙 Painel do Doador | Varal dos Sonhos</title>
+
+  <!-- Tailwind -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Fonte padrão -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="icon" href="../imagens/favicon.png" />
+
+  <style>
+    body {
+      font-family: "Poppins", sans-serif;
+      background: #e3f2fd;
+    }
+
+    /* Sidebar igual ao painel admin */
+    .sidebar {
+      width: 270px;
+      background: #1565c0;
+      color: white;
+      height: 100vh;
+      position: fixed;
+      left: 0;
+      top: 0;
+      padding: 20px 0;
+      box-shadow: 3px 0px 10px rgba(0,0,0,0.15);
+    }
+
+    .sidebar h2 {
+      padding-left: 28px;
+      font-size: 22px;
+      font-weight: 700;
+      margin-bottom: 30px;
+    }
+
+    .sidebar a {
+      display: block;
+      padding: 14px 30px;
+      margin: 4px 0;
+      text-decoration: none;
+      color: white;
+      font-weight: 500;
+      transition: .2s;
+    }
+    .sidebar a:hover {
+      background: #1e88e5;
+      padding-left: 40px;
+    }
+
+    /* Área da direita */
+    .content {
+      margin-left: 290px;
+      padding: 40px;
+    }
+
+    .card {
+      background: white;
+      padding: 25px;
+      border-radius: 18px;
+      margin-bottom: 40px;
+      box-shadow: 0 3px 8px rgba(0,0,0,0.1);
+      transition: .2s;
+      text-align: center;
+    }
+
+    .card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+    }
+
+    .emoji {
+      font-size: 55px;
+      margin-bottom: 10px;
+    }
+
+    .card-title {
+      font-size: 22px;
+      font-weight: 700;
+      color: #1565c0;
+      margin-bottom: 6px;
+    }
+
+    .desc {
+      color: #555;
+      font-size: 15px;
+    }
+  </style>
+</head>
+
+<body>
+
+<!-- ==========================================================
+     📌 SIDEBAR DO DOADOR
+=========================================================== -->
+<aside class="sidebar">
+  <h2>💙 Meu Painel</h2>
+
+  <a href="painel-doador.html">🏠 Início</a>
+  <a href="minhas-adocoes.html">📦 Minhas Adoções</a>
+  <a href="minhas-conquistas.html">🏅 Conquistas</a>
+  <a href="pontuacao.html">🎮 Pontuação</a>
+  <a href="meu-perfil.html">👤 Meu Perfil</a>
+
+  <hr class="my-6 border-white/40">
+
+  <a href="../index.html">⬅️ Voltar ao Site</a>
+  <a href="../logout.html">🚪 Sair</a>
+</aside>
+
+
+<!-- ==========================================================
+     📌 CONTEÚDO PRINCIPAL
+=========================================================== -->
+<main class="content">
+
+  <h1 class="text-3xl font-bold text-blue-800 mb-8">
+    💙 Bem-vindo ao Painel do Doador
+  </h1>
+
+  <!-- CARDS DO PAINEL -->
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+
+    <!-- CARD 1 -->
+    <a href="minhas-adocoes.html" class="card">
+      <div class="emoji">📦</div>
+      <h3 class="card-title">Minhas Adoções</h3>
+      <p class="desc">Veja todas as cartinhas que você adotou.</p>
+    </a>
+
+    <!-- CARD 2 -->
+    <a href="minhas-conquistas.html" class="card">
+      <div class="emoji">🏅</div>
+      <h3 class="card-title">Conquistas</h3>
+      <p class="desc">Acompanhe seus troféus e medalhas.</p>
+    </a>
+
+    <!-- CARD 3 -->
+    <a href="pontuacao.html" class="card">
+      <div class="emoji">🎮</div>
+      <h3 class="card-title">Pontuação</h3>
+      <p class="desc">Veja seus pontos acumulados e nível.</p>
+    </a>
+
+    <!-- CARD 4 -->
+    <a href="meu-perfil.html" class="card">
+      <div class="emoji">👤</div>
+      <h3 class="card-title">Meu Perfil</h3>
+      <p class="desc">Gerencie suas informações pessoais.</p>
+    </a>
+
+  </div>
+
+</main>
+
+<!---------------------- SCRIPTS--------------------------->
+<script src="../js/painel-doador.js"></script>
+
+
+</body>
+</html>

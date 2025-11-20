@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🎮 Pontuação | Varal dos Sonhos</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    body { font-family:"Poppins", sans-serif; background:#e3f2fd; }
+
+    .sidebar { width:270px; background:#1565c0; color:white; height:100vh; position:fixed; left:0; top:0;
+               padding:20px 0; box-shadow:3px 0px 10px rgba(0,0,0,0.15); }
+
+    .sidebar h2{ padding-left:28px; font-size:22px; font-weight:700; margin-bottom:30px; }
+
+    .sidebar a{ display:block; padding:14px 30px; margin:4px 0; text-decoration:none; color:white; font-weight:500; transition:.2s; }
+    .sidebar a:hover{ background:#1e88e5; padding-left:40px; }
+
+    .content{ margin-left:290px; padding:40px; }
+
+    .card{
+      background:white;
+      padding:25px;
+      border-radius:18px;
+      box-shadow:0 3px 8px rgba(0,0,0,0.1);
+    }
+
+    .emoji{ font-size:70px; }
+  </style>
+
+</head>
+
+<body>
+
+<aside class="sidebar">
+  <h2>💙 Meu Painel</h2>
+
+  <a href="painel-doador.html">🏠 Início</a>
+  <a href="minhas-adocoes.html">📦 Minhas Adoções</a>
+  <a href="minhas-conquistas.html">🏅 Conquistas</a>
+  <a href="pontuacao.html">🎮 Pontuação</a>
+  <a href="meu-perfil.html">👤 Meu Perfil</a>
+
+  <hr class="my-6 border-white/40">
+
+  <a href="../index.html">⬅️ Voltar ao Site</a>
+  <a href="../logout.html">🚪 Sair</a>
+</aside>
+
+<main class="content">
+
+  <h1 class="text-3xl font-bold text-blue-800 mb-8">
+    🎮 Minhas Pontuações
+  </h1>
+
+  <div class="card mb-8">
+    <h2 class="font-bold text-blue-700 text-xl mb-4">⭐ Nível Atual</h2>
+    <div class="flex items-center gap-6">
+      <div class="emoji">🌟</div>
+      <div>
+        <p class="font-bold text-xl">Nível 3 — Guardião</p>
+        <div class="w-full bg-gray-200 rounded-full h-4 mt-2">
+          <div class="bg-blue-600 h-4 rounded-full" style="width: 60%;"></div>
+        </div>
+        <p class="text-gray-600 text-sm mt-2">1200 / 2000 pontos</p>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<!---------------------- SCRIPTS--------------------------->
+<script src="../js/pontuacao.js"></script>
+
+</body>
+</html>

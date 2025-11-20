@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>📦 Minhas Adoções | Varal dos Sonhos</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    body { font-family: "Poppins", sans-serif; background:#e3f2fd; }
+
+    .sidebar {
+      width: 270px;
+      background: #1565c0;
+      color: white;
+      height: 100vh;
+      position: fixed;
+      left: 0;
+      top: 0;
+      padding: 20px 0;
+      box-shadow: 3px 0px 10px rgba(0,0,0,0.15);
+    }
+
+    .sidebar h2 {
+      padding-left: 28px;
+      font-size: 22px;
+      font-weight: 700;
+      margin-bottom: 30px;
+    }
+
+    .sidebar a {
+      display: block;
+      padding: 14px 30px;
+      margin: 4px 0;
+      text-decoration: none;
+      color: white;
+      font-weight: 500;
+      transition: .2s;
+    }
+    .sidebar a:hover { background:#1e88e5; padding-left:40px; }
+
+    .content { margin-left: 290px; padding: 40px; }
+
+    .card {
+      background: white;
+      padding: 20px;
+      border-radius: 16px;
+      box-shadow: 0 3px 8px rgba(0,0,0,0.1);
+      margin-bottom: 18px;
+      transition:.2s;
+    }
+
+    .card:hover { transform:translateY(-3px); }
+
+    .tag {
+      background:#e3f2fd;
+      padding:4px 10px;
+      border-radius:8px;
+      font-size:13px;
+      color:#0d47a1;
+      margin-right:6px;
+    }
+  </style>
+</head>
+
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <h2>💙 Meu Painel</h2>
+
+  <a href="painel-doador.html">🏠 Início</a>
+  <a href="minhas-adocoes.html">📦 Minhas Adoções</a>
+  <a href="minhas-conquistas.html">🏅 Conquistas</a>
+  <a href="pontuacao.html">🎮 Pontuação</a>
+  <a href="meu-perfil.html">👤 Meu Perfil</a>
+
+  <hr class="my-6 border-white/40">
+
+  <a href="../index.html">⬅️ Voltar ao Site</a>
+  <a href="../logout.html">🚪 Sair</a>
+</aside>
+
+<!-- CONTEÚDO -->
+<main class="content">
+  <h1 class="text-3xl font-bold text-blue-800 mb-6">
+    📦 Minhas Adoções
+  </h1>
+
+  <p class="mb-6 text-gray-700">
+    Aqui você encontra todas as cartinhas que você adotou 💙
+  </p>
+
+  <div id="listaAdocoes">
+    <!-- CARDS SERÃO INSERIDOS PELO JS -->
+    <div class="card">
+      <h3 class="font-bold text-lg text-blue-700">Nome da Criança</h3>
+      <p class="text-gray-700 text-sm">🎁 Sonho desejado</p>
+
+      <div class="mt-2">
+        <span class="tag">🆔 Cartinha 0001</span>
+        <span class="tag">📍 Ponto de coleta</span>
+        <span class="tag">📅 Status: Em andamento</span>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<!---------------------- SCRIPTS--------------------------->
+<script src="../js/minhas-adocoes.js"></script>
+
+</body>
+</html>
