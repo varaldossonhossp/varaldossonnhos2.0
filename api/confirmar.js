@@ -1,16 +1,12 @@
 // ============================================================
-// 💙 VARAL DOS SONHOS — /api/confirmar.js
+// 💙 VARAL DOS SONHOS — /api/confirmar.js 
 // ------------------------------------------------------------
-// Finalidade:
-//  • Admin confirma a adoção
-//  • Muda status → "confirmada"
-//  • Atualiza gamificação
-//  • Envia e-mail ao DOADOR (EmailJS)
-//  • Valida se o e-mail foi enviado DE VERDADE
-//
-// Observação importante:
-//  A etapa de confirmação deve ser 100% CONFIÁVEL.
-//  Se o e-mail falhar, NÃO confirmamos a adoção.
+// • Admin confirma a adoção
+// • Atualiza status → "confirmada"
+// • Busca dados completos (cartinha, usuário, ponto)
+// • Atualiza gamificação
+// • Envia e-mail ao doador via EmailJS
+// • Se o envio falhar → status NÃO muda
 // ============================================================
 
 import Airtable from "airtable";
@@ -24,13 +20,12 @@ export const config = { runtime: "nodejs" };
 const TB_ADOCOES = process.env.AIRTABLE_ADOCOES_TABLE || "adocoes";
 const TB_USUARIO = process.env.AIRTABLE_USUARIO_TABLE || "usuario";
 const TB_PONTOS = process.env.AIRTABLE_PONTOS_TABLE || "pontos_coleta";
+const TB_CARTINHA = process.env.AIRTABLE_CARTINHA_TABLE || "cartinha";
 const TB_GAMI = process.env.AIRTABLE_GAMIFICACAO_TABLE || "gamificacao";
 const TB_REGRAS = process.env.AIRTABLE_REGRAS_GAMIFICACAO_TABLE || "regras_gamificacao";
 
 // ============================================================
-// 💌 Função — Enviar e-mail ao DOADOR via EmailJS
-//   → Retorna TRUE se enviado
-//   → Retorna FALSE se falhou
+// 💌 Enviar e-mail ao doador via EmailJS
 // ============================================================
 async function enviarEmailDoador_EmailJS(params) {
   try {
@@ -44,11 +39,12 @@ async function enviarEmailDoador_EmailJS(params) {
         to_name: params.nome_doador,
         child_name: params.nome_crianca,
         child_gift: params.sonho,
+        id_cartinha: params.id_cartinha,
+        deadline: params.deadline || "Verifique seu painel",
         pickup_name: params.ponto_nome || "",
         pickup_address: params.ponto_endereco || "",
         pickup_phone: params.ponto_telefone || "",
         order_id: params.order_id,
-        deadline: params.deadline || "Verifique seu painel",
         gami_points: params.gami_points || 10,
         gami_level: params.gami_level || "Iniciante",
         gami_badge_title: params.gami_badge_title || "",
@@ -62,24 +58,22 @@ async function enviarEmailDoador_EmailJS(params) {
       body: JSON.stringify(payload),
     });
 
-    // Agora é VERDADEIRAMENTE verificado
     if (!r.ok) {
       console.error("❌ EmailJS falhou:", await r.text());
       return false;
     }
 
-    console.log("✅ Email enviado ao doador com sucesso!");
+    console.log("📨 Email enviado ao doador!");
     return true;
 
   } catch (err) {
-    console.error("🔥 ERRO no envio EmailJS:", err.message);
+    console.error("🔥 ERRO EMAIL DOADOR:", err.message);
     return false;
   }
 }
 
-
 // ============================================================
-// 🎮 GAMIFICAÇÃO — Atualiza pontos + nível
+// 🎮 GAMIFICAÇÃO
 // ============================================================
 async function atualizarGamificacao(base, idUsuarioRecord, idAdocao) {
   try {
@@ -87,15 +81,18 @@ async function atualizarGamificacao(base, idUsuarioRecord, idAdocao) {
       .select({ sort: [{ field: "faixa_min", direction: "asc" }] })
       .all();
 
+    // Busca registro gamificação atual
     const registros = await base(TB_GAMI)
       .select({ filterByFormula: `{usuario}='${idUsuarioRecord}'` })
       .all();
 
     let registro = registros[0];
     let pontosAtuais = registro ? registro.fields.pontos || 0 : 0;
+
+    // Ganha +10 pontos por adoção
     pontosAtuais += 10;
 
-    // Nível inicial
+    // Nível
     let nivel = "Iniciante";
     let titulo = "💙 Iniciante Solidário";
 
@@ -148,9 +145,8 @@ async function atualizarGamificacao(base, idUsuarioRecord, idAdocao) {
   }
 }
 
-
 // ============================================================
-// 🌟 PÁGINA DE SUCESSO (HTML SIMPLES)
+// 🌟 HTML de retorno
 // ============================================================
 function paginaSucesso(msg, cor = "#1e88e5") {
   return `
@@ -158,16 +154,14 @@ function paginaSucesso(msg, cor = "#1e88e5") {
     <div style="background:white;padding:40px;border-radius:14px;display:inline-block">
       <h2 style="color:${cor}">${msg}</h2>
       <p>Adoção confirmada e e-mail enviado ao doador 💙</p>
-      <a href="/pages/logistica-admin.html" 
+      <a href="/pages/logistica-admin.html"
          style="display:inline-block;margin-top:20px;background:${cor};
                 color:white;padding:10px 20px;border-radius:8px;text-decoration:none">
          Voltar ao Painel
       </a>
     </div>
-  </body></html>
-  `;
+  </body></html>`;
 }
-
 
 // ============================================================
 // 🌟 HANDLER PRINCIPAL
@@ -184,33 +178,46 @@ export default async function handler(req, res) {
       apiKey: process.env.AIRTABLE_API_KEY,
     }).base(process.env.AIRTABLE_BASE_ID);
 
-    // Buscar a adoção
+    // ----------------------------
+    // 1) Buscar ADOÇÃO
+    // ----------------------------
     const registro = await base(TB_ADOCOES).find(idAdocao);
     const f = registro.fields;
 
-    // Se já confirmada → retorna
     if (f.status_adocao === "confirmada") {
       return res.status(200).send(
         paginaSucesso("Esta adoção já estava confirmada.", "#ffa000")
       );
     }
 
-    // Buscar usuário
+    // ----------------------------
+    // 2) Buscar USUÁRIO
+    // ----------------------------
     const idUsuarioRecord = f.usuario ? f.usuario[0] : null;
     const usuario = idUsuarioRecord ? await base(TB_USUARIO).find(idUsuarioRecord) : null;
 
-    const emailDoador = usuario?.fields?.email_usuario;
-    const nomeDoador = usuario?.fields?.nome_usuario;
+    const emailDoador = usuario?.fields?.email_usuario || "";
+    const nomeDoador = usuario?.fields?.nome_usuario || "";
 
-    // Buscar nome/sonho da criança
-    const nomeCrianca = f.nome_crianca || "";
-    const sonho = f.sonho || "";
+    // ----------------------------
+    // 3) Buscar CARTINHA
+    // ----------------------------
+    const idCartinhaRecord = f.cartinha ? f.cartinha[0] : null;
+    const cart = idCartinhaRecord ? await base(TB_CARTINHA).find(idCartinhaRecord) : null;
 
-    // Buscar ponto
-    const pontoRecord = f.ponto_coleta ? f.ponto_coleta[0] : null;
+    const nomeCrianca = cart?.fields?.nome_crianca || "";
+    const sonho = cart?.fields?.sonho || "";
+    const id_cartinha = cart?.fields?.id_cartinha || idCartinhaRecord;
+    const deadline = cart?.fields?.data_limite_recebimento || "";
+
+    // ----------------------------
+    // 4) Buscar PONTO DE COLETA
+    // ----------------------------
+    const idPonto = f.pontos_coleta ? f.pontos_coleta[0] : null;
     let ponto = {};
-    if (pontoRecord) {
-      const p = await base(TB_PONTOS).find(pontoRecord);
+
+    if (idPonto) {
+      const p = await base(TB_PONTOS).find(idPonto);
       ponto = {
         nome: p.get("nome_ponto") || "",
         endereco: p.get("endereco") || "",
@@ -218,20 +225,28 @@ export default async function handler(req, res) {
       };
     }
 
-    // Atualizar status
+    // ----------------------------
+    // Atualizar STATUS
+    // ----------------------------
     await base(TB_ADOCOES).update([
       { id: idAdocao, fields: { status_adocao: "confirmada" } },
     ]);
 
-    // Gamificação
+    // ----------------------------
+    // GAMIFICAÇÃO
+    // ----------------------------
     const gami = await atualizarGamificacao(base, idUsuarioRecord, idAdocao);
 
-    // Enviar e-mail
+    // ----------------------------
+    // ENVIAR E-MAIL AO DOADOR
+    // ----------------------------
     const enviado = await enviarEmailDoador_EmailJS({
       email_doador: emailDoador,
       nome_doador: nomeDoador,
       nome_crianca: nomeCrianca,
       sonho,
+      id_cartinha,
+      deadline,
       ponto_nome: ponto.nome,
       ponto_endereco: ponto.endereco,
       ponto_telefone: ponto.telefone,
@@ -239,28 +254,26 @@ export default async function handler(req, res) {
       ...gami,
     });
 
-    // VERIFICAÇÃO CRÍTICA
     if (!enviado) {
-      // Reverte status
       await base(TB_ADOCOES).update([
         { id: idAdocao, fields: { status_adocao: "aguardando confirmacao" } },
       ]);
 
       return res.status(500).send(
         paginaSucesso(
-          "❌ ERRO: A adoção NÃO foi confirmada pois o e-mail falhou.",
+          "❌ ERRO: O e-mail falhou e a adoção NÃO foi confirmada.",
           "#d32f2f"
         )
       );
     }
 
-    // Tudo certo
+    // Sucesso!
     return res.status(200).send(
       paginaSucesso("Adoção confirmada com sucesso! 💙")
     );
 
   } catch (err) {
-    console.error("🔥 Erro ao confirmar adoção:", err);
+    console.error("🔥 ERRO AO CONFIRMAR ADOÇÃO:", err);
     return res.status(500).send(
       paginaSucesso("Erro interno ao confirmar adoção.", "#d32f2f")
     );
