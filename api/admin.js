@@ -68,12 +68,12 @@ import Airtable from "airtable";
 
 export const config = { runtime: "nodejs" };
 
-// Helpers de resposta
+// Helpers
 const ok  = (res, data) => res.status(200).json(data);
 const err = (res, code, msg) => res.status(code).json({ sucesso:false, mensagem:msg });
 
 // ============================================================
-// 🔐 AUTENTICAÇÃO — usada somente no POST
+// 🔐 TOKEN ADMIN
 // ============================================================
 function getToken(req) {
   return (
@@ -86,7 +86,7 @@ function getToken(req) {
 
 function requireAuth(req, res) {
 
-  // ⚠ GET config_site é público (usado pelo site para carregar logo/nuvem)
+  // GET config_site é público
   if (req.method === "GET" && req.query.tipo === "config_site") {
     return true;
   }
@@ -129,13 +129,15 @@ export default async function handler(req, res) {
   const configTable  = process.env.AIRTABLE_CONFIG_SITE_TABLE || "config_site";
 
   const { tipo = "" } = req.query;
+  const body = req.body || {};
 
   try {
 
     // ============================================================
-    // 📋 GET — CONFIG SITE (sem token)
+    // 📋 GET — CONFIG_SITE (SEM TOKEN)
     // ============================================================
     if (req.method === "GET" && tipo === "config_site") {
+
       const registros = await base(configTable)
         .select({ maxRecords: 1 })
         .all();
@@ -159,108 +161,47 @@ export default async function handler(req, res) {
     // ============================================================
     // 📝 POST — AÇÕES ADMINISTRATIVAS
     // ============================================================
-    const body = req.body || {};
     const { acao } = body;
 
     // ------------------------------------------------------------
-    // 🔧 SALVAR CONFIG DO SITE (MODO FICHA ÚNICA OU CAMPO/VALOR)
+    // 🔧 SALVAR CONFIG_SITE — FICHA ÚNICA
     // ------------------------------------------------------------
     if (acao === "salvar_config_site") {
 
-      // 🔹 1) Carrega (ou cria) o registro único de configuração
       const registros = await base(configTable)
         .select({ maxRecords: 1 })
         .all();
 
       let recordId = registros[0]?.id || null;
-
       const fields = {};
 
-      // 🔹 2) MODO NOVO – ficha única
-      //    Espera um objeto "dados" com todos os campos
-      const fonte =
-        body.dados || body.fields || {
-          nome_ong: body.nome_ong,
-          descricao_homepage: body.descricao_homepage,
-          instagram_url: body.instagram_url,
-          email_contato: body.email_contato,
-          telefone_contato: body.telefone_contato,
-          logo_header: body.logo_header,
-          nuvem_index: body.nuvem_index,
-        };
+      const fonte = body.dados || body.fields || body;
 
-      const temAlgumCampoNovo = Object.values(fonte).some(v => v !== undefined && v !== null && v !== "");
+      if (typeof fonte.nome_ong === "string") fields.nome_ong = fonte.nome_ong;
+      if (typeof fonte.descricao_homepage === "string") fields.descricao_homepage = fonte.descricao_homepage;
+      if (typeof fonte.instagram_url === "string") fields.instagram_url = fonte.instagram_url;
+      if (typeof fonte.email_contato === "string") fields.email_contato = fonte.email_contato;
+      if (typeof fonte.telefone_contato === "string") fields.telefone_contato = fonte.telefone_contato;
 
-      if (temAlgumCampoNovo) {
-
-        if (typeof fonte.nome_ong === "string") {
-          fields.nome_ong = fonte.nome_ong;
-        }
-
-        if (typeof fonte.descricao_homepage === "string") {
-          fields.descricao_homepage = fonte.descricao_homepage;
-        }
-
-        if (typeof fonte.instagram_url === "string") {
-          fields.instagram_url = fonte.instagram_url;
-        }
-
-        if (typeof fonte.email_contato === "string") {
-          fields.email_contato = fonte.email_contato;
-        }
-
-        if (typeof fonte.telefone_contato === "string") {
-          fields.telefone_contato = fonte.telefone_contato;
-        }
-
-        // Logo (attachment)
-        if (fonte.logo_header) {
-          if (Array.isArray(fonte.logo_header)) {
-            fields.logo_header = fonte.logo_header;
-          } else if (typeof fonte.logo_header === "string") {
-            fields.logo_header = [{ url: fonte.logo_header }];
-          }
-        }
-
-        // Nuvem da home (attachment)
-        if (fonte.nuvem_index) {
-          if (Array.isArray(fonte.nuvem_index)) {
-            fields.nuvem_index = fonte.nuvem_index;
-          } else if (typeof fonte.nuvem_index === "string") {
-            fields.nuvem_index = [{ url: fonte.nuvem_index }];
-          }
-        }
-      } else {
-        // 🔹 3) MODO ANTIGO – campo/valor (ainda suportado)
-        const { campo, valor } = body;
-
-        if (!campo || !valor) {
-          return err(res, 400, "Nenhum dado de configuração informado.");
-        }
-
-        if (campo === "logo") {
-          fields.logo_header = [{ url: valor }];
-        } else if (campo === "nuvem") {
-          fields.nuvem_index = [{ url: valor }];
-        } else if (campo === "instagram") {
-          fields.instagram_url = valor;
-        } else if (campo === "email") {
-          fields.email_contato = valor;
-        } else if (campo === "telefone") {
-          fields.telefone_contato = valor;
-        } else if (campo === "nome_ong") {
-          fields.nome_ong = valor;
-        } else if (campo === "descricao_homepage") {
-          fields.descricao_homepage = valor;
-        }
+      // Logo header
+      if (fonte.logo_header) {
+        if (Array.isArray(fonte.logo_header)) fields.logo_header = fonte.logo_header;
+        else if (typeof fonte.logo_header === "string") fields.logo_header = [{ url: fonte.logo_header }];
       }
 
-      // Se por algum motivo não sobrou nada pra salvar:
+      // Nuvem index
+      if (fonte.nuvem_index) {
+        if (Array.isArray(fonte.nuvem_index)) fields.nuvem_index = fonte.nuvem_index;
+        else if (typeof fonte.nuvem_index === "string") fields.nuvem_index = [{ url: fonte.nuvem_index }];
+      }
+
+      // ❗ NÃO ENVIAR updated_at – Airtable NÃO aceita
+      // Ele deve ser um campo automático OU preenchido via Date normal
+      //fields.updated_at = new Date();  // NÃO ENVIAR!
+
       if (Object.keys(fields).length === 0) {
-        return err(res, 400, "Nenhum campo válido para salvar em config_site.");
+        return err(res, 400, "Nenhum campo válido para salvar.");
       }
-
-      fields.updated_at = new Date().toISOString();
 
       if (recordId) {
         await base(configTable).update([{ id: recordId, fields }]);
@@ -273,39 +214,31 @@ export default async function handler(req, res) {
     }
 
     // ------------------------------------------------------------
-    // 🆕 EVENTO — CRIAR
+    // CRIAR EVENTO
     // ------------------------------------------------------------
     if (acao === "criar") {
-      const novo = await base(eventosTable).create([
-        { fields: body }
-      ]);
+      const novo = await base(eventosTable).create([{ fields: body.fields }]);
       return ok(res, { sucesso: true, id: novo[0].id });
     }
 
     // ------------------------------------------------------------
-    // ✏️ EVENTO — ATUALIZAR
+    // ATUALIZAR EVENTO
     // ------------------------------------------------------------
     if (acao === "atualizar") {
       const { id_evento, fields } = body;
-
-      if (!id_evento || !fields)
-        return err(res, 400, "Dados insuficientes.");
-
+      if (!id_evento || !fields) return err(res, 400, "Dados insuficientes.");
       await base(eventosTable).update([{ id: id_evento, fields }]);
-      return ok(res, { sucesso:true });
+      return ok(res, { sucesso: true });
     }
 
     // ------------------------------------------------------------
-    // 🗑️ EVENTO — EXCLUIR
+    // EXCLUIR EVENTO
     // ------------------------------------------------------------
     if (acao === "excluir") {
       const { id_evento } = body;
-
-      if (!id_evento)
-        return err(res, 400, "id_evento ausente.");
-
+      if (!id_evento) return err(res, 400, "id_evento ausente.");
       await base(eventosTable).destroy([id_evento]);
-      return ok(res, { sucesso:true });
+      return ok(res, { sucesso: true });
     }
 
     return err(res, 400, "Ação inválida.");
@@ -315,3 +248,4 @@ export default async function handler(req, res) {
     return err(res, 500, e.message);
   }
 }
+
