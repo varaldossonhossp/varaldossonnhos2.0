@@ -1,13 +1,12 @@
 // ============================================================
-// 💙 VARAL DOS SONHOS — /js/cartinha.js  (FINAL AJUSTADO)
+// 💙 VARAL DOS SONHOS — /js/cartinha.js 
 // ------------------------------------------------------------
-// Página de exibição das cartinhas disponíveis para adoção:
-// • Busca cartinhas via /api/cartinha
-// • Mostra cards em varal horizontal com scroll
-// • Botão para adicionar ao carrinho (localStorage)
-// • Modal de zoom na imagem da cartinha
+// Página do Varal Virtual:
+// • Busca cartinhas disponíveis (status = disponivel)
+// • Mostra no varal com scroll lateral
+// • Carrinho com localStorage
+// • Modal de zoom
 // ============================================================
-
 
 document.addEventListener("DOMContentLoaded", async () => {
 
@@ -22,7 +21,9 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   let cartinha = [];
 
-  // BUSCA API
+  // ============================================================
+  // 🔵 BUSCA API
+  // ============================================================
   try {
     const resp = await fetch("/api/cartinha");
     if (!resp.ok) throw new Error("Erro ao buscar cartinhas");
@@ -33,27 +34,35 @@ document.addEventListener("DOMContentLoaded", async () => {
       return;
     }
 
-    cartinha = json.cartinha;
+    // 🔥 FILTRA SOMENTE AS DISPONÍVEIS
+    cartinha = json.cartinha.filter(c =>
+      (c.status || "disponivel").toLowerCase() === "disponivel"
+    );
+
+    if (cartinha.length === 0) {
+      trilho.innerHTML = "<p style='padding:20px;'>Nenhuma cartinha disponível 😢</p>";
+      return;
+    }
+
     montarVaral(cartinha);
+
   } catch (e) {
-    console.error(e);
+    console.error("Erro ao carregar cartinhas:", e);
     trilho.innerHTML = "<p style='padding:20px;'>Erro ao carregar cartinhas.</p>";
   }
 
   // ============================================================
-  // MONTAR CARDS
+  // 🟣 MONTAR CARDS NO VARAL
   // ============================================================
   function montarVaral(lista) {
     trilho.innerHTML = "";
 
     lista.forEach(r => {
 
-
       const nome = r.primeiro_nome || (r.nome_crianca ? r.nome_crianca.split(" ")[0] : "Criança");
-  
       const idade = r.idade ?? "—";
       const sonho = r.sonho || "Sonho não informado.";
-      const irmaos = r.irmaos ?? 0;
+      const irmaos = r.irmaos ?? "—";
       const idadeIrmaos = r.idade_irmaos || "—";
 
       const foto =
@@ -85,16 +94,20 @@ document.addEventListener("DOMContentLoaded", async () => {
       `;
 
       const btn = card.querySelector(".btn-adotar");
+
+      // Se já estiver no carrinho
       if (estaNoCarrinho(r.id)) {
         btn.textContent = "No Carrinho 🧺";
         btn.classList.add("btn-ocupada");
         btn.disabled = true;
       }
 
+      // Adicionar ao carrinho
       btn.addEventListener("click", () => {
         adicionarAoCarrinho({ id: r.id, fields: r }, btn, nome);
       });
 
+      // Modal zoom
       card.querySelector(".cartinha-quadro").addEventListener("click", (e) => {
         abrirZoom(e.currentTarget.dataset.img, nome);
       });
@@ -105,7 +118,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   // ============================================================
-  // CARRINHO
+  // 🧺 LOGICA DO CARRINHO
   // ============================================================
   function estaNoCarrinho(id) {
     const carrinho = JSON.parse(localStorage.getItem("carrinho")) || [];
@@ -125,7 +138,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   // ============================================================
-  // MODAL
+  // 🔍 MODAL ZOOM
   // ============================================================
   function abrirZoom(img, nome) {
     imgZoom.src = img;
@@ -134,10 +147,12 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   closeZoom.onclick = () => (modalZoom.style.display = "none");
-  window.onclick = (e) => { if (e.target === modalZoom) modalZoom.style.display = "none"; };
+  window.onclick = (e) => {
+    if (e.target === modalZoom) modalZoom.style.display = "none";
+  };
 
   // ============================================================
-  // SETAS
+  // ↔ SETAS DO VARAL
   // ============================================================
   const passo = 330;
   btnEsq.onclick = () => trilho.scrollBy({ left: -passo, behavior: "smooth" });
@@ -146,7 +161,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 });
 
 // ============================================================
-// TOAST - AVISO BONITO E EMOCIONAL
+// 💬 TOAST BONITO E EMOCIONAL
 // ============================================================
 function mostrarToast(msg) {
   const area = document.getElementById("toast-container");
