@@ -16,7 +16,7 @@ function inicializarHeader() {
 
   const linkPainelAdmin = document.getElementById("linkPainelAdmin");
   const linkPainelPonto = document.getElementById("linkPainelPonto");
-  const linkConquista = document.getElementById("linkConquista");
+  const linkConquista = document.getElementById("linkPainelDoador");
 
   const toggle = document.getElementById("menu-toggle");
   const links = document.getElementById("menu-links");
