@@ -264,10 +264,8 @@ async function confirmarAdocao(id){
   }
 }
 
-
-
 // ==========================================================
-// ✔ RECEBER PRESENTE (PONTO)
+// ✔ RECEBER PRESENTE (ADMIN LOGÍSTICA)
 // ==========================================================
 async function receberPresente(idAdocao){
   if(!confirm("Confirmar que o presente foi RECEBIDO no ponto?")) return;
@@ -278,7 +276,7 @@ async function receberPresente(idAdocao){
     body:JSON.stringify({
       acao:"receber",
       id_registro:idAdocao,
-      responsavel:"Admin",
+      responsavel:"Admin Logística",
       observacoes:""
     })
   });
@@ -293,8 +291,9 @@ async function receberPresente(idAdocao){
   }
 }
 
+
 // ==========================================================
-// ✔ COLETAR PRESENTE
+// ✔ COLETAR / ENTREGAR PRESENTE (ADMIN LOGÍSTICA)
 // ==========================================================
 async function coletarPresente(idAdocao){
   if(!confirm("Confirmar que o presente foi COLETADO?")) return;
@@ -305,7 +304,7 @@ async function coletarPresente(idAdocao){
     body:JSON.stringify({
       acao:"coletar",
       id_registro:idAdocao,
-      responsavel:"Admin",
+      responsavel:"Admin Logística",
       observacoes:""
     })
   });
