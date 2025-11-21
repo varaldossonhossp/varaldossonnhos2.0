@@ -269,7 +269,7 @@ async function confirmarAdocao(id){
 // ==========================================================
 // ✔ RECEBER PRESENTE (PONTO)
 // ==========================================================
-async function receberPresente(idAdocao, idPonto){
+async function receberPresente(idAdocao){
   if(!confirm("Confirmar que o presente foi RECEBIDO no ponto?")) return;
 
   const r = await fetch("/api/logistica", {
@@ -277,8 +277,7 @@ async function receberPresente(idAdocao, idPonto){
     headers:{"Content-Type":"application/json"},
     body:JSON.stringify({
       acao:"receber",
-      id_adocao:idAdocao,
-      id_ponto:idPonto,
+      id_registro:idAdocao,     
       responsavel:"Admin",
       observacoes:""
     })
@@ -296,10 +295,11 @@ async function receberPresente(idAdocao, idPonto){
 
 
 
+
 // ==========================================================
 // ✔ COLETAR PRESENTE
 // ==========================================================
-async function coletarPresente(idAdocao, idPonto){
+async function coletarPresente(idAdocao){
   if(!confirm("Confirmar que o presente foi COLETADO no ponto?")) return;
 
   const r = await fetch("/api/logistica", {
@@ -307,8 +307,7 @@ async function coletarPresente(idAdocao, idPonto){
     headers:{"Content-Type":"application/json"},
     body:JSON.stringify({
       acao:"coletar",
-      id_adocao:idAdocao,
-      id_ponto:idPonto,
+      id_registro:idAdocao,    
       responsavel:"Admin",
       observacoes:""
     })
