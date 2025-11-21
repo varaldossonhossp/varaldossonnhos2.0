@@ -19,7 +19,7 @@
 // Se o e-mail falhar → NÃO muda status e retorna erro.
 // Compatível com as tabelas reais enviadas por Carina Mendes
 // adocoes → usuario, cartinha, pontos_coleta, id_doacao, status_adocao
-// pontos_movimentos → id_ponto, id_adocao, tipo_movimento, data...
+// pontos_movimentos → id_ponto, id_doacao, tipo_movimento, data...
 // ------------------------------------------------------------
 // RECEBER → Envia e-mail ao ADMIN (Mailjet Template 7473367)
 // COLETAR → Envia e-mail ao DOADOR (Mailjet Template 7512791)
@@ -29,9 +29,8 @@
 //  MAILJET_SECRET_KEY
 //  MAILJET_FROM_EMAIL
 //  MAILJET_FROM_NAME
-//  MAILJET_TEMPLATE_ID_RECEBIDO   (7473367)
-//  MAILJET_TEMPLATE_ID_ENTREGA    (7512791)
-//  ADMIN_LOGISTICA_EMAIL          (email do administrador)
+//  MAILJET_TEMPLATE_ID_ENTREGA    (7473367)
+//  MAILJET_TEMPLATE_ID_RECEBIDO   (7512791)
 // ============================================================
 
 import Airtable from "airtable";
@@ -48,22 +47,16 @@ const TB_MOV = "ponto_movimentos";
 const TB_EVENTOS = "eventos";
 
 // ============================================================
-// 📌 Email ADMIN — Template (Presente Recebido)
+// 📌 Email ADMIN — Template 7473367 (Presente Recebido)
 // ============================================================
 async function enviarEmailAdmin_Recebimento(data) {
   try {
     const payload = {
       Messages: [
         {
-          From: {
-            Email: process.env.MAILJET_FROM_EMAIL,
-            Name: process.env.MAILJET_FROM_NAME
-          },
-          To: [{
-            Email: process.env.ADMIN_LOGISTICA_EMAIL,
-            Name: "Equipe Logística"
-          }],
-          TemplateID: Number(process.env.MAILJET_TEMPLATE_ID_RECEBIDO),
+          From: { Email: process.env.MAILJET_FROM_EMAIL, Name: process.env.MAILJET_FROM_NAME },
+          To: [{ Email: process.env.MAILJET_FROM_EMAIL, Name: "Equipe Logística" }],
+          TemplateID: Number(process.env.MAILJET_TEMPLATE_ID_ENTREGA),
           TemplateLanguage: true,
           Subject: "📦 Presente Recebido no Ponto de Coleta!",
           Variables: {
@@ -80,11 +73,7 @@ async function enviarEmailAdmin_Recebimento(data) {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization:
-          "Basic " +
-          Buffer.from(
-            `${process.env.MAILJET_API_KEY}:${process.env.MAILJET_SECRET_KEY}`
-          ).toString("base64")
+        Authorization: "Basic " + Buffer.from(`${process.env.MAILJET_API_KEY}:${process.env.MAILJET_SECRET_KEY}`).toString("base64")
       },
       body: JSON.stringify(payload)
     });
@@ -97,19 +86,16 @@ async function enviarEmailAdmin_Recebimento(data) {
 }
 
 // ============================================================
-// 📌 Email DOADOR — Template (Presente Coletado)
+// 📌 Email DOADOR — Template 7512791 (Presente Coletado)
 // ============================================================
 async function enviarEmailDoador_Entrega(data) {
   try {
     const payload = {
       Messages: [
         {
-          From: {
-            Email: process.env.MAILJET_FROM_EMAIL,
-            Name: process.env.MAILJET_FROM_NAME
-          },
+          From: { Email: process.env.MAILJET_FROM_EMAIL, Name: process.env.MAILJET_FROM_NAME },
           To: [{ Email: data.email_doador, Name: data.nome_doador }],
-          TemplateID: Number(process.env.MAILJET_TEMPLATE_ID_ENTREGA),
+          TemplateID: Number(process.env.MAILJET_TEMPLATE_ID_RECEBIDO),
           TemplateLanguage: true,
           Subject: "🎁 Seu presente foi coletado e está a caminho do evento!",
           Variables: {
@@ -131,11 +117,7 @@ async function enviarEmailDoador_Entrega(data) {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization:
-          "Basic " +
-          Buffer.from(
-            `${process.env.MAILJET_API_KEY}:${process.env.MAILJET_SECRET_KEY}`
-          ).toString("base64")
+        Authorization: "Basic " + Buffer.from(`${process.env.MAILJET_API_KEY}:${process.env.MAILJET_SECRET_KEY}`).toString("base64")
       },
       body: JSON.stringify(payload)
     });
@@ -151,7 +133,6 @@ async function enviarEmailDoador_Entrega(data) {
 // 🌟 HANDLER PRINCIPAL
 // ============================================================
 export default async function handler(req, res) {
-
   if (req.method !== "POST") {
     return res.status(405).json({ sucesso: false, mensagem: "Use POST." });
   }
@@ -163,8 +144,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const base = new Airtable({ apiKey: process.env.AIRTABLE_API_KEY })
-      .base(process.env.AIRTABLE_BASE_ID);
+    const base = new Airtable({ apiKey: process.env.AIRTABLE_API_KEY }).base(process.env.AIRTABLE_BASE_ID);
 
     const ado = await base(TB_ADOCOES).find(id_registro);
     const f = ado.fields;
@@ -187,19 +167,16 @@ export default async function handler(req, res) {
     const pontoEndereco = ponto?.fields?.endereco || "";
     const pontoTelefone = ponto?.fields?.telefone || "";
 
-    const eventos = await base(TB_EVENTOS)
-      .select({ filterByFormula: `status_evento='em andamento'` })
-      .firstPage();
-
+    const eventos = await base(TB_EVENTOS).select({ filterByFormula: `status_evento='em andamento'` }).firstPage();
     const evento = eventos[0]?.fields || {};
+
     const eventoNome = evento.nome_evento || "Evento Solidário 💙";
     const eventoData = evento.data_realizacao_evento || "-";
 
     // ============================================================
-    // 1️⃣ RECEBER — e-mail ADMIN
+    // 1️⃣ RECEBER — email ADMIN
     // ============================================================
     if (acao === "receber") {
-
       const enviado = await enviarEmailAdmin_Recebimento({
         ponto_nome: pontoNome,
         nome_crianca: nomeCrianca,
@@ -208,19 +185,14 @@ export default async function handler(req, res) {
       });
 
       if (!enviado) {
-        return res.status(500).json({
-          sucesso: false,
-          mensagem: "Erro ao enviar email ao ADMIN."
-        });
+        return res.status(500).json({ sucesso: false, mensagem: "Erro ao enviar email ao ADMIN." });
       }
 
-      await base(TB_ADOCOES).update(id_registro, {
-        status_adocao: "presente recebido"
-      });
+      await base(TB_ADOCOES).update(id_registro, { status_adocao: "presente recebido" });
 
       await base(TB_MOV).create({
         id_ponto: [pontoId],
-        id_adocao: [id_registro],
+        id_doacao: id_doacao,
         tipo_movimento: "recebimento",
         responsavel,
         observacoes,
@@ -231,10 +203,9 @@ export default async function handler(req, res) {
     }
 
     // ============================================================
-    // 2️⃣ COLETAR — e-mail DOADOR
+    // 2️⃣ COLETAR — email DOADOR
     // ============================================================
     if (acao === "coletar") {
-
       const enviado = await enviarEmailDoador_Entrega({
         nome_doador: nomeDoador,
         email_doador: emailDoador,
@@ -249,19 +220,14 @@ export default async function handler(req, res) {
       });
 
       if (!enviado) {
-        return res.status(500).json({
-          sucesso: false,
-          mensagem: "Erro ao enviar email ao DOADOR."
-        });
+        return res.status(500).json({ sucesso: false, mensagem: "Erro ao enviar email ao DOADOR." });
       }
 
-      await base(TB_ADOCOES).update(id_registro, {
-        status_adocao: "presente entregue"
-      });
+      await base(TB_ADOCOES).update(id_registro, { status_adocao: "presente entregue" });
 
       await base(TB_MOV).create({
         id_ponto: [pontoId],
-        id_adocao: [id_registro],
+        id_doacao: id_doacao,
         tipo_movimento: "retirada",
         responsavel,
         observacoes,
