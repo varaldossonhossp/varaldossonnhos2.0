@@ -1,26 +1,23 @@
 // ============================================================
-// 💙 VARAL DOS SONHOS — painel-ponto.js
+// 💙 VARAL DOS SONHOS — painel-ponto.js 
 // ------------------------------------------------------------
-// Painel de controle do Ponto de Coleta:
-// • Lista adoções para receber e retirar
-// • Botões para registrar recebimento e retirada
+// Compatível com /api/logistica.js:
+// • Ação RECEBER → acao:"receber"
+// • Ação COLETAR → acao:"coletar"
+// • id_registro (NÃO id_adocao)
+// • Modal funcionando (responsável, observações, foto)
 // ============================================================
 
-// Endpoints
 const API_ADOCOES = "/api/adocoes";
 const API_LOGISTICA = "/api/logistica";
 
-// ------------------------------------------------------------
-// 1) Identificar o ponto logado
-// ------------------------------------------------------------
 let usuarioLogado = JSON.parse(localStorage.getItem("usuario_logado"));
 
 if (!usuarioLogado || usuarioLogado.tipo !== "ponto") {
-  alert("Acesso restrito! Somente pontos de coleta podem acessar este painel.");
+  alert("Acesso restrito!");
   window.location.href = "/index.html";
 }
 
-// Corrige ID do ponto (compatível com todas versões)
 const idPonto =
   usuarioLogado.id_record ||
   usuarioLogado.id ||
@@ -32,30 +29,28 @@ if (!idPonto) {
   window.location.href = "/index.html";
 }
 
-// ------------------------------------------------------------
-// 2) Buscar adoções
-// ------------------------------------------------------------
+// ========================================
+// CARREGAR ADOÇÕES
+// ========================================
 async function carregarAdoacoes() {
   try {
     const r = await fetch(API_ADOCOES);
     const json = await r.json();
 
-    if (!json.sucesso) {
-      console.error("API /adocoes retornou erro:", json.mensagem);
-      return;
-    }
+    if (!json.sucesso) return;
 
     processarAdoacoes(json.adocoes || []);
 
   } catch (e) {
-    console.error("Erro ao carregar adoções:", e);
+    console.error("Erro ao carregar adoções", e);
   }
 }
 
-// ------------------------------------------------------------
-// 3) Classificar adoções e preencher tabela
-// ------------------------------------------------------------
+// ========================================
+// CLASSIFICAR ADOÇÕES
+// ========================================
 function processarAdoacoes(lista) {
+
   const tReceber = document.getElementById("listaReceber");
   const tRetirar = document.getElementById("listaRetirar");
   const tEntregues = document.getElementById("listaEntregues");
@@ -65,10 +60,9 @@ function processarAdoacoes(lista) {
   tEntregues.innerHTML = "";
 
   lista
-    .filter(a => a.id_ponto === idPonto) // mostra só do ponto logado
+    .filter(a => a.id_ponto === idPonto)
     .forEach(a => {
 
-      // Linha padrão da tabela
       const linha = `
         <tr>
           <td>${a.nome_crianca}</td>
@@ -78,65 +72,82 @@ function processarAdoacoes(lista) {
         </tr>
       `;
 
-      switch (a.status_adocao) {
+      if (a.status_adocao === "confirmada") {
+        tReceber.innerHTML += linha;
+      }
 
-        case "confirmada":
-          tReceber.innerHTML += linha;
-          break;
+      if (a.status_adocao === "presente recebido") {
+        tRetirar.innerHTML += linha;
+      }
 
-        case "presente recebido":
-          tRetirar.innerHTML += linha;
-          break;
-
-        case "presente entregue":
-          tEntregues.innerHTML += `
-            <tr>
-              <td>${a.nome_crianca}</td>
-              <td>${a.sonho}</td>
-              <td>${a.nome_doador}</td>
-              <td>✔️ Entregue</td>
-            </tr>
-          `;
-          break;
-
-        default:
-          // Não exibir "aguardando confirmacao"
-          break;
+      if (a.status_adocao === "presente entregue") {
+        tEntregues.innerHTML += `
+          <tr>
+            <td>${a.nome_crianca}</td>
+            <td>${a.sonho}</td>
+            <td>${a.nome_doador}</td>
+            <td>✔️ Entregue</td>
+          </tr>
+        `;
       }
     });
 }
 
-// ------------------------------------------------------------
-// 4) Botões de ação
-// ------------------------------------------------------------
-function gerarBotao(ado) {
-  if (ado.status_adocao === "confirmada") {
-    return `
-      <button class="btn-acao btn-receber"
-        onclick="receber('${ado.id_record}')">📥 Receber</button>`;
+// ========================================
+// BOTÕES
+// ========================================
+function gerarBotao(a) {
+
+  if (a.status_adocao === "confirmada") {
+    return `<button class="btn btn-receber"
+              onclick="abrirModal('receber','${a.id_record}')">📥 Receber</button>`;
   }
 
-  if (ado.status_adocao === "presente recebido") {
-    return `
-      <button class="btn-acao btn-retirar"
-        onclick="retirar('${ado.id_record}')">📦 Registrar Retirada</button>`;
+  if (a.status_adocao === "presente recebido") {
+    return `<button class="btn btn-retirar"
+              onclick="abrirModal('coletar','${a.id_record}')">📦 Registrar Retirada</button>`;
   }
 
   return "";
 }
 
-// ------------------------------------------------------------
-// 5) Registrar RECEBIMENTO
-// ------------------------------------------------------------
-async function receber(idAdocao) {
+// ========================================
+// MODAL
+// ========================================
+let acaoAtual = null;
+let idAtual = null;
+
+function abrirModal(acao, idAdocao) {
+  acaoAtual = acao;
+  idAtual = idAdocao;
+
+  document.getElementById("modalTitulo").innerText =
+    acao === "receber"
+      ? "Confirmar Recebimento"
+      : "Registrar Retirada";
+
+  document.getElementById("modal").style.display = "flex";
+}
+
+function fecharModal() {
+  document.getElementById("modal").style.display = "none";
+}
+
+// ========================================
+// CONFIRMAR AÇÃO (RECEBER OU COLETAR)
+// ========================================
+document.getElementById("btnConfirmar").onclick = async () => {
+
+  const responsavel = document.getElementById("inputResponsavel").value || usuarioLogado.nome || usuarioLogado.nome_usuario;
+  const observacoes = document.getElementById("inputObs").value || "";
+  const foto = document.getElementById("inputFoto").value || ""; // opcional
 
   const body = {
-    acao: "receber",
-    id_adocao: idAdocao,
-    id_ponto: idPonto,
-    responsavel: usuarioLogado.nome || usuarioLogado.nome_usuario,
-    observacoes: "",
-    foto: ""
+    acao: acaoAtual,
+    id_registro: idAtual,
+    responsavel,
+    observacoes,
+    foto
   };
 
   try {
@@ -148,46 +159,17 @@ async function receber(idAdocao) {
 
     const json = await r.json();
     alert(json.mensagem);
+
+    fecharModal();
     carregarAdoacoes();
 
   } catch (e) {
-    alert("Erro ao registrar recebimento.");
+    alert("Erro ao registrar.");
     console.error(e);
   }
-}
+};
 
-// ------------------------------------------------------------
-// 6) Registrar RETIRADA
-// ------------------------------------------------------------
-async function retirar(idAdocao) {
-
-  const body = {
-    acao: "retirar",
-    id_adocao: idAdocao,
-    id_ponto: idPonto,
-    responsavel: usuarioLogado.nome || usuarioLogado.nome_usuario,
-    observacoes: "",
-    foto: ""
-  };
-
-  try {
-    const r = await fetch(API_LOGISTICA, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body)
-    });
-
-    const json = await r.json();
-    alert(json.mensagem);
-    carregarAdoacoes();
-
-  } catch (e) {
-    alert("Erro ao registrar retirada.");
-    console.error(e);
-  }
-}
-
-// ------------------------------------------------------------
-// 7) Iniciar painel
-// ------------------------------------------------------------
+// ========================================
+// INICIAR
+// ========================================
 document.addEventListener("DOMContentLoaded", carregarAdoacoes);
