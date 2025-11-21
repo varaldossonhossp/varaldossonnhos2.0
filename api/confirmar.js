@@ -181,7 +181,7 @@ export default async function handler(req, res) {
     const nomeCrianca = cart?.fields?.nome_crianca || "";
     const sonho = cart?.fields?.sonho || "";
     const id_cartinha = cart?.fields?.id_cartinha || idCartinha;
-    const deadline = cart?.fields?.data_limite_recebimento || "";
+    const deadline = f["data_limite_recebimento (from eventos)"]?.[0] || "";
 
     // 4️⃣ Buscar ponto de coleta (inclui horário)
     const idPonto = f.pontos_coleta?.[0];
