@@ -4,21 +4,19 @@
 // Fluxo da logística após a confirmação da adoção:
 //
 // 1) RECEBER PRESENTE  (acao="receber")
+//    RECEBER → muda para "presente recebido" + email ADMIN
 //    → muda status para "presente recebido"
 //    → cria movimento no ponto
 //    → envia e-mail ao ADMIN (EmailJS)
 //
 // 2) COLETAR PRESENTE  (acao="coletar")
+//    COLETAR → muda para "presente entregue" + email DOADOR
 //    → muda status para "presente entregue"
 //    → cria movimento no ponto
 //    → envia e-mail ao DOADOR (Mailjet)
 //
 // IMPORTANTE:
 // Se o e-mail falhar → NÃO muda status e retorna erro.
-// ============================================================
-// ============================================================
-// 💙 VARAL DOS SONHOS — /api/logistica.js (VERSÃO FINAL 2025)
-// ------------------------------------------------------------
 // Compatível com as tabelas reais enviadas por Carina Mendes
 // adocoes → usuario, cartinha, pontos_coleta, id_doacao, status_adocao
 // pontos_movimentos → id_ponto, id_adocao, tipo_movimento, data...
@@ -39,7 +37,6 @@ const TB_MOV = "ponto_movimentos";
 // ============================================================
 // ▶ Email ADMIN — EmailJS
 // ============================================================
-
 async function enviarEmailAdmin_Recebimento(data) {
   try {
     const payload = {
@@ -62,18 +59,15 @@ async function enviarEmailAdmin_Recebimento(data) {
     });
 
     return r.ok;
-
   } catch (err) {
     console.error("🔥 ERRO EMAIL ADMIN:", err);
     return false;
   }
 }
 
-
 // ============================================================
 // ▶ Email DOADOR — Mailjet
 // ============================================================
-
 async function enviarEmailDoador_Entrega(data) {
   try {
     const payload = {
@@ -83,9 +77,7 @@ async function enviarEmailDoador_Entrega(data) {
             Email: process.env.MAILJET_FROM_EMAIL,
             Name: process.env.MAILJET_FROM_NAME
           },
-          To: [
-            { Email: data.email_doador, Name: data.nome_doador }
-          ],
+          To: [{ Email: data.email_doador, Name: data.nome_doador }],
           TemplateID: Number(process.env.MAILJET_TEMPLATE_ID_RECEBIDO),
           TemplateLanguage: true,
           Subject: "🎁 Seu presente foi entregue à equipe!",
@@ -117,21 +109,16 @@ async function enviarEmailDoador_Entrega(data) {
     });
 
     return r.ok;
-
   } catch (err) {
     console.error("🔥 ERRO EMAIL DOADOR:", err);
     return false;
   }
 }
 
-
 // ============================================================
 // 🌟 HANDLER PRINCIPAL
 // ============================================================
-
 export default async function handler(req, res) {
-
-  // Apenas POST
   if (req.method !== "POST") {
     return res.status(405).json({ sucesso: false, mensagem: "Use POST." });
   }
@@ -146,20 +133,19 @@ export default async function handler(req, res) {
     const base = new Airtable({ apiKey: process.env.AIRTABLE_API_KEY })
       .base(process.env.AIRTABLE_BASE_ID);
 
-    // ================= Buscar adoção =================
+    // Buscar adoção
     const ado = await base(TB_ADOCOES).find(id_registro);
     const f = ado.fields;
 
-    const id_doacao = f.id_doacao;                      // autonumber
-    const usuarioId = f.usuario?.[0];                   // linked record
-    const cartinhaId = f.cartinha?.[0];                 // linked record
-    const pontoId = f.pontos_coleta?.[0];               // linked record (correto)
+    const id_doacao = f.id_doacao;
+    const usuarioId = f.usuario?.[0];
+    const cartinhaId = f.cartinha?.[0];
+    const pontoId = f.pontos_coleta?.[0];
 
     const user = await base(TB_USUARIOS).find(usuarioId);
     const cart = await base(TB_CARTINHAS).find(cartinhaId);
     const ponto = await base(TB_PONTOS).find(pontoId);
 
-    // Campos derivados
     const nomeCrianca = cart?.fields?.nome_crianca || "";
     const sonho = cart?.fields?.sonho || "";
     const nomeDoador = user?.fields?.nome_usuario || "";
@@ -173,7 +159,6 @@ export default async function handler(req, res) {
     // 1️⃣ RECEBER PRESENTE
     // ============================================================
     if (acao === "receber") {
-
       const enviado = await enviarEmailAdmin_Recebimento({
         ponto_nome: pontoNome,
         nome_crianca: nomeCrianca,
@@ -182,10 +167,7 @@ export default async function handler(req, res) {
       });
 
       if (!enviado) {
-        return res.status(500).json({
-          sucesso: false,
-          mensagem: "Erro ao enviar e-mail ao ADMIN. Status não alterado."
-        });
+        return res.status(500).json({ sucesso: false, mensagem: "Erro ao enviar e-mail ao ADMIN." });
       }
 
       await base(TB_ADOCOES).update(id_registro, {
@@ -204,12 +186,10 @@ export default async function handler(req, res) {
       return res.json({ sucesso: true, mensagem: "Presente marcado como RECEBIDO" });
     }
 
-
     // ============================================================
     // 2️⃣ COLETAR PRESENTE
     // ============================================================
     if (acao === "coletar") {
-
       const enviado = await enviarEmailDoador_Entrega({
         nome_doador: nomeDoador,
         email_doador: emailDoador,
@@ -223,10 +203,7 @@ export default async function handler(req, res) {
       });
 
       if (!enviado) {
-        return res.status(500).json({
-          sucesso: false,
-          mensagem: "Erro ao enviar e-mail ao DOADOR. Status não alterado."
-        });
+        return res.status(500).json({ sucesso: false, mensagem: "Erro ao enviar e-mail ao DOADOR." });
       }
 
       await base(TB_ADOCOES).update(id_registro, {
@@ -245,8 +222,7 @@ export default async function handler(req, res) {
       return res.json({ sucesso: true, mensagem: "Presente marcado como ENTREGUE" });
     }
 
-    // Ação inválida
-    return res.status(400).json({ sucesso: false, mensagem: "Ação inválida" });
+    return res.status(400).json({ sucesso: false, mensagem: "Ação inválida." });
 
   } catch (err) {
     console.error("🔥 ERRO LOGISTICA:", err);

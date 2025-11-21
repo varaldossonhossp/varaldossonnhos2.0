@@ -85,7 +85,6 @@ async function confirmarAdocao(id) {
 // 2️⃣ MARCAR PRESENTE RECEBIDO (chama /api/logistica.js)
 // ============================================================
 async function marcarRecebido(id_registro) {
-
   const r = await fetch("/api/logistica", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -107,12 +106,10 @@ async function marcarRecebido(id_registro) {
   }
 }
 
-
 // ============================================================
 // 3️⃣ MARCAR PRESENTE ENTREGUE (chama /api/logistica.js)
 // ============================================================
 async function marcarEntregue(id_registro) {
-
   const r = await fetch("/api/logistica", {
     method: "POST",
     headers: { "Content-Type": "application/json" },

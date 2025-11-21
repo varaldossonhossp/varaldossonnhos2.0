@@ -277,7 +277,7 @@ async function receberPresente(idAdocao){
     headers:{"Content-Type":"application/json"},
     body:JSON.stringify({
       acao:"receber",
-      id_registro:idAdocao,     
+      id_registro:idAdocao,
       responsavel:"Admin",
       observacoes:""
     })
@@ -293,21 +293,18 @@ async function receberPresente(idAdocao){
   }
 }
 
-
-
-
 // ==========================================================
 // ✔ COLETAR PRESENTE
 // ==========================================================
 async function coletarPresente(idAdocao){
-  if(!confirm("Confirmar que o presente foi COLETADO no ponto?")) return;
+  if(!confirm("Confirmar que o presente foi COLETADO?")) return;
 
   const r = await fetch("/api/logistica", {
     method:"POST",
     headers:{"Content-Type":"application/json"},
     body:JSON.stringify({
       acao:"coletar",
-      id_registro:idAdocao,    
+      id_registro:idAdocao,
       responsavel:"Admin",
       observacoes:""
     })
@@ -322,8 +319,6 @@ async function coletarPresente(idAdocao){
     alert("Erro: "+json.mensagem);
   }
 }
-
-
 
 document.addEventListener("DOMContentLoaded", carregarAdoacoes);
 
