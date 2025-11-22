@@ -1,9 +1,11 @@
 // ============================================================
-// 💙 VARAL DOS SONHOS — painel-ponto.js 
+// 💙 VARAL DOS SONHOS — painel-ponto.js (VERSÃO FINAL 2025)
 // ------------------------------------------------------------
-// Painel do ponto de coleta:
-// • Lista APENAS as adoções ligadas ao ponto logado
-// • Modal para confirmar RECEBIMENTO
+// Painel do Ponto de Coleta:
+// • Lista APENAS adoções ligadas ao ponto logado
+// • Exibe primeiro nome da criança
+// • Layout padronizado 
+// • Modal para confirmar RECEBIMENTO ou RETIRADA
 // • Integra com /api/logistica.js
 // ============================================================
 
@@ -29,6 +31,19 @@ const idPonto =
 if (!idPonto) {
   alert("Erro: ID do ponto não encontrado.");
   window.location.href = "/index.html";
+}
+
+// ------------------------------------------------------------
+// 🔹 Função para garantir *somente o primeiro nome da criança*
+// ------------------------------------------------------------
+function nomeCrianca(a) {
+  if (a.primeiro_nome && a.primeiro_nome.trim() !== "") {
+    return a.primeiro_nome.trim();
+  }
+  if (a.nome_crianca && a.nome_crianca.includes(" ")) {
+    return a.nome_crianca.split(" ")[0].trim();
+  }
+  return a.nome_crianca || "Criança";
 }
 
 // ------------------------------------------------------------
@@ -66,63 +81,51 @@ function processarAdoacoes(lista) {
     .filter(a => a.id_ponto === idPonto)
     .forEach(a => {
       if (a.status_adocao === "confirmada") {
-        tReceber.innerHTML += templateReceber(a);
+        tReceber.innerHTML += linhaAguardandoRecebimento(a);
       }
       else if (a.status_adocao === "presente recebido") {
-        tRetirar.innerHTML += templateRetirar(a);
+        tRetirar.innerHTML += linhaAguardandoRetirada(a);
       }
       else if (a.status_adocao === "presente entregue") {
-        tEntregues.innerHTML += templateEntregue(a);
+        tEntregues.innerHTML += linhaEntregue(a);
       }
     });
 }
 
-// ============================================================
-// 📌 NOVOS TEMPLATES → IDÊNTICOS AO VISUAL DO PAINEL ADMIN
-// ============================================================
-
-function nomeCrianca(a) {
-  return a.primeiro_nome || a.nome_crianca || "Criança";
-}
-
-/* -----------------------------------------------------------
-   1) AGUARDANDO RECEBIMENTO
------------------------------------------------------------ */
-function templateReceber(a) {
+// ------------------------------------------------------------
+// 🔹 Templates VISUAIS (padronizado igual ao logística-admin)
+// ------------------------------------------------------------
+function linhaAguardandoRecebimento(a) {
   return `
-    <div class="card-item">
+    <div class="item">
       <p class="font-bold text-lg">${nomeCrianca(a)}</p>
       <p class="text-gray-600 text-sm">🎁 ${a.sonho}</p>
 
       <div class="mt-2">
         <span class="tag">🆔 Cartinha: ${a.id_cartinha}</span>
-        <span class="tag">👤 ${a.nome_usuario}</span>
+        <span class="tag">👤 Doador: ${a.nome_usuario}</span>
       </div>
 
       <button class="btn-blue mt-4"
         onclick="abrirModal('receber', '${a.id_record}')">
-        📥 Receber
+        📥 Confirmar Recebimento
       </button>
     </div>
   `;
 }
 
-/* -----------------------------------------------------------
-   2) RECEBIDOS (aguardando retirar pela equipe)
------------------------------------------------------------ */
-function templateRetirar(a) {
+function linhaAguardandoRetirada(a) {
   return `
-    <div class="card-item">
+    <div class="item">
       <p class="font-bold text-lg">${nomeCrianca(a)}</p>
       <p class="text-gray-600 text-sm">🎁 ${a.sonho}</p>
 
       <div class="mt-2">
         <span class="tag">🆔 Cartinha: ${a.id_cartinha}</span>
-        <span class="tag">👤 ${a.nome_usuario}</span>
-        <span class="badge-status badge-recebido">✔ Recebido</span>
+        <span class="tag">👤 Doador: ${a.nome_usuario}</span>
       </div>
 
-      <button class="btn-green mt-4"
+      <button class="btn-blue mt-4"
         onclick="abrirModal('retirar', '${a.id_record}')">
         📦 Registrar Retirada
       </button>
@@ -130,26 +133,24 @@ function templateRetirar(a) {
   `;
 }
 
-/* -----------------------------------------------------------
-   3) ENTREGUES
------------------------------------------------------------ */
-function templateEntregue(a) {
+function linhaEntregue(a) {
   return `
-    <div class="card-item">
+    <div class="item">
       <p class="font-bold text-lg">${nomeCrianca(a)}</p>
       <p class="text-gray-600 text-sm">🎁 ${a.sonho}</p>
 
       <div class="mt-2">
         <span class="tag">🆔 Cartinha: ${a.id_cartinha}</span>
-        <span class="tag">👤 ${a.nome_usuario}</span>
-        <span class="badge-status badge-entregue">🚚 Entregue</span>
+        <span class="tag">👤 Doador: ${a.nome_usuario}</span>
       </div>
+
+      <span class="tag bg-green-100 text-green-700">✔️ Entregue</span>
     </div>
   `;
 }
 
 // ------------------------------------------------------------
-// Modal (permanece igual)
+// 4) MODAL
 // ------------------------------------------------------------
 let acaoAtual = null;
 let adocaoAtual = null;
@@ -161,15 +162,17 @@ function abrirModal(acao, idAdo) {
   document.getElementById("modalTitulo").textContent =
     acao === "receber" ? "Confirmar Recebimento" : "Confirmar Retirada";
 
-  document.getElementById("modal").style.display = "flex";
+  document.getElementById("modal").classList.remove("hidden");
+  document.getElementById("modal").classList.add("flex");
 }
 
 function fecharModal() {
-  document.getElementById("modal").style.display = "none";
+  document.getElementById("modal").classList.add("hidden");
+  document.getElementById("modal").classList.remove("flex");
 }
 
 // ------------------------------------------------------------
-// Enviar para API
+// 5) Enviar operação para API /logistica
 // ------------------------------------------------------------
 document.getElementById("btnConfirmar").addEventListener("click", async () => {
   const responsavel =
@@ -206,5 +209,7 @@ document.getElementById("btnConfirmar").addEventListener("click", async () => {
   }
 });
 
+// ------------------------------------------------------------
 // Start
+// ------------------------------------------------------------
 document.addEventListener("DOMContentLoaded", carregarAdoacoes);
