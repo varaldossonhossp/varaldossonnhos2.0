@@ -161,4 +161,20 @@
     </section>
   </main>
 
-  <!-- MODAL
+  <!-- MODAL -->
+  <div id="modal" class="modal" style="display:none;">
+    <div class="modal-content">
+      <h2 id="modalTitulo" class="text-lg font-semibold mb-3"></h2>
+
+      <input id="inputResponsavel" class="border p-2 w-full mb-3 rounded" placeholder="Responsável" />
+      <textarea id="inputObs" class="border p-2 w-full mb-3 rounded" placeholder="Observações"></textarea>
+      <input id="inputFoto" type="text" class="border p-2 w-full mb-3 rounded" placeholder="URL da foto (opcional)" />
+
+      <button id="btnConfirmar" class="btn w-full" style="background:#1e88e5;">Confirmar</button>
+      <button onclick="fecharModal()" class="btn w-full mt-2" style="background:#b0bec5;">Cancelar</button>
+    </div>
+  </div>
+
+  <script src="../js/painel-ponto.js"></script>
+</body>
+</html>

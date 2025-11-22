@@ -6,18 +6,20 @@
 // • Modal para confirmar RECEBIMENTO
 // • Integra com /api/logistica.js
 // ============================================================
+// ============================================================
+// 💙 VARAL DOS SONHOS — painel-ponto.js (REVISION FINAL)
+// ============================================================
 
-// Endpoints
-const API_ADOCOES = "/api/listAdocoes";  // CORRETO
+const API_ADOCOES = "/api/listAdocoes";
 const API_LOGISTICA = "/api/logistica";
 
 // ------------------------------------------------------------
-// 1) Identificar o ponto logado
+// 1) Identificar Ponto Logado
 // ------------------------------------------------------------
 let usuarioLogado = JSON.parse(localStorage.getItem("usuario_logado"));
 
 if (!usuarioLogado || usuarioLogado.tipo !== "ponto") {
-  alert("Acesso restrito! Somente pontos de coleta podem acessar este painel.");
+  alert("Acesso restrito!");
   window.location.href = "/index.html";
 }
 
@@ -33,7 +35,7 @@ if (!idPonto) {
 }
 
 // ------------------------------------------------------------
-// 2) Carregar adoções
+// 2) Carregar adoções (via /api/listAdocoes)
 // ------------------------------------------------------------
 async function carregarAdoacoes() {
   try {
@@ -52,7 +54,7 @@ async function carregarAdoacoes() {
 }
 
 // ------------------------------------------------------------
-// 3) Preencher tabelas (USANDO id_ponto CORRETO!)
+// 3) Processar adoções do PONTO LOGADO
 // ------------------------------------------------------------
 function processarAdoacoes(lista) {
   const tReceber = document.getElementById("listaReceber");
@@ -68,7 +70,7 @@ function processarAdoacoes(lista) {
     .forEach(a => {
       if (a.status_adocao === "confirmada") {
         tReceber.innerHTML += linhaAguardandoRecebimento(a);
-      } 
+      }
       else if (a.status_adocao === "presente recebido") {
         tRetirar.innerHTML += linhaAguardandoRetirada(a);
       }
@@ -79,7 +81,7 @@ function processarAdoacoes(lista) {
 }
 
 // ------------------------------------------------------------
-// Templates de linha
+// Templates das linhas
 // ------------------------------------------------------------
 function linhaAguardandoRecebimento(ado) {
   return `
@@ -98,7 +100,8 @@ function linhaAguardandoRetirada(ado) {
       <span>${ado.nome_crianca}</span>
       <span>${ado.sonho}</span>
       <span>${ado.nome_usuario}</span>
-      <span>📦 Aguardando retirada pela equipe</span>
+      <button class="btn btn-retirar"
+        onclick="abrirModal('retirar', '${ado.id_record}')">📦 Registrar Retirada</button>
     </div>`;
 }
 
@@ -113,7 +116,7 @@ function linhaEntregue(ado) {
 }
 
 // ------------------------------------------------------------
-// 4) Modal
+// Modal
 // ------------------------------------------------------------
 let acaoAtual = null;
 let adocaoAtual = null;
@@ -122,7 +125,9 @@ function abrirModal(acao, idAdo) {
   acaoAtual = acao;
   adocaoAtual = idAdo;
 
-  document.getElementById("modalTitulo").textContent = "Confirmar Recebimento";
+  document.getElementById("modalTitulo").textContent =
+    acao === "receber" ? "Confirmar Recebimento" : "Confirmar Retirada";
+
   document.getElementById("modal").style.display = "flex";
 }
 
@@ -131,10 +136,10 @@ function fecharModal() {
 }
 
 // ------------------------------------------------------------
-// 5) Enviar registro para API /logistica
+// Enviar para API /logistica
 // ------------------------------------------------------------
 document.getElementById("btnConfirmar").addEventListener("click", async () => {
-  const responsavel = 
+  const responsavel =
     document.getElementById("inputResponsavel").value ||
     usuarioLogado.nome_usuario;
 
@@ -142,7 +147,7 @@ document.getElementById("btnConfirmar").addEventListener("click", async () => {
   const foto = document.getElementById("inputFoto").value || "";
 
   const body = {
-    acao: "receber",
+    acao: acaoAtual,
     id_adocao: adocaoAtual,
     id_ponto: idPonto,
     responsavel,
@@ -168,7 +173,5 @@ document.getElementById("btnConfirmar").addEventListener("click", async () => {
   }
 });
 
-// ------------------------------------------------------------
 // Start
-// ------------------------------------------------------------
 document.addEventListener("DOMContentLoaded", carregarAdoacoes);
