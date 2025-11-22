@@ -2,17 +2,17 @@
 // 💙 VARAL DOS SONHOS — painel-ponto.js 
 // ------------------------------------------------------------
 // Painel do ponto de coleta:
-// • Lista adoções apenas do ponto logado
-// • Modal para Recebimento / Retirada
+// • Lista APENAS as adoções ligadas ao ponto logado
+// • Modal para confirmar RECEBIMENTO
 // • Integra com /api/logistica.js
 // ============================================================
 
 // Endpoints
-const API_ADOCOES = "/api/adocoes";
+const API_ADOCOES = "/api/listAdocoes";  // CORRETO
 const API_LOGISTICA = "/api/logistica";
 
 // ------------------------------------------------------------
-// 1) Identificar Ponto Logado
+// 1) Identificar o ponto logado
 // ------------------------------------------------------------
 let usuarioLogado = JSON.parse(localStorage.getItem("usuario_logado"));
 
@@ -41,7 +41,7 @@ async function carregarAdoacoes() {
     const json = await r.json();
 
     if (!json.sucesso) {
-      console.error("Erro API /adocoes:", json.mensagem);
+      console.error("Erro API /listAdocoes:", json.mensagem);
       return;
     }
 
@@ -52,7 +52,7 @@ async function carregarAdoacoes() {
 }
 
 // ------------------------------------------------------------
-// 3) Preencher tabelas (CORRIGIDO PARA pontos_coleta)
+// 3) Preencher tabelas (USANDO id_ponto CORRETO!)
 // ------------------------------------------------------------
 function processarAdoacoes(lista) {
   const tReceber = document.getElementById("listaReceber");
@@ -64,16 +64,15 @@ function processarAdoacoes(lista) {
   tEntregues.innerHTML = "";
 
   lista
-    .filter(a =>
-      a.pontos_coleta === idPonto ||
-      (Array.isArray(a.pontos_coleta) && a.pontos_coleta[0] === idPonto)
-    )
+    .filter(a => a.id_ponto === idPonto)
     .forEach(a => {
       if (a.status_adocao === "confirmada") {
         tReceber.innerHTML += linhaAguardandoRecebimento(a);
-      } else if (a.status_adocao === "presente recebido") {
+      } 
+      else if (a.status_adocao === "presente recebido") {
         tRetirar.innerHTML += linhaAguardandoRetirada(a);
-      } else if (a.status_adocao === "presente entregue") {
+      }
+      else if (a.status_adocao === "presente entregue") {
         tEntregues.innerHTML += linhaEntregue(a);
       }
     });
@@ -87,7 +86,7 @@ function linhaAguardandoRecebimento(ado) {
     <div class="table-row">
       <span>${ado.nome_crianca}</span>
       <span>${ado.sonho}</span>
-      <span>${ado.nome_doador}</span>
+      <span>${ado.nome_usuario}</span>
       <button class="btn btn-receber"
         onclick="abrirModal('receber', '${ado.id_record}')">📥 Receber</button>
     </div>`;
@@ -98,9 +97,8 @@ function linhaAguardandoRetirada(ado) {
     <div class="table-row">
       <span>${ado.nome_crianca}</span>
       <span>${ado.sonho}</span>
-      <span>${ado.nome_doador}</span>
-      <button class="btn btn-retirar"
-        onclick="abrirModal('retirar', '${ado.id_record}')">📦 Registrar Retirada</button>
+      <span>${ado.nome_usuario}</span>
+      <span>📦 Aguardando retirada pela equipe</span>
     </div>`;
 }
 
@@ -109,7 +107,7 @@ function linhaEntregue(ado) {
     <div class="table-row">
       <span>${ado.nome_crianca}</span>
       <span>${ado.sonho}</span>
-      <span>${ado.nome_doador}</span>
+      <span>${ado.nome_usuario}</span>
       <span>✔️ Entregue</span>
     </div>`;
 }
@@ -124,9 +122,7 @@ function abrirModal(acao, idAdo) {
   acaoAtual = acao;
   adocaoAtual = idAdo;
 
-  document.getElementById("modalTitulo").textContent =
-    acao === "receber" ? "Confirmar Recebimento" : "Confirmar Retirada";
-
+  document.getElementById("modalTitulo").textContent = "Confirmar Recebimento";
   document.getElementById("modal").style.display = "flex";
 }
 
@@ -138,7 +134,7 @@ function fecharModal() {
 // 5) Enviar registro para API /logistica
 // ------------------------------------------------------------
 document.getElementById("btnConfirmar").addEventListener("click", async () => {
-  const responsavel =
+  const responsavel = 
     document.getElementById("inputResponsavel").value ||
     usuarioLogado.nome_usuario;
 
@@ -146,7 +142,7 @@ document.getElementById("btnConfirmar").addEventListener("click", async () => {
   const foto = document.getElementById("inputFoto").value || "";
 
   const body = {
-    acao: acaoAtual,
+    acao: "receber",
     id_adocao: adocaoAtual,
     id_ponto: idPonto,
     responsavel,
@@ -172,5 +168,7 @@ document.getElementById("btnConfirmar").addEventListener("click", async () => {
   }
 });
 
-// Iniciar
+// ------------------------------------------------------------
+// Start
+// ------------------------------------------------------------
 document.addEventListener("DOMContentLoaded", carregarAdoacoes);

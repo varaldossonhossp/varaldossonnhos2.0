@@ -1,11 +1,11 @@
-<!-- // ============================================================
- // 📦 VARAL DOS SONHOS — /pages/painel-ponto.html
- // ------------------------------------------------------------
- // Página do painel de controle para pontos de coleta:
- // • Listas de presentes aguardando recebimento, aguardando retirada e entregues
- // • Modais para confirmar recebimento e retirada com campos adicionais
- // ============================================================ -->
- 
+<!-- ============================================================
+ 📦 VARAL DOS SONHOS — painel-ponto.html (VERSÃO FINAL REVISADA)
+ ---------------------------------------------------------------
+ Painel do Ponto de Coleta:
+ • Lista presentes confirmados pelo admin
+ • Permite marcar RECEBIDO
+============================================================== -->
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -23,7 +23,6 @@
       background-color: #e3f2fd;
     }
 
-    /* SIDEBAR */
     .sidebar {
       width: 240px;
       background: #1e88e5;
@@ -46,11 +45,10 @@
     .menu a {
       padding: 12px 20px;
       display: block;
-      text-decoration: none;
       color: white;
       font-weight: 500;
-      transition: 0.3s;
     }
+
     .menu a:hover {
       background: #64b5f6;
     }
@@ -73,10 +71,9 @@
       padding: 10px;
       font-weight: bold;
       border-radius: 8px;
-      margin-bottom: 8px;
-      font-size: 14px;
       display: grid;
-      grid-template-columns: 1fr 1fr 1fr 120px;
+      grid-template-columns: 1fr 1fr 1fr 150px;
+      margin-bottom: 8px;
     }
 
     .table-row {
@@ -84,8 +81,8 @@
       padding: 10px;
       border-radius: 8px;
       display: grid;
-      margin-top: 6px;
-      grid-template-columns: 1fr 1fr 1fr 120px;
+      grid-template-columns: 1fr 1fr 1fr 150px;
+      margin-bottom: 6px;
     }
 
     .btn {
@@ -93,34 +90,11 @@
       border-radius: 8px;
       font-size: 13px;
       cursor: pointer;
-      border: none;
       color: white;
+      border: none;
     }
+
     .btn-receber { background:#1e88e5; }
-    .btn-retirar { background:#43a047; }
-
-    /* MODAL */
-    .modal {
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.35);
-      display: none;
-      align-items: center;
-      justify-content: center;
-      z-index: 999;
-    }
-
-    .modal-content {
-      background: white;
-      width: 420px;
-      padding: 24px;
-      border-radius: 16px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.20);
-    }
-
-    .modal input, .modal textarea {
-      border: 1px solid #cbd5e1;
-    }
   </style>
 </head>
 
@@ -132,7 +106,7 @@
       <h2>📦 Painel do Ponto</h2>
       <nav class="menu">
         <a href="#receber">📥 Aguardando Recebimento</a>
-        <a href="#retirada">📦 Aguardando Retirada</a>
+        <a href="#retirada">📦 Recebidos</a>
         <a href="#entregues">🚚 Entregues</a>
       </nav>
     </div>
@@ -142,11 +116,9 @@
     </button>
   </aside>
 
-  <!-- CONTEÚDO -->
   <main class="content">
-
     <h1 class="text-3xl font-bold text-blue-800 mb-8">
-      Bem-vindo(a) ao Painel de Controle Logístico
+      Bem-vindo(a) ao Painel do Ponto de Coleta 💙
     </h1>
 
     <!-- AGUARDANDO RECEBIMENTO -->
@@ -165,11 +137,11 @@
     <!-- AGUARDANDO RETIRADA -->
     <section id="retirada" class="section-card">
       <h2 class="text-xl font-semibold text-blue-600 mb-3">
-        📦 Recebidos (aguardando retirada)
+        📦 Recebidos (aguardando retirada pela equipe)
       </h2>
 
       <div class="table-header">
-        <span>Criança</span> <span>Sonho</span> <span>Doador</span> <span>Ação</span>
+        <span>Criança</span> <span>Sonho</span> <span>Doador</span> <span>Status</span>
       </div>
 
       <div id="listaRetirar"></div>
@@ -187,25 +159,6 @@
 
       <div id="listaEntregues"></div>
     </section>
-
   </main>
 
-  <!-- MODAL (DINÂMICO PARA RECEBER e RETIRAR) -->
-  <div id="modal" class="modal">
-    <div class="modal-content">
-      <h2 id="modalTitulo" class="text-lg font-semibold mb-3"></h2>
-
-      <input id="inputResponsavel" class="border p-2 w-full mb-3 rounded" placeholder="Responsável" />
-      <textarea id="inputObs" class="border p-2 w-full mb-3 rounded" placeholder="Observações"></textarea>
-      <input id="inputFoto" type="text" class="border p-2 w-full mb-3 rounded" placeholder="URL da foto (opcional)" />
-
-      <button id="btnConfirmar" class="btn w-full" style="background:#1e88e5;">Confirmar</button>
-      <button onclick="fecharModal()" class="btn w-full mt-2" style="background:#b0bec5;">Cancelar</button>
-    </div>
-  </div>
-
-  <!-- JS FINAL -->
-  <script src="../js/config-site-apply.js"></script>
-  <script src="../js/painel-ponto.js"></script>
-</body>
-</html>
+  <!-- MODAL
