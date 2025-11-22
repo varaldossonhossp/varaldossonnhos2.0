@@ -2,9 +2,8 @@
 // 💙 VARAL DOS SONHOS — painel-ponto.js 
 // ------------------------------------------------------------
 // Painel do ponto de coleta:
-// • Lista adoções do ponto logado
-// • Modal para confirmar RECEBIMENTO
-// • Modal para confirmar RETIRADA (coleta pela equipe)
+// • Lista adoções apenas do ponto logado
+// • Modal para Recebimento / Retirada
 // • Integra com /api/logistica.js
 // ============================================================
 
@@ -13,7 +12,7 @@ const API_ADOCOES = "/api/adocoes";
 const API_LOGISTICA = "/api/logistica";
 
 // ------------------------------------------------------------
-// 1) Identificar o ponto logado
+// 1) Identificar Ponto Logado
 // ------------------------------------------------------------
 let usuarioLogado = JSON.parse(localStorage.getItem("usuario_logado"));
 
@@ -53,7 +52,7 @@ async function carregarAdoacoes() {
 }
 
 // ------------------------------------------------------------
-// 3) Preencher tabelas
+// 3) Preencher tabelas (CORRIGIDO PARA pontos_coleta)
 // ------------------------------------------------------------
 function processarAdoacoes(lista) {
   const tReceber = document.getElementById("listaReceber");
@@ -65,21 +64,24 @@ function processarAdoacoes(lista) {
   tEntregues.innerHTML = "";
 
   lista
-    .filter(a => a.id_ponto === idPonto)
+    .filter(a =>
+      a.pontos_coleta === idPonto ||
+      (Array.isArray(a.pontos_coleta) && a.pontos_coleta[0] === idPonto)
+    )
     .forEach(a => {
       if (a.status_adocao === "confirmada") {
         tReceber.innerHTML += linhaAguardandoRecebimento(a);
-      }
-      else if (a.status_adocao === "presente recebido") {
+      } else if (a.status_adocao === "presente recebido") {
         tRetirar.innerHTML += linhaAguardandoRetirada(a);
-      }
-      else if (a.status_adocao === "presente entregue") {
+      } else if (a.status_adocao === "presente entregue") {
         tEntregues.innerHTML += linhaEntregue(a);
       }
     });
 }
 
-// -------- Template HTML das linhas --------
+// ------------------------------------------------------------
+// Templates de linha
+// ------------------------------------------------------------
 function linhaAguardandoRecebimento(ado) {
   return `
     <div class="table-row">
@@ -113,7 +115,7 @@ function linhaEntregue(ado) {
 }
 
 // ------------------------------------------------------------
-// 4) MODAL de Registro
+// 4) Modal
 // ------------------------------------------------------------
 let acaoAtual = null;
 let adocaoAtual = null;
@@ -123,9 +125,7 @@ function abrirModal(acao, idAdo) {
   adocaoAtual = idAdo;
 
   document.getElementById("modalTitulo").textContent =
-    acao === "receber"
-      ? "Confirmar Recebimento"
-      : "Confirmar Retirada";
+    acao === "receber" ? "Confirmar Recebimento" : "Confirmar Retirada";
 
   document.getElementById("modal").style.display = "flex";
 }
@@ -135,10 +135,13 @@ function fecharModal() {
 }
 
 // ------------------------------------------------------------
-// 5) Confirmar (Enviar para API /logistica)
+// 5) Enviar registro para API /logistica
 // ------------------------------------------------------------
 document.getElementById("btnConfirmar").addEventListener("click", async () => {
-  const responsavel = document.getElementById("inputResponsavel").value || usuarioLogado.nome_usuario;
+  const responsavel =
+    document.getElementById("inputResponsavel").value ||
+    usuarioLogado.nome_usuario;
+
   const observacoes = document.getElementById("inputObs").value || "";
   const foto = document.getElementById("inputFoto").value || "";
 
@@ -163,14 +166,11 @@ document.getElementById("btnConfirmar").addEventListener("click", async () => {
 
     fecharModal();
     carregarAdoacoes();
-
   } catch (e) {
     alert("Erro ao registrar operação.");
     console.error(e);
   }
 });
 
-// ------------------------------------------------------------
-// Start
-// ------------------------------------------------------------
+// Iniciar
 document.addEventListener("DOMContentLoaded", carregarAdoacoes);
