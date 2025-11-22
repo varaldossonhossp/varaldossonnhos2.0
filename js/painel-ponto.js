@@ -6,9 +6,6 @@
 // • Modal para confirmar RECEBIMENTO
 // • Integra com /api/logistica.js
 // ============================================================
-// ============================================================
-// 💙 VARAL DOS SONHOS — painel-ponto.js (REVISION FINAL)
-// ============================================================
 
 const API_ADOCOES = "/api/listAdocoes";
 const API_LOGISTICA = "/api/logistica";
@@ -69,54 +66,90 @@ function processarAdoacoes(lista) {
     .filter(a => a.id_ponto === idPonto)
     .forEach(a => {
       if (a.status_adocao === "confirmada") {
-        tReceber.innerHTML += linhaAguardandoRecebimento(a);
+        tReceber.innerHTML += templateReceber(a);
       }
       else if (a.status_adocao === "presente recebido") {
-        tRetirar.innerHTML += linhaAguardandoRetirada(a);
+        tRetirar.innerHTML += templateRetirar(a);
       }
       else if (a.status_adocao === "presente entregue") {
-        tEntregues.innerHTML += linhaEntregue(a);
+        tEntregues.innerHTML += templateEntregue(a);
       }
     });
 }
 
-// ------------------------------------------------------------
-// Templates das linhas
-// ------------------------------------------------------------
-function linhaAguardandoRecebimento(ado) {
-  return `
-    <div class="table-row">
-      <span>${ado.nome_crianca}</span>
-      <span>${ado.sonho}</span>
-      <span>${ado.nome_usuario}</span>
-      <button class="btn btn-receber"
-        onclick="abrirModal('receber', '${ado.id_record}')">📥 Receber</button>
-    </div>`;
+// ============================================================
+// 📌 NOVOS TEMPLATES → IDÊNTICOS AO VISUAL DO PAINEL ADMIN
+// ============================================================
+
+function nomeCrianca(a) {
+  return a.primeiro_nome || a.nome_crianca || "Criança";
 }
 
-function linhaAguardandoRetirada(ado) {
+/* -----------------------------------------------------------
+   1) AGUARDANDO RECEBIMENTO
+----------------------------------------------------------- */
+function templateReceber(a) {
   return `
-    <div class="table-row">
-      <span>${ado.nome_crianca}</span>
-      <span>${ado.sonho}</span>
-      <span>${ado.nome_usuario}</span>
-      <button class="btn btn-retirar"
-        onclick="abrirModal('retirar', '${ado.id_record}')">📦 Registrar Retirada</button>
-    </div>`;
+    <div class="card-item">
+      <p class="font-bold text-lg">${nomeCrianca(a)}</p>
+      <p class="text-gray-600 text-sm">🎁 ${a.sonho}</p>
+
+      <div class="mt-2">
+        <span class="tag">🆔 Cartinha: ${a.id_cartinha}</span>
+        <span class="tag">👤 ${a.nome_usuario}</span>
+      </div>
+
+      <button class="btn-blue mt-4"
+        onclick="abrirModal('receber', '${a.id_record}')">
+        📥 Receber
+      </button>
+    </div>
+  `;
 }
 
-function linhaEntregue(ado) {
+/* -----------------------------------------------------------
+   2) RECEBIDOS (aguardando retirar pela equipe)
+----------------------------------------------------------- */
+function templateRetirar(a) {
   return `
-    <div class="table-row">
-      <span>${ado.nome_crianca}</span>
-      <span>${ado.sonho}</span>
-      <span>${ado.nome_usuario}</span>
-      <span>✔️ Entregue</span>
-    </div>`;
+    <div class="card-item">
+      <p class="font-bold text-lg">${nomeCrianca(a)}</p>
+      <p class="text-gray-600 text-sm">🎁 ${a.sonho}</p>
+
+      <div class="mt-2">
+        <span class="tag">🆔 Cartinha: ${a.id_cartinha}</span>
+        <span class="tag">👤 ${a.nome_usuario}</span>
+        <span class="badge-status badge-recebido">✔ Recebido</span>
+      </div>
+
+      <button class="btn-green mt-4"
+        onclick="abrirModal('retirar', '${a.id_record}')">
+        📦 Registrar Retirada
+      </button>
+    </div>
+  `;
+}
+
+/* -----------------------------------------------------------
+   3) ENTREGUES
+----------------------------------------------------------- */
+function templateEntregue(a) {
+  return `
+    <div class="card-item">
+      <p class="font-bold text-lg">${nomeCrianca(a)}</p>
+      <p class="text-gray-600 text-sm">🎁 ${a.sonho}</p>
+
+      <div class="mt-2">
+        <span class="tag">🆔 Cartinha: ${a.id_cartinha}</span>
+        <span class="tag">👤 ${a.nome_usuario}</span>
+        <span class="badge-status badge-entregue">🚚 Entregue</span>
+      </div>
+    </div>
+  `;
 }
 
 // ------------------------------------------------------------
-// Modal
+// Modal (permanece igual)
 // ------------------------------------------------------------
 let acaoAtual = null;
 let adocaoAtual = null;
@@ -136,7 +169,7 @@ function fecharModal() {
 }
 
 // ------------------------------------------------------------
-// Enviar para API /logistica
+// Enviar para API
 // ------------------------------------------------------------
 document.getElementById("btnConfirmar").addEventListener("click", async () => {
   const responsavel =
