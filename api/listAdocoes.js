@@ -47,14 +47,27 @@
 // OBJETIVO:
 // Fornecer ao painel de logística uma lista COMPLETA das adoções,
 // expandindo os relacionamentos entre:
-//
 //   • adocoes
 //   • cartinha
 //   • usuario
 //   • pontos_coleta
 //
-// Como o Airtable NÃO envia automaticamente LOOKUPS,
-// buscamos manualmente os dados.
+// Retornar ao painel ADMIN e ao painel PONTO uma lista COMPLETA
+// das adoções, já com:
+//   • dados da cartinha
+//   • dados do doador
+//   • dados do ponto de coleta
+//   • TODAS as movimentações (recebimento / retirada)
+// ------------------------------------------------------------
+// Fundamental para exibir no painel do ponto:
+//   ✔ Responsável pelo recebimento
+//   ✔ Observações
+//   ✔ Data da movimentação
+//   ✔ Responsável pela retirada
+//   ✔ Foto do presente (opcional)
+// ------------------------------------------------------------
+// IMPORTANTE: Airtable NÃO envia LOOKUPS automaticamente,
+// por isso buscamos manualmente todas as tabelas relacionadas.
 // ============================================================
 
 import Airtable from "airtable";
@@ -67,7 +80,6 @@ const base = new Airtable({
 }).base(process.env.AIRTABLE_BASE_ID);
 
 export default async function handler(req, res) {
-
   if (req.method !== "GET") {
     return res.status(405).json({
       sucesso: false,
@@ -87,17 +99,14 @@ export default async function handler(req, res) {
 
     const adocoes = [];
 
-    // --------------------------------------------------------
-    // EXPANDE CADA ADOÇÃO
-    // --------------------------------------------------------
     for (const r of records) {
       const f = r.fields || {};
 
       // ======================================================
-      // 1) CARTINHA (linked record real)
+      // 1) BUSCAR CARTINHA
       // ======================================================
       let cart = {};
-      const idCartinha = f.cartinha?.[0]; // ✔ CORRETO
+      const idCartinha = f.cartinha?.[0];
       if (idCartinha) {
         try {
           cart = await base("cartinha").find(idCartinha);
@@ -106,11 +115,15 @@ export default async function handler(req, res) {
         }
       }
 
+      // Primeiro nome automático
+      const nomeCompleto = cart.fields?.nome_crianca || "";
+      const primeiroNome = nomeCompleto.split(" ")[0] || nomeCompleto;
+
       // ======================================================
-      // 2) USUÁRIO (doador)
+      // 2) BUSCAR USUÁRIO (doador)
       // ======================================================
       let usuario = {};
-      const idUsuario = f.usuario?.[0]; // ✔ CORRETO
+      const idUsuario = f.usuario?.[0];
       if (idUsuario) {
         try {
           usuario = await base("usuario").find(idUsuario);
@@ -120,10 +133,10 @@ export default async function handler(req, res) {
       }
 
       // ======================================================
-      // 3) PONTO DE COLETA
+      // 3) BUSCAR PONTO DE COLETA
       // ======================================================
       let ponto = {};
-      const idPonto = f.pontos_coleta?.[0]; // ✔ CORRETO
+      const idPonto = f.pontos_coleta?.[0];
       if (idPonto) {
         try {
           ponto = await base("pontos_coleta").find(idPonto);
@@ -133,14 +146,38 @@ export default async function handler(req, res) {
       }
 
       // ======================================================
-      // OBJETO FINAL — do jeito que o painel precisa
+      // 4) BUSCAR MOVIMENTAÇÕES (recebimento / retirada)
+      // ======================================================
+      let movimentos = [];
+      try {
+        const movRecords = await base("ponto_movimentos")
+          .select({
+            filterByFormula: `{adocoes} = '${r.id}'`,
+            sort: [{ field: "data_movimento", direction: "asc" }],
+          })
+          .all();
+
+        movimentos = movRecords.map(m => ({
+          tipo_movimento: m.fields?.tipo_movimento || "",
+          data_movimento: m.fields?.data_movimento || "",
+          responsavel: m.fields?.responsavel || "",
+          observacoes: m.fields?.observacoes || "",
+          foto_presente: m.fields?.foto_presente?.[0]?.url || "",
+        }));
+      } catch (e) {
+        console.log("Erro ao buscar movimentos do ponto:", e);
+      }
+
+      // ======================================================
+      // OBJETO FINAL PARA O FRONT-END
       // ======================================================
       adocoes.push({
         id_record: r.id,
 
         // Dados da cartinha
         id_cartinha: cart.fields?.id_cartinha || "",
-        nome_crianca: cart.fields?.nome_crianca || "",
+        nome_crianca: primeiroNome,
+        nome_crianca_completo: nomeCompleto,
         sonho: cart.fields?.sonho || "",
 
         // Dados do usuário (doador)
@@ -148,7 +185,7 @@ export default async function handler(req, res) {
         email_usuario: usuario.fields?.email_usuario || "",
         telefone_usuario: usuario.fields?.telefone || "",
 
-        // Dados do ponto de coleta
+        // Dados do ponto
         id_ponto: idPonto || "",
         nome_ponto: ponto.fields?.nome_ponto || "",
         endereco_ponto: ponto.fields?.endereco || "",
@@ -156,14 +193,17 @@ export default async function handler(req, res) {
         cep_ponto: ponto.fields?.cep || "",
         telefone_ponto: ponto.fields?.telefone || "",
 
-        // Status
+        // Status atual
         status_adocao: f.status_adocao || "aguardando confirmacao",
+
+        // 🔥 Histórico completo do ponto
+        movimentos,
       });
     }
 
-    // ======================================================
+    // ------------------------------------------------------
     // RETORNO FINAL
-    // ======================================================
+    // ------------------------------------------------------
     return res.status(200).json({
       sucesso: true,
       adocoes,

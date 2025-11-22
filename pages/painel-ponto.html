@@ -3,9 +3,9 @@
  ------------------------------------------------------------
  Painel do Ponto de Coleta:
  • Lista apenas adoções do ponto logado (via painel-ponto.js)
- • Permite marcar RECEBIDO
+ • Permite marcar RECEBIDO e RETIRADA
  • Exibe dados completos do doador, da criança e movimentações
- • Permite registrar RECEBIMENTO / RETIRADA
+ • Mostra histórico dos movimentos gravados
 ============================================================== -->
 
 <!DOCTYPE html>
@@ -15,12 +15,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>📦 Painel do Ponto de Coleta | Varal dos Sonhos</title>
 
-  <!-- Tailwind -->
   <script src="https://cdn.tailwindcss.com"></script>
-
-  <!-- Fonte -->
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-
   <link rel="icon" href="../imagens/favicon.png" />
 
   <style>
@@ -37,29 +33,17 @@
       padding-top: 20px;
       box-shadow: 3px 0 10px rgba(0,0,0,.15);
     }
-    .sidebar h2 {
-      padding-left: 30px;
-      font-size: 22px;
-      font-weight: 700;
-      margin-bottom: 25px;
-    }
+    .sidebar h2 { padding-left:30px; font-size:22px; font-weight:700; margin-bottom:25px; }
     .sidebar a {
-      display: block;
-      padding: 14px 30px;
-      color: white;
-      text-decoration: none;
-      font-weight: 500;
-      transition: .2s;
+      display:block; padding:14px 30px;
+      color:white; text-decoration:none; font-weight:500;
+      transition:.2s;
     }
-    .sidebar a:hover {
-      background:#1e88e5;
-      padding-left: 40px;
-    }
+    .sidebar a:hover { background:#1e88e5; padding-left:40px; }
 
-    /* CONTENT */
-    .content { margin-left: 280px; padding: 40px; }
+    /* ÁREA PRINCIPAL */
+    .content { margin-left:280px; padding:40px; }
 
-    /* CARD */
     .card {
       background:white;
       padding:25px;
@@ -68,56 +52,61 @@
       margin-bottom:40px;
     }
 
-    /* ITEM */
-    .item {
+    .ado-item {
       border:1px solid #dce6ff;
       border-radius:16px;
-      padding:20px;
+      padding:22px;
       background:white;
-      margin-bottom:18px;
+      margin-bottom:22px;
     }
 
-    /* TAGS */
-    .tag{
+    .tag {
       background:#e3f2fd;
       padding:4px 10px;
       border-radius:8px;
       font-size:13px;
-      margin-right:4px;
+      margin-right:5px;
       color:#0d47a1;
       display:inline-block;
+      margin-bottom:6px;
+    }
+
+    .section-block {
+      background:#f0f7ff;
+      border:1px solid #d0e2ff;
+      padding:16px;
+      border-radius:12px;
+      margin-top:14px;
     }
 
     .btn-blue{
-      background:#1e88e5;color:white;padding:10px 18px;border-radius:10px;
-      font-weight:600; transition:.2s;
+      background:#1e88e5; color:white; padding:10px 18px;
+      border-radius:10px; font-weight:600;
+      transition:.2s;
     }
-    .btn-blue:hover { background:#0d47a1; }
+    .btn-blue:hover{ background:#0d47a1; }
   </style>
 </head>
 
 <body>
 
-<!-- ============================================================
-     SIDEBAR
-============================================================ -->
+<!-- SIDEBAR -->
 <aside class="sidebar">
   <h2>📦 Painel do Ponto</h2>
 
   <a href="#receber">📥 Aguardando Recebimento</a>
-  <a href="#retirar">📦 Recebidos (Ponto)</a>
+  <a href="#retirada">📦 Recebidos</a>
   <a href="#entregues">🚚 Entregues</a>
 
   <hr class="border-white/40 my-6">
 
-  <a href="../index.html">⬅️ Voltar ao site</a>
+  <a href="../index.html">⬅️ Voltar ao Site</a>
 </aside>
 
-<!-- ============================================================
-     CONTEÚDO PRINCIPAL
-============================================================ -->
+<!-- CONTEÚDO PRINCIPAL -->
 <main class="content">
-  <h1 class="text-3xl font-bold text-blue-800 mb-8">
+
+  <h1 class="text-3xl font-bold text-blue-800 mb-6">
     Bem-vindo(a) ao Painel do Ponto de Coleta 💙
   </h1>
 
@@ -127,9 +116,9 @@
     <div id="listaReceber"></div>
   </section>
 
-  <!-- RECEBIDOS (AGUARDANDO RETIRADA) -->
-  <section id="retirar" class="card">
-    <h2 class="text-2xl font-bold text-green-700 mb-4">📦 Recebidos (aguardando retirada pela equipe)</h2>
+  <!-- RECEBIDOS -->
+  <section id="retirada" class="card">
+    <h2 class="text-2xl font-bold text-green-700 mb-4">📦 Recebidos (aguardando retirada)</h2>
     <div id="listaRetirar"></div>
   </section>
 
@@ -138,14 +127,12 @@
     <h2 class="text-2xl font-bold text-orange-700 mb-4">🚚 Presentes já entregues</h2>
     <div id="listaEntregues"></div>
   </section>
+
 </main>
 
-<!-- ============================================================
-     MODAL
-============================================================ -->
+<!-- MODAL -->
 <div id="modal" class="fixed inset-0 bg-black/40 hidden items-center justify-center">
   <div class="bg-white w-[420px] p-6 rounded-2xl shadow-xl">
-
     <h2 id="modalTitulo" class="text-xl font-semibold mb-4"></h2>
 
     <input id="inputResponsavel" class="border p-2 w-full mb-3 rounded" placeholder="Responsável" />
@@ -157,7 +144,6 @@
   </div>
 </div>
 
-<!-- JS DO PAINEL -->
 <script src="../js/painel-ponto.js"></script>
 
 </body>
