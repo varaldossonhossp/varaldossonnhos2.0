@@ -6,171 +6,129 @@
 // • Modal para confirmar RECEBIMENTO
 // • Integra com /api/logistica.js
 // ============================================================
-// ============================================================
-// 💙 VARAL DOS SONHOS — painel-ponto.js (REVISION FINAL)
-// ============================================================
 
 const API_ADOCOES = "/api/listAdocoes";
 const API_LOGISTICA = "/api/logistica";
 
-// ------------------------------------------------------------
-// 1) Identificar Ponto Logado
-// ------------------------------------------------------------
+// Obtém ponto logado
 let usuarioLogado = JSON.parse(localStorage.getItem("usuario_logado"));
 
 if (!usuarioLogado || usuarioLogado.tipo !== "ponto") {
-  alert("Acesso restrito!");
-  window.location.href = "/index.html";
+  alert("Acesso negado.");
+  window.location.href = "../index.html";
 }
 
-const idPonto =
-  usuarioLogado.id_record ||
-  usuarioLogado.id ||
-  usuarioLogado.id_ponto ||
-  null;
+const idPonto = usuarioLogado.id_record;
 
-if (!idPonto) {
-  alert("Erro: ID do ponto não encontrado.");
-  window.location.href = "/index.html";
-}
-
-// ------------------------------------------------------------
-// 2) Carregar adoções (via /api/listAdocoes)
-// ------------------------------------------------------------
+// --------------------------------------------
+// Carregar adoções do ponto
+// --------------------------------------------
 async function carregarAdoacoes() {
-  try {
-    const r = await fetch(API_ADOCOES);
-    const json = await r.json();
+  const r = await fetch(API_ADOCOES);
+  const json = await r.json();
 
-    if (!json.sucesso) {
-      console.error("Erro API /listAdocoes:", json.mensagem);
-      return;
+  if (!json.sucesso) {
+    alert("Erro ao carregar adoções.");
+    return;
+  }
+
+  const lista = json.adocoes.filter(a => a.id_ponto === idPonto);
+
+  preencherSecoes(lista);
+}
+
+// --------------------------------------------
+// Montagem das listas
+// --------------------------------------------
+function preencherSecoes(lista) {
+
+  const t1 = document.getElementById("listaReceber");
+  const t2 = document.getElementById("listaRetirar");
+  const t3 = document.getElementById("listaEntregues");
+
+  t1.innerHTML = t2.innerHTML = t3.innerHTML = "";
+
+  lista.forEach(a => {
+    const primeiroNome = a.nome_crianca.split(" ")[0];
+
+    let html = `
+      <div class="item">
+        <p class="font-bold text-lg">${primeiroNome}</p>
+        <p class="text-gray-700">🎁 ${a.sonho}</p>
+
+        <div class="mt-2">
+          <span class="tag">👤 ${a.nome_usuario}</span>
+          <span class="tag">📍 ${a.endereco_ponto || ""}</span>
+          <span class="tag">🆔 Cartinha ${a.id_cartinha}</span>
+        </div>
+    `;
+
+    if (a.status_adocao === "confirmada") {
+      html += `
+        <button class="btn-blue mt-4"
+          onclick="abrirModal('receber','${a.id_record}')">
+          📥 Receber
+        </button>
+      `;
+      html += "</div>";
+      t1.innerHTML += html;
     }
 
-    processarAdoacoes(json.adocoes || []);
-  } catch (e) {
-    console.error("Falha ao carregar adoções:", e);
-  }
+    else if (a.status_adocao === "presente recebido") {
+      html += `<p class="mt-3 text-green-700 font-semibold">Recebido — aguardando retirada</p></div>`;
+      t2.innerHTML += html;
+    }
+
+    else if (a.status_adocao === "presente entregue") {
+      html += `<p class="mt-3 text-orange-700 font-semibold">Entregue ✔️</p></div>`;
+      t3.innerHTML += html;
+    }
+  });
 }
 
-// ------------------------------------------------------------
-// 3) Processar adoções do PONTO LOGADO
-// ------------------------------------------------------------
-function processarAdoacoes(lista) {
-  const tReceber = document.getElementById("listaReceber");
-  const tRetirar = document.getElementById("listaRetirar");
-  const tEntregues = document.getElementById("listaEntregues");
-
-  tReceber.innerHTML = "";
-  tRetirar.innerHTML = "";
-  tEntregues.innerHTML = "";
-
-  lista
-    .filter(a => a.id_ponto === idPonto)
-    .forEach(a => {
-      if (a.status_adocao === "confirmada") {
-        tReceber.innerHTML += linhaAguardandoRecebimento(a);
-      }
-      else if (a.status_adocao === "presente recebido") {
-        tRetirar.innerHTML += linhaAguardandoRetirada(a);
-      }
-      else if (a.status_adocao === "presente entregue") {
-        tEntregues.innerHTML += linhaEntregue(a);
-      }
-    });
-}
-
-// ------------------------------------------------------------
-// Templates das linhas
-// ------------------------------------------------------------
-function linhaAguardandoRecebimento(ado) {
-  return `
-    <div class="table-row">
-      <span>${ado.nome_crianca}</span>
-      <span>${ado.sonho}</span>
-      <span>${ado.nome_usuario}</span>
-      <button class="btn btn-receber"
-        onclick="abrirModal('receber', '${ado.id_record}')">📥 Receber</button>
-    </div>`;
-}
-
-function linhaAguardandoRetirada(ado) {
-  return `
-    <div class="table-row">
-      <span>${ado.nome_crianca}</span>
-      <span>${ado.sonho}</span>
-      <span>${ado.nome_usuario}</span>
-      <button class="btn btn-retirar"
-        onclick="abrirModal('retirar', '${ado.id_record}')">📦 Registrar Retirada</button>
-    </div>`;
-}
-
-function linhaEntregue(ado) {
-  return `
-    <div class="table-row">
-      <span>${ado.nome_crianca}</span>
-      <span>${ado.sonho}</span>
-      <span>${ado.nome_usuario}</span>
-      <span>✔️ Entregue</span>
-    </div>`;
-}
-
-// ------------------------------------------------------------
+// --------------------------------------------
 // Modal
-// ------------------------------------------------------------
+// --------------------------------------------
 let acaoAtual = null;
-let adocaoAtual = null;
+let idAtual = null;
 
-function abrirModal(acao, idAdo) {
+function abrirModal(acao, id) {
   acaoAtual = acao;
-  adocaoAtual = idAdo;
+  idAtual = id;
+  document.getElementById("modalTitulo").innerText =
+    acao === "receber" ? "Confirmar Recebimento" : "Confirmar";
 
-  document.getElementById("modalTitulo").textContent =
-    acao === "receber" ? "Confirmar Recebimento" : "Confirmar Retirada";
-
-  document.getElementById("modal").style.display = "flex";
+  document.getElementById("modal").classList.remove("hidden");
 }
 
 function fecharModal() {
-  document.getElementById("modal").style.display = "none";
+  document.getElementById("modal").classList.add("hidden");
 }
 
-// ------------------------------------------------------------
-// Enviar para API /logistica
-// ------------------------------------------------------------
+// --------------------------------------------
+// Enviar dados para API
+// --------------------------------------------
 document.getElementById("btnConfirmar").addEventListener("click", async () => {
-  const responsavel =
-    document.getElementById("inputResponsavel").value ||
-    usuarioLogado.nome_usuario;
-
-  const observacoes = document.getElementById("inputObs").value || "";
-  const foto = document.getElementById("inputFoto").value || "";
-
   const body = {
     acao: acaoAtual,
-    id_adocao: adocaoAtual,
+    id_adocao: idAtual,
     id_ponto: idPonto,
-    responsavel,
-    observacoes,
-    foto
+    responsavel: document.getElementById("inputResponsavel").value || usuarioLogado.nome_usuario,
+    observacoes: document.getElementById("inputObs").value,
+    foto: document.getElementById("inputFoto").value || ""
   };
 
-  try {
-    const r = await fetch(API_LOGISTICA, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body)
-    });
+  const r = await fetch(API_LOGISTICA, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body)
+  });
 
-    const json = await r.json();
-    alert(json.mensagem);
+  const json = await r.json();
+  alert(json.mensagem);
 
-    fecharModal();
-    carregarAdoacoes();
-  } catch (e) {
-    alert("Erro ao registrar operação.");
-    console.error(e);
-  }
+  fecharModal();
+  carregarAdoacoes();
 });
 
 // Start
