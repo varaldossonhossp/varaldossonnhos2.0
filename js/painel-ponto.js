@@ -7,6 +7,7 @@
 // • Layout padronizado 
 // • Modal para confirmar RECEBIMENTO ou RETIRADA
 // • Integra com /api/logistica.js
+// ✔ Exibe responsavel + observações + data da movimentação
 // ============================================================
 
 const API_ADOCOES = "/api/listAdocoes";
@@ -34,20 +35,26 @@ if (!idPonto) {
 }
 
 // ------------------------------------------------------------
-// 🔹 Função para garantir *somente o primeiro nome da criança*
+// Só primeiro nome da criança
 // ------------------------------------------------------------
 function nomeCrianca(a) {
   if (a.primeiro_nome && a.primeiro_nome.trim() !== "") {
     return a.primeiro_nome.trim();
   }
   if (a.nome_crianca && a.nome_crianca.includes(" ")) {
-    return a.nome_crianca.split(" ")[0].trim();
+    return a.nome_crianca.split(" ")[0];
   }
   return a.nome_crianca || "Criança";
 }
 
+// Formatar data
+function formatarData(d) {
+  if (!d) return "";
+  return new Date(d).toLocaleDateString("pt-BR");
+}
+
 // ------------------------------------------------------------
-// 2) Carregar adoções (via /api/listAdocoes)
+// 2) Carregar adoções
 // ------------------------------------------------------------
 async function carregarAdoacoes() {
   try {
@@ -66,7 +73,7 @@ async function carregarAdoacoes() {
 }
 
 // ------------------------------------------------------------
-// 3) Processar adoções do PONTO LOGADO
+// 3) Processar adoções
 // ------------------------------------------------------------
 function processarAdoacoes(lista) {
   const tReceber = document.getElementById("listaReceber");
@@ -81,27 +88,25 @@ function processarAdoacoes(lista) {
     .filter(a => a.id_ponto === idPonto)
     .forEach(a => {
       if (a.status_adocao === "confirmada") {
-        tReceber.innerHTML += linhaAguardandoRecebimento(a);
-      }
-      else if (a.status_adocao === "presente recebido") {
-        tRetirar.innerHTML += linhaAguardandoRetirada(a);
-      }
-      else if (a.status_adocao === "presente entregue") {
+        tReceber.innerHTML += linhaReceber(a);
+      } else if (a.status_adocao === "presente recebido") {
+        tRetirar.innerHTML += linhaRetirar(a);
+      } else if (a.status_adocao === "presente entregue") {
         tEntregues.innerHTML += linhaEntregue(a);
       }
     });
 }
 
 // ------------------------------------------------------------
-// 🔹 Templates VISUAIS (padronizado igual ao logística-admin)
+// Templates com layout avançado
 // ------------------------------------------------------------
-function linhaAguardandoRecebimento(a) {
+function linhaReceber(a) {
   return `
     <div class="item">
       <p class="font-bold text-lg">${nomeCrianca(a)}</p>
       <p class="text-gray-600 text-sm">🎁 ${a.sonho}</p>
 
-      <div class="mt-2">
+      <div class="mt-3">
         <span class="tag">🆔 Cartinha: ${a.id_cartinha}</span>
         <span class="tag">👤 Doador: ${a.nome_usuario}</span>
       </div>
@@ -114,15 +119,23 @@ function linhaAguardandoRecebimento(a) {
   `;
 }
 
-function linhaAguardandoRetirada(a) {
+function linhaRetirar(a) {
   return `
     <div class="item">
       <p class="font-bold text-lg">${nomeCrianca(a)}</p>
       <p class="text-gray-600 text-sm">🎁 ${a.sonho}</p>
 
-      <div class="mt-2">
+      <div class="mt-3">
         <span class="tag">🆔 Cartinha: ${a.id_cartinha}</span>
         <span class="tag">👤 Doador: ${a.nome_usuario}</span>
+      </div>
+
+      <!-- Informações DO RECEBIMENTO -->
+      <div class="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+        <p class="font-semibold text-blue-800">📥 Recebido pelo ponto</p>
+        <p class="text-sm text-gray-700">Responsável: <b>${a.responsavel_recebimento || "—"}</b></p>
+        <p class="text-sm text-gray-700">Obs: ${a.obs_recebimento || "—"}</p>
+        <p class="text-sm text-gray-700">Data: ${formatarData(a.data_recebimento) || "—"}</p>
       </div>
 
       <button class="btn-blue mt-4"
@@ -136,15 +149,29 @@ function linhaAguardandoRetirada(a) {
 function linhaEntregue(a) {
   return `
     <div class="item">
-      <p class="font-bold text-lg">${nomeCrianca(a)}</p>
-      <p class="text-gray-600 text-sm">🎁 ${a.sonho}</p>
 
-      <div class="mt-2">
-        <span class="tag">🆔 Cartinha: ${a.id_cartinha}</span>
-        <span class="tag">👤 Doador: ${a.nome_usuario}</span>
+      <div class="flex justify-between items-center">
+        <p class="font-bold text-lg">${nomeCrianca(a)}</p>
+        <span class="tag bg-green-200 text-green-900 font-bold">✔ ENTREGUE</span>
       </div>
 
-      <span class="tag bg-green-100 text-green-700">✔️ Entregue</span>
+      <p class="text-gray-600 text-sm mb-3">🎁 ${a.sonho}</p>
+
+      <span class="tag">👤 Doador: ${a.nome_usuario}</span>
+
+      <div class="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+        <p class="font-semibold text-blue-800">📥 Recebido no ponto</p>
+        <p class="text-sm text-gray-700">Responsável: <b>${a.resp_recebimento || "—"}</b></p>
+        <p class="text-sm text-gray-700">Obs: ${a.obs_recebimento || "—"}</p>
+        <p class="text-sm text-gray-700">Data: ${formatarData(a.data_recebimento) || "—"}</p>
+      </div>
+
+      <div class="mt-4 p-3 bg-green-50 rounded-lg border border-green-200">
+        <p class="font-semibold text-green-800">🚚 Retirada pela equipe</p>
+        <p class="text-sm text-gray-700">Responsável: <b>${a.resp_retirada || "—"}</b></p>
+        <p class="text-sm text-gray-700">Obs: ${a.obs_retirada || "—"}</p>
+        <p class="text-sm text-gray-700">Data: ${formatarData(a.data_retirada) || "—"}</p>
+      </div>
     </div>
   `;
 }
@@ -166,13 +193,20 @@ function abrirModal(acao, idAdo) {
   document.getElementById("modal").classList.add("flex");
 }
 
+function limparModal() {
+  document.getElementById("inputResponsavel").value = "";
+  document.getElementById("inputObs").value = "";
+  document.getElementById("inputFoto").value = "";
+}
+
 function fecharModal() {
+  limparModal();
   document.getElementById("modal").classList.add("hidden");
   document.getElementById("modal").classList.remove("flex");
 }
 
 // ------------------------------------------------------------
-// 5) Enviar operação para API /logistica
+// 5) Enviar operação
 // ------------------------------------------------------------
 document.getElementById("btnConfirmar").addEventListener("click", async () => {
   const responsavel =
@@ -209,7 +243,5 @@ document.getElementById("btnConfirmar").addEventListener("click", async () => {
   }
 });
 
-// ------------------------------------------------------------
 // Start
-// ------------------------------------------------------------
 document.addEventListener("DOMContentLoaded", carregarAdoacoes);

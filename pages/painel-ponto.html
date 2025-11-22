@@ -4,7 +4,9 @@
  Painel do Ponto de Coleta:
  • Lista apenas adoções do ponto logado (via painel-ponto.js)
  • Permite marcar RECEBIDO
-============================================================ -->
+ • Exibe dados completos do doador, da criança e movimentações
+ • Permite registrar RECEBIMENTO / RETIRADA
+============================================================== -->
 
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -16,75 +18,67 @@
   <!-- Tailwind -->
   <script src="https://cdn.tailwindcss.com"></script>
 
-  <!-- Fonte padrão -->
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <!-- Fonte -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
   <link rel="icon" href="../imagens/favicon.png" />
 
   <style>
-    body {
-      font-family: "Poppins", sans-serif;
-      background:#e3f2fd;
-    }
+    body { font-family:"Poppins", sans-serif; background:#e3f2fd; }
 
-    /* SIDEBAR (igual estilo logística-admin) */
+    /* SIDEBAR */
     .sidebar {
-      width: 270px;
+      width: 260px;
       background: #1565c0;
       color: white;
       height: 100vh;
       position: fixed;
-      left: 0;
-      top: 0;
-      padding: 20px 0;
-      box-shadow: 3px 0px 10px rgba(0,0,0,0.15);
+      top: 0; left: 0;
+      padding-top: 20px;
+      box-shadow: 3px 0 10px rgba(0,0,0,.15);
     }
-
     .sidebar h2 {
-      padding-left: 28px;
+      padding-left: 30px;
       font-size: 22px;
       font-weight: 700;
-      margin-bottom: 30px;
+      margin-bottom: 25px;
     }
-
     .sidebar a {
       display: block;
       padding: 14px 30px;
-      margin: 4px 0;
-      text-decoration: none;
       color: white;
+      text-decoration: none;
       font-weight: 500;
       transition: .2s;
     }
     .sidebar a:hover {
-      background: #1e88e5;
+      background:#1e88e5;
       padding-left: 40px;
     }
 
-    /* Área da direita */
-    .content {
-      margin-left: 290px;
-      padding: 40px;
-    }
+    /* CONTENT */
+    .content { margin-left: 280px; padding: 40px; }
 
+    /* CARD */
     .card {
-      background: white;
-      padding: 25px;
-      border-radius: 18px;
-      margin-bottom: 40px;
-      box-shadow: 0 3px 8px rgba(0,0,0,0.1);
-    }
-
-    /* Cada adoção como “cartão” */
-    .card-item {
       background:white;
-      border-radius: 14px;
-      padding: 20px;
-      border: 1px solid #d0e2ff;
-      margin-bottom: 16px;
+      padding:25px;
+      border-radius:18px;
+      box-shadow:0 3px 10px rgba(0,0,0,.1);
+      margin-bottom:40px;
     }
 
-    /* Tags coloridas iguais ao painel admin */
-    .tag {
+    /* ITEM */
+    .item {
+      border:1px solid #dce6ff;
+      border-radius:16px;
+      padding:20px;
+      background:white;
+      margin-bottom:18px;
+    }
+
+    /* TAGS */
+    .tag{
       background:#e3f2fd;
       padding:4px 10px;
       border-radius:8px;
@@ -94,108 +88,64 @@
       display:inline-block;
     }
 
-    /* Botões padrão */
     .btn-blue{
-      background:#1e88e5;color:white;padding:10px 16px;border-radius:10px;
-      font-weight:600;transition:.2s;
+      background:#1e88e5;color:white;padding:10px 18px;border-radius:10px;
+      font-weight:600; transition:.2s;
     }
-    .btn-blue:hover{ background:#0d47a1; }
-
-    .btn-green{
-      background:#2e7d32;color:white;padding:10px 16px;border-radius:10px;
-      font-weight:600;transition:.2s;
-    }
-    .btn-green:hover{ background:#1b5e20; }
-
-    .btn-orange{
-      background:#ef6c00;color:white;padding:10px 16px;border-radius:10px;
-      font-weight:600;transition:.2s;
-    }
-    .btn-orange:hover{ background:#e65100; }
-
-    /* Badge de status no painel do ponto */
-    .badge-status {
-      display:inline-block;
-      padding:4px 10px;
-      border-radius:999px;
-      font-size:12px;
-      font-weight:600;
-    }
-    .badge-recebido {
-      background:#e8f5e9;
-      color:#2e7d32;
-    }
-    .badge-entregue {
-      background:#fff3e0;
-      color:#ef6c00;
-    }
+    .btn-blue:hover { background:#0d47a1; }
   </style>
 </head>
 
 <body>
 
-<!-- ==========================================================
-     📌 SIDEBAR DO PONTO
-=========================================================== -->
+<!-- ============================================================
+     SIDEBAR
+============================================================ -->
 <aside class="sidebar">
   <h2>📦 Painel do Ponto</h2>
 
-  <a href="#sec-receber">📥 Aguardando Recebimento</a>
-  <a href="#sec-recebidos">📦 Recebidos</a>
-  <a href="#sec-entregues">🚚 Entregues</a>
+  <a href="#receber">📥 Aguardando Recebimento</a>
+  <a href="#retirar">📦 Recebidos (Ponto)</a>
+  <a href="#entregues">🚚 Entregues</a>
 
-  <hr class="my-6 border-white/40">
+  <hr class="border-white/40 my-6">
 
-  <a href="../index.html">🏠 Voltar ao Site</a>
+  <a href="../index.html">⬅️ Voltar ao site</a>
 </aside>
 
-<!-- ==========================================================
-     📌 CONTEÚDO PRINCIPAL
-=========================================================== -->
+<!-- ============================================================
+     CONTEÚDO PRINCIPAL
+============================================================ -->
 <main class="content">
-
-  <h1 class="text-3xl font-bold text-blue-800 mb-6">
+  <h1 class="text-3xl font-bold text-blue-800 mb-8">
     Bem-vindo(a) ao Painel do Ponto de Coleta 💙
   </h1>
 
-  <!-- ======================================================
-       1 — PRESENTES AGUARDANDO RECEBIMENTO
-  ====================================================== -->
-  <section id="sec-receber" class="card">
-    <h2 class="text-2xl font-bold text-blue-600 mb-4">
-      📥 Presentes aguardando recebimento
-    </h2>
-    <!-- JS vai preencher aqui com os cards -->
+  <!-- AGUARDANDO RECEBIMENTO -->
+  <section id="receber" class="card">
+    <h2 class="text-2xl font-bold text-blue-600 mb-4">📥 Presentes aguardando recebimento</h2>
     <div id="listaReceber"></div>
   </section>
 
-  <!-- ======================================================
-       2 — PRESENTES JÁ RECEBIDOS (aguardando retirar)
-  ====================================================== -->
-  <section id="sec-recebidos" class="card">
-    <h2 class="text-2xl font-bold text-green-700 mb-4">
-      📦 Recebidos (aguardando retirar pela equipe)
-    </h2>
+  <!-- RECEBIDOS (AGUARDANDO RETIRADA) -->
+  <section id="retirar" class="card">
+    <h2 class="text-2xl font-bold text-green-700 mb-4">📦 Recebidos (aguardando retirada pela equipe)</h2>
     <div id="listaRetirar"></div>
   </section>
 
-  <!-- ======================================================
-       3 — PRESENTES ENTREGUES
-  ====================================================== -->
-  <section id="sec-entregues" class="card">
-    <h2 class="text-2xl font-bold text-orange-700 mb-4">
-      🚚 Presentes já entregues
-    </h2>
+  <!-- ENTREGUES -->
+  <section id="entregues" class="card">
+    <h2 class="text-2xl font-bold text-orange-700 mb-4">🚚 Presentes já entregues</h2>
     <div id="listaEntregues"></div>
   </section>
-
 </main>
 
-<!-- ==========================================================
-     MODAL (usado pelo painel-ponto.js)
-=========================================================== -->
+<!-- ============================================================
+     MODAL
+============================================================ -->
 <div id="modal" class="fixed inset-0 bg-black/40 hidden items-center justify-center">
   <div class="bg-white w-[420px] p-6 rounded-2xl shadow-xl">
+
     <h2 id="modalTitulo" class="text-xl font-semibold mb-4"></h2>
 
     <input id="inputResponsavel" class="border p-2 w-full mb-3 rounded" placeholder="Responsável" />
@@ -207,7 +157,7 @@
   </div>
 </div>
 
-<!-- JS do painel do ponto (lógica de filtros e integração com /api/logistica) -->
+<!-- JS DO PAINEL -->
 <script src="../js/painel-ponto.js"></script>
 
 </body>
