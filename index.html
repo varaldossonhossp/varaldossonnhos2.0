@@ -188,10 +188,11 @@
   </div>
 
   <script>
-    window.addEventListener("load", () => {
-  
+    document.addEventListener("DOMContentLoaded", () => {
+
+    // Verifica se veio do login
     const deveMostrar = localStorage.getItem("mostrarModal");
-    if (!deveMostrar) return; // ❌ não mostrar se não veio do login
+    if (!deveMostrar) return; 
 
     const overlay = document.getElementById("welcomeOverlay");
     const nomeBox = document.getElementById("welcomeNome");
@@ -199,24 +200,26 @@
 
     if (!overlay || !nomeBox || !btn) return;
 
+    // Dados do usuário
     const uData = localStorage.getItem("usuario");
     if (!uData) return;
 
     const u = JSON.parse(uData);
-    const primeiroNome = u.nome?.split(" ")[0] || " Visitante";
+    const primeiroNome = u.nome?.split(" ")[0] || "Visitante";
 
+    // Mensagem personalizada
     nomeBox.innerHTML =
       `Olá, <b>${primeiroNome}</b>! 💙<br>É um prazer ter você aqui novamente!`;
 
+    // Exibe o modal
     overlay.style.display = "flex";
 
-    // 🔵 Apaga a chave para não repetir ao atualizar página
-    localStorage.removeItem("mostrarModal");
-
-    // Botão fechar
+    // Só remove a flag quando o usuário fechar o modal
     btn.addEventListener("click", () => {
       overlay.style.display = "none";
+      localStorage.removeItem("mostrarModal");
     });
+
   });
   </script>
 
