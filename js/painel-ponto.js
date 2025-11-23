@@ -11,11 +11,11 @@
 //   ✔ sonho
 //   ✔ nome_usuario (doador)
 //   ✔ status
-//   ✔ histórico REAL do ponto:
-//        responsável / observações / data / tipo
+//   ✔ observações 
 //
 // Totalmente compatível com a /api/listAdocoes.js
 // ============================================================
+
 
 const API_ADOCOES = "/api/listAdocoes";
 const API_LOGISTICA = "/api/logistica";
@@ -63,7 +63,7 @@ async function carregarAdoacoes() {
 }
 
 // ---------------------------------------------
-// 3) Renderização total dos cards
+// 3) Renderizar cards por status
 // ---------------------------------------------
 function renderizar(lista) {
 
@@ -76,12 +76,15 @@ function renderizar(lista) {
   tEntregues.innerHTML = "";
 
   lista.forEach(ado => {
+
     if (ado.status_adocao === "confirmada") {
       tReceber.innerHTML += cardReceber(ado);
     }
+
     else if (ado.status_adocao === "presente recebido") {
       tRetirar.innerHTML += cardRecebido(ado);
     }
+
     else if (ado.status_adocao === "presente entregue") {
       tEntregues.innerHTML += cardEntregue(ado);
     }
@@ -89,92 +92,87 @@ function renderizar(lista) {
 }
 
 /* ============================================================
-   🔵 Templates dos cards
+   🔵 TEMPLATES (com Observações apenas)
 ============================================================ */
 
 function cardReceber(a) {
   return `
-  <div class="ado-item">
-    <p class="font-bold text-xl">${a.nome_crianca}</p>
-    <p class="text-gray-700 mb-2">🎁 ${a.sonho}</p>
+    <div class="ado-item">
+      <p class="font-bold text-xl">${a.nome_crianca}</p>
+      <p class="text-gray-700 mb-2">🎁 ${a.sonho}</p>
 
-    <span class="tag">🆔 Cartinha: ${a.id_cartinha}</span>
-    <span class="tag">👤 Doador: ${a.nome_usuario}</span>
+      <span class="tag">🆔 Cartinha: ${a.id_cartinha}</span>
+      <span class="tag">👤 Doador: ${a.nome_usuario}</span>
 
-    ${blocoMovimentos(a.movimentos)}
+      ${blocoObservacoes(a.movimentos)}
 
-    <button class="btn-blue mt-4"
-      onclick="abrirModal('receber', '${a.id_record}')">
-      📥 Receber
-    </button>
-  </div>
+      <button class="btn-blue mt-4"
+        onclick="abrirModal('receber', '${a.id_record}')">
+        📥 Receber
+      </button>
+    </div>
   `;
 }
 
 function cardRecebido(a) {
   return `
-  <div class="ado-item">
-    <p class="font-bold text-xl">${a.nome_crianca}</p>
-    <p class="text-gray-700 mb-2">🎁 ${a.sonho}</p>
+    <div class="ado-item">
+      <p class="font-bold text-xl">${a.nome_crianca}</p>
+      <p class="text-gray-700 mb-2">🎁 ${a.sonho}</p>
 
-    <span class="tag">🆔 Cartinha: ${a.id_cartinha}</span>
-    <span class="tag">👤 Doador: ${a.nome_usuario}</span>
+      <span class="tag">🆔 Cartinha: ${a.id_cartinha}</span>
+      <span class="tag">👤 Doador: ${a.nome_usuario}</span>
 
-    ${blocoMovimentos(a.movimentos)}
+      ${blocoObservacoes(a.movimentos)}
 
-    <button class="btn-blue mt-4"
-      onclick="abrirModal('retirar', '${a.id_record}')">
-      📦 Registrar Retirada
-    </button>
-  </div>
+      <button class="btn-blue mt-4"
+        onclick="abrirModal('retirar', '${a.id_record}')">
+        📦 Registrar Retirada
+      </button>
+    </div>
   `;
 }
 
 function cardEntregue(a) {
   return `
-  <div class="ado-item">
-    <p class="font-bold text-xl">${a.nome_crianca}</p>
-    <p class="text-gray-700 mb-2">🎁 ${a.sonho}</p>
+    <div class="ado-item">
+      <p class="font-bold text-xl">${a.nome_crianca}</p>
+      <p class="text-gray-700 mb-2">🎁 ${a.sonho}</p>
 
-    <span class="tag">🆔 Cartinha: ${a.id_cartinha}</span>
-    <span class="tag">👤 Doador: ${a.nome_usuario}</span>
+      <span class="tag">🆔 Cartinha: ${a.id_cartinha}</span>
+      <span class="tag">👤 Doador: ${a.nome_usuario}</span>
 
-    ${blocoMovimentos(a.movimentos)}
-  </div>
+      ${blocoObservacoes(a.movimentos)}
+    </div>
   `;
 }
 
 /* ============================================================
-   🟦 bloco de movimentos
+   🟩 BLOCO NOVO — SOMENTE OBSERVAÇÕES
 ============================================================ */
-function blocoMovimentos(movs) {
+function blocoObservacoes(movs) {
+
+  // se não há nenhum movimento
   if (!movs || movs.length === 0) {
     return `
-    <div class="section-block">
-      <p class="font-semibold text-blue-700 mb-1">📄 Movimentos</p>
-      <p class="text-gray-600 text-sm">Nenhuma movimentação registrada.</p>
-    </div>`;
+      <div class="section-block">
+        <p class="font-semibold text-blue-700 mb-1">📝 Observações</p>
+        <p class="text-gray-600 text-sm">Nenhuma observação registrada.</p>
+      </div>
+    `;
   }
 
-  let html = `
-  <div class="section-block">
-    <p class="font-semibold text-blue-700 mb-2">📄 Movimentações</p>
+  // pegar apenas a última observação
+  const ultima = movs[movs.length - 1];
+
+  return `
+    <div class="section-block">
+      <p class="font-semibold text-blue-700 mb-1">📝 Observações</p>
+      <p class="text-gray-700 text-sm">
+        ${ultima.observacoes || "—"}
+      </p>
+    </div>
   `;
-
-  movs.forEach(m => {
-    html += `
-      <div class="mb-3">
-        <p><b>Tipo:</b> ${m.tipo_movimento}</p>
-        <p><b>Responsável:</b> ${m.responsavel || "—"}</p>
-        <p><b>Obs:</b> ${m.observacoes || "—"}</p>
-        <p><b>Data:</b> ${m.data_movimento || "—"}</p>
-      </div>
-      <hr class="my-3">
-    `;
-  });
-
-  html += `</div>`;
-  return html;
 }
 
 /* ============================================================
@@ -244,5 +242,5 @@ document.getElementById("btnConfirmar").addEventListener("click", async () => {
   }
 });
 
-// ===============================================
+// Iniciar
 document.addEventListener("DOMContentLoaded", carregarAdoacoes);
