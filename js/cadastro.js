@@ -106,3 +106,17 @@ document.addEventListener("DOMContentLoaded", () => {
       .addEventListener("click", () => (window.location.href = "/index.html"));
   }
 });
+
+// 📱 MÁSCARA TELEFONE
+document.getElementById("telefone").addEventListener("input", function (e) {
+  let tel = e.target.value.replace(/\D/g, "");
+
+  if (tel.length > 11) tel = tel.slice(0, 11);
+
+  if (tel.length <= 10) {
+    e.target.value = tel.replace(/(\d{2})(\d{4})(\d{0,4})/, "($1) $2-$3");
+  } else {
+    e.target.value = tel.replace(/(\d{2})(\d{5})(\d{0,4})/, "($1) $2-$3");
+  }
+});
+

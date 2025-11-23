@@ -124,7 +124,7 @@ export default async function handler(req, res) {
               endereco,
               numero,
               status: "ativo",
-              data_cadastro: new Date().toISOString(),
+              data_cadastro: new Date().toISOString().split("T")[0],
             },
           },
         ]);
