@@ -20,7 +20,10 @@
   <link rel="icon" href="../imagens/favicon.png" />
 
   <style>
-    body { font-family:"Poppins", sans-serif; background:#e3f2fd; }
+    body {
+      font-family: "Poppins", sans-serif;
+      background: #e3f2fd;
+    }
 
     /* SIDEBAR */
     .sidebar {
@@ -33,16 +36,30 @@
       padding-top: 20px;
       box-shadow: 3px 0 10px rgba(0,0,0,.15);
     }
-    .sidebar h2 { padding-left:30px; font-size:22px; font-weight:700; margin-bottom:25px; }
+    .sidebar h2 {
+      padding-left:30px;
+      font-size:22px;
+      font-weight:700;
+      margin-bottom:25px;
+    }
     .sidebar a {
-      display:block; padding:14px 30px;
-      color:white; text-decoration:none; font-weight:500;
+      display:block;
+      padding:14px 30px;
+      color:white;
+      text-decoration:none;
+      font-weight:500;
       transition:.2s;
     }
-    .sidebar a:hover { background:#1e88e5; padding-left:40px; }
+    .sidebar a:hover {
+      background:#1e88e5;
+      padding-left:40px;
+    }
 
     /* ÁREA PRINCIPAL */
-    .content { margin-left:280px; padding:40px; }
+    .content {
+      margin-left:280px;
+      padding:40px;
+    }
 
     .card {
       background:white;
@@ -80,11 +97,16 @@
     }
 
     .btn-blue{
-      background:#1e88e5; color:white; padding:10px 18px;
-      border-radius:10px; font-weight:600;
+      background:#1e88e5;
+      color:white;
+      padding:10px 18px;
+      border-radius:10px;
+      font-weight:600;
       transition:.2s;
     }
-    .btn-blue:hover{ background:#0d47a1; }
+    .btn-blue:hover{
+      background:#0d47a1;
+    }
   </style>
 </head>
 
@@ -130,17 +152,18 @@
 
 </main>
 
-<!-- MODAL -->
-<div id="modal" class="fixed inset-0 bg-black/40 hidden items-center justify-center">
+<!-- MODAL CENTRALIZADO -->
+<div id="modal" class="fixed inset-0 bg-black/40 hidden flex items-center justify-center z-50">
   <div class="bg-white w-[420px] p-6 rounded-2xl shadow-xl">
+
     <h2 id="modalTitulo" class="text-xl font-semibold mb-4"></h2>
 
     <input id="inputResponsavel" class="border p-2 w-full mb-3 rounded" placeholder="Responsável" />
     <textarea id="inputObs" class="border p-2 w-full mb-3 rounded" placeholder="Observações"></textarea>
-    <input id="inputFoto" type="text" class="border p-2 w-full mb-3 rounded" placeholder="URL da foto (opcional)" />
 
     <button id="btnConfirmar" class="btn-blue w-full">Confirmar</button>
     <button onclick="fecharModal()" class="mt-3 w-full py-2 rounded-lg bg-gray-300">Cancelar</button>
+
   </div>
 </div>
 

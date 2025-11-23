@@ -178,29 +178,26 @@ export default async function handler(req, res) {
       // ======================================================
       // 4) BUSCAR MOVIMENTAÇÕES (recebimento / retirada)
       // ======================================================
+      let movimentos = [];
+      try {
+        const movRecords = await base("ponto_movimentos")
+          .select({
+            filterByFormula: `SEARCH("${r.id}", ARRAYJOIN({adocoes}, ","))`,
+            sort: [{ field: "data_movimento", direction: "asc" }],
+          })
+          .all();
 
-        let movimentos = [];
-
-        try {
-          const movRecords = await base("ponto_movimentos")
-            .select({
-              filterByFormula: `SEARCH("${r.id}", ARRAYJOIN({adocoes}))`,
-              sort: [{ field: "data_movimento", direction: "asc" }],
-            })
-            .all();
-
-          movimentos = movRecords.map(m => ({
-            tipo_movimento: m.fields?.tipo_movimento || "",
-            data_movimento: m.fields?.data_movimento || "",
-            responsavel: m.fields?.responsavel || "",
-            observacoes: m.fields?.observacoes || "",
-            foto_presente: m.fields?.foto_presente?.[0]?.url || ""
-          }));
-
-        } catch (e) {
-          console.log("Erro ao buscar movimentos:", e);
-        }
-
+        movimentos = movRecords.map(m => ({
+          tipo_movimento: m.fields?.tipo_movimento || "",
+          data_movimento: m.fields?.data_movimento || "",
+          responsavel: m.fields?.responsavel || "",
+          observacoes: m.fields?.observacoes || "",
+          // foto removida a pedido:
+          foto_presente: "",
+        }));
+      } catch (e) {
+        console.log("Erro ao buscar movimentos do ponto:", e);
+      }
 
       // ======================================================
       // OBJETO FINAL PARA O FRONT-END (NÃO FOI ALTERADO)

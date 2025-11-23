@@ -12,7 +12,7 @@
 //   ✔ nome_usuario (doador)
 //   ✔ status
 //   ✔ histórico REAL do ponto:
-//        responsável / observações / data / foto / tipo
+//        responsável / observações / data / tipo
 //
 // Totalmente compatível com a /api/listAdocoes.js
 // ============================================================
@@ -42,7 +42,7 @@ if (!idPonto) {
 }
 
 // ---------------------------------------------
-// 2) Buscar adoções da API
+// 2) Buscar adoções
 // ---------------------------------------------
 async function carregarAdoacoes() {
   try {
@@ -54,10 +54,7 @@ async function carregarAdoacoes() {
       return;
     }
 
-    const lista = json.adocoes || [];
-
-    const minhas = lista.filter(a => a.id_ponto === idPonto);
-
+    const minhas = (json.adocoes || []).filter(a => a.id_ponto === idPonto);
     renderizar(minhas);
 
   } catch (e) {
@@ -66,7 +63,7 @@ async function carregarAdoacoes() {
 }
 
 // ---------------------------------------------
-// 3) Construir interface completa
+// 3) Renderização total dos cards
 // ---------------------------------------------
 function renderizar(lista) {
 
@@ -92,7 +89,7 @@ function renderizar(lista) {
 }
 
 /* ============================================================
-   🔵 4) Templates dos cards
+   🔵 Templates dos cards
 ============================================================ */
 
 function cardReceber(a) {
@@ -171,7 +168,6 @@ function blocoMovimentos(movs) {
         <p><b>Responsável:</b> ${m.responsavel || "—"}</p>
         <p><b>Obs:</b> ${m.observacoes || "—"}</p>
         <p><b>Data:</b> ${m.data_movimento || "—"}</p>
-        ${m.foto_presente ? `<img src="${m.foto_presente}" class="mt-2 w-24 rounded border"/>` : ""}
       </div>
       <hr class="my-3">
     `;
@@ -188,9 +184,16 @@ function blocoMovimentos(movs) {
 let acaoAtual = null;
 let adocaoAtual = null;
 
+function limparModal() {
+  document.getElementById("inputResponsavel").value = "";
+  document.getElementById("inputObs").value = "";
+}
+
 function abrirModal(acao, idAdo) {
   acaoAtual = acao;
   adocaoAtual = idAdo;
+
+  limparModal();
 
   document.getElementById("modalTitulo").textContent =
     acao === "receber" ? "Confirmar Recebimento" : "Confirmar Retirada";
@@ -199,6 +202,7 @@ function abrirModal(acao, idAdo) {
 }
 
 function fecharModal() {
+  limparModal();
   document.getElementById("modal").classList.add("hidden");
 }
 
@@ -212,15 +216,13 @@ document.getElementById("btnConfirmar").addEventListener("click", async () => {
     usuarioLogado.nome_usuario;
 
   const observacoes = document.getElementById("inputObs").value || "";
-  const foto = document.getElementById("inputFoto").value || "";
 
   const body = {
     acao: acaoAtual === "receber" ? "receber" : "retirar",
     id_adocao: adocaoAtual,
     id_ponto: idPonto,
     responsavel,
-    observacoes,
-    foto
+    observacoes
   };
 
   try {
@@ -232,11 +234,6 @@ document.getElementById("btnConfirmar").addEventListener("click", async () => {
 
     const json = await r.json();
     alert(json.mensagem);
-
-    // limpa campos ao fechar
-    document.getElementById("inputResponsavel").value = "";
-    document.getElementById("inputObs").value = "";
-    document.getElementById("inputFoto").value = "";
 
     fecharModal();
     carregarAdoacoes();
