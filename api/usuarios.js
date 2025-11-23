@@ -1,5 +1,5 @@
 // ============================================================
-// 👥 VARAL DOS SONHOS — /api/usuarios.js (versão funcional final)
+// 👥 VARAL DOS SONHOS — /api/usuarios.js 
 // ------------------------------------------------------------
 // ✔ Cadastro de novos usuários
 // ✔ Login de usuários (doador, voluntário, admin)
@@ -13,16 +13,16 @@
 import Airtable from "airtable";
 export const config = { runtime: "nodejs" };
 
-// ============================================================
+// ------------------------------------------------------------
 // 🔐 Configurações
-// ============================================================
+// ------------------------------------------------------------
 const AIRTABLE_API_KEY = process.env.AIRTABLE_API_KEY;
 const AIRTABLE_BASE_ID = process.env.AIRTABLE_BASE_ID;
 const TABLE_NAME = process.env.AIRTABLE_USUARIO_TABLE || "usuario";
 
-// ============================================================
-// 🧰 Utilitários de resposta (compatível Node 20 / Vercel)
-// ============================================================
+// ------------------------------------------------------------
+// 🧰 Respostas JSON
+// ------------------------------------------------------------
 function sendJson(res, code, data) {
   res.statusCode = code;
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -43,9 +43,9 @@ function ok(res, data) {
 
 const escapeFormulaString = (str) => (str ? str.replace(/'/g, "''") : "");
 
-// ============================================================
-// 🔧 Função auxiliar para ler corpo JSON (req.body)
-// ============================================================
+// ------------------------------------------------------------
+// 📥 Ler body JSON
+// ------------------------------------------------------------
 async function getBody(req) {
   try {
     const chunks = [];
@@ -62,7 +62,6 @@ async function getBody(req) {
 // 🌈 Handler principal
 // ============================================================
 export default async function handler(req, res) {
-  // CORS básico
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
@@ -74,14 +73,16 @@ export default async function handler(req, res) {
 
     const base = new Airtable({ apiKey: AIRTABLE_API_KEY }).base(AIRTABLE_BASE_ID);
 
-    // ============================================================
-    // POST → CADASTRO ou LOGIN
-    // ============================================================
+    // ------------------------------------------------------------
+    // POST → cadastro / login
+    // ------------------------------------------------------------
     if (req.method === "POST") {
       const body = await getBody(req);
       const { acao } = body || {};
 
-      // ----------------------------- CADASTRO -----------------------------
+      // ------------------------------------------------------------
+      // CADASTRO
+      // ------------------------------------------------------------
       if (acao === "cadastro") {
         const {
           nome_usuario,
@@ -99,6 +100,7 @@ export default async function handler(req, res) {
           return err(res, 400, "Campos obrigatórios ausentes.");
 
         const emailEsc = escapeFormulaString(email_usuario);
+
         const existe = await base(TABLE_NAME)
           .select({
             filterByFormula: `{email_usuario}='${emailEsc}'`,
@@ -106,7 +108,8 @@ export default async function handler(req, res) {
           })
           .all();
 
-        if (existe.length > 0) return err(res, 409, "E-mail já cadastrado.");
+        if (existe.length > 0)
+          return err(res, 409, "E-mail já cadastrado.");
 
         const novo = await base(TABLE_NAME).create([
           {
@@ -120,7 +123,8 @@ export default async function handler(req, res) {
               cep,
               endereco,
               numero,
-              status: "ativo",              
+              status: "ativo",
+              data_cadastro: new Date().toISOString(),
             },
           },
         ]);
@@ -131,9 +135,12 @@ export default async function handler(req, res) {
         });
       }
 
-      // ------------------------------- LOGIN -------------------------------
+      // ------------------------------------------------------------
+      // LOGIN
+      // ------------------------------------------------------------
       if (acao === "login") {
         const { email_usuario, senha } = body || {};
+
         if (!email_usuario || !senha)
           return err(res, 400, "E-mail e senha obrigatórios.");
 
@@ -141,42 +148,44 @@ export default async function handler(req, res) {
         const senhaEsc = escapeFormulaString(senha);
 
         const formula = `AND({email_usuario}='${emailEsc}', {senha}='${senhaEsc}', {status}='ativo')`;
+
         const registros = await base(TABLE_NAME)
-          .select({ filterByFormula: formula, maxRecords: 1 })
+          .select({
+            filterByFormula: formula,
+            maxRecords: 1,
+          })
           .all();
 
         if (registros.length === 0)
           return err(res, 401, "E-mail ou senha incorretos.");
 
-        const usuario = registros[0].fields;
+        const f = registros[0].fields;
 
         return ok(res, {
           mensagem: "Login efetuado com sucesso.",
           usuario: {
             id: registros[0].id,
-            nome_usuario: usuario.nome_usuario,
-            email_usuario: usuario.email_usuario,   
-            telefone: u.telefone || "",
-            endereco: u.endereco || "",
-            numero: u.numero || "",
-            bairro: u.bairro || "",
-            cidade: u.cidade || "",
-            cep: u.cep || "",
-            tipo_usuario: usuario.tipo_usuario || "doador",
+            nome: f.nome_usuario,
+            email: f.email_usuario,
+            telefone: f.telefone || "",
+            endereco: f.endereco || "",
+            numero: f.numero || "",
+            cidade: f.cidade || "",
+            cep: f.cep || "",
+            tipo: f.tipo_usuario || "doador",
           },
         });
       }
 
-      // ------------------------------- INVÁLIDO -------------------------------
-      return err(res, 400, "Ação inválida. Use 'cadastro' ou 'login'.");
+      return err(res, 400, "Ação inválida.");
     }
 
-    // ============================================================
-    // GET → (opcional) listar usuários
-    // ============================================================
+    // ------------------------------------------------------------
+    // GET → lista básica
+    // ------------------------------------------------------------
     if (req.method === "GET") {
       const registros = await base(TABLE_NAME)
-        .select({ maxRecords: 5 })
+        .select({ maxRecords: 20 })
         .all();
 
       const usuarios = registros.map((r) => ({
@@ -190,6 +199,6 @@ export default async function handler(req, res) {
     return err(res, 405, "Método não suportado.");
   } catch (e) {
     console.error("🔥 Erro interno /api/usuarios:", e);
-    err(res, 500, "Erro interno no servidor.", { detalhe: e.message });
+    return err(res, 500, "Erro interno no servidor.", { detalhe: e.message });
   }
 }
