@@ -77,6 +77,26 @@
 // IMPORTANTE: Airtable NÃO envia LOOKUPS automaticamente,
 // por isso buscamos manualmente todas as tabelas relacionadas.
 // ============================================================
+// ============================================================
+// 💙 VARAL DOS SONHOS — /api/listAdocoes.js (VERSÃO FINAL 2025)
+// ------------------------------------------------------------
+// OBJETIVO:
+// Retornar ao painel ADMIN e ao painel PONTO uma lista COMPLETA
+// das adoções, contendo:
+//
+//   • dados da cartinha
+//   • dados do usuário (doador)
+//   • dados do ponto de coleta
+//   • histórico COMPLETO das movimentações do ponto
+//
+// Mantido 100% compatível com:
+//   ✔ painel logistica-admin
+//   ✔ painel ponto de coleta
+//   ✔ API /api/logistica.js
+//
+// Nenhuma função ou campo foi alterado ou removido.
+// Somente corrigido o filtro de movimentos.
+// ============================================================
 
 import Airtable from "airtable";
 
@@ -115,6 +135,7 @@ export default async function handler(req, res) {
       // ======================================================
       let cart = {};
       const idCartinha = f.cartinha?.[0];
+
       if (idCartinha) {
         try {
           cart = await base("cartinha").find(idCartinha);
@@ -123,7 +144,6 @@ export default async function handler(req, res) {
         }
       }
 
-      // Primeiro nome automático
       const nomeCompleto = cart.fields?.nome_crianca || "";
       const primeiroNome = nomeCompleto.split(" ")[0] || nomeCompleto;
 
@@ -132,6 +152,7 @@ export default async function handler(req, res) {
       // ======================================================
       let usuario = {};
       const idUsuario = f.usuario?.[0];
+
       if (idUsuario) {
         try {
           usuario = await base("usuario").find(idUsuario);
@@ -145,6 +166,7 @@ export default async function handler(req, res) {
       // ======================================================
       let ponto = {};
       const idPonto = f.pontos_coleta?.[0];
+
       if (idPonto) {
         try {
           ponto = await base("pontos_coleta").find(idPonto);
@@ -157,10 +179,19 @@ export default async function handler(req, res) {
       // 4) BUSCAR MOVIMENTAÇÕES (recebimento / retirada)
       // ======================================================
       let movimentos = [];
+
       try {
         const movRecords = await base("ponto_movimentos")
           .select({
-            filterByFormula: `{adocoes} = '${r.id}'`,
+            /**
+             * CORREÇÃO FUNDAMENTAL
+             * ---------------------
+             * Antes: `{adocoes} = '${r.id}'` ← ERRADO para Linked Records
+             *
+             * Agora: SEARCH + ARRAYJOIN
+             * Funciona com arrays, 1 registro ou vários.
+             */
+            filterByFormula: `SEARCH('${r.id}', ARRAYJOIN({adocoes}))`,
             sort: [{ field: "data_movimento", direction: "asc" }],
           })
           .all();
@@ -177,7 +208,7 @@ export default async function handler(req, res) {
       }
 
       // ======================================================
-      // OBJETO FINAL PARA O FRONT-END
+      // OBJETO FINAL PARA O FRONT-END (NÃO FOI ALTERADO)
       // ======================================================
       adocoes.push({
         id_record: r.id,
@@ -188,7 +219,7 @@ export default async function handler(req, res) {
         nome_crianca_completo: nomeCompleto,
         sonho: cart.fields?.sonho || "",
 
-        // Dados do usuário (doador)
+        // Dados do usuário
         nome_usuario: usuario.fields?.nome_usuario || "",
         email_usuario: usuario.fields?.email_usuario || "",
         telefone_usuario: usuario.fields?.telefone || "",
@@ -204,7 +235,7 @@ export default async function handler(req, res) {
         // Status atual
         status_adocao: f.status_adocao || "aguardando confirmacao",
 
-        // 🔥 Histórico completo do ponto
+        // Histórico completo do ponto
         movimentos,
       });
     }
@@ -219,6 +250,7 @@ export default async function handler(req, res) {
 
   } catch (error) {
     console.error("🔥 ERRO API listAdocoes:", error);
+
     return res.status(500).json({
       sucesso: false,
       mensagem: "Erro interno ao listar adoções.",
