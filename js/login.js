@@ -8,6 +8,9 @@
 // • Redireciona para index.html
 // ============================================================
 
+// ============================================================
+// 💙 VARAL DOS SONHOS — /js/login.js (VERSÃO CORRIGIDA FINAL)
+// ============================================================
 
 document.addEventListener("DOMContentLoaded", () => {
   const form = document.getElementById("formLogin");
@@ -42,23 +45,21 @@ document.addEventListener("DOMContentLoaded", () => {
     if (userData && userData.sucesso && userData.usuario) {
       const u = userData.usuario;
 
-      // Grava sessão padronizada
+      // ✔ Gravar usuário padronizado
       localStorage.setItem("usuario", JSON.stringify({
         id: u.id,
-        nome: u.nome_usuario,
-        email: u.email_usuario,
+        nome: u.nome,           // ✔ Corrigido
+        email: u.email,         // ✔ Corrigido
         telefone: u.telefone || "",
         endereco: u.endereco || "",
         numero: u.numero || "",
-        bairro: u.bairro || "",
         cidade: u.cidade || "",
         cep: u.cep || "",
-        tipo: u.tipo_usuario || "doador",
+        tipo: u.tipo || "doador",  // ✔ Corrigido
       }));
 
-      alert(`💙 Bem-vindo(a), ${u.nome_usuario.split(" ")[0]}!`);
+      alert(`💙 Bem-vindo(a), ${u.nome.split(" ")[0]}!`);
 
-      // ✔ TODOS VÃO PARA O INDEX
       setTimeout(() => {
         window.location.href = "/index.html";
       }, 400);
@@ -93,7 +94,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
       alert(`📦 Bem-vindo(a), ${p.nome_ponto}!`);
 
-      // ✔ TODOS VÃO PARA O INDEX
       setTimeout(() => {
         window.location.href = "/index.html";
       }, 400);
