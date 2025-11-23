@@ -6,10 +6,14 @@
 // • Envia requisição para /api/usuarios (login)
 // • Trata resposta e grava sessão no localStorage
 // • Redireciona para index.html
-// ============================================================
-
-// ============================================================
-// 💙 VARAL DOS SONHOS — /js/login.js (VERSÃO CORRIGIDA FINAL)
+//
+// Lógica:
+// ✔ Captura evento submit do formulário
+// ✔ Valida campos obrigatórios
+// ✔ Envia requisição POST para /api/usuarios
+// ✔ Trata resposta de sucesso ou erro
+// ✔ Grava dados do usuário no localStorage
+// ✔ Redireciona para a página inicial
 // ============================================================
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -48,17 +52,18 @@ document.addEventListener("DOMContentLoaded", () => {
       // ✔ Gravar usuário padronizado
       localStorage.setItem("usuario", JSON.stringify({
         id: u.id,
-        nome: u.nome,           // ✔ Corrigido
-        email: u.email,         // ✔ Corrigido
+        nome: u.nome,           
+        email: u.email,         
         telefone: u.telefone || "",
         endereco: u.endereco || "",
         numero: u.numero || "",
         cidade: u.cidade || "",
         cep: u.cep || "",
-        tipo: u.tipo || "doador",  // ✔ Corrigido
+        tipo: u.tipo || "doador",
       }));
 
-      alert(`💙 Bem-vindo(a), ${u.nome.split(" ")[0]}!`);
+      // ⬇️ AQUI — ativar modal no index
+      localStorage.setItem("mostrarModal", "sim");
 
       setTimeout(() => {
         window.location.href = "/index.html";
@@ -92,7 +97,8 @@ document.addEventListener("DOMContentLoaded", () => {
         tipo: "ponto",
       }));
 
-      alert(`📦 Bem-vindo(a), ${p.nome_ponto}!`);
+      // ⬇️ AQUI — ativar modal no index
+      localStorage.setItem("mostrarModal", "sim");
 
       setTimeout(() => {
         window.location.href = "/index.html";
