@@ -178,12 +178,13 @@ export default async function handler(req, res) {
       // ======================================================
       // 4) BUSCAR MOVIMENTAÇÕES (recebimento / retirada)
       // ======================================================
+
       let movimentos = [];
       try {
         const movRecords = await base("ponto_movimentos")
           .select({
-            filterByFormula: `SEARCH("${r.id}", ARRAYJOIN({adocoes}, ","))`,
-            sort: [{ field: "data_movimento", direction: "asc" }],
+            filterByFormula: `FIND('${r.id}', ARRAYJOIN({adocoes}))`,
+            sort: [{ field: "id_movimentacao_ponto", direction: "asc" }],
           })
           .all();
 
@@ -192,12 +193,11 @@ export default async function handler(req, res) {
           data_movimento: m.fields?.data_movimento || "",
           responsavel: m.fields?.responsavel || "",
           observacoes: m.fields?.observacoes || "",
-          // foto removida a pedido:
-          foto_presente: "",
         }));
       } catch (e) {
         console.log("Erro ao buscar movimentos do ponto:", e);
       }
+
 
       // ======================================================
       // OBJETO FINAL PARA O FRONT-END (NÃO FOI ALTERADO)
