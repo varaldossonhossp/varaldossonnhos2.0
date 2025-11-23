@@ -100,8 +100,7 @@
   <script src="js/config-site-loader.js"></script>
 
 
-  <!-- ============================================================ -->
-  <!-- 💙 MODAL DE BOAS-VINDAS — Varal dos Sonhos -->
+  <!--  MODAL DE BOAS-VINDAS — Varal dos Sonhos -->
   <!-- ============================================================ -->
 
   <style>
@@ -189,28 +188,34 @@
   </div>
 
   <script>
-    document.addEventListener("DOMContentLoaded", () => {
-      try {
-        const u = JSON.parse(localStorage.getItem("usuario"));
-        const jaExibiu = sessionStorage.getItem("welcomeShown");
+    window.addEventListener("load", () => {
+    const overlay = document.getElementById("welcomeOverlay");
+    const nomeBox = document.getElementById("welcomeNome");
+    const btn = document.getElementById("btnFecharWelcome");
 
-        if (u && !jaExibiu) {
-          const primeiroNome = u.nome?.split(" ")[0] || "";
+    if (!overlay || !nomeBox || !btn) return;
 
-          document.getElementById("welcomeNome").innerHTML =
-            `Olá, <b>${primeiroNome}</b>! 💙<br>Prepare-se para viver a magia do Varal dos Sonhos!`;
+    const uData = localStorage.getItem("usuario");
+    if (!uData) return;
 
-          document.getElementById("welcomeOverlay").style.display = "flex";
+    const u = JSON.parse(uData);
+    const jaExibiu = sessionStorage.getItem("welcomeShown");
 
-          sessionStorage.setItem("welcomeShown", "true");
-        }
-      } catch (e) { console.error(e); }
+    if (jaExibiu) return;
+
+    const primeiroNome = u.nome?.split(" ")[0] || "visitante";
+
+    nomeBox.innerHTML =
+      `Olá, <b>${primeiroNome}</b>! 💙<br>Prepare-se para viver a magia do Varal dos Sonhos!`;
+
+    overlay.style.display = "flex";
+
+    sessionStorage.setItem("welcomeShown", "true");
+
+    btn.addEventListener("click", () => {
+      overlay.style.display = "none";
     });
-
-    document.getElementById("btnFecharWelcome")
-      .addEventListener("click", () => {
-        document.getElementById("welcomeOverlay").style.display = "none";
-      });
+  });
   </script>
 
 </body>
