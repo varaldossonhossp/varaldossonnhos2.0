@@ -1,3 +1,12 @@
+<!-- ---------------------------------------------------------------------------
+// 💙 VARAL DOS SONHOS — /pages/minhas-adocoes.html
+// ---------------------------------------------------------------------------
+// Página do painel do doador:
+// • Lista de cartinhas adotadas pelo doador
+// • Detalhes de cada adoção (data, status, itens)
+// • Carregamento dinâmico de header, footer e cloudinho via JS
+// --------------------------------------------------------------------------- -->
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -45,22 +54,29 @@
 
     .card {
       background: white;
-      padding: 20px;
+      padding: 22px;
       border-radius: 16px;
       box-shadow: 0 3px 8px rgba(0,0,0,0.1);
       margin-bottom: 18px;
       transition:.2s;
     }
-
     .card:hover { transform:translateY(-3px); }
 
-    .tag {
-      background:#e3f2fd;
-      padding:4px 10px;
-      border-radius:8px;
-      font-size:13px;
-      color:#0d47a1;
-      margin-right:6px;
+    .progress-bar {
+      width: 100%;
+      height: 10px;
+      border-radius: 6px;
+      overflow: hidden;
+      background: #bbdefb;
+      margin-top: 8px;
+    }
+
+    .progress-fill {
+      height: 100%;
+      width: 0%;
+      border-radius: 6px;
+      transition: width 1.1s ease;
+      background: linear-gradient(90deg, #64b5f6, #0d47a1);
     }
   </style>
 </head>
@@ -80,7 +96,6 @@
   <hr class="my-6 border-white/40">
 
   <a href="../index.html">⬅️ Voltar ao Site</a>
-  <a href="../logout.html">🚪 Sair</a>
 </aside>
 
 <!-- CONTEÚDO -->
@@ -93,24 +108,9 @@
     Aqui você encontra todas as cartinhas que você adotou 💙
   </p>
 
-  <div id="listaAdocoes">
-    <!-- CARDS SERÃO INSERIDOS PELO JS -->
-    <div class="card">
-      <h3 class="font-bold text-lg text-blue-700">Nome da Criança</h3>
-      <p class="text-gray-700 text-sm">🎁 Sonho desejado</p>
-
-      <div class="mt-2">
-        <span class="tag">🆔 Cartinha 0001</span>
-        <span class="tag">📍 Ponto de coleta</span>
-        <span class="tag">📅 Status: Em andamento</span>
-      </div>
-    </div>
-
-  </div>
+  <div id="listaAdocoes"></div>
 </main>
 
-<!---------------------- SCRIPTS--------------------------->
 <script src="../js/minhas-adocoes.js"></script>
-
 </body>
 </html>
