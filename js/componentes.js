@@ -2,8 +2,7 @@
 // 💙 VARAL DOS SONHOS — /js/componentes.js 
 // ------------------------------------------------------------
 // Carrega dinamicamente header, footer e cloudinho e
-// garante que o nome do usuário logado e a configuração do site
-// (logo, nuvem, etc.) sejam aplicados em todas as páginas.
+// atualiza login (saudação, logout) em todas as páginas.
 // ============================================================
 
 async function carregarComponente(id, arquivo) {
@@ -17,11 +16,11 @@ async function carregarComponente(id, arquivo) {
 
     el.innerHTML = html;
 
-    // ⬇️ AQUI — depois que o HEADER CARREGAR
+    // ⬇️ Após carregar o HEADER
     if (id === "header") {
       setTimeout(() => {
-        atualizarLogin();     // já existia
-        aplicarConfigSite();  // ⬅️ ESTA É A LINHA NOVA
+        atualizarLogin();     
+        aplicarConfigSite();  
       }, 200);
     }
 
@@ -38,16 +37,16 @@ document.addEventListener("DOMContentLoaded", async () => {
   // Segurança extra
   window.addEventListener("load", () => {
     atualizarLogin();
-    aplicarConfigSite(); // aplica a configuração se precisar
+    aplicarConfigSite();
   });
 });
 
 // ============================================================
-// 👤 Atualiza a saudação e o botão "Sair"
+// 👤 Atualiza saudação, login/logout e visibilidade
 // ============================================================
 function atualizarLogin() {
-  const usuarioData =
-    localStorage.getItem("usuario") || localStorage.getItem("usuario_logado");
+  // 🔹 Padronização: usar somente "usuario"
+  const usuarioData = localStorage.getItem("usuario");
 
   const loginLink = document.getElementById("loginLink");
   const usuarioNome = document.getElementById("usuarioNome");
@@ -55,20 +54,27 @@ function atualizarLogin() {
 
   if (!loginLink || !usuarioNome || !btnLogout) return;
 
+  // Usuário logado
   if (usuarioData) {
     const usuario = JSON.parse(usuarioData);
-    usuarioNome.textContent = `Olá, ${usuario.nome.split(" ")[0]}! 💙`;
+
+    const primeiroNome = usuario.nome?.split(" ")[0] || "Usuário";
+
+    usuarioNome.textContent = `Olá, ${primeiroNome}! 💙`;
     usuarioNome.style.display = "inline-block";
+
     loginLink.style.display = "none";
     btnLogout.style.display = "inline-block";
 
+    // LOGOUT
     btnLogout.onclick = () => {
       localStorage.removeItem("usuario");
-      localStorage.removeItem("usuario_logado");
       alert("💙 Você saiu com sucesso!");
       window.location.href = "/index.html";
     };
+
   } else {
+    // Visitante
     usuarioNome.style.display = "none";
     loginLink.style.display = "inline-block";
     btnLogout.style.display = "none";

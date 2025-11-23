@@ -1,14 +1,11 @@
 // ============================================================
-// 💙 VARAL DOS SONHOS — /js/login.js
-// ------------------------------------------------------------
-// Login unificado para:
-// • Usuários (doador, voluntário, admin)
-// • Pontos de coleta
-// ------------------------------------------------------------
-// Garante compatibilidade com header.js (usa "usuario_logado")
-// e cria nova chave "ponto_logado" quando for login de ponto.
-// ------------------------------------------------------------
-// Tenta login em /usuarios → se falhar → tenta /pontos_coleta
+// 💙 VARAL DOS SONHOS — /js/login.js 
+// ============================================================
+// Script para a página de login:
+// • Captura formulário de login
+// • Envia requisição para /api/usuarios (login)
+// • Trata resposta e grava sessão no localStorage
+// • Redireciona para index.html
 // ============================================================
 
 
@@ -27,9 +24,9 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    // ============================================================
-    // 1️⃣ TENTAR LOGIN COMO USUÁRIO NORMAL / ADMIN
-    // ============================================================
+    // ========================
+    // 1️⃣ LOGIN DE USUÁRIO NORMAL
+    // ========================
     const userResp = await fetch("/api/usuarios", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -40,27 +37,38 @@ document.addEventListener("DOMContentLoaded", () => {
       }),
     });
 
-    const userData = await userResp.json();
+    const userData = await userResp.json().catch(() => null);
 
-    if (userData.sucesso && userData.usuario) {
-      salvarSessao({
-        id: userData.usuario.id,
-        nome: userData.usuario.nome_usuario,
-        email: userData.usuario.email_usuario,
-        telefone: userData.usuario.telefone,
-        endereco: userData.usuario.endereco,
-        numero: userData.usuario.numero,
-        bairro: userData.usuario.bairro,
-        cidade: userData.usuario.cidade,
-        cep: userData.usuario.cep,
-        tipo: userData.usuario.tipo_usuario, // administrador / doador / voluntario
-      });
+    if (userData && userData.sucesso && userData.usuario) {
+      const u = userData.usuario;
+
+      // Grava sessão padronizada
+      localStorage.setItem("usuario", JSON.stringify({
+        id: u.id,
+        nome: u.nome_usuario,
+        email: u.email_usuario,
+        telefone: u.telefone || "",
+        endereco: u.endereco || "",
+        numero: u.numero || "",
+        bairro: u.bairro || "",
+        cidade: u.cidade || "",
+        cep: u.cep || "",
+        tipo: u.tipo_usuario || "doador",
+      }));
+
+      alert(`💙 Bem-vindo(a), ${u.nome_usuario.split(" ")[0]}!`);
+
+      // ✔ TODOS VÃO PARA O INDEX
+      setTimeout(() => {
+        window.location.href = "/index.html";
+      }, 400);
+
       return;
     }
 
-    // ============================================================
-    // 2️⃣ SE NÃO FOR USUÁRIO → TENTA LOGIN DO PONTO
-    // ============================================================
+    // ========================
+    // 2️⃣ LOGIN DO PONTO DE COLETA
+    // ========================
     const pontoResp = await fetch("/api/pontosdecoleta", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -71,38 +79,31 @@ document.addEventListener("DOMContentLoaded", () => {
       }),
     });
 
-    const pontoData = await pontoResp.json();
+    const pontoData = await pontoResp.json().catch(() => null);
 
-    if (pontoData.sucesso && pontoData.ponto) {
-      salvarSessao({
-        id: pontoData.ponto.id_ponto,
-        nome: pontoData.ponto.nome_ponto,
-        email: pontoData.ponto.email_ponto,
+    if (pontoData && pontoData.sucesso && pontoData.ponto) {
+      const p = pontoData.ponto;
+
+      localStorage.setItem("usuario", JSON.stringify({
+        id: p.id_ponto,
+        nome: p.nome_ponto,
+        email: p.email_ponto,
         tipo: "ponto",
-      });
+      }));
+
+      alert(`📦 Bem-vindo(a), ${p.nome_ponto}!`);
+
+      // ✔ TODOS VÃO PARA O INDEX
+      setTimeout(() => {
+        window.location.href = "/index.html";
+      }, 400);
+
       return;
     }
 
-    // ============================================================
+    // ========================
     // 3️⃣ ERRO FINAL
-    // ============================================================
+    // ========================
     alert("❌ E-mail ou senha incorretos.");
   });
-
-  function salvarSessao(usuario) {
-    localStorage.setItem("usuario", JSON.stringify(usuario));
-
-    const nomeCurto = usuario.nome.split(" ")[0];
-    alert(`💙 Bem-vindo(a), ${nomeCurto}!`);
-
-    setTimeout(() => {
-      if (usuario.tipo === "administrador") {
-        window.location.href = "/pages/admin.html";
-      } else if (usuario.tipo === "ponto") {
-        window.location.href = "/pages/painel-ponto.html";
-      } else {
-        window.location.href = "/index.html";
-      }
-    }, 400);
-  }
 });

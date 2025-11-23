@@ -155,7 +155,7 @@ export default async function handler(req, res) {
           usuario: {
             id: registros[0].id,
             nome_usuario: usuario.nome_usuario,
-            email_usuario: usuario.email_usuario,
+            email_usuario: usuario.email_usuario,   
             telefone: u.telefone || "",
             endereco: u.endereco || "",
             numero: u.numero || "",

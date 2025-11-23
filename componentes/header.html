@@ -6,7 +6,7 @@
 // • Suporta usuários: visitante, doador, voluntário, admin, ponto de coleta.
 ============================================================ -->
 
-<!-- /componentes/header.html -->
+
 <header class="header-site">
   <nav class="menu">
 
@@ -26,9 +26,13 @@
       <li><a href="/pages/pontosdecoleta.html">Pontos de Coleta</a></li>
       <li><a href="/pages/carrinho.html">Carrinho</a></li>
 
+      <!-- Ocultados – agora controlados pelo JS -->
       <li><a id="linkPainelAdmin" href="/pages/admin.html" style="display:none;">⚙️ Painel Admin</a></li>
       <li><a id="linkPainelPonto" href="/pages/painel-ponto.html" style="display:none;">⚙️ Painel Ponto</a></li>
       <li><a id="linkPainelDoador" href="/pages/painel-doador.html" style="display:none;">💙 Painel do Doador</a></li>
+
+      <!-- 🔵 NOVO: Botão unificado MEU PAINEL -->
+      <li><a id="meuPainelLink" href="#" style="display:none;">📂 Meu Painel</a></li>
 
       <li><a id="linkLogin" href="/pages/login.html">🔑 Login</a></li>
       <li><a id="linkCadastro" href="/pages/cadastro.html">📝 Cadastro</a></li>
@@ -42,5 +46,3 @@
 
 <script src="/js/config-site-loader.js"></script>
 <script src="../js/config-site-apply.js"></script>
-
-

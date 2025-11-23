@@ -1,82 +1,85 @@
 // ============================================================
-// 💙 VARAL DOS SONHOS — /js/header.js (FINAL)
+// 💙 VARAL DOS SONHOS — /js/header.js (VERSÃO FINAL)
 // ------------------------------------------------------------
-// Script do cabeçalho (header) do site:
-// • Gerencia exibição de links conforme tipo de usuário logado
-// • Suporta usuários: visitante, doador, voluntário, admin, ponto de coleta
+// Lógica:
+// ✔ Sempre lê localStorage.usuario
+// ✔ Exibe nome e botão sair
+// ✔ Cria e controla o botão “MEU PAINEL”
+// ✔ Oculta links antigos de painel
 // ============================================================
 
 function inicializarHeader() {
-  const usuario = JSON.parse(localStorage.getItem("usuario_logado"));
+  const usuarioData = localStorage.getItem("usuario");
+  const usuario = usuarioData ? JSON.parse(usuarioData) : null;
 
   const saudacao = document.getElementById("saudacaoUsuario");
   const linkLogin = document.getElementById("linkLogin");
   const linkCadastro = document.getElementById("linkCadastro");
   const linkSair = document.getElementById("linkSair");
 
-  const linkPainelAdmin = document.getElementById("linkPainelAdmin");
-  const linkPainelPonto = document.getElementById("linkPainelPonto");
-  const linkConquista = document.getElementById("linkPainelDoador");
+  // Ocultar links antigos
+  const painelAdmin = document.getElementById("linkPainelAdmin");
+  const painelPonto = document.getElementById("linkPainelPonto");
+  const painelDoador = document.getElementById("linkPainelDoador");
 
-  const toggle = document.getElementById("menu-toggle");
-  const links = document.getElementById("menu-links");
+  if (painelAdmin) painelAdmin.style.display = "none";
+  if (painelPonto) painelPonto.style.display = "none";
+  if (painelDoador) painelDoador.style.display = "none";
 
-  // botão mobile
-  if (toggle) {
-    toggle.addEventListener("click", () => {
-      links.classList.toggle("menu-aberto");
-    });
+  // Criar botão "MEU PAINEL"
+  let botaoPainel = document.getElementById("meuPainelBtn");
+  if (!botaoPainel) {
+    botaoPainel = document.createElement("li");
+    botaoPainel.id = "meuPainelBtn";
+    botaoPainel.innerHTML = `
+      <a id="meuPainelLink" style="display:none;">📂 Meu Painel</a>
+    `;
+    document.getElementById("menu-links").appendChild(botaoPainel);
   }
 
-  // Visitante
+  const linkPainel = document.getElementById("meuPainelLink");
+
+  // VISITANTE
   if (!usuario) {
     if (saudacao) saudacao.style.display = "none";
-    linkSair.style.display = "none";
-    linkPainelAdmin.style.display = "none";
-    linkPainelPonto.style.display = "none";
-    linkConquista.style.display = "none";
+    if (linkSair) linkSair.style.display = "none";
+    if (linkPainel) linkPainel.style.display = "none";
 
     linkLogin.style.display = "inline-block";
     linkCadastro.style.display = "inline-block";
     return;
   }
 
-  // Usuário logado
-  saudacao.textContent = `👋 Olá, ${usuario.nome.split(" ")[0]}!`;
+  // USUÁRIO LOGADO
+  const primeiroNome = usuario.nome?.split(" ")[0] || "Usuário";
+
+  saudacao.textContent = `👋 Olá, ${primeiroNome}!`;
   saudacao.style.display = "inline-block";
+
   linkLogin.style.display = "none";
   linkCadastro.style.display = "none";
   linkSair.style.display = "inline-block";
 
-  // ADMIN
-  if (usuario.tipo === "administrador") {
-    linkPainelAdmin.style.display = "inline-block";
-    linkPainelPonto.style.display = "none";
-    linkConquista.style.display = "none";
-  }
+  // DEFINIR PAINEL CORRETO
+  let hrefPainel = "/pages/painel-doador.html"; // padrão
 
-  // PONTO DE COLETA
-  else if (usuario.tipo === "ponto") {
-    linkPainelPonto.style.display = "inline-block";
-    linkPainelAdmin.style.display = "none";
-    linkConquista.style.display = "none";
-  }
+  if (usuario.tipo === "administrador") hrefPainel = "/pages/admin.html";
+  if (usuario.tipo === "ponto") hrefPainel = "/pages/painel-ponto.html";
+  if (usuario.tipo === "voluntario") hrefPainel = "/pages/painel-voluntario.html";
 
-  // DOADOR / VOLUNTÁRIO
-  else {
-    linkConquista.style.display = "inline-block";
-    linkPainelAdmin.style.display = "none";
-    linkPainelPonto.style.display = "none";
-  }
+  // Mostrar botão MEU PAINEL
+  linkPainel.href = hrefPainel;
+  linkPainel.style.display = "inline-block";
 
-  // Logout
+  // LOGOUT
   linkSair.addEventListener("click", (e) => {
     e.preventDefault();
-    localStorage.removeItem("usuario_logado");
+    localStorage.removeItem("usuario");
+    alert("💙 Você saiu com sucesso!");
     window.location.href = "/index.html";
   });
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  setTimeout(inicializarHeader, 150);
+  setTimeout(inicializarHeader, 200);
 });

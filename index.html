@@ -45,7 +45,7 @@
         </div>
 
         <div class="texto-transparente">
-          Processo simples e transparente ✨ Acompanhamento por e-mail e WhatsApp 💌
+          Processo simples e transparente ✨ Acompanhamento pelo Meu Painel💌
         </div>
       </div>
 
@@ -53,7 +53,6 @@
         <section id="momentos">
           <h2 class="h2-azul">🌟 Momentos que Inspiram</h2>
           <div class="carrossel" id="carrossel-eventos">
-            <!-- Fallback local (enquanto não vem da API) -->
             <div class="slide fade"><img src="imagens/1.png" alt="Evento 1" /></div>
             <div class="slide fade"><img src="imagens/2.png" alt="Evento 2" /></div>
             <div class="slide fade"><img src="imagens/3.png" alt="Evento 3" /></div>
@@ -81,7 +80,7 @@
   <div id="footer"></div>
   <div id="cloudinho"></div>
 
-  <!-- Carregador de componentes (funciona na raiz e em /pages) -->
+  <!-- Carregador de componentes -->
   <script>
     async function carregarComponente(id, arquivo) {
       const base = location.pathname.includes("/pages/") ? "../componentes/" : "componentes/";
@@ -99,6 +98,120 @@
   <script src="js/cloudinho.js"></script>
   <script src="js/header.js"></script>
   <script src="js/config-site-loader.js"></script>
-  
+
+
+  <!-- ============================================================ -->
+  <!-- 💙 MODAL DE BOAS-VINDAS — Varal dos Sonhos -->
+  <!-- ============================================================ -->
+
+  <style>
+    #welcomeOverlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.55);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 99999;
+      animation: fadeIn .3s ease;
+    }
+
+    #welcomeModal {
+      background: #ffffff;
+      width: 92%;
+      max-width: 460px;
+      padding: 32px;
+      border-radius: 22px;
+      text-align: center;
+      font-family: "Poppins", sans-serif;
+      box-shadow: 0 8px 25px rgba(0,0,0,0.18);
+      animation: pop .38s ease;
+    }
+
+    #welcomeModal img {
+      width: 140px;
+      margin-bottom: 15px;
+    }
+
+    #welcomeModal h2 {
+      font-size: 26px;
+      font-weight: 700;
+      color: #1565c0;
+      margin-bottom: 12px;
+    }
+
+    #welcomeModal p {
+      font-size: 16px;
+      color: #37474f;
+      margin-bottom: 22px;
+    }
+
+    #btnFecharWelcome {
+      background: #1565c0;
+      color: white;
+      padding: 12px 22px;
+      border-radius: 10px;
+      font-size: 16px;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+      width: 100%;
+      transition: .2s;
+    }
+
+    #btnFecharWelcome:hover {
+      background: #0d47a1;
+    }
+
+    @keyframes pop {
+      0% { transform: scale(.6); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to   { opacity: 1; }
+    }
+  </style>
+
+  <div id="welcomeOverlay">
+    <div id="welcomeModal">
+      <img src="./imagens/logo.png" alt="Varal dos Sonhos">
+
+      <h2>✨ Bem-vindo(a)! ✨</h2>
+      <p id="welcomeNome">
+        Estamos muito felizes em ter você aqui 💙  
+        Vamos juntos espalhar sonhos e fazer a magia acontecer!
+      </p>
+
+      <button id="btnFecharWelcome">Começar</button>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      try {
+        const u = JSON.parse(localStorage.getItem("usuario"));
+        const jaExibiu = sessionStorage.getItem("welcomeShown");
+
+        if (u && !jaExibiu) {
+          const primeiroNome = u.nome?.split(" ")[0] || "";
+
+          document.getElementById("welcomeNome").innerHTML =
+            `Olá, <b>${primeiroNome}</b>! 💙<br>Prepare-se para viver a magia do Varal dos Sonhos!`;
+
+          document.getElementById("welcomeOverlay").style.display = "flex";
+
+          sessionStorage.setItem("welcomeShown", "true");
+        }
+      } catch (e) { console.error(e); }
+    });
+
+    document.getElementById("btnFecharWelcome")
+      .addEventListener("click", () => {
+        document.getElementById("welcomeOverlay").style.display = "none";
+      });
+  </script>
+
 </body>
 </html>
