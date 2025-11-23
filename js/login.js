@@ -47,6 +47,12 @@ document.addEventListener("DOMContentLoaded", () => {
         id: userData.usuario.id,
         nome: userData.usuario.nome_usuario,
         email: userData.usuario.email_usuario,
+        telefone: userData.usuario.telefone,
+        endereco: userData.usuario.endereco,
+        numero: userData.usuario.numero,
+        bairro: userData.usuario.bairro,
+        cidade: userData.usuario.cidade,
+        cep: userData.usuario.cep,
         tipo: userData.usuario.tipo_usuario, // administrador / doador / voluntario
       });
       return;
@@ -84,7 +90,7 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   function salvarSessao(usuario) {
-    localStorage.setItem("usuario_logado", JSON.stringify(usuario));
+    localStorage.setItem("usuario", JSON.stringify(usuario));
 
     const nomeCurto = usuario.nome.split(" ")[0];
     alert(`💙 Bem-vindo(a), ${nomeCurto}!`);
