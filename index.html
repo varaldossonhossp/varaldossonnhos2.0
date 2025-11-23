@@ -189,6 +189,10 @@
 
   <script>
     window.addEventListener("load", () => {
+  
+    const deveMostrar = localStorage.getItem("mostrarModal");
+    if (!deveMostrar) return; // ❌ não mostrar se não veio do login
+
     const overlay = document.getElementById("welcomeOverlay");
     const nomeBox = document.getElementById("welcomeNome");
     const btn = document.getElementById("btnFecharWelcome");
@@ -199,19 +203,17 @@
     if (!uData) return;
 
     const u = JSON.parse(uData);
-    const jaExibiu = sessionStorage.getItem("welcomeShown");
-
-    if (jaExibiu) return;
-
-    const primeiroNome = u.nome?.split(" ")[0] || "visitante";
+    const primeiroNome = u.nome?.split(" ")[0] || " Visitante";
 
     nomeBox.innerHTML =
-      `Olá, <b>${primeiroNome}</b>! 💙<br>Prepare-se para viver a magia do Varal dos Sonhos!`;
+      `Olá, <b>${primeiroNome}</b>! 💙<br>É um prazer ter você aqui novamente!`;
 
     overlay.style.display = "flex";
 
-    sessionStorage.setItem("welcomeShown", "true");
+    // 🔵 Apaga a chave para não repetir ao atualizar página
+    localStorage.removeItem("mostrarModal");
 
+    // Botão fechar
     btn.addEventListener("click", () => {
       overlay.style.display = "none";
     });
