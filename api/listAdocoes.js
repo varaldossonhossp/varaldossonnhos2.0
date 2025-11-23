@@ -178,34 +178,29 @@ export default async function handler(req, res) {
       // ======================================================
       // 4) BUSCAR MOVIMENTAÇÕES (recebimento / retirada)
       // ======================================================
-      let movimentos = [];
 
-      try {
-        const movRecords = await base("ponto_movimentos")
-          .select({
-            /**
-             * CORREÇÃO FUNDAMENTAL
-             * ---------------------
-             * Antes: `{adocoes} = '${r.id}'` ← ERRADO para Linked Records
-             *
-             * Agora: SEARCH + ARRAYJOIN
-             * Funciona com arrays, 1 registro ou vários.
-             */
-            filterByFormula: `SEARCH('${r.id}', ARRAYJOIN({adocoes}))`,
-            sort: [{ field: "data_movimento", direction: "asc" }],
-          })
-          .all();
+        let movimentos = [];
 
-        movimentos = movRecords.map(m => ({
-          tipo_movimento: m.fields?.tipo_movimento || "",
-          data_movimento: m.fields?.data_movimento || "",
-          responsavel: m.fields?.responsavel || "",
-          observacoes: m.fields?.observacoes || "",
-          foto_presente: m.fields?.foto_presente?.[0]?.url || "",
-        }));
-      } catch (e) {
-        console.log("Erro ao buscar movimentos do ponto:", e);
-      }
+        try {
+          const movRecords = await base("ponto_movimentos")
+            .select({
+              filterByFormula: `SEARCH("${r.id}", ARRAYJOIN({adocoes}))`,
+              sort: [{ field: "data_movimento", direction: "asc" }],
+            })
+            .all();
+
+          movimentos = movRecords.map(m => ({
+            tipo_movimento: m.fields?.tipo_movimento || "",
+            data_movimento: m.fields?.data_movimento || "",
+            responsavel: m.fields?.responsavel || "",
+            observacoes: m.fields?.observacoes || "",
+            foto_presente: m.fields?.foto_presente?.[0]?.url || ""
+          }));
+
+        } catch (e) {
+          console.log("Erro ao buscar movimentos:", e);
+        }
+
 
       // ======================================================
       // OBJETO FINAL PARA O FRONT-END (NÃO FOI ALTERADO)
