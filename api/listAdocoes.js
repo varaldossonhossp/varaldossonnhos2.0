@@ -183,7 +183,7 @@ export default async function handler(req, res) {
       try {
         const movRecords = await base("ponto_movimentos")
           .select({
-            filterByFormula: `{id_doacao (from adocoes)} = '${f.id_doacao}'`,
+            filterByFormula: `FIND('${r.id}', ARRAYJOIN({adocoes}))`,
             sort: [{ field: "id_movimentacao_ponto", direction: "asc" }],
           })
           .all();
@@ -197,7 +197,6 @@ export default async function handler(req, res) {
       } catch (e) {
         console.log("Erro ao buscar movimentos do ponto:", e);
       }
-
 
 
       // ======================================================
