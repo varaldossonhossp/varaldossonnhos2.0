@@ -10,24 +10,18 @@
 
   <style>
     body { font-family:"Poppins", sans-serif; background:#e3f2fd; }
-
     .sidebar { width:270px; background:#1565c0; color:white; height:100vh; position:fixed; left:0; top:0;
                padding:20px 0; box-shadow:3px 0px 10px rgba(0,0,0,0.15); }
-
     .sidebar a{ display:block; padding:14px 30px; margin:4px 0; text-decoration:none; color:white; font-weight:500; transition:.2s; }
     .sidebar a:hover{ background:#1e88e5; padding-left:40px; }
-
     .sidebar h2{ padding-left:28px; font-size:22px; font-weight:700; margin-bottom:30px; }
-
     .content{ margin-left:290px; padding:40px; }
-
     .card{
       background:white;
       padding:25px;
       border-radius:18px;
       box-shadow:0 3px 8px rgba(0,0,0,0.1);
     }
-
     label { font-weight:600; }
   </style>
 </head>
@@ -56,18 +50,33 @@
   <div class="card max-w-xl">
 
     <label>Nome</label>
-    <input type="text" class="w-full p-3 border rounded-lg mb-4" placeholder="Seu nome">
+    <input id="perfil-nome" type="text" class="w-full p-3 border rounded-lg mb-4">
 
-    <label>E-mail</label>
-    <input type="email" class="w-full p-3 border rounded-lg mb-4" placeholder="Seu e-mail">
+    <label>Endereço</label>
+    <input id="perfil-endereco" type="text" class="w-full p-3 border rounded-lg mb-4">
+
+    <label>Número</label>
+    <input id="perfil-numero" type="text" class="w-full p-3 border rounded-lg mb-4">
+
+    <label>Bairro</label>
+    <input id="perfil-bairro" type="text" class="w-full p-3 border rounded-lg mb-4">
+
+    <label>Cidade</label>
+    <input id="perfil-cidade" type="text" class="w-full p-3 border rounded-lg mb-4">
+
+    <label>CEP</label>
+    <input id="perfil-cep" type="text" class="w-full p-3 border rounded-lg mb-4">
 
     <label>Telefone</label>
-    <input type="text" class="w-full p-3 border rounded-lg mb-4" placeholder="(00) 00000-0000">
+    <input id="perfil-telefone" type="text" class="w-full p-3 border rounded-lg mb-4">
+
+    <label>E-mail</label>
+    <input id="perfil-email" type="email" class="w-full p-3 border rounded-lg mb-4">
 
     <label>Nova Senha</label>
-    <input type="password" class="w-full p-3 border rounded-lg mb-4" placeholder="********">
+    <input id="perfil-senha" type="password" class="w-full p-3 border rounded-lg mb-4" placeholder="********">
 
-    <button class="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold">
+    <button id="btn-salvar-perfil" class="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold">
       💾 Salvar Alterações
     </button>
 
@@ -75,7 +84,6 @@
 
 </main>
 
-<!---------------------- SCRIPTS--------------------------->
 <script src="../js/meu-perfil.js"></script>
 
 </body>
