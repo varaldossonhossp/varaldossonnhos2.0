@@ -119,7 +119,10 @@ document.addEventListener("DOMContentLoaded", async () => {
     const pontoId = selectPonto.value;
     if (!pontoId) return alert("Escolha um ponto antes de finalizar.");
 
-    const usuario = JSON.parse(localStorage.getItem("usuario_logado")) || {};
+    const usuario = JSON.parse(localStorage.getItem("usuario")) ||
+    JSON.parse(localStorage.getItem("usuario_logado")) ||
+    {};
+
     if (!usuario.id) return alert("Faça login antes de adotar.");
 
     btnFinalizar.disabled = true;
