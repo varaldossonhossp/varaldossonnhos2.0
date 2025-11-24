@@ -1,158 +1,116 @@
 // ============================================================
-// 💙 VARAL DOS SONHOS — /js/minhas-conquistas.js
+// 💙 VARAL DOS SONHOS — /js/minhas-conquistas.js 
 // ------------------------------------------------------------
-// Página "Minhas Conquistas":
-// • Consulta /api/gamificacao?id_usuario=RECxxx
-// • Consulta /api/regras_gamificacao
-// • Mostra resumo do nível atual + todas as conquistas possíveis
-// • Destaca a conquista atual e a próxima conquista
+// Agora a busca é feita pelo e-mail, conforme a API nova
+// • Exibe resumo da gamificação do usuário
+// • Exibe lista de conquistas (regras_gamificacao)
+// • Destaca conquista atual e próxima conquista
 // ============================================================
 
 function obterUsuarioLogado() {
   try {
     const raw = localStorage.getItem("usuario");
-    if (!raw) return null;
-    return JSON.parse(raw);
-  } catch (e) {
-    console.error("Erro ao ler usuário do localStorage:", e);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
     return null;
   }
 }
 
 // ------------------------------------------------------------
-// Formata data yyyy-mm-dd → dd/mm/aaaa
+// Formata YYYY-MM-DD → DD/MM/AAAA
 // ------------------------------------------------------------
 function formatarData(iso) {
   if (!iso) return "—";
   const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return iso;
-  const dia = String(d.getDate()).padStart(2, "0");
-  const mes = String(d.getMonth() + 1).padStart(2, "0");
-  const ano = d.getFullYear();
-  return `${dia}/${mes}/${ano}`;
+  if (isNaN(d)) return iso;
+  return `${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}/${d.getFullYear()}`;
 }
 
 // ------------------------------------------------------------
-// Renderiza o card de resumo da gamificação
+// RENDER — Resumo da gamificação
 // ------------------------------------------------------------
 function renderResumo(container, gamificacao) {
   if (!gamificacao) {
     container.innerHTML = `
       <p class="text-gray-700">
-        Você ainda não possui registros de gamificação.<br/>
-        Adote sua primeira cartinha e desbloqueie a conquista
-        <strong>💙 Coração Azul — cada ato seu espalha sonhos.</strong>
-      </p>
-    `;
+        Você ainda não possui registro de gamificação.<br/>
+        Adote sua primeira cartinha para desbloquear conquistas 💙
+      </p>`;
     return;
   }
 
-  const nivel = gamificacao.nivel_gamificacao_atual || "Iniciante";
-  const pontos = gamificacao.pontos_coracao || 0;
-  const total = gamificacao.total_cartinhas_adotadas || 0;
-  const titulo = gamificacao.titulo_conquista_atual || "💙 Iniciante Solidário";
-  const data = gamificacao.data_ultima_atualizacao
-    ? formatarData(gamificacao.data_ultima_atualizacao)
-    : "—";
-
   container.innerHTML = `
     <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+
       <div>
         <p class="text-sm text-gray-600 mb-1">Seu nível atual</p>
         <h2 class="text-2xl font-bold text-blue-800 flex items-center gap-2">
-          ${titulo}
+          ${gamificacao.titulo_conquista_atual}
         </h2>
         <span class="tag-nivel mt-2 inline-block">
-          Nível de gamificação: ${nivel}
+          Nível de gamificação: ${gamificacao.nivel_gamificacao_atual}
         </span>
       </div>
 
       <div class="flex flex-wrap gap-6">
+
         <div>
-          <p class="text-xs uppercase text-gray-500 tracking-wide">Pontos de coração</p>
-          <p class="text-2xl font-semibold text-blue-700">${pontos}</p>
+          <p class="text-xs uppercase text-gray-500">Pontos de coração</p>
+          <p class="text-2xl font-semibold text-blue-700">${gamificacao.pontos_coracao}</p>
         </div>
 
         <div>
-          <p class="text-xs uppercase text-gray-500 tracking-wide">Cartinhas adotadas</p>
-          <p class="text-2xl font-semibold text-blue-700">${total}</p>
+          <p class="text-xs uppercase text-gray-500">Cartinhas adotadas</p>
+          <p class="text-2xl font-semibold text-blue-700">${gamificacao.total_cartinhas_adotadas}</p>
         </div>
 
         <div>
-          <p class="text-xs uppercase text-gray-500 tracking-wide">Última atualização</p>
-          <p class="text-sm text-gray-700">${data}</p>
+          <p class="text-xs uppercase text-gray-500">Última atualização</p>
+          <p class="text-sm text-gray-700">${formatarData(gamificacao.data_ultima_atualizacao)}</p>
         </div>
+
       </div>
     </div>
   `;
 }
 
 // ------------------------------------------------------------
-// Renderiza lista de conquistas (regras_gamificacao)
+// RENDER — Lista de conquistas (regras_gamificacao)
 // ------------------------------------------------------------
 function renderConquistas(container, regras, totalAdocoes) {
-  if (!Array.isArray(regras) || regras.length === 0) {
-    container.innerHTML = `
-      <p class="text-gray-700">
-        Nenhuma regra de gamificação cadastrada ainda.
-      </p>
-    `;
-    return;
-  }
 
   container.innerHTML = "";
 
-  // Descobre qual é a conquista atual e a próxima
   let indiceAtual = -1;
-  regras.forEach((r, idx) => {
-    if (totalAdocoes >= (r.faixa_minima || 0)) {
-      indiceAtual = idx;
-    }
+  regras.forEach((r, i) => {
+    if (totalAdocoes >= (r.faixa_minima || 0)) indiceAtual = i;
   });
+
   const indiceProxima = indiceAtual + 1 < regras.length ? indiceAtual + 1 : -1;
 
   regras.forEach((regra, idx) => {
-    const titulo = regra.titulo_conquista || "Conquista";
-    const descricao = regra.descricao || "";
-    const faixa = regra.faixa_minima || 0;
-    const nivel = regra.nivel || "Iniciante";
-
-    // tenta extrair emoji do começo do título (se existir)
-    const primeiraParte = titulo.split(" ")[0];
-    const emojiProvavel = /[\u2190-\u2BFF\u2600-\u27BF\uD800-\uDBFF]/.test(primeiraParte)
-      ? primeiraParte
-      : "🏅";
-
-    const restanteTitulo = /[\u2190-\u2BFF\u2600-\u27BF\uD800-\uDBFF]/.test(primeiraParte)
-      ? titulo.replace(primeiraParte, "").trim()
-      : titulo;
-
-    let extraClasse = "";
-    let selo = "";
-
-    if (idx === indiceAtual && totalAdocoes > 0) {
-      extraClasse = "badge-atual";
-      selo = `<span class="selo">Conquista atual</span>`;
-    } else if (idx === indiceProxima) {
-      extraClasse = "badge-proxima";
-      selo = `<span class="selo selo-proxima">Próxima conquista</span>`;
-    }
 
     const badge = document.createElement("div");
-    badge.className = "badge " + extraClasse;
+    badge.className = "badge";
+
+    if (idx === indiceAtual) badge.classList.add("badge-atual");
+    if (idx === indiceProxima) badge.classList.add("badge-proxima");
 
     badge.innerHTML = `
-      ${selo}
-      <div class="emoji">${emojiProvavel}</div>
+      ${idx === indiceAtual ? `<span class="selo">Conquista atual</span>` : ""}
+      ${idx === indiceProxima ? `<span class="selo selo-proxima">Próxima conquista</span>` : ""}
+      
+      <div class="emoji">${regra.titulo_conquista.split(" ")[0]}</div>
+
       <h3 class="font-bold text-blue-700 text-base mb-1">
-        ${restanteTitulo}
+        ${regra.titulo_conquista.replace(regra.titulo_conquista.split(" ")[0], "").trim()}
       </h3>
+
       <p class="text-xs text-gray-600 mb-2">
-        A partir de <strong>${faixa}</strong> adoção(ões) • Nível: <strong>${nivel}</strong>
+        A partir de <strong>${regra.faixa_minima}</strong> adoções
       </p>
-      <p class="text-sm text-gray-700">
-        ${descricao}
-      </p>
+
+      <p class="text-sm text-gray-700">${regra.descricao}</p>
     `;
 
     container.appendChild(badge);
@@ -160,72 +118,40 @@ function renderConquistas(container, regras, totalAdocoes) {
 }
 
 // ------------------------------------------------------------
-// Fluxo principal da página
+// FLUXO PRINCIPAL
 // ------------------------------------------------------------
 async function carregarConquistasGamificacao() {
+
   const usuario = obterUsuarioLogado();
+
+  const email = usuario?.email_usuario || usuario?.email;
+
   const resumoEl = document.getElementById("resumo-gamificacao");
   const listaEl = document.getElementById("listaConquistas");
 
-  if (!resumoEl || !listaEl) {
-    console.warn("Elementos de conteúdo não encontrados.");
+  if (!email) {
+    resumoEl.innerHTML = `<p class="text-red-600">Faça login para continuar.</p>`;
     return;
   }
 
-  if (!usuario) {
-    resumoEl.innerHTML = `
-      <p class="text-red-600">
-        ⚠️ Faça login para visualizar suas conquistas.
-      </p>
-    `;
-    return;
-  }
+  resumoEl.innerHTML = `<p class="text-gray-600">Carregando...</p>`;
+  listaEl.innerHTML = `<p class="text-gray-600">Carregando...</p>`;
 
   try {
-    const idUsuario = usuario.id_usuario || usuario.id;
-
-    if (!idUsuario) {
-      resumoEl.innerHTML = `
-        <p class="text-red-600">
-          Não foi possível identificar seu cadastro. Tente sair e entrar novamente.
-        </p>
-      `;
-      return;
-    }
-
-    resumoEl.innerHTML = `<p class="text-gray-600">Carregando suas conquistas...</p>`;
-    listaEl.innerHTML = `<p class="text-gray-600">Carregando níveis de gamificação...</p>`;
-
-    // Busca gamificação + regras em paralelo
-    const [respGami, respRegras] = await Promise.all([
-      fetch(`/api/gamificacao?id_usuario=${encodeURIComponent(idUsuario)}`),
-      fetch("/api/regras_gamificacao"),
+    const [gamiResp, regrasResp] = await Promise.all([
+      fetch(`/api/gamificacao?email_usuario=${encodeURIComponent(email)}`),
+      fetch(`/api/regras_gamificacao`)
     ]);
 
-    if (!respGami.ok) throw new Error("Falha ao consultar /api/gamificacao");
-    if (!respRegras.ok) throw new Error("Falha ao consultar /api/regras_gamificacao");
+    const jGami = await gamiResp.json();
+    const jRegras = await regrasResp.json();
 
-    const jsonGami = await respGami.json();
-    const jsonRegras = await respRegras.json();
+    renderResumo(resumoEl, jGami.gamificacao || null);
+    renderConquistas(listaEl, jRegras.regras || [], jGami.gamificacao?.total_cartinhas_adotadas || 0);
 
-    const gamificacao = jsonGami.sucesso ? jsonGami.gamificacao : null;
-    const regras = jsonRegras.sucesso ? jsonRegras.regras || [] : [];
-
-    const totalAdocoes = gamificacao?.total_cartinhas_adotadas || 0;
-
-    // Renderiza resumo e conquistas
-    renderResumo(resumoEl, gamificacao);
-    renderConquistas(listaEl, regras, totalAdocoes);
-
-  } catch (erro) {
-    console.error("Erro ao carregar conquistas:", erro);
-    const msg = `
-      <p class="text-red-600">
-        Ocorreu um erro ao carregar suas conquistas. Tente novamente mais tarde.
-      </p>
-    `;
-    resumoEl.innerHTML = msg;
-    listaEl.innerHTML = "";
+  } catch (e) {
+    console.error("Erro:", e);
+    resumoEl.innerHTML = `<p class="text-red-600">Erro ao carregar conquistas.</p>`;
   }
 }
 

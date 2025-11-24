@@ -1,15 +1,22 @@
 // ============================================================
-// 🎮 VARAL DOS SONHOS — /api/gamificacao.js (corrigida)
+// 🎮 VARAL DOS SONHOS — /api/gamificacao.js 
 // ------------------------------------------------------------
-// API para gerenciar o sistema de gamificação dos usuários:
-// • Consulta e atualização do progresso via Airtable
-// • Campos: nível, pontos de coração, total de cartinhas adotadas, título da conquista
+// Sistema de gamificação:
+// • Busca e atualiza gamificação por e-mail do usuário
+// • Campos usados no Airtable:
+//   - email_usuario (lookup vindo de usuario)
+//   - pontos_coracao
+//   - total_adocoes
+//   - nivel_gamificacao_atual
+//   - titulo_conquista_atual
+//   - data_ultima_atualizacao
 // ============================================================
 
 import Airtable from "airtable";
 export const config = { runtime: "nodejs" };
 
 export default async function handler(req, res) {
+
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
@@ -17,20 +24,25 @@ export default async function handler(req, res) {
 
   const base = new Airtable({ apiKey: process.env.AIRTABLE_API_KEY })
     .base(process.env.AIRTABLE_BASE_ID);
+
   const tabela = process.env.AIRTABLE_GAMIFICACAO_TABLE || "gamificacao";
 
   try {
+
     // ============================================================
-    // 🔹 GET → Consulta o progresso do usuário
+    // 🔹 GET — consulta a gamificação pelo e-mail
     // ============================================================
     if (req.method === "GET") {
-      const { id_usuario } = req.query;
-      if (!id_usuario)
-        return res.status(400).json({ sucesso: false, mensagem: "id_usuario ausente." });
+      const { email_usuario } = req.query;
 
-      // Busca pelo link do usuário
+      if (!email_usuario)
+        return res.status(400).json({ sucesso: false, mensagem: "email_usuario ausente." });
+
+      // Busca por e-mail
       const registros = await base(tabela)
-        .select({ filterByFormula: `SEARCH('${id_usuario}', ARRAYJOIN(usuario))` })
+        .select({
+          filterByFormula: `SEARCH('${email_usuario}', {email_usuario})`
+        })
         .all();
 
       if (registros.length === 0)
@@ -38,65 +50,71 @@ export default async function handler(req, res) {
 
       const g = registros[0].fields;
 
-      // Mapeamento para o front-end
-      const gamificacao = {
-        nivel_gamificacao_atual: g.nivel_gamificacao_atual || "Iniciante",
-        pontos_coracao: g.pontos_coracao || 0,
-        total_cartinhas_adotadas: g.total_adocoes || 0,
-        titulo_conquista_atual: g.titulo_conquista_atual || "💙 Iniciante Solidário",
-        data_ultima_atualizacao: g.data_ultima_atualizacao || null,
-      };
-
-      return res.status(200).json({ sucesso: true, gamificacao });
+      return res.status(200).json({
+        sucesso: true,
+        gamificacao: {
+          nivel_gamificacao_atual: g.nivel_gamificacao_atual || "Iniciante",
+          pontos_coracao: g.pontos_coracao || 0,
+          total_cartinhas_adotadas: g.total_adocoes || 0,
+          titulo_conquista_atual: g.titulo_conquista_atual || "💙 Iniciante Solidário",
+          data_ultima_atualizacao: g.data_ultima_atualizacao || null,
+        }
+      });
     }
 
     // ============================================================
-    // 🔹 POST → Atualiza ou cria registro
+    // 🔹 POST — cria ou atualiza automaticamente
     // ============================================================
     if (req.method === "POST") {
-      const { id_usuario, pontos_coracao = 0, total_cartinhas_adotadas = 0, titulo_conquista_atual } =
-        req.body || {};
+      const {
+        email_usuario,
+        pontos_coracao = 0,
+        total_cartinhas_adotadas = 0,
+        titulo_conquista_atual = "💙 Iniciante Solidário",
+        nivel_gamificacao_atual = "Iniciante"
+      } = req.body || {};
 
-      if (!id_usuario)
-        return res.status(400).json({ sucesso: false, mensagem: "id_usuario obrigatório." });
+      if (!email_usuario)
+        return res.status(400).json({ sucesso: false, mensagem: "email_usuario é obrigatório." });
 
       const existentes = await base(tabela)
-        .select({ filterByFormula: `SEARCH('${id_usuario}', ARRAYJOIN(usuario))` })
+        .select({
+          filterByFormula: `SEARCH('${email_usuario}', {email_usuario})`
+        })
         .all();
 
-      const novosCampos = {
+      const campos = {
+        email_usuario,
         pontos_coracao,
         total_adocoes: total_cartinhas_adotadas,
-        titulo_conquista_atual: titulo_conquista_atual || "💙 Iniciante Solidário",
+        nivel_gamificacao_atual,
+        titulo_conquista_atual,
         data_ultima_atualizacao: new Date().toISOString(),
       };
 
+      // Atualiza se já existir
       if (existentes.length > 0) {
-        await base(tabela).update([{ id: existentes[0].id, fields: novosCampos }]);
+        await base(tabela).update([
+          { id: existentes[0].id, fields: campos }
+        ]);
+
         return res.status(200).json({ sucesso: true, atualizado: true });
       }
 
       // Cria novo registro
-      const criado = await base(tabela).create([
-        {
-          fields: {
-            usuario: [id_usuario], // vincula ao registro do usuário
-            ...novosCampos,
-            nivel_gamificacao_atual: "Iniciante",
-          },
-        },
-      ]);
+      const criado = await base(tabela).create([{ fields: campos }]);
 
       return res.status(200).json({ sucesso: true, criado: true, id: criado[0].id });
     }
 
     return res.status(405).json({ sucesso: false, mensagem: "Método não suportado." });
+
   } catch (e) {
     console.error("Erro /api/gamificacao:", e);
-    res.status(500).json({
+    return res.status(500).json({
       sucesso: false,
       mensagem: "Erro interno na gamificação.",
-      detalhe: e.message,
+      detalhe: e.message
     });
   }
 }
