@@ -2,9 +2,8 @@
 💙 VARAL DOS SONHOS — /pages/minhas-conquistas.html
 ---------------------------------------------------------------
 Painel do Doador — Minhas Conquistas
-• Mostra o resumo da gamificação do usuário (nível, pontos, total)
-• Lista todas as conquistas configuradas em regras_gamificacao
-• Integra com /api/gamificacao e /api/regras_gamificacao
+Agora integrado com a nova API unificada:
+    /api/gamificacao_unificada
 ============================================================ -->
 
 <!DOCTYPE html>
@@ -74,14 +73,15 @@ Painel do Doador — Minhas Conquistas
       margin-bottom: 24px;
     }
 
+    /* Conquistas */
     .badge {
       background: white;
       padding: 20px;
       border-radius: 18px;
       box-shadow: 0 3px 8px rgba(0,0,0,0.08);
       text-align: center;
-      transition: .2s;
       position: relative;
+      transition: .2s;
     }
 
     .badge:hover {
@@ -147,7 +147,6 @@ Painel do Doador — Minhas Conquistas
   <hr class="my-6 border-white/40">
 
   <a href="../index.html">⬅️ Voltar ao Site</a>
-  
 </aside>
 
 <!-- ==========================================================
@@ -164,25 +163,26 @@ Painel do Doador — Minhas Conquistas
     e as conquistas desbloqueadas a cada adoção 💙
   </p>
 
-  <!-- RESUMO DA GAMIFICAÇÃO (preenchido via JS) -->
+  <!-- RESUMO DA GAMIFICAÇÃO -->
   <section id="resumo-gamificacao" class="card-resumo">
     <p class="text-gray-600">Carregando suas conquistas...</p>
   </section>
 
-  <!-- LISTA DE CONQUISTAS (regras_gamificacao) -->
+  <!-- LISTA DE CONQUISTAS -->
   <section>
     <h2 class="text-xl font-semibold text-blue-800 mb-3">
       🌟 Níveis e conquistas do Varal dos Sonhos
     </h2>
 
     <div id="listaConquistas" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      <!-- Cards das conquistas serão inseridos aqui via JS -->
+      <!-- Inserido via JS -->
     </div>
+
   </section>
 
 </main>
 
-<!---------------------- SCRIPTS--------------------------->
+<!---------------------- SCRIPTS --------------------------->
 <script src="../js/minhas-conquistas.js"></script>
 
 </body>
