@@ -1,14 +1,12 @@
 // ============================================================
-// 💙 VARAL DOS SONHOS — painel-ponto.js (VERSÃO FINAL)
+// 💙 VARAL DOS SONHOS — painel-ponto.js 
 // ============================================================
 
 const API_ADOCOES = "/api/listAdocoes";
 const API_LOGISTICA = "/api/logistica";
 
-// ---------------------------------------------
 // 1) Identificar Ponto Logado
-// ---------------------------------------------
-let usuarioLogado = JSON.parse(localStorage.getItem("usuario"));
+let usuarioLogado = JSON.parse(localStorage.getItem("usuario_logado"));
 
 if (!usuarioLogado || usuarioLogado.tipo !== "ponto") {
   alert("Acesso restrito!");
@@ -16,8 +14,8 @@ if (!usuarioLogado || usuarioLogado.tipo !== "ponto") {
 }
 
 const idPonto =
-  usuarioLogado.id ||
   usuarioLogado.id_record ||
+  usuarioLogado.id ||
   usuarioLogado.id_ponto ||
   null;
 
@@ -26,9 +24,7 @@ if (!idPonto) {
   window.location.href = "/index.html";
 }
 
-// ---------------------------------------------
 // 2) Buscar adoções
-// ---------------------------------------------
 async function carregarAdoacoes() {
   try {
     const r = await fetch(API_ADOCOES);
@@ -40,7 +36,6 @@ async function carregarAdoacoes() {
     }
 
     const minhas = (json.adocoes || []).filter(a => a.id_ponto === idPonto);
-
     renderizar(minhas);
 
   } catch (e) {
@@ -48,9 +43,7 @@ async function carregarAdoacoes() {
   }
 }
 
-// ---------------------------------------------
-// 3) Renderizar cards por status
-// ---------------------------------------------
+// 3) Renderizar cards
 function renderizar(lista) {
 
   const tReceber = document.getElementById("listaReceber");
@@ -62,24 +55,19 @@ function renderizar(lista) {
   tEntregues.innerHTML = "";
 
   lista.forEach(ado => {
-
     if (ado.status_adocao === "confirmada") {
       tReceber.innerHTML += cardReceber(ado);
     }
-
     else if (ado.status_adocao === "presente recebido") {
       tRetirar.innerHTML += cardRecebido(ado);
     }
-
     else if (ado.status_adocao === "presente entregue") {
       tEntregues.innerHTML += cardEntregue(ado);
     }
   });
 }
 
-/* ============================================================
-   🔵 TEMPLATES
-============================================================ */
+// ===== TEMPLATES (SEM OBSERVAÇÕES) =====
 
 function cardReceber(a) {
   return `
@@ -89,8 +77,6 @@ function cardReceber(a) {
 
       <span class="tag">🆔 Cartinha: ${a.id_cartinha}</span>
       <span class="tag">👤 Doador: ${a.nome_usuario}</span>
-
-      ${blocoObservacoes(a.movimentos)}
 
       <button class="btn-blue mt-4"
         onclick="abrirModal('receber', '${a.id_record}')">
@@ -109,8 +95,6 @@ function cardRecebido(a) {
       <span class="tag">🆔 Cartinha: ${a.id_cartinha}</span>
       <span class="tag">👤 Doador: ${a.nome_usuario}</span>
 
-      ${blocoObservacoes(a.movimentos)}
-
       <button class="btn-blue mt-4"
         onclick="abrirModal('retirar', '${a.id_record}')">
         📦 Registrar Retirada
@@ -127,46 +111,19 @@ function cardEntregue(a) {
 
       <span class="tag">🆔 Cartinha: ${a.id_cartinha}</span>
       <span class="tag">👤 Doador: ${a.nome_usuario}</span>
-
-      ${blocoObservacoes(a.movimentos)}
     </div>
   `;
 }
 
-/* ============================================================
-   🟩 Exibir observações (somente últimas)
-============================================================ */
-function blocoObservacoes(movs) {
-
-  if (!movs || movs.length === 0) {
-    return `
-      <div class="section-block">
-        <p class="font-semibold text-blue-700 mb-1">📝 Observações</p>
-        <p class="text-gray-600 text-sm">Nenhuma observação registrada.</p>
-      </div>
-    `;
-  }
-
-  const ultima = movs[movs.length - 1];
-
-  return `
-    <div class="section-block">
-      <p class="font-semibold text-blue-700 mb-1">📝 Observações</p>
-      <p class="text-gray-700 text-sm">${ultima.observacoes || "—"}</p>
-    </div>
-  `;
-}
-
-/* ============================================================
-   🔶 Modal
-============================================================ */
+// =======================
+// Modal
+// =======================
 
 let acaoAtual = null;
 let adocaoAtual = null;
 
 function limparModal() {
   document.getElementById("inputResponsavel").value = "";
-  document.getElementById("inputObs").value = "";
 }
 
 function abrirModal(acao, idAdo) {
@@ -186,23 +143,21 @@ function fecharModal() {
   document.getElementById("modal").classList.add("hidden");
 }
 
-/* ============================================================
-   🟩 Salvar operação
-============================================================ */
+// =======================
+// Salvar operação
+// =======================
+
 document.getElementById("btnConfirmar").addEventListener("click", async () => {
 
   const responsavel =
     document.getElementById("inputResponsavel").value ||
-    usuarioLogado.nome;
-
-  const observacoes = document.getElementById("inputObs").value || "";
+    usuarioLogado.nome_usuario;
 
   const body = {
     acao: acaoAtual === "receber" ? "receber" : "retirar",
     id_adocao: adocaoAtual,
     id_ponto: idPonto,
-    responsavel,
-    observacoes
+    responsavel
   };
 
   try {
@@ -223,12 +178,6 @@ document.getElementById("btnConfirmar").addEventListener("click", async () => {
     console.error(e);
   }
 });
-
-/* ============================================================
-   🌐 Tornar funções globais (corrige onclick do HTML)
-============================================================ */
-window.abrirModal = abrirModal;
-window.fecharModal = fecharModal;
 
 // Iniciar
 document.addEventListener("DOMContentLoaded", carregarAdoacoes);
