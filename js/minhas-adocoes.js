@@ -61,19 +61,25 @@ async function carregarMinhasAdocoes() {
 
     if (!json.sucesso) throw new Error("API não retornou sucesso");
 
+    // Todas adoções
     const todas = json.adocoes;
 
-    // 🔥🔥🔥 FILTRO CORRETO (baseado na API ATUAL)
-    const minhas = todas.filter(a => a.email_usuario === usuario.email_usuario);
+    // 🟦 FILTRO CORRETO — a API retorna email_usuario
+    const emailUser = (usuario.email_usuario || usuario.email || "").toLowerCase();
 
+    const minhas = todas.filter(a =>
+      (a.email_usuario || "").toLowerCase() === emailUser
+    );
+
+    // Nenhuma adoção
     if (!minhas.length) {
       lista.innerHTML = `<p class="text-gray-700">Você ainda não adotou nenhuma cartinha 💙</p>`;
       return;
     }
 
+    // Renderiza tudo
     lista.innerHTML = "";
 
-    // Renderiza cada adoção
     minhas.forEach(a => {
       const statusInfo = formatarStatus(a.status_adocao);
       const prog = calcularProgresso(a.status_adocao);
@@ -98,8 +104,7 @@ async function carregarMinhasAdocoes() {
         <div class="w-full bg-blue-100 rounded-full h-3 mt-2 overflow-hidden">
           <div class="h-3 rounded-full progress-bar"
                style="width:0%; background:${prog.cor};
-               transition: width 1.2s ease;">
-          </div>
+               transition: width 1.2s ease;"></div>
         </div>
 
         <p class="text-sm text-gray-600 mt-1">${prog.pct}%</p>
