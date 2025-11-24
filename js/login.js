@@ -75,42 +75,41 @@ document.addEventListener("DOMContentLoaded", () => {
     // ========================
     // 2️⃣ LOGIN DO PONTO DE COLETA
     // ========================
-    const pontoResp = await fetch("/api/pontosdecoleta", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        acao: "login",
-        email_ponto: email,
-        senha: senha,
-      }),
-    });
+      const pontoResp = await fetch("/api/pontosdecoleta", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          acao: "login",
+          email_ponto: email,
+          senha: senha,
+        }),
+      });
 
-    const pontoData = await pontoResp.json().catch(() => null);
+      const pontoData = await pontoResp.json().catch(() => null);
 
-    if (pontoData && pontoData.sucesso && pontoData.ponto) {
-      const p = pontoData.ponto;
+      if (pontoData && pontoData.sucesso && pontoData.ponto) {
+        const p = pontoData.ponto;
 
-      const pontoObjeto = {
-      id: p.id_ponto,
-      id_record: p.id_ponto, // garante compatibilidade
-      nome_usuario: p.nome_ponto,
-      email: p.email_ponto,
-      tipo: "ponto"
-    };
+        const pontoObjeto = {
+          id: p.id_ponto,
+          id_record: p.id_ponto, 
+          nome_usuario: p.nome_ponto,
+          email: p.email_ponto,
+          tipo: "ponto"
+        };
 
-      // gravar nas DUAS chaves (compatível com tudo)
-      localStorage.setItem("usuario", JSON.stringify(pontoObjeto));
-      localStorage.setItem("usuario_logado", JSON.stringify(pontoObjeto));
+        // salvar compatível com todo o projeto
+        localStorage.setItem("usuario", JSON.stringify(pontoObjeto));
+        localStorage.setItem("usuario_logado", JSON.stringify(pontoObjeto));
 
-      // ⬇️ AQUI — ativar modal no index
-      localStorage.setItem("mostrarModal", "sim");
+        localStorage.setItem("mostrarModal", "sim");
 
-      setTimeout(() => {
-        window.location.href = "/index.html";
-      }, 400);
+        setTimeout(() => {
+          window.location.href = "/index.html";
+        }, 400);
 
-      return;
-    }
+        return;
+      }
 
     // ========================
     // 3️⃣ ERRO FINAL
