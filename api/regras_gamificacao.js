@@ -1,5 +1,5 @@
 // ============================================================
-// 📜 VARAL DOS SONHOS — /api/regras_gamificacao.js (versão final TCC)
+// 📜 VARAL DOS SONHOS — /api/regras_gamificacao.js 
 // ------------------------------------------------------------
 // Esta API lista as regras de gamificação cadastradas no Airtable.
 // Cada regra define um marco de conquistas (nível, título, faixa mínima etc.)

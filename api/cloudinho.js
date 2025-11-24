@@ -1,5 +1,5 @@
 // ============================================================
-// 💬 VARAL DOS SONHOS — /api/cloudinho.js (v2)
+// 💬 VARAL DOS SONHOS — /api/cloudinho.js 
 // ------------------------------------------------------------
 // Busca respostas na tabela "cloudinho" (Airtable)
 // Campos esperados: pergunta, palavras_chave, resposta

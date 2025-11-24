@@ -1,5 +1,5 @@
 // ============================================================
-// 💙 VARAL DOS SONHOS — /api/confirmar.js (VERSÃO FINAL)
+// 💙 VARAL DOS SONHOS — /api/confirmar.js 
 // ------------------------------------------------------------
 // • Admin confirma a adoção
 // • Atualiza status → "confirmada"

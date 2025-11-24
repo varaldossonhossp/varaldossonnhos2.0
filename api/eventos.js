@@ -1,5 +1,5 @@
 // ============================================================
-// 💙 VARAL DOS SONHOS — /api/eventos.js (versão final TCC)
+// 💙 VARAL DOS SONHOS — /api/eventos.js 
 // ------------------------------------------------------------
 // ✔ Retorna todos os eventos
 // 🔹 Finalidade da API:
