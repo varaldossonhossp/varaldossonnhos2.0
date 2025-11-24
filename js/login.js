@@ -91,16 +91,16 @@ document.addEventListener("DOMContentLoaded", () => {
         const p = pontoData.ponto;
 
         const pontoObjeto = {
-          id: p.id_ponto,
-          id_record: p.id_ponto, 
-          nome_usuario: p.nome_ponto,
-          email: p.email_ponto,
-          tipo: "ponto"
-        };
+        id: p.id_ponto,
+        id_record: p.id_ponto,
+        nome: p.nome_ponto,          // <-- PADRÃO DO HEADER
+        nome_usuario: p.nome_ponto,  // opcional, para compatibilidade
+        email: p.email_ponto,
+        tipo: "ponto"
+      };
 
-        // salvar compatível com todo o projeto
-        localStorage.setItem("usuario", JSON.stringify(pontoObjeto));
-        localStorage.setItem("usuario_logado", JSON.stringify(pontoObjeto));
+      localStorage.setItem("usuario", JSON.stringify(pontoObjeto));
+      localStorage.setItem("usuario_logado", JSON.stringify(pontoObjeto));
 
         localStorage.setItem("mostrarModal", "sim");
 
