@@ -1,27 +1,14 @@
 // ============================================================
-// 💙 VARAL DOS SONHOS — painel-ponto.js 
-// ------------------------------------------------------------
-// Painel do Ponto de Coleta:
-// • Lista APENAS adoções ligadas ao ponto logado
-// • Modal mostra TODAS as observações (movimentos)
-// • Modal já carrega a ÚLTIMA observação automaticamente
-// • Quando salva → cria novo movimento na tabela ponto_movimentos
-// • Interface organizada por status:
-//      - confirmada → receber
-//      - presente recebido → retirada
-//      - presente entregue → finalizado
+// 💙 VARAL DOS SONHOS — painel-ponto.js (VERSÃO FINAL)
 // ============================================================
-
 
 const API_ADOCOES = "/api/listAdocoes";
 const API_LOGISTICA = "/api/logistica";
 
-
-
-// ===============================================
-// 1) IDENTIFICAR PONTO LOGADO
-// ===============================================
-let usuarioLogado = JSON.parse(localStorage.getItem("usuario_logado"));
+// ---------------------------------------------
+// 1) Identificar Ponto Logado
+// ---------------------------------------------
+let usuarioLogado = JSON.parse(localStorage.getItem("usuario"));
 
 if (!usuarioLogado || usuarioLogado.tipo !== "ponto") {
   alert("Acesso restrito!");
@@ -29,8 +16,8 @@ if (!usuarioLogado || usuarioLogado.tipo !== "ponto") {
 }
 
 const idPonto =
-  usuarioLogado.id_record ||
   usuarioLogado.id ||
+  usuarioLogado.id_record ||
   usuarioLogado.id_ponto ||
   null;
 
@@ -39,11 +26,9 @@ if (!idPonto) {
   window.location.href = "/index.html";
 }
 
-
-
-// ===============================================
-// 2) BUSCAR ADOÇÕES
-// ===============================================
+// ---------------------------------------------
+// 2) Buscar adoções
+// ---------------------------------------------
 async function carregarAdoacoes() {
   try {
     const r = await fetch(API_ADOCOES);
@@ -54,10 +39,8 @@ async function carregarAdoacoes() {
       return;
     }
 
-    // Armazena globalmente para acesso do modal
-    window.__ADOCOES__ = json.adocoes || [];
-
     const minhas = (json.adocoes || []).filter(a => a.id_ponto === idPonto);
+
     renderizar(minhas);
 
   } catch (e) {
@@ -65,11 +48,9 @@ async function carregarAdoacoes() {
   }
 }
 
-
-
-// ===============================================
-// 3) RENDERIZAÇÃO POR STATUS
-// ===============================================
+// ---------------------------------------------
+// 3) Renderizar cards por status
+// ---------------------------------------------
 function renderizar(lista) {
 
   const tReceber = document.getElementById("listaReceber");
@@ -96,11 +77,10 @@ function renderizar(lista) {
   });
 }
 
+/* ============================================================
+   🔵 TEMPLATES
+============================================================ */
 
-
-// ===============================================
-// 4) TEMPLATES
-// ===============================================
 function cardReceber(a) {
   return `
     <div class="ado-item">
@@ -119,7 +99,6 @@ function cardReceber(a) {
     </div>
   `;
 }
-
 
 function cardRecebido(a) {
   return `
@@ -140,7 +119,6 @@ function cardRecebido(a) {
   `;
 }
 
-
 function cardEntregue(a) {
   return `
     <div class="ado-item">
@@ -155,11 +133,9 @@ function cardEntregue(a) {
   `;
 }
 
-
-
-// ===============================================
-// 5) OBSERVAÇÕES — MOSTRAR TODAS
-// ===============================================
+/* ============================================================
+   🟩 Exibir observações (somente últimas)
+============================================================ */
 function blocoObservacoes(movs) {
 
   if (!movs || movs.length === 0) {
@@ -171,31 +147,20 @@ function blocoObservacoes(movs) {
     `;
   }
 
-  let html = `
+  const ultima = movs[movs.length - 1];
+
+  return `
     <div class="section-block">
       <p class="font-semibold text-blue-700 mb-1">📝 Observações</p>
+      <p class="text-gray-700 text-sm">${ultima.observacoes || "—"}</p>
+    </div>
   `;
-
-  movs.forEach((m, i) => {
-    html += `
-      <div class="mb-2">
-        <p class="text-sm font-semibold text-gray-900">
-          Observação ${i + 1} — <span class="text-blue-700">${m.tipo_movimento}</span>
-        </p>
-        <p class="text-sm text-gray-700">${m.observacoes || "—"}</p>
-      </div>
-    `;
-  });
-
-  html += `</div>`;
-  return html;
 }
 
+/* ============================================================
+   🔶 Modal
+============================================================ */
 
-
-// ============================================================
-// 6) MODAL — PREENCHE A ÚLTIMA OBSERVAÇÃO AUTOMATICAMENTE
-// ============================================================
 let acaoAtual = null;
 let adocaoAtual = null;
 
@@ -204,22 +169,11 @@ function limparModal() {
   document.getElementById("inputObs").value = "";
 }
 
-
 function abrirModal(acao, idAdo) {
   acaoAtual = acao;
   adocaoAtual = idAdo;
 
   limparModal();
-
-  // pega os dados completos da adoção
-  const ado = window.__ADOCOES__.find(a => a.id_record === idAdo);
-
-  // se existir alguma observação anterior → carrega no modal
-  if (ado && ado.movimentos?.length > 0) {
-    const ultima = ado.movimentos[ado.movimentos.length - 1];
-    document.getElementById("inputObs").value = ultima.observacoes || "";
-    document.getElementById("inputResponsavel").value = ultima.responsavel || "";
-  }
 
   document.getElementById("modalTitulo").textContent =
     acao === "receber" ? "Confirmar Recebimento" : "Confirmar Retirada";
@@ -227,22 +181,19 @@ function abrirModal(acao, idAdo) {
   document.getElementById("modal").classList.remove("hidden");
 }
 
-
 function fecharModal() {
   limparModal();
   document.getElementById("modal").classList.add("hidden");
 }
 
-
-
-// ============================================================
-// 7) SALVAR OPERAÇÃO (CRIAR NOVO MOVIMENTO NO AIRTABLE)
-// ============================================================
+/* ============================================================
+   🟩 Salvar operação
+============================================================ */
 document.getElementById("btnConfirmar").addEventListener("click", async () => {
 
   const responsavel =
     document.getElementById("inputResponsavel").value ||
-    usuarioLogado.nome_usuario;
+    usuarioLogado.nome;
 
   const observacoes = document.getElementById("inputObs").value || "";
 
@@ -273,10 +224,11 @@ document.getElementById("btnConfirmar").addEventListener("click", async () => {
   }
 });
 
+/* ============================================================
+   🌐 Tornar funções globais (corrige onclick do HTML)
+============================================================ */
+window.abrirModal = abrirModal;
+window.fecharModal = fecharModal;
 
-
-// ============================================================
-// 8) INICIAR
-// ============================================================
+// Iniciar
 document.addEventListener("DOMContentLoaded", carregarAdoacoes);
-
