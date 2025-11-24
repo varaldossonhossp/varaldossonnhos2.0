@@ -1,11 +1,10 @@
 <!-- ============================================================
- 📦 VARAL DOS SONHOS — painel-ponto.html (NOVA VERSÃO)
+ 📦 VARAL DOS SONHOS — painel-ponto.html (VERSÃO REVISTA 2025)
  ------------------------------------------------------------
- Painel do Ponto de Coleta:
- • Lista apenas adoções do ponto logado (via painel-ponto.js)
- • Permite marcar RECEBIDO e RETIRADA
- • Exibe dados completos do doador, da criança e movimentações
- • Mostra histórico dos movimentos gravados
+ Painel do Ponto de Coleta
+ • Lista adoções ligadas ao ponto logado
+ • Recebimento / Retirada
+ • Histórico de observações (movimentos)
 ============================================================== -->
 
 <!DOCTYPE html>
@@ -55,12 +54,13 @@
       padding-left:40px;
     }
 
-    /* ÁREA PRINCIPAL */
+    /* CONTEÚDO PRINCIPAL */
     .content {
       margin-left:280px;
       padding:40px;
     }
 
+    /* CARDS */
     .card {
       background:white;
       padding:25px;
@@ -153,16 +153,24 @@
 </main>
 
 <!-- MODAL CENTRALIZADO -->
-<div id="modal" class="fixed inset-0 bg-black/40 hidden flex items-center justify-center z-50">
+<div id="modal" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center z-[9999]">
   <div class="bg-white w-[420px] p-6 rounded-2xl shadow-xl">
 
     <h2 id="modalTitulo" class="text-xl font-semibold mb-4"></h2>
 
-    <input id="inputResponsavel" class="border p-2 w-full mb-3 rounded" placeholder="Responsável" />
-    <textarea id="inputObs" class="border p-2 w-full mb-3 rounded" placeholder="Observações"></textarea>
+    <input id="inputResponsavel" 
+           class="border p-2 w-full mb-3 rounded" 
+           placeholder="Responsável" />
+
+    <textarea id="inputObs" 
+              class="border p-2 w-full mb-3 rounded h-28" 
+              placeholder="Observações"></textarea>
 
     <button id="btnConfirmar" class="btn-blue w-full">Confirmar</button>
-    <button onclick="fecharModal()" class="mt-3 w-full py-2 rounded-lg bg-gray-300">Cancelar</button>
+    <button onclick="fecharModal()" 
+            class="mt-3 w-full py-2 rounded-lg bg-gray-300">
+      Cancelar
+    </button>
 
   </div>
 </div>

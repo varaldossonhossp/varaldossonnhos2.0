@@ -1,21 +1,13 @@
 // ============================================================
-// 💙 VARAL DOS SONHOS — painel-ponto.js 
+// 💙 VARAL DOS SONHOS — painel-ponto.js (VERSÃO FINAL)
 // ------------------------------------------------------------
-// Painel do Ponto de Coleta:
-// • Lista APENAS adoções ligadas ao ponto logado
-// • Layout padronizado 
-// • Modal para confirmar RECEBIMENTO ou RETIRADA
-// • Integra com /api/logistica.js
-//   ✔ primeiro nome da criança
-//   ✔ id_cartinha
-//   ✔ sonho
-//   ✔ nome_usuario (doador)
-//   ✔ status
-//   ✔ observações 
-//
-// Totalmente compatível com a /api/listAdocoes.js
+// Sistema revisado para exibir TODAS as observações do ponto:
+//   ✔ Recebimento
+//   ✔ Retirada
+//   ✔ Ordem cronológica
+//   ✔ Histórico completo
+//   ✔ Compatível com listAdocoes.js sem alterações
 // ============================================================
-
 
 const API_ADOCOES = "/api/listAdocoes";
 const API_LOGISTICA = "/api/logistica";
@@ -92,7 +84,7 @@ function renderizar(lista) {
 }
 
 /* ============================================================
-   🔵 TEMPLATES (com Observações apenas)
+   🔵 TEMPLATES DE CARDS
 ============================================================ */
 
 function cardReceber(a) {
@@ -107,7 +99,7 @@ function cardReceber(a) {
       ${blocoObservacoes(a.movimentos)}
 
       <button class="btn-blue mt-4"
-        onclick="abrirModal('receber', '${a.id_record}')">
+        onclick="abrirModal('receber', '${a.id_record}', ${encodeURIComponent(JSON.stringify(a.movimentos))})">
         📥 Receber
       </button>
     </div>
@@ -126,7 +118,7 @@ function cardRecebido(a) {
       ${blocoObservacoes(a.movimentos)}
 
       <button class="btn-blue mt-4"
-        onclick="abrirModal('retirar', '${a.id_record}')">
+        onclick="abrirModal('retirar', '${a.id_record}', ${encodeURIComponent(JSON.stringify(a.movimentos))})">
         📦 Registrar Retirada
       </button>
     </div>
@@ -148,11 +140,10 @@ function cardEntregue(a) {
 }
 
 /* ============================================================
-   🟩 BLOCO NOVO — SOMENTE OBSERVAÇÕES
+   🟩 BLOCO DE OBSERVAÇÕES — TODAS, ORGANIZADAS
 ============================================================ */
 function blocoObservacoes(movs) {
 
-  // se não há nenhum movimento
   if (!movs || movs.length === 0) {
     return `
       <div class="section-block">
@@ -162,36 +153,51 @@ function blocoObservacoes(movs) {
     `;
   }
 
-  // pegar apenas a última observação
-  const ultima = movs[movs.length - 1];
-
-  return `
+  let html = `
     <div class="section-block">
-      <p class="font-semibold text-blue-700 mb-1">📝 Observações</p>
-      <p class="text-gray-700 text-sm">
-        ${ultima.observacoes || "—"}
-      </p>
-    </div>
+      <p class="font-semibold text-blue-700 mb-1">📝 Observações do Ponto</p>
   `;
+
+  movs.forEach((m, i) => {
+    html += `
+      <div class="mt-2 p-2 border-l-4 border-blue-500 bg-white rounded">
+        <p class="text-sm"><strong>${i+1}ª observação:</strong></p>
+        <p class="text-gray-700 text-sm">• ${m.observacoes || "—"}</p>
+        <p class="text-gray-500 text-xs">(${m.tipo_movimento})</p>
+      </div>
+    `;
+  });
+
+  html += `</div>`;
+  return html;
 }
 
 /* ============================================================
-   🔶 Modal
+   🔶 MODAL
 ============================================================ */
 
 let acaoAtual = null;
 let adocaoAtual = null;
+let movimentosAtuais = [];
 
 function limparModal() {
   document.getElementById("inputResponsavel").value = "";
   document.getElementById("inputObs").value = "";
 }
 
-function abrirModal(acao, idAdo) {
+function abrirModal(acao, idAdo, movimentosEncoded) {
   acaoAtual = acao;
   adocaoAtual = idAdo;
 
+  movimentosAtuais = JSON.parse(decodeURIComponent(movimentosEncoded));
+
   limparModal();
+
+  // Se já existe observação anterior → pré-preencher
+  if (movimentosAtuais.length > 0) {
+    const ultima = movimentosAtuais[movimentosAtuais.length - 1];
+    document.getElementById("inputObs").value = ultima.observacoes || "";
+  }
 
   document.getElementById("modalTitulo").textContent =
     acao === "receber" ? "Confirmar Recebimento" : "Confirmar Retirada";
@@ -205,7 +211,7 @@ function fecharModal() {
 }
 
 /* ============================================================
-   🟩 Salvar operação
+   🟩 SALVAR OPERAÇÃO
 ============================================================ */
 document.getElementById("btnConfirmar").addEventListener("click", async () => {
 
