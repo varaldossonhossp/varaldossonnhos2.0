@@ -178,13 +178,11 @@ export default async function handler(req, res) {
       // ======================================================
       // 4) BUSCAR MOVIMENTAÇÕES (recebimento / retirada)
       // ======================================================
-
       let movimentos = [];
       try {
         const movRecords = await base("ponto_movimentos")
           .select({
-            filterByFormula: `FIND('${f.id_doacao}', ARRAYJOIN({adocoes}))`,
-
+            filterByFormula: `{adocoes} = '${r.id}'`,
             sort: [{ field: "id_movimentacao_ponto", direction: "asc" }],
           })
           .all();
@@ -198,6 +196,7 @@ export default async function handler(req, res) {
       } catch (e) {
         console.log("Erro ao buscar movimentos do ponto:", e);
       }
+
 
 
       // ======================================================
