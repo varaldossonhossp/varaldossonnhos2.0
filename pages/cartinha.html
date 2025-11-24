@@ -297,16 +297,6 @@
   <!-- TOAST -->
   <div id="toast-container"></div>
 
-  <script>
-    async function carregarComponente(id, arquivo) {
-      const resp = await fetch("../componentes/" + arquivo);
-      if (resp.ok) document.getElementById(id).innerHTML = await resp.text();
-    }
-    carregarComponente("header", "header.html");
-    carregarComponente("footer", "footer.html");
-    carregarComponente("cloudinho", "cloudinho.html");
-  </script>
-
   <!-- ==================== JS ==================== -->
   <script src="../js/config-site-apply.js"></script>
   <script src="../js/cloudinho.js"></script>
