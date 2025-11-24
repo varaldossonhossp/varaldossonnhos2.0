@@ -89,7 +89,7 @@ async function carregarMinhasAdocoes() {
 
       card.innerHTML = `
         <h3 class="font-bold text-lg text-blue-700">Cartinha de ${a.nome_crianca}</h3>
-        <p class="text-gray-700 text-sm">🎁 ${a.sonho}</p>
+        <p class="text-gray-700 text-sm">Sonho 🎁:  ${a.sonho}</p>
 
         <div class="mt-2 mb-2 flex flex-wrap gap-2">
           <span class="tag">🆔 Cartinha: ${a.id_cartinha}</span>
