@@ -90,12 +90,17 @@ document.addEventListener("DOMContentLoaded", () => {
     if (pontoData && pontoData.sucesso && pontoData.ponto) {
       const p = pontoData.ponto;
 
-      localStorage.setItem("usuario", JSON.stringify({
-        id: p.id_ponto,
-        nome: p.nome_ponto,
-        email: p.email_ponto,
-        tipo: "ponto",
-      }));
+      const pontoObjeto = {
+      id: p.id_ponto,
+      id_record: p.id_ponto, // garante compatibilidade
+      nome_usuario: p.nome_ponto,
+      email: p.email_ponto,
+      tipo: "ponto"
+    };
+
+      // gravar nas DUAS chaves (compatível com tudo)
+      localStorage.setItem("usuario", JSON.stringify(pontoObjeto));
+      localStorage.setItem("usuario_logado", JSON.stringify(pontoObjeto));
 
       // ⬇️ AQUI — ativar modal no index
       localStorage.setItem("mostrarModal", "sim");
