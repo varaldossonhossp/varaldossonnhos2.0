@@ -76,8 +76,8 @@ async function inicializarCloudinho() {
         return [
           primeiroNome
             ? `Oi, ${primeiroNome}! 💙 Precisa de ajuda para acessar sua conta?`
-            : "Bem-vindo(a) de volta! 💙 Precisa de ajuda para entrar ou recuperar a senha?",
-          "Se não conseguir fazer login, posso te orientar sobre cadastro e recuperação de senha. 😉",
+            : "Bem-vindo(a) de volta! 💙 Precisa de ajuda para entrar?",
+          "Se não conseguir fazer login, posso te orientar sobre cadastro. 😉",
         ];
 
       case "cadastro":
