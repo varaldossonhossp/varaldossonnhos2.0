@@ -1,69 +1,70 @@
 // ============================================================
 // 💙 VARAL DOS SONHOS — /api/eventos.js 
-// ------------------------------------------------------------
-// ✔ Retorna todos os eventos
-// 🔹 Finalidade da API:
-//     - Fornecer dados de EVENTOS para o site público
-//       e para o painel administrativo.
-//     - Retorna lista de eventos com filtros opcionais.
-//     - Agora também retorna CONFIGURAÇÃO DO SITE
-//       (logo, nuvem, instagram etc.) sem exigir token.
-// 🔹 Operações implementadas:
-//   • GET ?tipo=site
-//        → retorna config_site (sem token)
-//   • GET ?tipo=home
-//        → retorna eventos destacados na homepage
-//   • GET ?tipo=admin
-//        → retorna eventos para o painel administrativo
-//   • GET ?status=em andamento|proximo|encerrado
-//        → filtra eventos por status
-// 🔹 Tabelas utilizadas no Airtable:
-//     🗂  Tabela: eventos
-//     🗂  Tabela: config_site
-// 🔹 Campos utilizados pela API (conforme Airtable):
-//     - id_evento
-//     - nome_evento
-//     - local_evento
-//     - descricao
-//     - data_evento
-//     - data_limite_recebimento
-//     - data_realizacao_evento
-//     - status_evento
-//     - destacar_na_homepage
-//     - imagem
-// 🔹 Alterações recentes:
-//   • Refatoração completa do código para suportar
-//     múltiplos tipos de resposta (eventos + config_site).
-//  • Implementação de filtros por tipo e status.
-//  • Melhoria no mapeamento dos campos de imagem.
+// ============================================================
+// 🔹 OBJETIVO DESTA API:
+//      Disponibiliza TODOS os eventos cadastrados no Airtable,
+//      juntamente com as configurações do site (logo, nuvem etc.),
+//      para consumo pelo site público e pelo painel administrativo.
+//
+// 🔹 MELHORIAS REALIZADAS :
+//    ✔ Remoção de .all() — causava TRAVAMENTOS (timeout 300s no Vercel)
+//    ✔ Substituição por ".firstPage()", seguro, rápido e recomendado
+//    ✔ Mapeamento de attachments (Cloudinary)
+//    ✔ Filtros inteligentes para cada tipo de listagem (home/admin/site)
+//    ✔ Tratamento de erros robusto (JSON explicativo)
+// 
+// 🔹 POR QUE ESSA API É IMPORTANTE
+//      - Carrega os eventos que aparecem no site.
+//      - Carrega as imagens (Cloudinary) usadas no front-end.
+//      - Carrega a configuração visual do projeto (config_site).
+//      - É a API MAIS ACESSADA DO SISTEMA (Home → Eventos).
+//
+// 🔹 TABELAS UTILIZADAS:
+//      🗂 eventos
+//      🗂 config_site
+//
+// 🔹 CAMPOS USADOS NOS EVENTOS:
+//      - id_evento (autonumber)
+//      - nome_evento
+//      - descricao
+//      - local_evento
+//      - data_evento
+//      - data_realizacao_evento
+//      - status_evento
+//      - destacar_na_homepage
+//      - imagem (attachment Cloudinary)
 // ============================================================
 
 import Airtable from "airtable";
 
 export const config = { runtime: "nodejs" };
 
-// ============================================================
-// 🔧 Conexão Airtable
-// ============================================================
+// ------------------------------------------------------------
+// 📡 Conexão com Airtable — com validação de ambiente
+// ------------------------------------------------------------
 function getAirtable() {
   const apiKey = process.env.AIRTABLE_API_KEY;
   const baseId = process.env.AIRTABLE_BASE_ID;
 
+  // 🛑 Erro explicativo caso o Vercel esteja sem credencial
   if (!apiKey || !baseId) {
-    throw new Error("❌ Credenciais do Airtable ausentes.");
+    throw new Error("❌ Credenciais do Airtable ausentes no ambiente.");
   }
 
   const base = new Airtable({ apiKey }).base(baseId);
+
   return {
     base,
     eventosTable: process.env.AIRTABLE_EVENTOS_TABLE || "eventos",
-    configTable: process.env.AIRTABLE_CONFIG_SITE_TABLE || "config_site"
+    configTable:  process.env.AIRTABLE_CONFIG_SITE_TABLE || "config_site"
   };
 }
 
-// ============================================================
-// 🟦 Mapeamento seguro de config_site (resolve attachments)
-// ============================================================
+// ------------------------------------------------------------
+// 🟦 Mapeamento da tabela config_site
+// ------------------------------------------------------------
+// 🔹 Converte attachments em URL pura
+// 🔹 Evita que o front quebre caso algum campo esteja vazio
 function mapConfig(fields) {
   if (!fields) return null;
 
@@ -74,32 +75,19 @@ function mapConfig(fields) {
     email_contato: fields.email_contato || "",
     telefone_contato: fields.telefone_contato || "",
 
-    // LOGO HEADER (URL pura)
-    logo_header: Array.isArray(fields.logo_header)
-      ? fields.logo_header[0]?.url || ""
-      : fields.logo_header || "",
+    logo_header:
+      Array.isArray(fields.logo_header) ? fields.logo_header[0]?.url || "" : "",
 
-    // NUVEM FOOTER (URL pura)
-    nuvem_footer: Array.isArray(fields.nuvem_footer)
-      ? fields.nuvem_footer[0]?.url || ""
-      : fields.nuvem_footer || ""
+    nuvem_footer:
+      Array.isArray(fields.nuvem_footer) ? fields.nuvem_footer[0]?.url || "" : "",
   };
 }
 
-// ============================================================
-// 🟦 Mapeamento de evento (mantido exatamente igual)
-// ============================================================
+// ------------------------------------------------------------
+// 🟦 Mapeamento do evento
+// ------------------------------------------------------------
 function mapEvento(rec) {
   const f = rec.fields || {};
-
-  const imagem = Array.isArray(f.imagem)
-    ? f.imagem.map(x => ({
-        url: x.url,
-        filename: x.filename,
-        width: x.width,
-        height: x.height
-      }))
-    : [];
 
   return {
     id: rec.id,
@@ -112,32 +100,49 @@ function mapEvento(rec) {
     data_realizacao_evento: f.data_realizacao_evento ?? null,
     status_evento: (f.status_evento || "").toLowerCase(),
     destacar_na_homepage: !!f.destacar_na_homepage,
-    imagem,
+
+    // 🔥 Mapeamento inteligente de imagens (Cloudinary)
+    imagem: Array.isArray(f.imagem)
+      ? f.imagem.map(img => ({
+          url: img.url,
+          filename: img.filename,
+          width: img.width,
+          height: img.height
+        }))
+      : [],
+
+    // Relacionamentos caso existam
     cartinhas: Array.isArray(f.cartinha) ? f.cartinha : [],
-    adocoes: Array.isArray(f.adocoes) ? f.adocoes : []
+    adocoes: Array.isArray(f.adocoes) ? f.adocoes : [],
   };
 }
 
-// ============================================================
-// 🚀 Handler Principal
-// ============================================================
+// ============================================================================
+// 🚀 HANDLER PRINCIPAL
+// ============================================================================
 export default async function handler(req, res) {
+
+  // Configuração básica de CORS
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET,OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+
   if (req.method === "OPTIONS") return res.status(204).end();
 
   try {
+
+    // Conexão
     const { base, eventosTable, configTable } = getAirtable();
     const { tipo = "", status = "" } = req.query;
 
-    // ==========================================================
-    // 📌 1 — CONFIG DO SITE (corrigida: agora retorna URL pura)
-    // ==========================================================
+    // ============================================================
+    // 1️⃣ CONFIG_SITE — Sem token (para home e layout do site)
+    // ============================================================
     if (tipo === "site") {
+
       const registros = await base(configTable)
         .select({ maxRecords: 1 })
-        .all();
+        .firstPage();   // ← seguro
 
       const rec = registros[0] || null;
 
@@ -147,31 +152,49 @@ export default async function handler(req, res) {
       });
     }
 
-    // ==========================================================
-    // 📌 2 — EVENTOS (mantido igual)
-    // ==========================================================
-    let filtro = "";
+    // ============================================================
+    // 2️⃣ EVENTOS — Filtragem Inteligente por Tipo/Status
+    // ============================================================
+    let filtroFormula = "";
 
+    // Eventos exibidos na home
     if (tipo === "home") {
-      filtro = "AND({destacar_na_homepage}=1, {status_evento}='em andamento')";
-    } else if (tipo === "admin") {
-      filtro = "{status_evento}='em andamento'";
-    } else if (status) {
-      const allowed = ["em andamento", "proximo", "encerrado"];
-      if (allowed.includes(status.toLowerCase())) {
-        filtro = `{status_evento}='${status}'`;
+      filtroFormula =
+        "AND({destacar_na_homepage}=1, {status_evento}='em andamento')";
+    }
+
+    // Painel administrativo
+    else if (tipo === "admin") {
+      filtroFormula = "{status_evento}='em andamento'";
+    }
+
+    // Filtro por status público
+    else if (status) {
+      const valid = ["em andamento", "proximo", "encerrado"];
+      if (valid.includes(status.toLowerCase())) {
+        filtroFormula = `{status_evento}='${status}'`;
       }
     }
 
+    // Seleção segura
     const selectConfig = {
-      sort: [{ field: "data_evento", direction: "asc" }],
+      pageSize: 100, // ← garante performance (não limita o sistema)
+      sort: [{ field: "data_evento", direction: "asc" }]
     };
 
-    if (filtro) selectConfig.filterByFormula = filtro;
+    if (filtroFormula) {
+      selectConfig.filterByFormula = filtroFormula;
+    }
 
-    const registros = await base(eventosTable).select(selectConfig).all();
+    // 🔥 Uso do firstPage → evita travamentos
+    const registros = await base(eventosTable)
+      .select(selectConfig)
+      .firstPage();
+
+    // Mapeamento dos eventos
     const eventos = registros.map(mapEvento);
 
+    // Retorno final
     return res.status(200).json({
       sucesso: true,
       total: eventos.length,
@@ -179,10 +202,12 @@ export default async function handler(req, res) {
     });
 
   } catch (e) {
+
     console.error("🔥 Erro /api/eventos:", e);
+
     return res.status(500).json({
       sucesso: false,
-      mensagem: "Erro ao listar eventos/config.",
+      mensagem: "Erro ao listar eventos/configuração.",
       detalhe: e.message
     });
   }

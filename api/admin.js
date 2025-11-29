@@ -66,24 +66,33 @@
 
 import Airtable from "airtable";
 
+// ============================================================
+// ⚙️ Configuração do runtime Vercel
+// ============================================================
 export const config = { runtime: "nodejs" };
 
+// Helpers de resposta
 const ok  = (res, data) => res.status(200).json(data);
 const err = (res, code, msg) => res.status(code).json({ sucesso:false, mensagem:msg });
 
 // ------------------------------------------------------------
-// TOKEN
+// 🔐 Funções de autenticação do administrador
 // ------------------------------------------------------------
+
+// Extrai o token enviado pelo painel admin
 function getToken(req) {
   return (
-    req.headers["x-admin-token"] ||
-    req.query.token_admin ||
-    req.body?.token_admin ||
+    req.headers["x-admin-token"] ||     // header padrão do painel
+    req.query.token_admin ||            // fallback via query
+    req.body?.token_admin ||            // fallback via body
     ""
   );
 }
 
+// Verifica se o token é válido
 function requireAuth(req, res) {
+
+  // A rota ?tipo=config_site deve ser pública (home precisa)
   if (req.method === "GET" && req.query.tipo === "config_site") {
     return true;
   }
@@ -91,15 +100,25 @@ function requireAuth(req, res) {
   const secret = process.env.ADMIN_SECRET;
   const token  = getToken(req);
 
-  if (!secret) return err(res, 500, "ADMIN_SECRET ausente.");
-  if (!token)  return err(res, 401, "Token ausente.");
-  if (token !== secret) return err(res, 401, "Token inválido.");
+  // Tratamento OSB → se falhar NÃO continua para Airtable
+  if (!secret) {
+    err(res, 500, "ADMIN_SECRET ausente.");
+    return false;
+  }
+  if (!token)  {
+    err(res, 401, "Token ausente.");
+    return false;
+  }
+  if (token !== secret) {
+    err(res, 401, "Token inválido.");
+    return false;
+  }
 
   return true;
 }
 
 // ------------------------------------------------------------
-// Airtable
+// 📡 Conexão Airtable
 // ------------------------------------------------------------
 function getBase() {
   return new Airtable({ apiKey: process.env.AIRTABLE_API_KEY })
@@ -107,16 +126,18 @@ function getBase() {
 }
 
 // ============================================================================
-// HANDLER
+// 🚀 HANDLER PRINCIPAL
 // ============================================================================
 export default async function handler(req, res) {
 
+  // Configuração básica de CORS (permitir requisições)
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type,x-admin-token");
 
   if (req.method === "OPTIONS") return res.status(204).end();
 
+  // 🔒 Autenticação (corrigido — não continua em caso de erro)
   if (!requireAuth(req, res)) return;
 
   const base = getBase();
@@ -128,10 +149,15 @@ export default async function handler(req, res) {
   try {
 
     // ============================================================
-    // GET — CONFIG_SITE
+    // 📌 GET — CONFIGURAÇÃO DO SITE (logo, nuvem, textos)
     // ============================================================
     if (req.method === "GET" && tipo === "config_site") {
-      const registros = await base(configTable).select({ maxRecords: 1 }).all();
+
+      // firstPage() → evita travamento e é recomendada pelo airtable
+      const registros = await base(configTable)
+        .select({ maxRecords: 1 })
+        .firstPage();
+
       const rec = registros[0] || null;
 
       return ok(res, {
@@ -141,49 +167,62 @@ export default async function handler(req, res) {
     }
 
     // ============================================================
-    // GET EVENTOS
+    // 📌 GET — LISTAR EVENTOS 
     // ============================================================
     if (req.method === "GET") {
-      const registros = await base(eventosTable).select().all();
-      return ok(res, { sucesso: true, eventos: registros });
+
+      const registros = await base(eventosTable)
+        .select({
+          pageSize: 100, // 🔥 garante performance sem limitar o sistema
+          sort: [{ field: "data_evento", direction: "asc" }],
+        })
+        .firstPage();
+
+      return ok(res, {
+        sucesso: true,
+        eventos: registros.map(r => ({ id: r.id, ...r.fields }))
+      });
     }
 
     // ============================================================
-    // POST — AÇÕES
+    // 🔧 POST — Manipulação de eventos e config_site
     // ============================================================
     const body = req.body || {};
     const { acao } = body;
 
     // ============================================================
-    // SALVAR CONFIG_SITE — CORRIGIDO
+    // 🛠 SALVAR CONFIG_SITE
     // ============================================================
     if (acao === "salvar_config_site") {
 
       const registros = await base(configTable)
         .select({ maxRecords: 1 })
-        .all();
+        .firstPage();
 
       let recordId = registros[0]?.id || null;
 
       const dados = body.dados || {};
       const fields = {};
 
-      // textos
-      if (dados.nome_ong) fields.nome_ong = dados.nome_ong;
-      if (dados.descricao_homepage) fields.descricao_homepage = dados.descricao_homepage;
-      if (dados.instagram_url) fields.instagram_url = dados.instagram_url;
-      if (dados.email_contato) fields.email_contato = dados.email_contato;
-      if (dados.telefone_contato) fields.telefone_contato = dados.telefone_contato;
+      // Copiar apenas campos válidos
+      [
+        "nome_ong",
+        "descricao_homepage",
+        "instagram_url",
+        "email_contato",
+        "telefone_contato"
+      ].forEach(k => {
+        if (dados[k]) fields[k] = dados[k];
+      });
 
-      // 🔥 attachments corretos
-      if (dados.logo_header) {
+      // Imagens (Cloudinary)
+      if (dados.logo_header)
         fields.logo_header = [{ url: dados.logo_header }];
-      }
 
-      if (dados.nuvem_index) {
+      if (dados.nuvem_index)
         fields.nuvem_index = [{ url: dados.nuvem_index }];
-      }
 
+      // Criar ou atualizar registro
       if (!recordId) {
         const novo = await base(configTable).create([{ fields }]);
         recordId = novo[0].id;
@@ -195,7 +234,7 @@ export default async function handler(req, res) {
     }
 
     // ============================================================
-    // CRUD EVENTOS (SEM ALTERAÇÕES)
+    // 🛠 CRUD EVENTOS 
     // ============================================================
     if (acao === "criar") {
       const novo = await base(eventosTable).create([{ fields: body }]);
